@@ -1005,8 +1005,14 @@ button[class*="variant-ghost"]:hover {
     bottom: 0;
     width: 100vw;
     height: 100vh;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
+}
+.kiosk-fullscreen .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.kiosk-fullscreen .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* Gradient Background */

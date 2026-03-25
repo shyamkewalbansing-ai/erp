@@ -16,7 +16,9 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 ## Implemented Features
 
 ### Kiosk (Tenant-Facing)
-- Full redesign: orange gradient, floating cards, 3D elements
+- Professional kiosk design: solid orange background, clean flat white cards with minimal rounding (rounded-lg) and subtle shadows
+- Thick white bottom bar with company name and tenant info (12vh height)
+- Viewport-adaptive: fills screen on any size, scrollable content when needed, no decorative background elements
 - PIN entry, apartment selection, tenant overview, payment flow
 - Payment methods: Cash, Mope (QR), SumUp (Card)
 - Receipt generation with auto-print

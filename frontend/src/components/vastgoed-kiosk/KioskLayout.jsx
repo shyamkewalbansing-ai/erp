@@ -223,8 +223,8 @@ export default function KioskLayout() {
           animate="center"
           exit="exit"
           transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="absolute inset-0 overflow-y-auto overflow-x-hidden"
-          style={{ paddingBottom: '56px' }}
+          className="absolute inset-0 overflow-y-auto overflow-x-hidden scrollbar-hide"
+          style={{ paddingBottom: '12vh' }}
         >
           {renderStep()}
         </motion.div>
@@ -232,17 +232,17 @@ export default function KioskLayout() {
       <VirtualKeyboard />
       {/* Floating bottom bar - kiosk machine style */}
       {step !== 'loading' && step !== 'not-found' && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 h-14 bg-white/95 backdrop-blur-sm shadow-[0_-2px_16px_rgba(0,0,0,0.08)] flex items-center justify-between px-6 sm:px-10" data-testid="kiosk-bottom-bar">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center">
-              <Building2 className="w-4 h-4 text-white" />
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white flex items-center justify-between px-8 sm:px-12" style={{ height: '12vh' }} data-testid="kiosk-bottom-bar">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-white" />
             </div>
-            <span className="text-sm font-bold text-slate-700 tracking-wide">{companyName || 'Kiosk'}</span>
+            <span className="text-lg font-bold text-slate-800 tracking-wide">{companyName || 'Kiosk'}</span>
           </div>
           {tenant && step !== 'welcome' && step !== 'pin' && step !== 'select' && (
-            <div className="flex items-center gap-4 text-sm">
-              <span className="text-slate-400">{tenant.name}</span>
-              <span className="font-bold text-slate-700">Appt. {tenant.apartment_number}</span>
+            <div className="flex items-center gap-6 text-base">
+              <span className="text-slate-400 font-medium">{tenant.name}</span>
+              <span className="font-bold text-slate-800">Appt. {tenant.apartment_number}</span>
             </div>
           )}
         </div>

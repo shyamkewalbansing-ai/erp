@@ -51,21 +51,8 @@ export default function KioskPinEntry({ companyId, companyName, onSuccess, onBac
   };
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-[55%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
-        <div className="absolute -bottom-40 -left-40 w-[500px] h-[500px] bg-orange-400/25 rounded-full blur-3xl" />
-        <div className="absolute -top-20 -right-20 w-72 h-72 border-[3px] border-white/10 rounded-full" />
-        <div className="absolute top-[20%] left-[8%] w-36 h-36 border-[3px] border-white/10 rounded-full" />
-        <div className="absolute top-[25%] left-[10%] w-20 h-20 bg-white/5 rounded-full" />
-        <div className="absolute bottom-[15%] right-[12%] w-28 h-28 border-[3px] border-white/8 rounded-full" />
-        <div className="absolute top-[50%] left-[3%] w-3 h-3 bg-white/15 rounded-full" />
-        <div className="absolute top-[35%] right-[20%] w-4 h-4 bg-white/10 rounded-full" />
-        <div className="absolute top-0 left-[40%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent rotate-12 origin-top" />
-      </div>
-
-      {onBack && (
+    <div className="min-h-full bg-orange-500 flex flex-col items-center justify-center relative overflow-hidden">
+{onBack && (
         <div className="absolute top-5 left-8 z-20">
           <button onClick={onBack} className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
             <ArrowLeft className="w-5 h-5" /><span>Terug</span>
@@ -73,7 +60,7 @@ export default function KioskPinEntry({ companyId, companyName, onSuccess, onBac
         </div>
       )}
 
-      <div className="relative z-10 bg-white rounded-2xl shadow-lg p-10 sm:p-12 lg:p-14 w-full max-w-md mx-6">
+      <div className="relative z-10 bg-white rounded-lg shadow-sm p-10 sm:p-12 lg:p-14 w-full max-w-md mx-6">
         <div className="flex items-center gap-4 mb-8">
           <div className="w-14 h-14 rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
             <Building2 className="w-7 h-7 text-white" />

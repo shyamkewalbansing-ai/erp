@@ -248,16 +248,8 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   // Choose method screen
   if (!payMethod) {
     return (
-      <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-0 right-0 w-[55%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
-          <div className="absolute -bottom-40 -left-40 w-[450px] h-[450px] bg-orange-400/25 rounded-full blur-3xl" />
-          <div className="absolute -top-16 -right-16 w-64 h-64 border-[3px] border-white/10 rounded-full" />
-          <div className="absolute bottom-[15%] left-[10%] w-36 h-36 border-[3px] border-white/10 rounded-full" />
-          <div className="absolute top-0 left-[45%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent rotate-12 origin-top" />
-        </div>
-
-        <div className="absolute top-5 left-8 z-20">
+      <div className="min-h-full bg-orange-500 flex flex-col items-center justify-center relative overflow-hidden">
+<div className="absolute top-5 left-8 z-20">
           <button onClick={onBack} className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
             <ArrowLeft className="w-5 h-5" /><span>Terug</span>
           </button>
@@ -271,7 +263,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
         <div className="relative z-10 flex flex-col sm:flex-row gap-5 px-6 w-full max-w-3xl flex-wrap justify-center">
           {/* Cash option */}
           <button onClick={() => setPayMethod('cash')} data-testid="pay-method-cash"
-            className="flex-1 min-w-[200px] bg-white rounded-2xl shadow-lg p-8 sm:p-10 flex flex-col items-center text-center hover:scale-[1.02] transition active:scale-[0.98]">
+            className="flex-1 min-w-[200px] bg-white rounded-lg shadow-sm p-8 sm:p-10 flex flex-col items-center text-center hover:scale-[1.02] transition active:scale-[0.98]">
             <div className="w-20 h-20 rounded-2xl bg-green-50 flex items-center justify-center mb-5 shadow-sm border border-green-100">
               <Banknote className="w-10 h-10 text-green-500" />
             </div>
@@ -282,7 +274,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           {/* Mope option */}
           {!mopeLoading && mopeEnabled && (
             <button onClick={() => { setPayMethod('mope'); handleMopePayment(); }} data-testid="pay-method-mope"
-              className="flex-1 min-w-[200px] bg-white rounded-2xl shadow-lg p-8 sm:p-10 flex flex-col items-center text-center hover:scale-[1.02] transition active:scale-[0.98]">
+              className="flex-1 min-w-[200px] bg-white rounded-lg shadow-sm p-8 sm:p-10 flex flex-col items-center text-center hover:scale-[1.02] transition active:scale-[0.98]">
               <div className="w-20 h-20 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5 shadow-sm border border-emerald-100">
                 <QrCode className="w-10 h-10 text-emerald-600" />
               </div>
@@ -295,7 +287,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           {/* Card option */}
           {!sumupLoading && sumupEnabled && (
             <button onClick={() => { setPayMethod('card'); handleCardPayment(); }} data-testid="pay-method-card"
-              className="flex-1 min-w-[200px] bg-white rounded-2xl shadow-lg p-8 sm:p-10 flex flex-col items-center text-center hover:scale-[1.02] transition active:scale-[0.98]">
+              className="flex-1 min-w-[200px] bg-white rounded-lg shadow-sm p-8 sm:p-10 flex flex-col items-center text-center hover:scale-[1.02] transition active:scale-[0.98]">
               <div className="w-20 h-20 rounded-2xl bg-blue-50 flex items-center justify-center mb-5 shadow-sm border border-blue-100">
                 <CreditCard className="w-10 h-10 text-blue-500" />
               </div>
@@ -316,16 +308,8 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   // Cash confirmation screen
   if (payMethod === 'cash') {
     return (
-      <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-0 right-0 w-[55%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
-          <div className="absolute -bottom-40 -left-40 w-[450px] h-[450px] bg-orange-400/25 rounded-full blur-3xl" />
-          <div className="absolute -top-16 -right-16 w-64 h-64 border-[3px] border-white/10 rounded-full" />
-          <div className="absolute bottom-[15%] left-[10%] w-36 h-36 border-[3px] border-white/10 rounded-full" />
-          <div className="absolute top-0 left-[45%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent rotate-12 origin-top" />
-        </div>
-
-        <div className="absolute top-5 left-8 z-20">
+      <div className="h-full bg-orange-500 flex flex-col items-center justify-center relative overflow-hidden">
+<div className="absolute top-5 left-8 z-20">
           <button onClick={() => setPayMethod(null)} disabled={processing} className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm disabled:opacity-50">
             <ArrowLeft className="w-5 h-5" /><span>Terug</span>
           </button>
@@ -335,7 +319,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">Bevestig contante betaling</h1>
         </div>
 
-        <div className="relative z-10 bg-white rounded-2xl shadow-lg p-8 sm:p-10 lg:p-12 w-full max-w-lg mx-6">
+        <div className="relative z-10 bg-white rounded-lg shadow-sm p-8 sm:p-10 lg:p-12 w-full max-w-lg mx-6">
           <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-8 sm:p-10 text-center mb-6 shadow-xl shadow-orange-500/20">
             <p className="text-orange-100 text-base mb-2">Te betalen bedrag</p>
             <p className="text-4xl sm:text-5xl font-extrabold text-white mb-3 tracking-tight whitespace-nowrap" data-testid="confirm-amount">{formatSRD(paymentData.amount)}</p>
@@ -369,16 +353,8 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   // Mope QR code payment screen
   if (payMethod === 'mope') {
     return (
-      <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-0 right-0 w-[55%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
-          <div className="absolute -bottom-40 -left-40 w-[450px] h-[450px] bg-orange-400/25 rounded-full blur-3xl" />
-          <div className="absolute -top-16 -right-16 w-64 h-64 border-[3px] border-white/10 rounded-full" />
-          <div className="absolute bottom-[15%] left-[10%] w-36 h-36 border-[3px] border-white/10 rounded-full" />
-          <div className="absolute top-0 left-[45%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent rotate-12 origin-top" />
-        </div>
-
-        <div className="absolute top-5 left-8 z-20">
+      <div className="h-full bg-orange-500 flex flex-col items-center justify-center relative overflow-hidden">
+<div className="absolute top-5 left-8 z-20">
           <button onClick={() => { setPayMethod(null); setMopeStatus('idle'); setError(''); if (mopePollRef.current) clearInterval(mopePollRef.current); }}
             className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
             <ArrowLeft className="w-5 h-5" /><span>Terug</span>
@@ -390,7 +366,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           <p className="text-white/70 mt-2 text-lg whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
         </div>
 
-        <div className="relative z-10 bg-white rounded-2xl shadow-lg p-8 sm:p-10 lg:p-12 w-full max-w-lg mx-6">
+        <div className="relative z-10 bg-white rounded-lg shadow-sm p-8 sm:p-10 lg:p-12 w-full max-w-lg mx-6">
           {mopeStatus === 'creating' && (
             <div className="text-center py-8">
               <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mx-auto mb-4" />
@@ -454,16 +430,8 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
 
   // Card payment screen (SumUp)
   return (
-    <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col items-center justify-center relative overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-[55%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
-        <div className="absolute -bottom-40 -left-40 w-[450px] h-[450px] bg-orange-400/25 rounded-full blur-3xl" />
-        <div className="absolute -top-16 -right-16 w-64 h-64 border-[3px] border-white/10 rounded-full" />
-        <div className="absolute bottom-[15%] left-[10%] w-36 h-36 border-[3px] border-white/10 rounded-full" />
-        <div className="absolute top-0 left-[45%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent rotate-12 origin-top" />
-      </div>
-
-      <div className="absolute top-5 left-8 z-20">
+    <div className="h-full bg-orange-500 flex flex-col items-center justify-center relative overflow-hidden">
+<div className="absolute top-5 left-8 z-20">
         <button onClick={() => { setPayMethod(null); setCardStatus('idle'); setError(''); widgetMounted.current = false; if (pollRef.current) clearInterval(pollRef.current); }}
           className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
           <ArrowLeft className="w-5 h-5" /><span>Terug</span>
@@ -475,7 +443,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
         <p className="text-white/70 mt-2 text-lg whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
       </div>
 
-      <div className="relative z-10 bg-white rounded-2xl shadow-lg p-8 sm:p-10 lg:p-12 w-full max-w-lg mx-6">
+      <div className="relative z-10 bg-white rounded-lg shadow-sm p-8 sm:p-10 lg:p-12 w-full max-w-lg mx-6">
         {cardStatus === 'creating' && (
           <div className="text-center py-8">
             <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />

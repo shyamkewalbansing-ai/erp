@@ -13,31 +13,7 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId 
   };
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col relative overflow-hidden">
-      {/* Rich background decorations */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {/* Large gradient overlay right */}
-        <div className="absolute top-0 right-0 w-[60%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
-        {/* Bottom left glow */}
-        <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-orange-400/25 rounded-full blur-3xl" />
-        {/* Top right circle */}
-        <div className="absolute -top-20 -right-20 w-80 h-80 border-[3px] border-white/10 rounded-full" />
-        <div className="absolute -top-10 -right-10 w-60 h-60 border-[3px] border-white/8 rounded-full" />
-        {/* Middle decorative circles */}
-        <div className="absolute top-[15%] left-[8%] w-44 h-44 border-[3px] border-white/10 rounded-full" />
-        <div className="absolute top-[20%] left-[10%] w-28 h-28 bg-white/5 rounded-full" />
-        {/* Bottom right shapes */}
-        <div className="absolute bottom-[10%] right-[15%] w-36 h-36 border-[3px] border-white/8 rounded-full" />
-        <div className="absolute bottom-[25%] right-[8%] w-20 h-20 bg-white/5 rounded-full" />
-        {/* Diagonal lines for 3D depth */}
-        <div className="absolute top-0 left-[30%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent rotate-12 origin-top" />
-        <div className="absolute top-0 left-[70%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent -rotate-6 origin-top" />
-        {/* Floating dots */}
-        <div className="absolute top-[40%] left-[5%] w-3 h-3 bg-white/15 rounded-full" />
-        <div className="absolute top-[60%] left-[15%] w-2 h-2 bg-white/20 rounded-full" />
-        <div className="absolute top-[30%] right-[25%] w-4 h-4 bg-white/10 rounded-full" />
-        <div className="absolute bottom-[15%] left-[40%] w-3 h-3 bg-white/15 rounded-full" />
-      </div>
+    <div className="min-h-full bg-orange-500 flex flex-col relative overflow-hidden">
 
       {/* Top bar */}
       <div className="relative z-10 flex items-center justify-between px-8 lg:px-12 py-5">
@@ -64,7 +40,7 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId 
       {/* Main content */}
       <div className="relative z-10 flex-1 flex flex-col md:flex-row items-center justify-center gap-8 md:gap-14 px-6 sm:px-10 lg:px-16 pb-10">
         {/* Left - Main card */}
-        <div className="bg-white rounded-2xl shadow-lg p-10 sm:p-12 lg:p-14 w-full max-w-xl">
+        <div className="bg-white rounded-lg shadow-sm p-10 sm:p-12 lg:p-14 w-full max-w-xl">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 mb-3 leading-tight tracking-tight">
             Welkom
           </h1>

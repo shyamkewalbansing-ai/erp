@@ -11,20 +11,6 @@ function formatSRD(amount) {
 const TYPE_LABELS = { rent: 'Huur', partial_rent: 'Gedeeltelijk', service_costs: 'Servicekosten', fines: 'Boetes', deposit: 'Borg' };
 const METHOD_LABELS = { cash: 'Contant', card: 'Pinpas', mope: 'Mope', bank: 'Bank', pin: 'PIN' };
 
-const BG_DECOR = () => (
-  <div className="absolute inset-0 pointer-events-none overflow-hidden">
-    <div className="absolute top-0 right-0 w-[55%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
-    <div className="absolute -bottom-40 -left-40 w-[450px] h-[450px] bg-orange-400/25 rounded-full blur-3xl" />
-    <div className="absolute -top-16 -right-16 w-64 h-64 border-[3px] border-white/10 rounded-full" />
-    <div className="absolute bottom-[10%] left-[8%] w-36 h-36 border-[3px] border-white/10 rounded-full" />
-    <div className="absolute bottom-[14%] left-[10%] w-20 h-20 bg-white/5 rounded-full" />
-    <div className="absolute top-[45%] right-[6%] w-28 h-28 border-[3px] border-white/8 rounded-full" />
-    <div className="absolute top-0 left-[40%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent rotate-12 origin-top" />
-    <div className="absolute top-[35%] left-[4%] w-3 h-3 bg-white/15 rounded-full" />
-    <div className="absolute top-[60%] right-[15%] w-4 h-4 bg-white/10 rounded-full" />
-  </div>
-);
-
 export default function KioskTenantOverview({ tenant, onBack, onPay, companyId }) {
   const [showHistory, setShowHistory] = useState(false);
   const [payments, setPayments] = useState([]);
@@ -52,8 +38,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId }
   ];
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col relative overflow-hidden">
-      <BG_DECOR />
+    <div className="min-h-full bg-orange-500 flex flex-col relative overflow-hidden">
 
       {/* Header */}
       <div className="relative z-10 flex items-center justify-between px-8 lg:px-12 py-5">
@@ -67,7 +52,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId }
       {/* Content */}
       <div className="relative z-10 flex-1 flex flex-col md:flex-row items-start justify-center gap-6 md:gap-8 px-6 sm:px-10 lg:px-12 pb-8 overflow-auto">
         {/* Left - Financial card */}
-        <div className="bg-white rounded-2xl shadow-lg p-7 sm:p-8 lg:p-10 w-full max-w-xl min-w-0">
+        <div className="bg-white rounded-lg shadow-sm p-7 sm:p-8 lg:p-10 w-full max-w-xl min-w-0">
           {/* Tenant info */}
           <div className="flex items-center gap-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100/50 border border-slate-100 mb-5">
             <div className="w-14 h-14 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -131,7 +116,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId }
         </div>
 
         {/* Right - Status card */}
-        <div className="bg-white rounded-2xl shadow-lg p-8 sm:p-10 lg:p-12 w-full max-w-sm min-w-0 flex flex-col items-center text-center">
+        <div className="bg-white rounded-lg shadow-sm p-8 sm:p-10 lg:p-12 w-full max-w-sm min-w-0 flex flex-col items-center text-center">
           {hasDebt ? (
             <>
               <div className="w-20 h-20 rounded-full bg-orange-50 flex items-center justify-center mb-5 shadow-sm border border-orange-100">
@@ -173,7 +158,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId }
       {/* Payment History Overlay */}
       {showHistory && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowHistory(false)}>
-          <div className="bg-white rounded-2xl shadow-lg w-full max-w-2xl max-h-[80vh] overflow-hidden" onClick={e => e.stopPropagation()} data-testid="history-popup">
+          <div className="bg-white rounded-lg shadow-sm w-full max-w-2xl max-h-[80vh] overflow-hidden" onClick={e => e.stopPropagation()} data-testid="history-popup">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-slate-100">
               <div className="flex items-center gap-3">

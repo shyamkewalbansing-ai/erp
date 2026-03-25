@@ -67,23 +67,10 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
   const restartCountdown = (s) => { setCountdown(s); timerRef.current = setInterval(() => { setCountdown(prev => { if (prev <= 1) { clearInterval(timerRef.current); onDone(); return 0; } return prev - 1; }); }, 1000); };
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col md:flex-row relative overflow-hidden">
-      {/* Same background decorations as other pages */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-[55%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
-        <div className="absolute -bottom-40 -left-40 w-[450px] h-[450px] bg-orange-400/25 rounded-full blur-3xl" />
-        <div className="absolute -top-16 -right-16 w-64 h-64 border-[3px] border-white/10 rounded-full" />
-        <div className="absolute bottom-[10%] left-[8%] w-36 h-36 border-[3px] border-white/10 rounded-full" />
-        <div className="absolute bottom-[14%] left-[10%] w-20 h-20 bg-white/5 rounded-full" />
-        <div className="absolute top-[45%] right-[6%] w-28 h-28 border-[3px] border-white/8 rounded-full" />
-        <div className="absolute top-0 left-[40%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent rotate-12 origin-top" />
-        <div className="absolute top-[35%] left-[4%] w-3 h-3 bg-white/15 rounded-full" />
-        <div className="absolute top-[60%] right-[15%] w-4 h-4 bg-white/10 rounded-full" />
-      </div>
-
-      {/* Left - Success card */}
+    <div className="min-h-full bg-orange-500 flex flex-col md:flex-row relative overflow-hidden">
+{/* Left - Success card */}
       <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 relative z-10 print:hidden">
-        <div className="bg-white rounded-2xl shadow-lg p-10 sm:p-12 lg:p-14 max-w-md w-full text-center">
+        <div className="bg-white rounded-lg shadow-sm p-10 sm:p-12 lg:p-14 max-w-md w-full text-center">
           <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-5 shadow-sm border border-green-100">
             <CheckCircle className="w-10 h-10 text-green-500" />
           </div>

@@ -49,29 +49,15 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
 
   if (loading) {
     return (
-      <div className="min-h-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+      <div className="min-h-full bg-orange-500 flex items-center justify-center">
         <div className="w-14 h-14 border-4 border-white/30 border-t-white rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-0 right-0 w-[55%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
-        <div className="absolute -bottom-40 -left-40 w-[450px] h-[450px] bg-orange-400/25 rounded-full blur-3xl" />
-        <div className="absolute -top-16 -right-16 w-64 h-64 border-[3px] border-white/10 rounded-full" />
-        <div className="absolute bottom-[8%] left-[12%] w-40 h-40 border-[3px] border-white/10 rounded-full" />
-        <div className="absolute bottom-[12%] left-[14%] w-24 h-24 bg-white/5 rounded-full" />
-        <div className="absolute top-[50%] right-[5%] w-32 h-32 border-[3px] border-white/8 rounded-full" />
-        <div className="absolute top-0 left-[35%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent rotate-12 origin-top" />
-        <div className="absolute top-0 left-[75%] w-[2px] h-full bg-gradient-to-b from-transparent via-white/5 to-transparent -rotate-6 origin-top" />
-        <div className="absolute top-[30%] left-[3%] w-3 h-3 bg-white/15 rounded-full" />
-        <div className="absolute top-[65%] right-[18%] w-4 h-4 bg-white/10 rounded-full" />
-      </div>
-
-      {/* Header */}
+    <div className="h-full bg-orange-500 flex flex-col relative overflow-hidden">
+{/* Header */}
       <div className="relative z-10 flex items-center justify-between px-8 lg:px-12 py-5">
         <button onClick={onBack} className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
           <ArrowLeft className="w-5 h-5" /><span>Terug</span>
@@ -129,7 +115,7 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
           </div>
         ) : (
           <div className="flex items-center justify-center">
-            <div className="bg-white rounded-2xl shadow-lg p-8 sm:p-10 lg:p-12 w-full max-w-lg">
+            <div className="bg-white rounded-lg shadow-sm p-8 sm:p-10 lg:p-12 w-full max-w-lg">
               <p className="text-lg text-slate-400 text-center mb-6">Voer uw huurderscode in</p>
               <div className="bg-gradient-to-b from-slate-50 to-slate-100/50 border-2 border-slate-200 rounded-2xl p-5 sm:p-6 mb-6 text-center">
                 <span className="text-3xl sm:text-4xl font-mono font-extrabold text-slate-900 tracking-[0.25em]">
