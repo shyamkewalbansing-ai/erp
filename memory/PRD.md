@@ -67,6 +67,15 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - `GET /api/kiosk/public/{id}/tenant/{tid}/payments` - Tenant payment history
 - `POST /api/kiosk/public/{id}/payments` - Register payment
 
+### Automatic Device Detection (Completed 25 Mar 2026)
+- Touch detection via navigator.maxTouchPoints / ontouchstart
+- Screen size categories: compact (≤800px), normal, large (>1080px)
+- Touch mode: larger buttons (min 48px touch targets), bigger fonts
+- Compact mode: tighter spacing, smaller fonts for small screens
+- Large mode: bigger fonts and icons for large monitors
+- Visible mode badge in bottom bar (Touch/Desktop indicator)
+- CSS classes: .kiosk-touch, .kiosk-compact, .kiosk-large on root element
+
 ## Pending/Upcoming Tasks
 ### P0
 - Integrate real Mope API key (waiting for Hakrinbank credentials from user)

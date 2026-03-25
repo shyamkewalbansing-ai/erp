@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Lock, Building2 } from 'lucide-react';
+import { Lock, Building2, Hand, Monitor, Smartphone } from 'lucide-react';
 import axios from 'axios';
 import KioskWelcome from './KioskWelcome';
 import KioskPinEntry from './KioskPinEntry';
@@ -22,9 +22,28 @@ const slideVariants = {
   exit: { opacity: 0, x: -100 },
 };
 
+function useKioskMode() {
+  const [mode, setMode] = useState({ isTouch: false, screenSize: 'normal' });
+
+  useEffect(() => {
+    const detect = () => {
+      const isTouch = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+      const h = window.innerHeight;
+      const screenSize = h <= 800 ? 'compact' : h > 1080 ? 'large' : 'normal';
+      setMode({ isTouch, screenSize });
+    };
+    detect();
+    window.addEventListener('resize', detect);
+    return () => window.removeEventListener('resize', detect);
+  }, []);
+
+  return mode;
+}
+
 export default function KioskLayout() {
   const { companyId } = useParams();
   const navigate = useNavigate();
+  const kioskMode = useKioskMode();
   const [step, setStep] = useState('loading');
   const [tenant, setTenant] = useState(null);
   const [paymentData, setPaymentData] = useState(null);
@@ -33,6 +52,12 @@ export default function KioskLayout() {
   const [companyNotFound, setCompanyNotFound] = useState(false);
   const [requiresPin, setRequiresPin] = useState(false);
   const [pinVerified, setPinVerified] = useState(false);
+
+  const modeClasses = [
+    kioskMode.isTouch ? 'kiosk-touch' : '',
+    kioskMode.screenSize === 'compact' ? 'kiosk-compact' : '',
+    kioskMode.screenSize === 'large' ? 'kiosk-large' : '',
+  ].filter(Boolean).join(' ');
 
   useEffect(() => {
     if (companyId) {
@@ -214,7 +239,7 @@ export default function KioskLayout() {
   };
 
   return (
-    <div className="kiosk-fullscreen">
+    <div className={`kiosk-fullscreen ${modeClasses}`}>
       <AnimatePresence mode="wait">
         <motion.div
           key={step}
@@ -232,19 +257,27 @@ export default function KioskLayout() {
       <VirtualKeyboard />
       {/* Floating bottom bar - kiosk machine style */}
       {step !== 'loading' && step !== 'not-found' && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white flex items-center justify-between px-8 sm:px-12" style={{ height: '12vh' }} data-testid="kiosk-bottom-bar">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-lg bg-orange-500 flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-white" />
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white flex items-center justify-between" style={{ height: '12vh', padding: '0 clamp(16px, 2vw, 48px)' }} data-testid="kiosk-bottom-bar">
+          <div className="flex items-center" style={{ gap: 'clamp(8px, 1vw, 16px)' }}>
+            <div className="rounded-lg bg-orange-500 flex items-center justify-center" style={{ width: 'clamp(32px, 4vh, 48px)', height: 'clamp(32px, 4vh, 48px)' }}>
+              <Building2 style={{ width: '2.5vh', height: '2.5vh' }} className="text-white" />
             </div>
-            <span className="text-lg font-bold text-slate-800 tracking-wide">{companyName || 'Kiosk'}</span>
+            <span className="kiosk-subtitle font-bold text-slate-800 tracking-wide">{companyName || 'Kiosk'}</span>
           </div>
-          {tenant && step !== 'welcome' && step !== 'pin' && step !== 'select' && (
-            <div className="flex items-center gap-6 text-base">
-              <span className="text-slate-400 font-medium">{tenant.name}</span>
-              <span className="font-bold text-slate-800">Appt. {tenant.apartment_number}</span>
-            </div>
-          )}
+          <div className="flex items-center" style={{ gap: 'clamp(8px, 1.5vw, 24px)' }}>
+            {tenant && step !== 'welcome' && step !== 'pin' && step !== 'select' && (
+              <div className="flex items-center gap-2">
+                <span className="kiosk-body text-slate-400 font-medium">{tenant.name}</span>
+                <span className="kiosk-body font-bold text-slate-800">Appt. {tenant.apartment_number}</span>
+              </div>
+            )}
+            <span className={`kiosk-mode-badge ${kioskMode.isTouch ? 'touch' : 'desktop'}`} data-testid="kiosk-mode-badge">
+              {kioskMode.isTouch
+                ? <><Hand style={{ width: '1.3vh', height: '1.3vh' }} /> Touch</>
+                : <><Monitor style={{ width: '1.3vh', height: '1.3vh' }} /> Desktop</>
+              }
+            </span>
+          </div>
         </div>
       )}
     </div>
