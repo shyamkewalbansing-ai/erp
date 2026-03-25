@@ -1,57 +1,79 @@
 # Vastgoed Kiosk ERP - Product Requirements Document
 
-## Origineel Probleemstelling
-Migratie van een standalone React/Python KIOSK applicatie (voor vastgoed/appartement huurbetalingen) naar een bestaand full-stack ERP systeem met SaaS model.
+## Original Problem Statement
+Full-stack ERP system for real estate/apartment rent payments with a tenant-facing Kiosk, Admin Dashboard, and Superadmin Dashboard.
 
-## Architectuur
-- **Frontend:** React (CRA) + Tailwind CSS + Shadcn/UI
-- **Backend:** FastAPI (Python)
-- **Database:** MongoDB
-- **Route prefix:** /api/kiosk/
+## Core Architecture
+- **Backend**: FastAPI + MongoDB (kiosk.py ~3000 lines)
+- **Frontend**: React + TailwindCSS + Shadcn/UI
+- **Kiosk Design**: Albert Heijn self-checkout style (orange theme, floating white cards, touch-friendly)
 
-## Kiosk Design
-- **Albert Heijn zelfscankassa stijl** met oranje gradient achtergrond
-- Decoratieve elementen: cirkels, glow, diagonale lijnen
-- Witte zwevende kaarten (rounded-[2rem], shadow-[0_25px_60px])
-- Glasachtige knoppen (bg-white/20 backdrop-blur-sm)
+## User Personas
+- **Tenants**: Use kiosk to pay rent via Cash, Mope QR, or SumUp Card
+- **Company Admins**: Manage tenants, payments, settings per company
+- **Superadmin**: Manages all companies
 
-## Voltooide Features
-- [2026-03-23] Auto-billing + Achterstand + Huurovereenkomst + Werknemers + Bank/Kas
-- [2026-03-24] Zoekbalk, Kwitanties filter, ReceiptTicket, Multi-select betalingen
-- [2026-03-24] WhatsApp Business API + Berichten tab
-- [2026-03-24] Stroombreker auto-cutoff, Superadmin Dashboard
-- [2026-03-24] Virtual Keyboard, Tenant code, Delete buttons, Responsive UI
-- [2026-03-24] KIOSK REDESIGN: AH stijl, grotere kaarten, rijke achtergrond, zichtbare knoppen
-- [2026-03-24] Print fix: dubbele afdruk verwijderd
-- [2026-03-24] SRD bedragen op 1 lijn (whitespace-nowrap)
-- [2026-03-24] Betaling geslaagd pagina: zelfde oranje achtergrond
-- [2026-03-24] Volgende knop + Terug naar start knop op overzicht
-- **[2026-03-24] SumUp Online Checkout integratie (per bedrijf instelbaar via Admin Instellingen)**
+## Implemented Features
 
-## SumUp Integratie
-- Per bedrijf instelbaar: API Key + Merchant Code in Admin → Instellingen
-- Toggle om SumUp aan/uit te zetten
-- Kiosk betalingsflow: keuze Contant of Pinpas (SumUp)
-- SumUp Card Widget wordt geladen voor kaartbetaling
-- Backend endpoints: POST checkout, GET status, GET enabled
-- Currency: EUR (instelbaar)
+### Kiosk (Tenant-Facing)
+- Full redesign: orange gradient, floating cards, 3D elements
+- PIN entry, apartment selection, tenant overview, payment flow
+- Payment methods: Cash, Mope (QR), SumUp (Card)
+- Receipt generation with auto-print
+- Responsive: works in both landscape AND portrait mode (md:flex-row breakpoint)
 
-## Database Schema
-- `kiosk_companies`: + `sumup_api_key`, `sumup_merchant_code`, `sumup_enabled`
-- `kiosk_employees`, `kiosk_kas`, `kiosk_payments`, `kiosk_tenants`
+### Payment Integrations
+- **SumUp Pinbetaling**: Per-company API key, merchant code, currency (EUR/USD), exchange rate for SRD conversion
+- **Mope QR Betaling**: Per-company API key, QR code generation, status polling (open/scanned/paid)
+  - Mock mode: key starting with `mock_` auto-transitions payment status
+  - Real mode: connects to https://api.mope.sr API
+
+### Admin Dashboard
+- Tenant management (CRUD, import)
+- Payment overview, receipts
+- Settings: Company info, billing, WhatsApp, SumUp, Mope
+- Kiosk PIN management
+
+### Superadmin Dashboard
+- Company management, activation/deactivation
+
+## Database Schema (key collections)
+- `kiosk_companies`: company settings including sumup_*/mope_* fields
+- `kiosk_tenants`: tenant info, outstanding rent/service costs/fines
+- `kiosk_payments`: payment records with payment_method (cash/card/mope)
+- `kiosk_apartments`: apartment records
+- `mope_mock_payments`: mock Mope payment tracking
+
+## Key API Endpoints
+- `PUT /api/kiosk/auth/settings` - Save company settings (SumUp + Mope)
+- `GET /api/kiosk/public/{id}/sumup/enabled` - Check SumUp config + exchange rate
+- `POST /api/kiosk/public/{id}/sumup/checkout` - Create SumUp checkout
+- `GET /api/kiosk/public/{id}/mope/enabled` - Check Mope config
+- `POST /api/kiosk/public/{id}/mope/checkout` - Create Mope payment (+ mock)
+- `GET /api/kiosk/public/{id}/mope/status/{pid}` - Poll Mope status
+- `POST /api/kiosk/public/{id}/payments` - Register payment
+
+## Pending/Upcoming Tasks
+### P1
+- Modernize "Kwitanties" (Receipts) tab with unified table style
+
+### P2
+- Monthly financial report (automated)
+- CSV/PDF export of payment reports
+- Password reset functionality
+- Multi-building support per company
+
+### Refactoring
+- Split KioskAdminDashboard.jsx (~3000 lines) into smaller components
+- Split kiosk.py (~3000 lines) into feature-specific route files
+
+## 3rd Party Integrations
+- SumUp Online Checkout API (per-company keys)
+- Mope/Hakrinbank Payment API (per-company keys)
+- Shelly Smart Relays (local HTTP)
+- WhatsApp Business API
 
 ## Credentials
-- Email: demo@facturatie.sr | Wachtwoord: demo2024
-- Superadmin: admin@facturatie.sr | Wachtwoord: Bharat7755
-
-## Backlog
-### P2
-- Kwitanties tab moderniseren
-- Maandelijks financieel rapport
-- CSV/PDF export betalingsrapporten
-- Wachtwoord vergeten
-- Multi-building support
-
-## Refactoring
-- KioskAdminDashboard.jsx (3000+ regels) opsplitsen
-- kiosk.py (2800+ regels) opsplitsen
+- Superadmin: admin@facturatie.sr / Bharat7755
+- Test company: shyam@kewalbansing.net / Bharat7755
+- Kiosk PIN: 5678

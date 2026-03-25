@@ -44,9 +44,9 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex-1 flex flex-col sm:flex-row items-start justify-center gap-4 sm:gap-6 px-4 sm:px-8 lg:px-12 pb-8 overflow-auto">
+      <div className="relative z-10 flex-1 flex flex-col md:flex-row items-start justify-center gap-6 md:gap-8 px-6 sm:px-10 lg:px-12 pb-8 overflow-auto">
         {/* Left - Financial card */}
-        <div className="bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-5 sm:p-7 lg:p-10 w-full sm:flex-[3] min-w-0 border border-white/50">
+        <div className="bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-7 sm:p-8 lg:p-10 w-full max-w-xl min-w-0 border border-white/50">
           {/* Tenant info */}
           <div className="flex items-center gap-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100/50 border border-slate-100 mb-5">
             <div className="w-14 h-14 rounded-xl bg-orange-100 flex items-center justify-center flex-shrink-0 shadow-sm">
@@ -110,30 +110,30 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
         </div>
 
         {/* Right - Status card */}
-        <div className="bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-5 sm:p-6 lg:p-12 w-full sm:flex-[2] min-w-0 flex flex-col items-center text-center border border-white/50 overflow-hidden">
+        <div className="bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.25)] p-8 sm:p-10 lg:p-12 w-full max-w-sm min-w-0 flex flex-col items-center text-center border border-white/50">
           {hasDebt ? (
             <>
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-orange-50 flex items-center justify-center mb-4 shadow-sm border border-orange-100">
-                <CreditCard className="w-8 h-8 sm:w-10 sm:h-10 text-orange-500" />
+              <div className="w-20 h-20 rounded-full bg-orange-50 flex items-center justify-center mb-5 shadow-sm border border-orange-100">
+                <CreditCard className="w-10 h-10 text-orange-500" />
               </div>
-              <p className="text-sm sm:text-base text-slate-400 mb-1">Te betalen</p>
-              <p className="text-xl sm:text-2xl lg:text-4xl font-extrabold text-slate-900 mb-6 tracking-tight">{formatSRD(total)}</p>
+              <p className="text-base text-slate-400 mb-2">Te betalen</p>
+              <p className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-8 tracking-tight whitespace-nowrap">{formatSRD(total)}</p>
               <button onClick={onPay} data-testid="pay-btn"
-                className="w-full py-4 sm:py-5 px-6 rounded-2xl text-lg sm:text-xl font-bold flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/30 transition active:scale-[0.98]">
+                className="w-full py-5 sm:py-6 px-8 rounded-2xl text-xl font-bold flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/30 transition active:scale-[0.98]">
                 Volgende
-                <ArrowRight className="w-5 h-5 sm:w-6 sm:h-6" />
+                <ArrowRight className="w-6 h-6" />
               </button>
             </>
           ) : (
             <>
-              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-50 flex items-center justify-center mb-4 shadow-sm border border-green-100">
-                <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-green-500" />
+              <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mb-5 shadow-sm border border-green-100">
+                <CheckCircle className="w-10 h-10 text-green-500" />
               </div>
-              <p className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-green-700 mb-2 tracking-tight">Alles betaald!</p>
-              <p className="text-sm sm:text-base text-green-500 mb-6">Geen openstaand saldo</p>
+              <p className="text-3xl sm:text-4xl font-extrabold text-green-700 mb-2 tracking-tight">Alles betaald!</p>
+              <p className="text-base text-green-500 mb-8">Geen openstaand saldo</p>
               <button onClick={onBack} data-testid="back-home-btn"
-                className="w-full py-4 sm:py-5 px-6 rounded-2xl text-lg sm:text-xl font-bold flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/30 transition active:scale-[0.98]">
-                <Home className="w-5 h-5 sm:w-6 sm:h-6" />
+                className="w-full py-5 sm:py-6 px-8 rounded-2xl text-xl font-bold flex items-center justify-center gap-3 bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/30 transition active:scale-[0.98]">
+                <Home className="w-6 h-6" />
                 Terug naar start
               </button>
             </>

@@ -67,7 +67,7 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
   const restartCountdown = (s) => { setCountdown(s); timerRef.current = setInterval(() => { setCountdown(prev => { if (prev <= 1) { clearInterval(timerRef.current); onDone(); return 0; } return prev - 1; }); }, 1000); };
 
   return (
-    <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col sm:flex-row relative overflow-hidden">
+    <div className="min-h-full bg-gradient-to-br from-orange-500 via-orange-500 to-orange-600 flex flex-col md:flex-row relative overflow-hidden">
       {/* Same background decorations as other pages */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 right-0 w-[55%] h-full bg-gradient-to-l from-orange-700/40 to-transparent rounded-l-[120px]" />
@@ -116,7 +116,7 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
       </div>
 
       {/* Right - Receipt */}
-      <div className="w-full sm:w-1/2 bg-white/10 backdrop-blur-sm flex items-center justify-center overflow-auto p-6 print:hidden border-l border-white/10">
+      <div className="w-full md:w-1/2 bg-white/10 backdrop-blur-sm flex items-center justify-center overflow-auto p-6 print:hidden border-l border-white/10">
         <ReceiptTicket payment={payment} tenant={tenant} preview={true} stampData={stampData} />
       </div>
 
