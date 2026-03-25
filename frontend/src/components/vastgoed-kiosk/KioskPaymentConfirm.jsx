@@ -250,6 +250,10 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
                   {formatSRD(paymentData.amount)} = {sumupCurrency} {(paymentData.amount / sumupExchangeRate).toFixed(2)}
                 </p>
               )}
+              <div className="flex items-center justify-center" style={{ gap: 'clamp(8px, 1vw, 16px)', marginTop: '1.5vh' }}>
+                <img src="/hakrinbank-logo.png" alt="Hakrinbank" style={{ height: 'clamp(20px, 3.5vh, 40px)', width: 'auto', objectFit: 'contain' }} />
+                <img src="/dsb-logo.png" alt="DSB Bank" style={{ height: 'clamp(20px, 3.5vh, 40px)', width: 'auto', objectFit: 'contain' }} />
+              </div>
             </button>
           )}
         </div>
