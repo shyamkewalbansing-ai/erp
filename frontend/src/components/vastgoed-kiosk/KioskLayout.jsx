@@ -170,6 +170,7 @@ export default function KioskLayout() {
         return (
           <KioskTenantOverview
             tenant={tenant}
+            companyId={companyId}
             onBack={() => goTo('select')}
             onPay={() => goTo('payment')}
           />

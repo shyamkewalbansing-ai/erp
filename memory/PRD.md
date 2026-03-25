@@ -20,6 +20,7 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - PIN entry, apartment selection, tenant overview, payment flow
 - Payment methods: Cash, Mope (QR), SumUp (Card)
 - Receipt generation with auto-print
+- **Betalingsgeschiedenis**: popup overlay met laatste 10 betalingen per huurder
 - Responsive: works in both landscape AND portrait mode (md:flex-row breakpoint)
 
 ### Payment Integrations
@@ -51,6 +52,7 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - `GET /api/kiosk/public/{id}/mope/enabled` - Check Mope config
 - `POST /api/kiosk/public/{id}/mope/checkout` - Create Mope payment (+ mock)
 - `GET /api/kiosk/public/{id}/mope/status/{pid}` - Poll Mope status
+- `GET /api/kiosk/public/{id}/tenant/{tid}/payments` - Tenant payment history
 - `POST /api/kiosk/public/{id}/payments` - Register payment
 
 ## Pending/Upcoming Tasks

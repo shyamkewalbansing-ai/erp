@@ -1,8 +1,15 @@
-import { ArrowLeft, ArrowRight, User, AlertTriangle, CreditCard, Wallet, FileText, CheckCircle, Home } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, ArrowRight, User, AlertTriangle, CreditCard, Wallet, FileText, CheckCircle, Home, Clock, X } from 'lucide-react';
+import axios from 'axios';
+
+const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
 function formatSRD(amount) {
   return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
+
+const TYPE_LABELS = { rent: 'Huur', partial_rent: 'Gedeeltelijk', service_costs: 'Servicekosten', fines: 'Boetes', deposit: 'Borg' };
+const METHOD_LABELS = { cash: 'Contant', card: 'Pinpas', mope: 'Mope', bank: 'Bank', pin: 'PIN' };
 
 const BG_DECOR = () => (
   <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -18,11 +25,25 @@ const BG_DECOR = () => (
   </div>
 );
 
-export default function KioskTenantOverview({ tenant, onBack, onPay }) {
+export default function KioskTenantOverview({ tenant, onBack, onPay, companyId }) {
+  const [showHistory, setShowHistory] = useState(false);
+  const [payments, setPayments] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   if (!tenant) return null;
 
   const total = (tenant.outstanding_rent || 0) + (tenant.service_costs || 0) + (tenant.fines || 0);
   const hasDebt = total > 0;
+
+  const loadHistory = async () => {
+    setShowHistory(true);
+    setLoadingHistory(true);
+    try {
+      const res = await axios.get(`${API}/public/${companyId}/tenant/${tenant.tenant_id}/payments`);
+      setPayments(res.data);
+    } catch { setPayments([]); }
+    finally { setLoadingHistory(false); }
+  };
 
   const items = [
     { label: 'Openstaande huur', desc: tenant.overdue_months?.length > 0 ? `Achterstand: ${tenant.overdue_months.join(', ')}` : 'Geen achterstand', amount: tenant.outstanding_rent || 0, icon: Wallet },
@@ -123,6 +144,10 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
                 Volgende
                 <ArrowRight className="w-6 h-6" />
               </button>
+              <button onClick={loadHistory} data-testid="history-btn"
+                className="w-full mt-3 py-3 px-6 rounded-2xl text-base font-semibold flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 transition active:scale-[0.98]">
+                <Clock className="w-5 h-5" /> Betalingsgeschiedenis
+              </button>
             </>
           ) : (
             <>
@@ -136,10 +161,86 @@ export default function KioskTenantOverview({ tenant, onBack, onPay }) {
                 <Home className="w-6 h-6" />
                 Terug naar start
               </button>
+              <button onClick={loadHistory} data-testid="history-btn-no-debt"
+                className="w-full mt-3 py-3 px-6 rounded-2xl text-base font-semibold flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 transition active:scale-[0.98]">
+                <Clock className="w-5 h-5" /> Betalingsgeschiedenis
+              </button>
             </>
           )}
         </div>
       </div>
+
+      {/* Payment History Overlay */}
+      {showHistory && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setShowHistory(false)}>
+          <div className="bg-white rounded-[2rem] shadow-[0_25px_60px_-12px_rgba(0,0,0,0.35)] w-full max-w-2xl max-h-[80vh] overflow-hidden" onClick={e => e.stopPropagation()} data-testid="history-popup">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-orange-500" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">Betalingsgeschiedenis</h2>
+                  <p className="text-sm text-slate-400">{tenant.name}</p>
+                </div>
+              </div>
+              <button onClick={() => setShowHistory(false)} className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition" data-testid="history-close-btn">
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="overflow-auto max-h-[60vh] p-6">
+              {loadingHistory ? (
+                <div className="text-center py-12">
+                  <div className="w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+                  <p className="text-slate-400">Laden...</p>
+                </div>
+              ) : payments.length === 0 ? (
+                <div className="text-center py-12">
+                  <Clock className="w-12 h-12 text-slate-200 mx-auto mb-3" />
+                  <p className="text-lg font-bold text-slate-400">Geen betalingen gevonden</p>
+                  <p className="text-sm text-slate-300 mt-1">Er zijn nog geen betalingen geregistreerd</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {payments.map((p, i) => {
+                    const date = p.created_at ? new Date(p.created_at) : null;
+                    const dateStr = date ? date.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+                    return (
+                      <div key={p.payment_id || i} className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-slate-100 transition" data-testid={`history-item-${i}`}>
+                        <div className="w-10 h-10 rounded-xl bg-green-50 border border-green-100 flex items-center justify-center flex-shrink-0">
+                          <CheckCircle className="w-5 h-5 text-green-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-base font-bold text-slate-900">{formatSRD(p.amount)}</p>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 text-orange-600 font-semibold">{TYPE_LABELS[p.payment_type] || p.payment_type}</span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-600 font-medium">{METHOD_LABELS[p.payment_method] || p.payment_method || 'Contant'}</span>
+                          </div>
+                          <div className="flex items-center gap-3 mt-1">
+                            <p className="text-xs text-slate-400">{dateStr}</p>
+                            {p.kwitantie_nummer && <p className="text-xs text-slate-300">{p.kwitantie_nummer}</p>}
+                            {p.covered_months?.length > 0 && <p className="text-xs text-slate-400">{p.covered_months.join(', ')}</p>}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-slate-100">
+              <button onClick={() => setShowHistory(false)} className="w-full py-3 rounded-2xl text-base font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 transition">
+                Sluiten
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
