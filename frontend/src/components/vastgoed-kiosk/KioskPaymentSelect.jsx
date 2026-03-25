@@ -121,7 +121,6 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                 </div>
                 <div className="text-left">
                   <p className="kiosk-body font-bold text-slate-900">Ander bedrag</p>
-                  <p className="kiosk-small text-slate-400 hidden sm:block">Voer zelf een bedrag in</p>
                 </div>
               </div>
             </button>
@@ -150,7 +149,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
         {/* Right - Keypad card (only when custom amount) */}
         {useCustomAmount && (
           <div className="kiosk-card flex-[2] flex flex-col min-w-0" style={{ padding: 'clamp(12px, 2vh, 28px) clamp(10px, 1.5vw, 24px)' }}>
-            <h4 className="kiosk-body font-bold text-slate-900" style={{ marginBottom: '0.3vh' }}>Bedrag invoeren</h4>
+            <h4 className="kiosk-subtitle font-bold text-slate-900" style={{ marginBottom: '0.3vh' }}>Bedrag invoeren</h4>
             <p className="kiosk-small text-slate-400" style={{ marginBottom: '1.5vh' }}>Totaal openstaand: {formatSRD(totalDebt)}</p>
             <div className="bg-slate-50 border-2 border-slate-200 rounded-lg" style={{ padding: 'clamp(8px, 1.5vh, 20px)', marginBottom: '2vh' }}>
               <p className="kiosk-small text-slate-400" style={{ marginBottom: '0.3vh' }}>SRD</p>
