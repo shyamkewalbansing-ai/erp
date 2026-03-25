@@ -223,7 +223,7 @@ export default function KioskLayout() {
           animate="center"
           exit="exit"
           transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="absolute inset-0 overflow-y-auto overflow-x-hidden scrollbar-hide"
+          className="absolute inset-0 overflow-hidden"
           style={{ paddingBottom: '12vh' }}
         >
           {renderStep()}

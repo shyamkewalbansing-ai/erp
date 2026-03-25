@@ -6,7 +6,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://kiosk-sumup-test.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://self-checkout-flow.preview.emergentagent.com')
 
 class TestKioskPinLogin:
     """Tests for PIN login on /vastgoed landing page"""

@@ -67,46 +67,55 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
   const restartCountdown = (s) => { setCountdown(s); timerRef.current = setInterval(() => { setCountdown(prev => { if (prev <= 1) { clearInterval(timerRef.current); onDone(); return 0; } return prev - 1; }); }, 1000); };
 
   return (
-    <div className="min-h-full bg-orange-500 flex flex-col md:flex-row relative overflow-hidden">
-{/* Left - Success card */}
-      <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 relative z-10 print:hidden">
-        <div className="bg-white rounded-lg shadow-sm p-10 sm:p-12 lg:p-14 max-w-md w-full text-center">
-          <div className="w-20 h-20 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-5 shadow-sm border border-green-100">
-            <CheckCircle className="w-10 h-10 text-green-500" />
-          </div>
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-2 tracking-tight">Betaling geslaagd!</h1>
-          <p className="text-base text-slate-400 mb-8">Kwitantie: {kwNr}</p>
+    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
+      {/* Header */}
+      <div className="flex items-center justify-center" style={{ height: '7vh' }}>
+        <span className="kiosk-subtitle text-white">Betaling voltooid</span>
+      </div>
 
-          <div className="mb-8">
-            {printStatus === 'waiting' && <p className="text-slate-400 flex items-center justify-center gap-2"><Printer className="w-4 h-4" /> Voorbereiden...</p>}
-            {printStatus === 'printing' && <p className="text-orange-500 flex items-center justify-center gap-2 animate-pulse"><Printer className="w-4 h-4" /> Afdrukken...</p>}
-            {printStatus === 'done' && <p className="text-green-500 flex items-center justify-center gap-2"><Check className="w-4 h-4" /> Afgedrukt{printMethod === 'server' ? ' (Server)' : ''}</p>}
-            {printStatus === 'error' && <p className="text-red-500 flex items-center justify-center gap-2"><AlertCircle className="w-4 h-4" /> Mislukt</p>}
+      {/* Content - two panels */}
+      <div className="flex-1 flex gap-[1vw] min-h-0" style={{ paddingBottom: '1.5vh' }}>
+        {/* Left - Success card */}
+        <div className="kiosk-card flex-1 flex flex-col items-center justify-center text-center min-w-0" style={{ padding: 'clamp(12px, 2vh, 32px) clamp(12px, 2vw, 40px)' }}>
+          <div className="rounded-full bg-green-50 flex items-center justify-center" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
+            <CheckCircle style={{ width: '4vh', height: '4vh' }} className="text-green-500" />
+          </div>
+          <h1 className="kiosk-title text-slate-900" style={{ marginBottom: '0.5vh' }}>Betaling geslaagd!</h1>
+          <p className="kiosk-body text-slate-400" style={{ marginBottom: '3vh' }}>Kwitantie: {kwNr}</p>
+
+          <div style={{ marginBottom: '3vh' }}>
+            {printStatus === 'waiting' && <p className="kiosk-body text-slate-400 flex items-center justify-center gap-2"><Printer style={{ width: '2vh', height: '2vh' }} /> Voorbereiden...</p>}
+            {printStatus === 'printing' && <p className="kiosk-body text-orange-500 flex items-center justify-center gap-2 animate-pulse"><Printer style={{ width: '2vh', height: '2vh' }} /> Afdrukken...</p>}
+            {printStatus === 'done' && <p className="kiosk-body text-green-500 flex items-center justify-center gap-2"><Check style={{ width: '2vh', height: '2vh' }} /> Afgedrukt{printMethod === 'server' ? ' (Server)' : ''}</p>}
+            {printStatus === 'error' && <p className="kiosk-body text-red-500 flex items-center justify-center gap-2"><AlertCircle style={{ width: '2vh', height: '2vh' }} /> Mislukt</p>}
           </div>
 
-          <div className="space-y-3">
-            <button onClick={handleManualPrint}
-              className="w-full py-4 px-6 rounded-2xl text-base font-bold flex items-center justify-center gap-2 bg-gradient-to-b from-slate-100 to-slate-200 hover:from-slate-200 hover:to-slate-300 text-slate-700 transition">
-              <Printer className="w-5 h-5" /> Opnieuw afdrukken
+          <div className="w-full" style={{ maxWidth: '20vw' }}>
+            <button onClick={handleManualPrint} data-testid="reprint-btn"
+              className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg flex items-center justify-center gap-2 transition kiosk-body font-bold"
+              style={{ padding: 'clamp(8px, 1.5vh, 20px)', marginBottom: '1vh' }}>
+              <Printer style={{ width: '2vh', height: '2vh' }} /> Opnieuw afdrukken
             </button>
-            <button onClick={onDone}
-              className="w-full py-4 px-6 rounded-2xl text-base font-bold flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/25 transition">
-              <Home className="w-5 h-5" /> Klaar
+            <button onClick={onDone} data-testid="receipt-done-btn"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-lg flex items-center justify-center gap-2 transition kiosk-body font-bold"
+              style={{ padding: 'clamp(8px, 1.5vh, 20px)' }}>
+              <Home style={{ width: '2vh', height: '2vh' }} /> Klaar
             </button>
           </div>
 
-          <div className="mt-8">
-            <div className="text-6xl font-extrabold text-slate-200">{countdown}</div>
-            <p className="text-xs text-slate-400 mt-2">Automatisch terug naar welkomscherm</p>
+          <div style={{ marginTop: '3vh' }}>
+            <div className="text-slate-200 font-extrabold" style={{ fontSize: 'clamp(32px, 6vh, 72px)' }}>{countdown}</div>
+            <p className="kiosk-small text-slate-400">Automatisch terug</p>
           </div>
+        </div>
+
+        {/* Right - Receipt preview */}
+        <div className="kiosk-card flex-1 flex items-center justify-center min-w-0 overflow-auto" style={{ padding: 'clamp(8px, 1vh, 16px)' }}>
+          <ReceiptTicket payment={payment} tenant={tenant} preview={true} stampData={stampData} />
         </div>
       </div>
 
-      {/* Right - Receipt */}
-      <div className="w-full md:w-1/2 bg-white/10 backdrop-blur-sm flex items-center justify-center overflow-auto p-6 print:hidden border-l border-white/10">
-        <ReceiptTicket payment={payment} tenant={tenant} preview={true} stampData={stampData} />
-      </div>
-
+      {/* Hidden print elements */}
       <div className="print-receipt-content" style={{ display: 'none' }}>
         <ReceiptTicket payment={payment} tenant={tenant} preview={false} stampData={stampData} />
       </div>

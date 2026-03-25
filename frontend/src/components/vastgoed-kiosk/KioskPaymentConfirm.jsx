@@ -13,7 +13,7 @@ const TYPE_LABELS = { rent: 'Huur', partial_rent: 'Gedeeltelijke betaling', serv
 export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuccess, companyId }) {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [payMethod, setPayMethod] = useState(null); // null = choose, 'cash', 'card', 'mope'
+  const [payMethod, setPayMethod] = useState(null);
   const [sumupEnabled, setSumupEnabled] = useState(false);
   const [sumupCurrency, setSumupCurrency] = useState('EUR');
   const [sumupExchangeRate, setSumupExchangeRate] = useState(1);
@@ -22,28 +22,21 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   const [checkoutId, setCheckoutId] = useState(null);
   const widgetMounted = useRef(false);
   const pollRef = useRef(null);
-  // Mope state
   const [mopeEnabled, setMopeEnabled] = useState(false);
   const [mopeLoading, setMopeLoading] = useState(true);
-  const [mopeStatus, setMopeStatus] = useState('idle'); // idle, creating, qr, polling, done, error
+  const [mopeStatus, setMopeStatus] = useState('idle');
   const [mopePaymentUrl, setMopePaymentUrl] = useState('');
   const [mopePaymentId, setMopePaymentId] = useState(null);
   const mopePollRef = useRef(null);
 
-  // Check if SumUp is enabled
   useEffect(() => {
     if (!companyId) return;
     axios.get(`${API}/public/${companyId}/sumup/enabled`)
-      .then(res => { 
-        setSumupEnabled(res.data.enabled); 
-        setSumupCurrency(res.data.currency || 'EUR'); 
-        setSumupExchangeRate(res.data.exchange_rate || 1);
-      })
+      .then(res => { setSumupEnabled(res.data.enabled); setSumupCurrency(res.data.currency || 'EUR'); setSumupExchangeRate(res.data.exchange_rate || 1); })
       .catch(() => {})
       .finally(() => setSumupLoading(false));
   }, [companyId]);
 
-  // Check if Mope is enabled
   useEffect(() => {
     if (!companyId) return;
     axios.get(`${API}/public/${companyId}/mope/enabled`)
@@ -52,9 +45,8 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
       .finally(() => setMopeLoading(false));
   }, [companyId]);
 
-  // Cleanup polling on unmount
   useEffect(() => {
-    return () => { 
+    return () => {
       if (pollRef.current) clearInterval(pollRef.current);
       if (mopePollRef.current) clearInterval(mopePollRef.current);
     };
@@ -77,26 +69,17 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   const handleCardPayment = async () => {
     setCardStatus('creating'); setError('');
     try {
-      // Create SumUp checkout
       const res = await axios.post(`${API}/public/${companyId}/sumup/checkout`, {
         amount: paymentData.amount,
         description: paymentData.description || TYPE_LABELS[paymentData.payment_type],
         tenant_id: tenant.tenant_id,
         payment_type: paymentData.payment_type,
       });
-
       const chkId = res.data.checkout_id;
       setCheckoutId(chkId);
       setCardStatus('widget');
-
-      // Load SumUp SDK and mount widget
       await loadSumUpSDK();
-      
-      setTimeout(() => {
-        if (!widgetMounted.current) {
-          mountSumUpWidget(chkId);
-        }
-      }, 500);
+      setTimeout(() => { if (!widgetMounted.current) mountSumUpWidget(chkId); }, 500);
     } catch (err) {
       setError(err.response?.data?.detail || 'Kon SumUp checkout niet aanmaken');
       setCardStatus('error');
@@ -112,7 +95,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
       script.id = 'sumup-sdk';
       script.src = 'https://gateway.sumup.com/gateway/ecom/card/v2/sdk.js';
       script.onload = () => resolve();
-      script.onerror = () => resolve(); // still try
+      script.onerror = () => resolve();
       document.head.appendChild(script);
     });
   };
@@ -120,33 +103,19 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   const mountSumUpWidget = (chkId) => {
     if (widgetMounted.current) return;
     widgetMounted.current = true;
-    
     const container = document.getElementById('sumup-card-container');
     if (!container) { setError('Widget container niet gevonden'); setCardStatus('error'); return; }
-
     if (window.SumUpCard) {
       try {
-        const card = window.SumUpCard.mount({
-          id: 'sumup-card-container',
-          checkoutId: chkId,
+        window.SumUpCard.mount({
+          id: 'sumup-card-container', checkoutId: chkId,
           onResponse: (type, body) => {
-            if (type === 'success' || body?.status === 'PAID') {
-              handleCardSuccess();
-            } else if (type === 'error') {
-              setError('Kaartbetaling mislukt. Probeer opnieuw.');
-              setCardStatus('error');
-              widgetMounted.current = false;
-            }
+            if (type === 'success' || body?.status === 'PAID') { handleCardSuccess(); }
+            else if (type === 'error') { setError('Kaartbetaling mislukt.'); setCardStatus('error'); widgetMounted.current = false; }
           },
         });
-      } catch (e) {
-        // If SDK mount fails, fall back to polling
-        startPolling(chkId);
-      }
-    } else {
-      // SDK not loaded, fall back to polling
-      startPolling(chkId);
-    }
+      } catch { startPolling(chkId); }
+    } else { startPolling(chkId); }
   };
 
   const startPolling = (chkId) => {
@@ -154,22 +123,11 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
     let attempts = 0;
     pollRef.current = setInterval(async () => {
       attempts++;
-      if (attempts > 120) { // 2 min timeout
-        clearInterval(pollRef.current);
-        setError('Betaling timeout. Probeer opnieuw.');
-        setCardStatus('error');
-        return;
-      }
+      if (attempts > 120) { clearInterval(pollRef.current); setError('Betaling timeout.'); setCardStatus('error'); return; }
       try {
         const res = await axios.get(`${API}/public/${companyId}/sumup/checkout/${chkId}/status`);
-        if (res.data.status === 'PAID') {
-          clearInterval(pollRef.current);
-          handleCardSuccess();
-        } else if (res.data.status === 'FAILED') {
-          clearInterval(pollRef.current);
-          setError('Kaartbetaling mislukt.');
-          setCardStatus('error');
-        }
+        if (res.data.status === 'PAID') { clearInterval(pollRef.current); handleCardSuccess(); }
+        else if (res.data.status === 'FAILED') { clearInterval(pollRef.current); setError('Kaartbetaling mislukt.'); setCardStatus('error'); }
       } catch {}
     }, 2000);
   };
@@ -184,12 +142,9 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
         rent_month: paymentData.rent_month || null,
       });
       setTimeout(() => onSuccess(res.data), 1000);
-    } catch {
-      setError('Betaling geregistreerd bij SumUp maar opslaan mislukt.');
-    }
+    } catch { setError('Betaling geregistreerd bij SumUp maar opslaan mislukt.'); }
   };
 
-  // ============== MOPE FUNCTIONS ==============
   const handleMopePayment = async () => {
     setMopeStatus('creating'); setError('');
     try {
@@ -202,7 +157,6 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
       setMopePaymentId(res.data.payment_id);
       setMopePaymentUrl(res.data.payment_url);
       setMopeStatus('qr');
-      // Start polling for payment status
       startMopePolling(res.data.payment_id);
     } catch (err) {
       setError(err.response?.data?.detail || 'Kon Mope betaalverzoek niet aanmaken');
@@ -214,18 +168,10 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
     let attempts = 0;
     mopePollRef.current = setInterval(async () => {
       attempts++;
-      if (attempts > 180) { // 6 min timeout (payment requests last 1 day but don't wait forever)
-        clearInterval(mopePollRef.current);
-        setError('Betaling timeout. Probeer opnieuw.');
-        setMopeStatus('error');
-        return;
-      }
+      if (attempts > 180) { clearInterval(mopePollRef.current); setError('Betaling timeout.'); setMopeStatus('error'); return; }
       try {
         const res = await axios.get(`${API}/public/${companyId}/mope/status/${payId}`);
-        if (res.data.status === 'paid') {
-          clearInterval(mopePollRef.current);
-          handleMopeSuccess();
-        }
+        if (res.data.status === 'paid') { clearInterval(mopePollRef.current); handleMopeSuccess(); }
       } catch {}
     }, 2000);
   };
@@ -240,61 +186,57 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
         rent_month: paymentData.rent_month || null,
       });
       setTimeout(() => onSuccess(res.data), 1000);
-    } catch {
-      setError('Betaling geregistreerd bij Mope maar opslaan mislukt.');
-    }
+    } catch { setError('Betaling geregistreerd bij Mope maar opslaan mislukt.'); }
   };
 
-  // Choose method screen
+  // ====== CHOOSE METHOD SCREEN ======
   if (!payMethod) {
     return (
-      <div className="min-h-full bg-orange-500 flex flex-col items-center justify-center relative overflow-hidden">
-<div className="absolute top-5 left-8 z-20">
-          <button onClick={onBack} className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
-            <ArrowLeft className="w-5 h-5" /><span>Terug</span>
+      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
+        <div className="flex items-center justify-between" style={{ height: '7vh', padding: '0 0.5vw' }}>
+          <button onClick={onBack} className="flex items-center gap-2 text-white font-bold opacity-80 hover:opacity-100 transition" data-testid="back-btn-confirm">
+            <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
+            <span className="kiosk-body">Terug</span>
           </button>
+          <div className="text-white text-center">
+            <span className="kiosk-subtitle">Hoe wilt u betalen?</span>
+            <span className="kiosk-body opacity-70 ml-3">{formatSRD(paymentData.amount)}</span>
+          </div>
+          <div style={{ width: '6vw' }} />
         </div>
-
-        <div className="relative z-10 text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">Hoe wilt u betalen?</h1>
-          <p className="text-white/70 mt-2 text-lg">{formatSRD(paymentData.amount)}</p>
-        </div>
-
-        <div className="relative z-10 flex flex-col sm:flex-row gap-5 px-6 w-full max-w-3xl flex-wrap justify-center">
-          {/* Cash option */}
+        <div className="flex-1 flex gap-[1vw] min-h-0" style={{ paddingBottom: '1.5vh' }}>
+          {/* Cash */}
           <button onClick={() => setPayMethod('cash')} data-testid="pay-method-cash"
-            className="flex-1 min-w-[200px] bg-white rounded-lg shadow-sm p-8 sm:p-10 flex flex-col items-center text-center hover:scale-[1.02] transition active:scale-[0.98]">
-            <div className="w-20 h-20 rounded-2xl bg-green-50 flex items-center justify-center mb-5 shadow-sm border border-green-100">
-              <Banknote className="w-10 h-10 text-green-500" />
+            className="kiosk-card flex-1 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition active:scale-[0.98] cursor-pointer min-w-0">
+            <div className="rounded-lg bg-green-50 flex items-center justify-center" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
+              <Banknote style={{ width: '4vh', height: '4vh' }} className="text-green-500" />
             </div>
-            <p className="text-2xl font-extrabold text-slate-900 mb-2">Contant</p>
-            <p className="text-sm text-slate-400">Betaal met contant geld</p>
+            <p className="kiosk-subtitle text-slate-900" style={{ marginBottom: '0.5vh' }}>Contant</p>
+            <p className="kiosk-small text-slate-400">Betaal met contant geld</p>
           </button>
-
-          {/* Mope option */}
+          {/* Mope */}
           {!mopeLoading && mopeEnabled && (
             <button onClick={() => { setPayMethod('mope'); handleMopePayment(); }} data-testid="pay-method-mope"
-              className="flex-1 min-w-[200px] bg-white rounded-lg shadow-sm p-8 sm:p-10 flex flex-col items-center text-center hover:scale-[1.02] transition active:scale-[0.98]">
-              <div className="w-20 h-20 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5 shadow-sm border border-emerald-100">
-                <QrCode className="w-10 h-10 text-emerald-600" />
+              className="kiosk-card flex-1 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition active:scale-[0.98] cursor-pointer min-w-0">
+              <div className="rounded-lg bg-emerald-50 flex items-center justify-center" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
+                <QrCode style={{ width: '4vh', height: '4vh' }} className="text-emerald-600" />
               </div>
-              <p className="text-2xl font-extrabold text-slate-900 mb-2">Mope</p>
-              <p className="text-sm text-slate-400">Scan QR-code met Mope app</p>
-              <p className="text-xs text-emerald-600 font-semibold mt-1">{formatSRD(paymentData.amount)}</p>
+              <p className="kiosk-subtitle text-slate-900" style={{ marginBottom: '0.5vh' }}>Mope</p>
+              <p className="kiosk-small text-slate-400">Scan QR-code met Mope app</p>
+              <p className="kiosk-small text-emerald-600 font-semibold" style={{ marginTop: '0.5vh' }}>{formatSRD(paymentData.amount)}</p>
             </button>
           )}
-
-          {/* Card option */}
+          {/* Card/SumUp */}
           {!sumupLoading && sumupEnabled && (
             <button onClick={() => { setPayMethod('card'); handleCardPayment(); }} data-testid="pay-method-card"
-              className="flex-1 min-w-[200px] bg-white rounded-lg shadow-sm p-8 sm:p-10 flex flex-col items-center text-center hover:scale-[1.02] transition active:scale-[0.98]">
-              <div className="w-20 h-20 rounded-2xl bg-blue-50 flex items-center justify-center mb-5 shadow-sm border border-blue-100">
-                <CreditCard className="w-10 h-10 text-blue-500" />
+              className="kiosk-card flex-1 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition active:scale-[0.98] cursor-pointer min-w-0">
+              <div className="rounded-lg bg-blue-50 flex items-center justify-center" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
+                <CreditCard style={{ width: '4vh', height: '4vh' }} className="text-blue-500" />
               </div>
-              <p className="text-2xl font-extrabold text-slate-900 mb-2">Pinpas</p>
-              <p className="text-sm text-slate-400">Betaal met pinpas via SumUp</p>
+              <p className="kiosk-subtitle text-slate-900" style={{ marginBottom: '0.5vh' }}>Pinpas</p>
+              <p className="kiosk-small text-slate-400">Betaal met pinpas via SumUp</p>
               {sumupExchangeRate > 1 && (
-                <p className="text-xs text-blue-600 font-semibold mt-1 whitespace-nowrap">
+                <p className="kiosk-small text-blue-600 font-semibold whitespace-nowrap" style={{ marginTop: '0.5vh' }}>
                   {formatSRD(paymentData.amount)} = {sumupCurrency} {(paymentData.amount / sumupExchangeRate).toFixed(2)}
                 </p>
               )}
@@ -305,197 +247,175 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
     );
   }
 
-  // Cash confirmation screen
+  // ====== CASH CONFIRMATION ======
   if (payMethod === 'cash') {
     return (
-      <div className="h-full bg-orange-500 flex flex-col items-center justify-center relative overflow-hidden">
-<div className="absolute top-5 left-8 z-20">
-          <button onClick={() => setPayMethod(null)} disabled={processing} className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm disabled:opacity-50">
-            <ArrowLeft className="w-5 h-5" /><span>Terug</span>
+      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
+        <div className="flex items-center" style={{ height: '7vh', padding: '0 0.5vw' }}>
+          <button onClick={() => setPayMethod(null)} disabled={processing}
+            className="flex items-center gap-2 text-white font-bold opacity-80 hover:opacity-100 transition disabled:opacity-50">
+            <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
+            <span className="kiosk-body">Terug</span>
           </button>
         </div>
-
-        <div className="relative z-10 text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">Bevestig contante betaling</h1>
-        </div>
-
-        <div className="relative z-10 bg-white rounded-lg shadow-sm p-8 sm:p-10 lg:p-12 w-full max-w-lg mx-6">
-          <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl p-8 sm:p-10 text-center mb-6 shadow-xl shadow-orange-500/20">
-            <p className="text-orange-100 text-base mb-2">Te betalen bedrag</p>
-            <p className="text-4xl sm:text-5xl font-extrabold text-white mb-3 tracking-tight whitespace-nowrap" data-testid="confirm-amount">{formatSRD(paymentData.amount)}</p>
-            <div className="flex items-center justify-center gap-2 text-orange-100 text-sm">
-              <Banknote className="w-5 h-5" /><span>{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
+        <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
+          <div className="kiosk-card flex flex-col items-center text-center" style={{ width: 'clamp(300px, 35vw, 520px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
+            <div className="bg-orange-500 rounded-lg w-full text-center" style={{ padding: 'clamp(12px, 2vh, 28px)', marginBottom: '2vh' }}>
+              <p className="kiosk-small text-orange-100" style={{ marginBottom: '0.5vh' }}>Te betalen bedrag</p>
+              <p className="kiosk-amount-lg text-white whitespace-nowrap" data-testid="confirm-amount">{formatSRD(paymentData.amount)}</p>
+              <div className="flex items-center justify-center gap-2 text-orange-100 kiosk-small" style={{ marginTop: '0.5vh' }}>
+                <Banknote style={{ width: '2vh', height: '2vh' }} />
+                <span>{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
+              </div>
             </div>
+
+            <div className="flex items-center gap-3 w-full bg-slate-50 rounded-lg" style={{ padding: 'clamp(8px, 1.2vh, 18px) clamp(10px, 1vw, 16px)', marginBottom: '2vh' }}>
+              <div className="rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0" style={{ width: '4vh', height: '4vh' }}>
+                <User style={{ width: '2vh', height: '2vh' }} className="text-orange-500" />
+              </div>
+              <div className="text-left">
+                <p className="kiosk-body font-bold text-slate-900">{tenant.name}</p>
+                <p className="kiosk-small text-slate-400">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
+              </div>
+            </div>
+
+            {error && <div className="kiosk-body w-full bg-red-50 border border-red-200 text-red-600 rounded-lg text-center font-semibold" style={{ padding: '1vh', marginBottom: '1.5vh' }}>{error}</div>}
+
+            <button onClick={handleCashPayment} disabled={processing} data-testid="confirm-payment-btn"
+              className="w-full bg-green-500 hover:bg-green-600 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-lg flex items-center justify-center gap-2 transition active:scale-[0.98]"
+              style={{ padding: 'clamp(12px, 2vh, 24px)', fontSize: 'clamp(14px, 2vh, 22px)', fontWeight: 700 }}>
+              {processing ? (<><Loader2 style={{ width: '2.5vh', height: '2.5vh' }} className="animate-spin" /><span>Verwerken...</span></>) : (<><CheckCircle style={{ width: '2.5vh', height: '2.5vh' }} /><span>Bevestig betaling</span></>)}
+            </button>
+            <p className="kiosk-small text-slate-400" style={{ marginTop: '1vh' }}>Contant bedrag is ontvangen</p>
           </div>
-
-          <div className="flex items-center gap-4 p-4 sm:p-5 rounded-2xl bg-gradient-to-b from-slate-50 to-slate-100/50 border border-slate-100 mb-5">
-            <div className="w-12 h-12 rounded-xl bg-orange-100 text-orange-500 flex items-center justify-center flex-shrink-0 shadow-sm">
-              <User className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="text-base sm:text-lg font-bold text-slate-900">{tenant.name}</p>
-              <p className="text-sm text-slate-400">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
-            </div>
-          </div>
-
-          {error && <div className="mb-5 p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-center font-semibold">{error}</div>}
-
-          <button onClick={handleCashPayment} disabled={processing} data-testid="confirm-payment-btn"
-            className="w-full py-5 sm:py-6 px-8 rounded-2xl text-xl font-bold flex items-center justify-center gap-3 transition bg-green-500 hover:bg-green-600 disabled:bg-slate-200 disabled:text-slate-400 text-white shadow-xl shadow-green-500/25 active:scale-[0.98]">
-            {processing ? (<><Loader2 className="w-6 h-6 animate-spin" /><span>Verwerken...</span></>) : (<><CheckCircle className="w-6 h-6" /><span>Bevestig betaling</span></>)}
-          </button>
-          <p className="text-center text-slate-400 text-sm mt-4">Contant bedrag is ontvangen</p>
         </div>
       </div>
     );
   }
 
-  // Mope QR code payment screen
+  // ====== MOPE QR CODE ======
   if (payMethod === 'mope') {
     return (
-      <div className="h-full bg-orange-500 flex flex-col items-center justify-center relative overflow-hidden">
-<div className="absolute top-5 left-8 z-20">
+      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
+        <div className="flex items-center" style={{ height: '7vh', padding: '0 0.5vw' }}>
           <button onClick={() => { setPayMethod(null); setMopeStatus('idle'); setError(''); if (mopePollRef.current) clearInterval(mopePollRef.current); }}
-            className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
-            <ArrowLeft className="w-5 h-5" /><span>Terug</span>
+            className="flex items-center gap-2 text-white font-bold opacity-80 hover:opacity-100 transition">
+            <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
+            <span className="kiosk-body">Terug</span>
           </button>
         </div>
-
-        <div className="relative z-10 text-center mb-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">Mope Betaling</h1>
-          <p className="text-white/70 mt-2 text-lg whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
+        <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
+          <div className="kiosk-card flex flex-col items-center text-center" style={{ width: 'clamp(300px, 35vw, 520px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
+            {mopeStatus === 'creating' && (
+              <div className="text-center" style={{ padding: '4vh 0' }}>
+                <Loader2 className="text-emerald-500 animate-spin mx-auto" style={{ width: '5vh', height: '5vh', marginBottom: '2vh' }} />
+                <p className="kiosk-subtitle text-slate-900">Betaalverzoek aanmaken...</p>
+                <p className="kiosk-small text-slate-400" style={{ marginTop: '0.5vh' }}>Even geduld</p>
+              </div>
+            )}
+            {mopeStatus === 'qr' && mopePaymentUrl && (
+              <div className="text-center" data-testid="mope-qr-screen">
+                <div className="bg-emerald-500 rounded-lg w-full text-center" style={{ padding: 'clamp(8px, 1.5vh, 20px)', marginBottom: '2vh' }}>
+                  <QrCode className="text-white mx-auto" style={{ width: '3vh', height: '3vh', marginBottom: '0.5vh' }} />
+                  <p className="kiosk-amount-md text-white whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
+                  <p className="kiosk-small text-emerald-100" style={{ marginTop: '0.3vh' }}>{tenant.name} · Appt. {tenant.apartment_number}</p>
+                </div>
+                <div className="bg-white border-2 border-emerald-200 rounded-lg inline-block" style={{ padding: 'clamp(8px, 1.5vh, 20px)', marginBottom: '2vh' }} data-testid="mope-qr-code">
+                  <QRCodeSVG value={mopePaymentUrl} size={Math.min(220, window.innerHeight * 0.25)} level="H" includeMargin={true} bgColor="#ffffff" fgColor="#000000" />
+                </div>
+                <p className="kiosk-body font-bold text-slate-900" style={{ marginBottom: '0.3vh' }}>Scan met uw Mope app</p>
+                <p className="kiosk-small text-slate-400" style={{ marginBottom: '2vh' }}>Open de Mope app en scan deze QR-code</p>
+                <div className="flex items-center justify-center gap-2 text-emerald-500 animate-pulse">
+                  <Smartphone style={{ width: '2vh', height: '2vh' }} />
+                  <p className="kiosk-body font-semibold">Wacht op betaling...</p>
+                </div>
+              </div>
+            )}
+            {mopeStatus === 'done' && (
+              <div className="text-center" style={{ padding: '4vh 0' }}>
+                <div className="rounded-full bg-green-50 flex items-center justify-center mx-auto" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
+                  <CheckCircle style={{ width: '4vh', height: '4vh' }} className="text-green-500" />
+                </div>
+                <p className="kiosk-title text-green-700">Betaling geslaagd!</p>
+                <p className="kiosk-small text-slate-400" style={{ marginTop: '0.5vh' }}>Kwitantie wordt afgedrukt...</p>
+              </div>
+            )}
+            {mopeStatus === 'error' && (
+              <div className="text-center" style={{ padding: '3vh 0' }}>
+                {error && <div className="kiosk-body bg-red-50 border border-red-200 text-red-600 rounded-lg text-center font-semibold" style={{ padding: '1vh', marginBottom: '2vh' }}>{error}</div>}
+                <button onClick={() => { setMopeStatus('idle'); setError(''); handleMopePayment(); }} data-testid="mope-retry-btn"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg kiosk-btn-text transition"
+                  style={{ padding: 'clamp(10px, 1.8vh, 24px) clamp(20px, 3vw, 48px)' }}>
+                  Opnieuw proberen
+                </button>
+              </div>
+            )}
+          </div>
         </div>
+      </div>
+    );
+  }
 
-        <div className="relative z-10 bg-white rounded-lg shadow-sm p-8 sm:p-10 lg:p-12 w-full max-w-lg mx-6">
-          {mopeStatus === 'creating' && (
-            <div className="text-center py-8">
-              <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mx-auto mb-4" />
-              <p className="text-lg font-bold text-slate-900">Betaalverzoek aanmaken...</p>
-              <p className="text-sm text-slate-400 mt-1">Even geduld</p>
+  // ====== CARD PAYMENT (SUMUP) ======
+  return (
+    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
+      <div className="flex items-center" style={{ height: '7vh', padding: '0 0.5vw' }}>
+        <button onClick={() => { setPayMethod(null); setCardStatus('idle'); setError(''); widgetMounted.current = false; if (pollRef.current) clearInterval(pollRef.current); }}
+          className="flex items-center gap-2 text-white font-bold opacity-80 hover:opacity-100 transition">
+          <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
+          <span className="kiosk-body">Terug</span>
+        </button>
+      </div>
+      <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
+        <div className="kiosk-card flex flex-col items-center text-center" style={{ width: 'clamp(300px, 35vw, 520px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
+          {cardStatus === 'creating' && (
+            <div className="text-center" style={{ padding: '4vh 0' }}>
+              <Loader2 className="text-orange-500 animate-spin mx-auto" style={{ width: '5vh', height: '5vh', marginBottom: '2vh' }} />
+              <p className="kiosk-subtitle text-slate-900">Checkout aanmaken...</p>
+              <p className="kiosk-small text-slate-400" style={{ marginTop: '0.5vh' }}>Even geduld</p>
             </div>
           )}
-
-          {mopeStatus === 'qr' && mopePaymentUrl && (
-            <div className="text-center" data-testid="mope-qr-screen">
-              <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-2xl p-5 text-center mb-6 shadow-lg">
-                <QrCode className="w-8 h-8 text-white mx-auto mb-2" />
-                <p className="text-2xl font-extrabold text-white whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
-                <p className="text-emerald-100 text-sm mt-1">{tenant.name} · Appt. {tenant.apartment_number}</p>
+          {(cardStatus === 'widget' || cardStatus === 'polling') && (
+            <div className="text-center w-full">
+              <div className="bg-blue-500 rounded-lg w-full text-center" style={{ padding: 'clamp(10px, 1.8vh, 24px)', marginBottom: '2vh' }}>
+                <CreditCard className="text-white mx-auto" style={{ width: '3.5vh', height: '3.5vh', marginBottom: '0.5vh' }} />
+                <p className="kiosk-amount-md text-white whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
+                {sumupExchangeRate > 1 && (
+                  <p className="kiosk-body text-blue-100 whitespace-nowrap" style={{ marginTop: '0.3vh' }}>
+                    = {sumupCurrency} {(paymentData.amount / sumupExchangeRate).toFixed(2)}
+                  </p>
+                )}
+                <p className="kiosk-small text-blue-100" style={{ marginTop: '0.3vh' }}>{tenant.name} · Appt. {tenant.apartment_number}</p>
               </div>
-
-              <div className="bg-white border-2 border-emerald-200 rounded-2xl p-6 mb-5 inline-block" data-testid="mope-qr-code">
-                <QRCodeSVG 
-                  value={mopePaymentUrl} 
-                  size={220} 
-                  level="H"
-                  includeMargin={true}
-                  bgColor="#ffffff"
-                  fgColor="#000000"
-                />
-              </div>
-
-              <p className="text-lg font-bold text-slate-900 mb-1">Scan met uw Mope app</p>
-              <p className="text-sm text-slate-400 mb-4">Open de Mope app en scan deze QR-code om te betalen</p>
-
-              <div className="flex items-center justify-center gap-3 text-emerald-500 py-3 animate-pulse">
-                <Smartphone className="w-5 h-5" />
-                <p className="text-base font-semibold">Wacht op betaling...</p>
-              </div>
+              <div id="sumup-card-container" style={{ minHeight: '20vh', marginBottom: '1.5vh' }} />
+              {cardStatus === 'polling' && (
+                <div className="flex items-center justify-center gap-2 text-orange-500">
+                  <Wifi style={{ width: '2vh', height: '2vh' }} className="animate-pulse" />
+                  <p className="kiosk-body font-semibold">Wacht op kaartbetaling...</p>
+                </div>
+              )}
             </div>
           )}
-
-          {mopeStatus === 'done' && (
-            <div className="text-center py-8">
-              <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-500" />
+          {cardStatus === 'done' && (
+            <div className="text-center" style={{ padding: '4vh 0' }}>
+              <div className="rounded-full bg-green-50 flex items-center justify-center mx-auto" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
+                <CheckCircle style={{ width: '4vh', height: '4vh' }} className="text-green-500" />
               </div>
-              <p className="text-xl font-extrabold text-green-700">Betaling geslaagd!</p>
-              <p className="text-sm text-slate-400 mt-1">Kwitantie wordt afgedrukt...</p>
+              <p className="kiosk-title text-green-700">Betaling geslaagd!</p>
+              <p className="kiosk-small text-slate-400" style={{ marginTop: '0.5vh' }}>Kwitantie wordt afgedrukt...</p>
             </div>
           )}
-
-          {mopeStatus === 'error' && (
-            <div className="text-center py-6">
-              {error && <div className="mb-5 p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-center font-semibold">{error}</div>}
-              <button onClick={() => { setMopeStatus('idle'); setError(''); handleMopePayment(); }}
-                className="px-8 py-4 rounded-2xl text-lg font-bold bg-emerald-500 hover:bg-emerald-600 text-white shadow-xl shadow-emerald-500/30 transition" data-testid="mope-retry-btn">
+          {cardStatus === 'error' && (
+            <div className="text-center" style={{ padding: '3vh 0' }}>
+              {error && <div className="kiosk-body bg-red-50 border border-red-200 text-red-600 rounded-lg text-center font-semibold" style={{ padding: '1vh', marginBottom: '2vh' }}>{error}</div>}
+              <button onClick={() => { setCardStatus('idle'); setError(''); widgetMounted.current = false; handleCardPayment(); }}
+                className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg kiosk-btn-text transition"
+                style={{ padding: 'clamp(10px, 1.8vh, 24px) clamp(20px, 3vw, 48px)' }}>
                 Opnieuw proberen
               </button>
             </div>
           )}
         </div>
-      </div>
-    );
-  }
-
-  // Card payment screen (SumUp)
-  return (
-    <div className="h-full bg-orange-500 flex flex-col items-center justify-center relative overflow-hidden">
-<div className="absolute top-5 left-8 z-20">
-        <button onClick={() => { setPayMethod(null); setCardStatus('idle'); setError(''); widgetMounted.current = false; if (pollRef.current) clearInterval(pollRef.current); }}
-          className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
-          <ArrowLeft className="w-5 h-5" /><span>Terug</span>
-        </button>
-      </div>
-
-      <div className="relative z-10 text-center mb-8">
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight drop-shadow-lg">Pinbetaling</h1>
-        <p className="text-white/70 mt-2 text-lg whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
-      </div>
-
-      <div className="relative z-10 bg-white rounded-lg shadow-sm p-8 sm:p-10 lg:p-12 w-full max-w-lg mx-6">
-        {cardStatus === 'creating' && (
-          <div className="text-center py-8">
-            <Loader2 className="w-12 h-12 text-orange-500 animate-spin mx-auto mb-4" />
-            <p className="text-lg font-bold text-slate-900">Checkout aanmaken...</p>
-            <p className="text-sm text-slate-400 mt-1">Even geduld</p>
-          </div>
-        )}
-
-        {(cardStatus === 'widget' || cardStatus === 'polling') && (
-          <div className="text-center">
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-center mb-6 shadow-lg">
-              <CreditCard className="w-10 h-10 text-white mx-auto mb-3" />
-              <p className="text-2xl font-extrabold text-white whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
-              {sumupExchangeRate > 1 && (
-                <p className="text-lg font-bold text-blue-100 mt-1 whitespace-nowrap">
-                  = {sumupCurrency} {(paymentData.amount / sumupExchangeRate).toFixed(2)}
-                </p>
-              )}
-              <p className="text-blue-100 text-sm mt-1">{tenant.name} · Appt. {tenant.apartment_number}</p>
-            </div>
-            
-            {/* SumUp widget container */}
-            <div id="sumup-card-container" className="mb-4 min-h-[200px]" />
-            
-            {cardStatus === 'polling' && (
-              <div className="flex items-center justify-center gap-3 text-orange-500 py-4">
-                <Wifi className="w-5 h-5 animate-pulse" />
-                <p className="text-base font-semibold">Wacht op kaartbetaling...</p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {cardStatus === 'done' && (
-          <div className="text-center py-8">
-            <div className="w-16 h-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-500" />
-            </div>
-            <p className="text-xl font-extrabold text-green-700">Betaling geslaagd!</p>
-            <p className="text-sm text-slate-400 mt-1">Kwitantie wordt afgedrukt...</p>
-          </div>
-        )}
-
-        {cardStatus === 'error' && (
-          <div className="text-center py-6">
-            {error && <div className="mb-5 p-4 bg-red-50 border border-red-200 text-red-600 rounded-2xl text-center font-semibold">{error}</div>}
-            <button onClick={() => { setCardStatus('idle'); setError(''); widgetMounted.current = false; handleCardPayment(); }}
-              className="px-8 py-4 rounded-2xl text-lg font-bold bg-orange-500 hover:bg-orange-600 text-white shadow-xl shadow-orange-500/30 transition">
-              Opnieuw proberen
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

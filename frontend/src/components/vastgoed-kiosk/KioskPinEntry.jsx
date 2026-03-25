@@ -51,56 +51,63 @@ export default function KioskPinEntry({ companyId, companyName, onSuccess, onBac
   };
 
   return (
-    <div className="min-h-full bg-orange-500 flex flex-col items-center justify-center relative overflow-hidden">
-{onBack && (
-        <div className="absolute top-5 left-8 z-20">
-          <button onClick={onBack} className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
-            <ArrowLeft className="w-5 h-5" /><span>Terug</span>
+    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between" style={{ height: '7vh', padding: '0 0.5vw' }}>
+        {onBack && (
+          <button onClick={onBack} className="flex items-center gap-2 text-white font-bold opacity-80 hover:opacity-100 transition" data-testid="pin-back-btn">
+            <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
+            <span className="kiosk-body">Terug</span>
           </button>
+        )}
+        <div className="flex items-center gap-2 text-white">
+          <Building2 style={{ width: '2.5vh', height: '2.5vh' }} />
+          <span className="kiosk-subtitle">{companyName || 'Kiosk'}</span>
         </div>
-      )}
+        <div style={{ width: '6vw' }} />
+      </div>
 
-      <div className="relative z-10 bg-white rounded-lg shadow-sm p-10 sm:p-12 lg:p-14 w-full max-w-md mx-6">
-        <div className="flex items-center gap-4 mb-8">
-          <div className="w-14 h-14 rounded-2xl bg-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
-            <Building2 className="w-7 h-7 text-white" />
+      {/* Content */}
+      <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
+        <div className="kiosk-card flex flex-col items-center" style={{ width: 'clamp(280px, 30vw, 440px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2.5vw, 48px)' }}>
+          <h2 className="kiosk-title text-slate-900" style={{ marginBottom: '0.5vh' }}>Voer PIN in</h2>
+          <p className="kiosk-body text-slate-400" style={{ marginBottom: '3vh' }}>4-cijferige toegangscode</p>
+
+          {/* PIN dots */}
+          <div className="flex justify-center" style={{ gap: '1.2vw', marginBottom: '2vh' }}>
+            {pin.map((digit, index) => (
+              <input key={index} ref={inputRefs[index]} type="password" inputMode="numeric" maxLength={1}
+                value={digit} onChange={(e) => handlePinChange(index, e.target.value)} onKeyDown={(e) => handleKeyDown(index, e)}
+                className={`text-center font-bold rounded-lg border-2 transition-all outline-none ${
+                  error ? 'border-red-400 bg-red-50' : digit ? 'border-orange-500 bg-orange-50' : 'border-slate-200 bg-slate-50 focus:border-orange-500'
+                }`}
+                style={{ width: 'clamp(40px, 5vw, 72px)', height: 'clamp(48px, 7vh, 80px)', fontSize: 'clamp(18px, 2.5vh, 32px)' }}
+                disabled={loading}
+                data-testid={`pin-input-${index}`} />
+            ))}
           </div>
-          <div>
-            <p className="text-xl font-bold text-slate-900">{companyName || 'Kiosk'}</p>
-            <p className="text-sm text-slate-400">Beveiligde toegang</p>
+
+          {error && <p className="kiosk-body text-red-500 text-center font-semibold" style={{ marginBottom: '1.5vh' }}>{error}</p>}
+
+          {/* Keypad */}
+          <div className="grid grid-cols-3 w-full" style={{ gap: 'clamp(4px, 0.6vh, 10px)' }}>
+            {['1','2','3','4','5','6','7','8','9','_e','0','DEL'].map((key) => (
+              key === '_e' ? <div key={key} /> : (
+                <button key={key} onClick={() => handleKeypadPress(key)} disabled={loading}
+                  data-testid={`keypad-${key}`}
+                  className={`font-bold rounded-lg transition active:scale-95 disabled:opacity-50 flex items-center justify-center ${
+                    key === 'DEL' ? 'bg-slate-100 text-red-500 hover:bg-red-50'
+                    : 'bg-slate-50 text-slate-900 hover:bg-orange-50 hover:text-orange-600 border border-slate-100'
+                  }`}
+                  style={{ height: 'clamp(36px, 5.5vh, 56px)', fontSize: 'clamp(16px, 2.2vh, 26px)' }}>
+                  {key === 'DEL' ? <Delete style={{ width: '2.2vh', height: '2.2vh' }} /> : key}
+                </button>
+              )
+            ))}
           </div>
+
+          {loading && <p className="kiosk-small text-slate-400 animate-pulse" style={{ marginTop: '2vh' }}>Verifi&euml;ren...</p>}
         </div>
-
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-2 tracking-tight">Voer PIN in</h2>
-        <p className="text-base text-slate-400 mb-8">4-cijferige toegangscode</p>
-
-        <div className="flex justify-center gap-4 mb-6">
-          {pin.map((digit, index) => (
-            <input key={index} ref={inputRefs[index]} type="password" inputMode="numeric" maxLength={1}
-              value={digit} onChange={(e) => handlePinChange(index, e.target.value)} onKeyDown={(e) => handleKeyDown(index, e)}
-              className={`w-16 h-20 sm:w-20 sm:h-24 text-center text-3xl font-bold rounded-2xl border-2 transition-all outline-none ${
-                error ? 'border-red-400 bg-red-50' : digit ? 'border-orange-500 bg-orange-50' : 'border-slate-200 bg-slate-50 focus:border-orange-500'
-              }`} disabled={loading} />
-          ))}
-        </div>
-
-        {error && <p className="text-red-500 text-center font-semibold mb-4">{error}</p>}
-
-        <div className="grid grid-cols-3 gap-3">
-          {['1','2','3','4','5','6','7','8','9','_e','0','DEL'].map((key) => (
-            key === '_e' ? <div key={key} /> : (
-              <button key={key} onClick={() => handleKeypadPress(key)} disabled={loading}
-                className={`h-16 sm:h-18 text-2xl font-bold rounded-2xl transition active:scale-95 disabled:opacity-50 ${
-                  key === 'DEL' ? 'bg-slate-100 text-red-500 hover:bg-red-50 flex items-center justify-center'
-                  : 'bg-gradient-to-b from-slate-50 to-slate-100 text-slate-900 hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 border border-slate-100'
-                }`}>
-                {key === 'DEL' ? <Delete className="w-6 h-6" /> : key}
-              </button>
-            )
-          ))}
-        </div>
-
-        {loading && <p className="text-center text-slate-400 mt-6 animate-pulse">Verifi&euml;ren...</p>}
       </div>
     </div>
   );

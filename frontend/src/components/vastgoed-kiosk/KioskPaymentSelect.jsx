@@ -26,7 +26,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
   const toggleCustom = () => { if (!useCustomAmount) { setSelectedTypes(new Set()); setUseCustomAmount(true); } else { setUseCustomAmount(false); setCustomAmount(''); } };
   const selectedTotal = [...selectedTypes].reduce((sum, t) => sum + getAmountForType(t), 0);
   const buildDescription = () => { const l = []; if (selectedTypes.has('rent')) l.push('Huur'); if (selectedTypes.has('service_costs')) l.push('Servicekosten'); if (selectedTypes.has('fines')) l.push('Boetes'); return l.join(' + '); };
-  const getPaymentType = () => { if (useCustomAmount) return 'partial_rent'; if (selectedTypes.size === 1) { const t = [...selectedTypes][0]; return t; } return 'rent'; };
+  const getPaymentType = () => { if (useCustomAmount) return 'partial_rent'; if (selectedTypes.size === 1) return [...selectedTypes][0]; return 'rent'; };
   const handleConfirm = () => {
     let amount, description, paymentType;
     if (useCustomAmount) { amount = parseFloat(customAmount); if (isNaN(amount) || amount <= 0) return; description = `Gedeeltelijke betaling - ${formatSRD(amount)}`; paymentType = 'partial_rent'; }
@@ -40,40 +40,42 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
   const allSelected = PAYMENT_TYPES.filter(t => !isTypeDisabled(t.id)).every(t => selectedTypes.has(t.id));
 
   return (
-    <div className="min-h-full bg-orange-500 flex flex-col relative overflow-hidden">
-{/* Header */}
-      <div className="relative z-10 flex items-center justify-between px-8 lg:px-12 py-5">
-        <button onClick={onBack} className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
-          <ArrowLeft className="w-5 h-5" /><span>Terug</span>
+    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between" style={{ height: '7vh', padding: '0 0.5vw' }}>
+        <button onClick={onBack} className="flex items-center gap-2 text-white font-bold opacity-80 hover:opacity-100 transition" data-testid="payselect-back-btn">
+          <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
+          <span className="kiosk-body">Terug</span>
         </button>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Wat wilt u betalen?</h1>
-        <div className="text-right hidden sm:block">
-          <p className="text-white font-semibold">{tenant.name}</p>
-          <p className="text-white/60 text-sm">Appt. {tenant.apartment_number}</p>
+        <span className="kiosk-subtitle text-white">Wat wilt u betalen?</span>
+        <div className="text-right text-white hidden sm:block">
+          <p className="kiosk-body font-semibold">{tenant.name}</p>
+          <p className="kiosk-small opacity-70">Appt. {tenant.apartment_number}</p>
         </div>
       </div>
 
       {/* Content */}
-      <div className="relative z-10 flex-1 flex flex-col md:flex-row items-start justify-center gap-6 md:gap-8 px-6 sm:px-10 lg:px-12 pb-8 overflow-auto">
+      <div className="flex-1 flex gap-[1vw] min-h-0" style={{ paddingBottom: '1.5vh' }}>
         {/* Left - Options card */}
-        <div className="bg-white rounded-lg shadow-sm p-7 sm:p-8 lg:p-10 w-full max-w-xl min-w-0">
+        <div className={`kiosk-card flex flex-col min-w-0 ${useCustomAmount ? 'flex-[3]' : 'flex-1'}`} style={{ padding: 'clamp(8px, 1.2vh, 16px) clamp(10px, 1.2vw, 20px)' }}>
           {/* Select All */}
           {!useCustomAmount && PAYMENT_TYPES.filter(t => !isTypeDisabled(t.id)).length > 1 && (
-            <button onClick={allSelected ? () => setSelectedTypes(new Set()) : selectAll}
-              className={`w-full mb-4 p-4 sm:p-5 rounded-2xl border-2 transition flex items-center justify-between ${
-                allSelected ? 'bg-orange-50 border-orange-400' : 'bg-gradient-to-b from-white to-slate-50 border-slate-200 hover:border-orange-300'}`}>
-              <div className="flex items-center gap-3">
-                <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center ${allSelected ? 'bg-orange-500 border-orange-500' : 'border-slate-300'}`}>
-                  {allSelected && <CheckCircle className="w-4 h-4 text-white" />}
+            <button onClick={allSelected ? () => setSelectedTypes(new Set()) : selectAll} data-testid="pay-select-all"
+              className={`w-full flex items-center justify-between rounded-lg border-2 transition ${
+                allSelected ? 'bg-orange-50 border-orange-400' : 'bg-white border-slate-200 hover:border-orange-300'}`}
+              style={{ padding: 'clamp(8px, 1.2vh, 16px) clamp(8px, 1vw, 16px)', marginBottom: 'clamp(4px, 0.6vh, 10px)' }}>
+              <div className="flex items-center gap-2">
+                <div className={`flex items-center justify-center rounded border-2 ${allSelected ? 'bg-orange-500 border-orange-500' : 'border-slate-300'}`} style={{ width: '2.2vh', height: '2.2vh' }}>
+                  {allSelected && <CheckCircle className="text-white" style={{ width: '1.5vh', height: '1.5vh' }} />}
                 </div>
-                <span className="text-base sm:text-lg font-bold text-slate-900">Alles betalen</span>
+                <span className="kiosk-body font-bold text-slate-900">Alles betalen</span>
               </div>
-              <span className="text-lg sm:text-xl font-extrabold text-orange-600 whitespace-nowrap">{formatSRD(totalDebt)}</span>
+              <span className="kiosk-subtitle text-orange-600 whitespace-nowrap">{formatSRD(totalDebt)}</span>
             </button>
           )}
 
           {/* Options */}
-          <div className="space-y-3">
+          <div className="flex-1 flex flex-col" style={{ gap: 'clamp(3px, 0.5vh, 8px)' }}>
             {PAYMENT_TYPES.map((type) => {
               const disabled = isTypeDisabled(type.id) || useCustomAmount;
               const isSelected = selectedTypes.has(type.id);
@@ -81,83 +83,87 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
               const Icon = type.icon;
               return (
                 <button key={type.id} disabled={disabled} onClick={() => toggleType(type.id)} data-testid={`pay-type-${type.id}`}
-                  className={`flex items-center justify-between w-full p-4 sm:p-5 rounded-2xl border-2 transition ${
+                  className={`flex items-center justify-between w-full rounded-lg border-2 transition ${
                     disabled ? 'bg-slate-50 border-slate-100 opacity-40 cursor-not-allowed'
-                    : isSelected ? 'bg-orange-50 border-orange-400' : 'bg-gradient-to-b from-white to-slate-50 border-slate-200 hover:border-orange-300'
-                  }`}>
-                  <div className="flex items-center gap-3 sm:gap-4">
-                    <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-orange-500 border-orange-500' : 'border-slate-300'}`}>
-                      {isSelected && <CheckCircle className="w-4 h-4 text-white" />}
+                    : isSelected ? 'bg-orange-50 border-orange-400' : 'bg-white border-slate-200 hover:border-orange-300'
+                  }`}
+                  style={{ padding: 'clamp(6px, 1vh, 16px) clamp(8px, 1vw, 16px)' }}>
+                  <div className="flex items-center" style={{ gap: 'clamp(6px, 0.8vw, 14px)' }}>
+                    <div className={`flex items-center justify-center rounded border-2 flex-shrink-0 ${isSelected ? 'bg-orange-500 border-orange-500' : 'border-slate-300'}`} style={{ width: '2.2vh', height: '2.2vh' }}>
+                      {isSelected && <CheckCircle className="text-white" style={{ width: '1.5vh', height: '1.5vh' }} />}
                     </div>
-                    <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm ${isSelected ? 'bg-orange-100 border border-orange-200' : 'bg-slate-50 border border-slate-100'}`}>
-                      <Icon className={`w-6 h-6 ${isSelected ? 'text-orange-500' : 'text-slate-400'}`} />
+                    <div className={`rounded-lg flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-orange-100' : 'bg-slate-50'}`} style={{ width: '4vh', height: '4vh' }}>
+                      <Icon style={{ width: '2vh', height: '2vh' }} className={isSelected ? 'text-orange-500' : 'text-slate-400'} />
                     </div>
                     <div className="text-left">
-                      <p className="text-base sm:text-lg font-bold text-slate-900">{type.label}</p>
-                      <p className="text-sm text-slate-400 hidden sm:block">{type.desc}</p>
+                      <p className="kiosk-body font-bold text-slate-900">{type.label}</p>
+                      <p className="kiosk-small text-slate-400 hidden sm:block">{type.desc}</p>
                     </div>
                   </div>
-                  <p className={`text-lg sm:text-xl font-extrabold flex-shrink-0 ml-3 whitespace-nowrap ${disabled ? 'text-slate-300' : isSelected ? 'text-orange-600' : 'text-slate-900'}`}>
+                  <p className={`kiosk-subtitle flex-shrink-0 ml-2 whitespace-nowrap ${disabled ? 'text-slate-300' : isSelected ? 'text-orange-600' : 'text-slate-900'}`}>
                     {formatSRD(amount)}
                   </p>
                 </button>
               );
             })}
+
+            {/* Custom */}
+            <button onClick={toggleCustom} data-testid="pay-type-custom"
+              className={`flex items-center justify-between w-full rounded-lg border-2 transition ${
+                useCustomAmount ? 'bg-orange-50 border-orange-400' : 'bg-white border-slate-200 hover:border-orange-300'}`}
+              style={{ padding: 'clamp(6px, 1vh, 16px) clamp(8px, 1vw, 16px)' }}>
+              <div className="flex items-center" style={{ gap: 'clamp(6px, 0.8vw, 14px)' }}>
+                <div className={`flex items-center justify-center rounded border-2 ${useCustomAmount ? 'bg-orange-500 border-orange-500' : 'border-slate-300'}`} style={{ width: '2.2vh', height: '2.2vh' }}>
+                  {useCustomAmount && <CheckCircle className="text-white" style={{ width: '1.5vh', height: '1.5vh' }} />}
+                </div>
+                <div className={`rounded-lg flex items-center justify-center ${useCustomAmount ? 'bg-orange-100' : 'bg-slate-50'}`} style={{ width: '4vh', height: '4vh' }}>
+                  <Wallet style={{ width: '2vh', height: '2vh' }} className={useCustomAmount ? 'text-orange-500' : 'text-slate-400'} />
+                </div>
+                <div className="text-left">
+                  <p className="kiosk-body font-bold text-slate-900">Ander bedrag</p>
+                  <p className="kiosk-small text-slate-400 hidden sm:block">Voer zelf een bedrag in</p>
+                </div>
+              </div>
+            </button>
           </div>
 
-          {/* Custom */}
-          <button onClick={toggleCustom} data-testid="pay-type-custom"
-            className={`mt-3 flex items-center justify-between w-full p-4 sm:p-5 rounded-2xl border-2 transition ${
-              useCustomAmount ? 'bg-orange-50 border-orange-400' : 'bg-gradient-to-b from-white to-slate-50 border-slate-200 hover:border-orange-300'}`}>
-            <div className="flex items-center gap-3 sm:gap-4">
-              <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center ${useCustomAmount ? 'bg-orange-500 border-orange-500' : 'border-slate-300'}`}>
-                {useCustomAmount && <CheckCircle className="w-4 h-4 text-white" />}
-              </div>
-              <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center shadow-sm ${useCustomAmount ? 'bg-orange-100 border border-orange-200' : 'bg-slate-50 border border-slate-100'}`}>
-                <Wallet className={`w-6 h-6 ${useCustomAmount ? 'text-orange-500' : 'text-slate-400'}`} />
-              </div>
-              <div className="text-left">
-                <p className="text-base sm:text-lg font-bold text-slate-900">Ander bedrag</p>
-                <p className="text-sm text-slate-400 hidden sm:block">Voer zelf een bedrag in</p>
-              </div>
-            </div>
-          </button>
-
-          {/* Total */}
+          {/* Total bar */}
           {!useCustomAmount && selectedTypes.size > 0 && (
-            <div className="mt-4 rounded-2xl bg-slate-900 p-5 sm:p-6 flex items-center justify-between">
+            <div className="bg-slate-900 rounded-lg flex items-center justify-between" style={{ padding: 'clamp(8px, 1.2vh, 16px) clamp(10px, 1.2vw, 20px)', marginTop: 'clamp(4px, 0.6vh, 10px)' }}>
               <div>
-                <p className="text-slate-400 text-sm">{selectedTypes.size} item{selectedTypes.size > 1 ? 's' : ''} geselecteerd</p>
-                <p className="text-white text-sm">{buildDescription()}</p>
+                <p className="kiosk-small text-slate-400">{selectedTypes.size} item{selectedTypes.size > 1 ? 's' : ''}</p>
+                <p className="kiosk-small text-white">{buildDescription()}</p>
               </div>
-              <p className="text-2xl sm:text-3xl font-extrabold text-white whitespace-nowrap">{formatSRD(selectedTotal)}</p>
+              <p className="kiosk-amount-md text-white whitespace-nowrap">{formatSRD(selectedTotal)}</p>
             </div>
           )}
 
           {/* Next button */}
           <button onClick={handleConfirm} disabled={!canProceed} data-testid="payment-next-btn"
-            className="mt-5 w-full py-5 sm:py-6 px-8 rounded-2xl text-lg sm:text-xl font-bold flex items-center justify-center gap-3 transition bg-orange-500 hover:bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 text-white shadow-xl shadow-orange-500/30 active:scale-[0.98]">
+            className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-lg flex items-center justify-center gap-2 transition active:scale-[0.98]"
+            style={{ padding: 'clamp(10px, 1.8vh, 24px)', marginTop: 'clamp(4px, 0.6vh, 10px)', fontSize: 'clamp(14px, 2vh, 22px)', fontWeight: 700 }}>
             <span>Volgende — {formatSRD(useCustomAmount ? (parseFloat(customAmount) || 0) : selectedTotal)}</span>
-            <ArrowRight className="w-6 h-6" />
+            <ArrowRight style={{ width: '2.5vh', height: '2.5vh' }} />
           </button>
         </div>
 
-        {/* Right - Keypad card */}
+        {/* Right - Keypad card (only when custom amount) */}
         {useCustomAmount && (
-          <div className="bg-white rounded-lg shadow-sm p-7 sm:p-8 lg:p-10 w-full max-w-sm min-w-0">
-            <h4 className="text-lg font-bold text-slate-900 mb-1">Bedrag invoeren</h4>
-            <p className="text-sm text-slate-400 mb-4">Totaal: {formatSRD(totalDebt)}</p>
-            <div className="bg-gradient-to-b from-slate-50 to-slate-100/50 border-2 border-slate-200 rounded-2xl p-4 sm:p-5 mb-4">
-              <p className="text-slate-400 text-xs mb-1">SRD</p>
-              <p className="text-3xl sm:text-4xl font-extrabold text-slate-900 font-mono">{customAmount || '0.00'}</p>
+          <div className="kiosk-card flex-[2] flex flex-col min-w-0" style={{ padding: 'clamp(12px, 2vh, 28px) clamp(10px, 1.5vw, 24px)' }}>
+            <h4 className="kiosk-body font-bold text-slate-900" style={{ marginBottom: '0.3vh' }}>Bedrag invoeren</h4>
+            <p className="kiosk-small text-slate-400" style={{ marginBottom: '1.5vh' }}>Totaal openstaand: {formatSRD(totalDebt)}</p>
+            <div className="bg-slate-50 border-2 border-slate-200 rounded-lg" style={{ padding: 'clamp(8px, 1.5vh, 20px)', marginBottom: '2vh' }}>
+              <p className="kiosk-small text-slate-400" style={{ marginBottom: '0.3vh' }}>SRD</p>
+              <p className="font-extrabold text-slate-900 font-mono" style={{ fontSize: 'clamp(20px, 3.5vh, 44px)' }}>{customAmount || '0.00'}</p>
             </div>
-            <div className="grid grid-cols-3 gap-2.5">
+            <div className="grid grid-cols-3 flex-1" style={{ gap: 'clamp(4px, 0.6vh, 10px)' }}>
               {['1','2','3','4','5','6','7','8','9','.','0','DEL'].map((key) => (
                 <button key={key} onClick={() => handleKeypadPress(key)}
-                  className={`h-14 sm:h-16 text-xl font-bold rounded-xl transition active:scale-95 ${
+                  className={`rounded-lg font-bold transition active:scale-95 flex items-center justify-center ${
                     key === 'DEL' ? 'bg-slate-100 text-red-500 hover:bg-red-50 border border-slate-100'
-                    : 'bg-gradient-to-b from-white to-slate-50 text-slate-900 hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 border border-slate-100'
-                  }`}>
+                    : 'bg-slate-50 text-slate-900 hover:bg-orange-50 hover:text-orange-600 border border-slate-100'
+                  }`}
+                  style={{ fontSize: 'clamp(16px, 2.2vh, 26px)' }}>
                   {key}
                 </button>
               ))}

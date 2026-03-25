@@ -12,7 +12,7 @@
   "test_results": {
     "service_worker_registration": {
       "status": "PASS",
-      "details": "SW v7 registered at scope https://kiosk-sumup-test.preview.emergentagent.com/, state: activated"
+      "details": "SW v7 registered at scope https://self-checkout-flow.preview.emergentagent.com/, state: activated"
     },
     "index_html_caching": {
       "status": "PASS",

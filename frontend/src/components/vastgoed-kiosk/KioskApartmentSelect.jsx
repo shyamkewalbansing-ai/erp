@@ -49,104 +49,110 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
 
   if (loading) {
     return (
-      <div className="min-h-full bg-orange-500 flex items-center justify-center">
-        <div className="w-14 h-14 border-4 border-white/30 border-t-white rounded-full animate-spin" />
+      <div className="h-full bg-orange-500 flex items-center justify-center">
+        <div className="border-4 border-white/30 border-t-white rounded-full animate-spin" style={{ width: '5vh', height: '5vh' }} />
       </div>
     );
   }
 
   return (
-    <div className="h-full bg-orange-500 flex flex-col relative overflow-hidden">
-{/* Header */}
-      <div className="relative z-10 flex items-center justify-between px-8 lg:px-12 py-5">
-        <button onClick={onBack} className="flex items-center gap-2 bg-white/20 backdrop-blur-sm border border-white/20 text-white px-5 py-2.5 rounded-xl font-bold transition hover:bg-white/30 shadow-lg text-sm">
-          <ArrowLeft className="w-5 h-5" /><span>Terug</span>
+    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between" style={{ height: '7vh', padding: '0 0.5vw' }}>
+        <button onClick={onBack} className="flex items-center gap-2 text-white font-bold opacity-80 hover:opacity-100 transition" data-testid="apt-back-btn">
+          <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
+          <span className="kiosk-body">Terug</span>
         </button>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight drop-shadow-lg">Kies uw appartement</h1>
-        <div className="flex gap-1.5 bg-white/20 backdrop-blur-sm rounded-2xl p-1.5 border border-white/20 shadow-lg">
-          <button onClick={() => { setMode('grid'); setError(''); }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition ${
-              mode === 'grid' ? 'bg-white text-orange-600 shadow-md' : 'bg-white/15 text-white hover:bg-white/25'}`}>
-            <Building2 className="w-4 h-4" /><span className="hidden sm:inline">Appartement</span>
+        <span className="kiosk-subtitle text-white">Kies uw appartement</span>
+        <div className="flex bg-white/20 rounded-lg" style={{ padding: '0.4vh' }}>
+          <button onClick={() => { setMode('grid'); setError(''); }} data-testid="mode-grid"
+            className={`flex items-center gap-1 rounded-md transition kiosk-small font-bold ${mode === 'grid' ? 'bg-white text-orange-600' : 'text-white hover:bg-white/15'}`}
+            style={{ padding: '0.6vh 1vw' }}>
+            <Building2 style={{ width: '1.6vh', height: '1.6vh' }} />
+            <span className="hidden sm:inline">Appartement</span>
           </button>
-          <button onClick={() => { setMode('code'); setError(''); }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition ${
-              mode === 'code' ? 'bg-white text-orange-600 shadow-md' : 'bg-white/15 text-white hover:bg-white/25'}`}>
-            <Keyboard className="w-4 h-4" /><span className="hidden sm:inline">Code</span>
+          <button onClick={() => { setMode('code'); setError(''); }} data-testid="mode-code"
+            className={`flex items-center gap-1 rounded-md transition kiosk-small font-bold ${mode === 'code' ? 'bg-white text-orange-600' : 'text-white hover:bg-white/15'}`}
+            style={{ padding: '0.6vh 1vw' }}>
+            <Keyboard style={{ width: '1.6vh', height: '1.6vh' }} />
+            <span className="hidden sm:inline">Code</span>
           </button>
         </div>
       </div>
 
       {error && (
-        <div className="relative z-10 mx-8 lg:mx-12 mb-4 p-4 bg-white/95 backdrop-blur-sm text-red-600 rounded-2xl text-center text-base font-semibold shadow-xl">
+        <div className="bg-white/95 text-red-600 rounded-lg text-center kiosk-body font-semibold" style={{ margin: '0 0.5vw 1vh', padding: '1vh 1vw' }}>
           {error}
         </div>
       )}
 
-      <div className="relative z-10 flex-1 px-6 sm:px-10 lg:px-12 pb-8 overflow-auto">
+      {/* Content */}
+      <div className="flex-1 min-h-0 overflow-auto" style={{ paddingBottom: '1.5vh' }}>
         {mode === 'grid' ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5 max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 h-full" style={{ gap: 'clamp(6px, 0.8vw, 14px)', padding: '0 0.5vw' }}>
             {apartments.map((apt) => {
               const tenant = tenants.find(t => t.apartment_id === apt.apartment_id && t.status === 'active');
               const hasTenant = !!tenant;
               return (
                 <button key={apt.apartment_id} onClick={() => handleApartmentClick(apt)} disabled={!hasTenant}
                   data-testid={`apt-${apt.number}`}
-                  className={`flex flex-col items-center justify-center p-6 sm:p-8 lg:p-10 rounded-[1.5rem] transition min-h-[160px] sm:min-h-[200px] ${
-                    hasTenant
-                      ? 'bg-white hover:scale-[1.03] hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.3)] cursor-pointer shadow-xl'
-                      : 'bg-white/30 backdrop-blur-sm cursor-not-allowed opacity-50'
-                  }`}>
-                  <span className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 mb-2 tracking-tight">{apt.number}</span>
+                  className={`kiosk-card flex flex-col items-center justify-center text-center transition ${
+                    hasTenant ? 'hover:bg-slate-50 cursor-pointer active:scale-[0.98]' : 'opacity-40 cursor-not-allowed'
+                  }`}
+                  style={{ padding: 'clamp(8px, 1.5vh, 20px) clamp(4px, 0.5vw, 12px)' }}>
+                  <span className="kiosk-amount-md text-slate-900" style={{ marginBottom: '0.5vh' }}>{apt.number}</span>
                   {hasTenant ? (
                     <>
-                      <div className="flex items-center gap-1.5 text-slate-400 mb-3">
-                        <User className="w-4 h-4" />
-                        <span className="text-sm sm:text-base truncate max-w-[100px] sm:max-w-[140px]">{tenant.name}</span>
+                      <div className="flex items-center gap-1 text-slate-400" style={{ marginBottom: '0.8vh' }}>
+                        <User style={{ width: '1.5vh', height: '1.5vh' }} />
+                        <span className="kiosk-small truncate" style={{ maxWidth: '10vw' }}>{tenant.name}</span>
                       </div>
-                      <span className="px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold bg-green-100 text-green-600">Bezet</span>
+                      <span className="kiosk-small font-bold text-green-600 bg-green-50 rounded" style={{ padding: '0.3vh 0.8vw' }}>Bezet</span>
                     </>
                   ) : (
-                    <span className="text-sm text-white/50 mt-1">Leeg</span>
+                    <span className="kiosk-small text-slate-300">Leeg</span>
                   )}
                 </button>
               );
             })}
           </div>
         ) : (
-          <div className="flex items-center justify-center">
-            <div className="bg-white rounded-lg shadow-sm p-8 sm:p-10 lg:p-12 w-full max-w-lg">
-              <p className="text-lg text-slate-400 text-center mb-6">Voer uw huurderscode in</p>
-              <div className="bg-gradient-to-b from-slate-50 to-slate-100/50 border-2 border-slate-200 rounded-2xl p-5 sm:p-6 mb-6 text-center">
-                <span className="text-3xl sm:text-4xl font-mono font-extrabold text-slate-900 tracking-[0.25em]">
+          <div className="flex items-center justify-center h-full" style={{ padding: '0 0.5vw' }}>
+            <div className="kiosk-card" style={{ width: 'clamp(300px, 35vw, 520px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
+              <p className="kiosk-body text-slate-400 text-center" style={{ marginBottom: '2vh' }}>Voer uw huurderscode in</p>
+              <div className="bg-slate-50 border-2 border-slate-200 rounded-lg text-center" style={{ padding: 'clamp(10px, 2vh, 24px)', marginBottom: '2vh' }}>
+                <span className="font-mono font-extrabold text-slate-900" style={{ fontSize: 'clamp(20px, 3vh, 40px)', letterSpacing: '0.2em' }}>
                   {searchCode || '_ _ _ _ _'}
                 </span>
               </div>
-              <div className="space-y-2.5 mb-3">
-                <div className="grid grid-cols-9 gap-1.5 sm:gap-2">
-                  {['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((key) => (
-                    <button key={key} onClick={() => handleKeypadPress(key)}
-                      className="h-11 sm:h-13 text-sm sm:text-base font-bold rounded-xl transition active:scale-95 bg-gradient-to-b from-white to-slate-50 border border-slate-100 text-slate-700 hover:from-orange-50 hover:to-orange-100 hover:text-orange-600 hover:border-orange-200">
-                      {key}
-                    </button>
-                  ))}
-                  <button onClick={() => handleKeypadPress('DEL')}
-                    className="h-11 sm:h-13 text-xs font-bold rounded-xl transition active:scale-95 bg-red-50 text-red-500 hover:bg-red-100 border border-red-100">
-                    DEL
+              {/* Letter keys */}
+              <div className="grid grid-cols-9" style={{ gap: 'clamp(2px, 0.3vw, 6px)', marginBottom: '1vh' }}>
+                {['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((key) => (
+                  <button key={key} onClick={() => handleKeypadPress(key)}
+                    className="bg-slate-50 text-slate-700 hover:bg-orange-50 hover:text-orange-600 border border-slate-100 rounded font-bold transition active:scale-95 flex items-center justify-center"
+                    style={{ height: 'clamp(28px, 4vh, 44px)', fontSize: 'clamp(10px, 1.4vh, 16px)' }}>
+                    {key}
                   </button>
-                </div>
-                <div className="grid grid-cols-6 gap-1.5 sm:gap-2">
-                  {['1','2','3','4','5','6','7','8','9','0'].map((key) => (
-                    <button key={key} onClick={() => handleKeypadPress(key)}
-                      className="h-14 sm:h-16 text-xl sm:text-2xl font-bold rounded-xl transition active:scale-95 bg-gradient-to-b from-white to-slate-50 border border-slate-100 text-slate-900 hover:from-orange-50 hover:to-orange-100 hover:text-orange-600">
-                      {key}
-                    </button>
-                  ))}
-                  <button onClick={() => handleKeypadPress('OK')} data-testid="code-ok-btn"
-                    className="h-14 sm:h-16 text-xl font-bold rounded-xl transition active:scale-95 bg-orange-500 text-white hover:bg-orange-600 col-span-2 shadow-lg shadow-orange-500/30">
-                    OK
+                ))}
+                <button onClick={() => handleKeypadPress('DEL')}
+                  className="bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 rounded font-bold transition active:scale-95 flex items-center justify-center kiosk-small">
+                  DEL
+                </button>
+              </div>
+              {/* Number keys */}
+              <div className="grid grid-cols-6" style={{ gap: 'clamp(3px, 0.4vw, 8px)' }}>
+                {['1','2','3','4','5','6','7','8','9','0'].map((key) => (
+                  <button key={key} onClick={() => handleKeypadPress(key)}
+                    className="bg-slate-50 text-slate-900 hover:bg-orange-50 hover:text-orange-600 border border-slate-100 rounded-lg font-bold transition active:scale-95 flex items-center justify-center"
+                    style={{ height: 'clamp(36px, 5vh, 52px)', fontSize: 'clamp(14px, 2vh, 24px)' }}>
+                    {key}
                   </button>
-                </div>
+                ))}
+                <button onClick={() => handleKeypadPress('OK')} data-testid="code-ok-btn"
+                  className="col-span-2 bg-orange-500 text-white hover:bg-orange-600 rounded-lg font-bold transition active:scale-95 flex items-center justify-center"
+                  style={{ height: 'clamp(36px, 5vh, 52px)', fontSize: 'clamp(14px, 2vh, 24px)' }}>
+                  OK
+                </button>
               </div>
             </div>
           </div>

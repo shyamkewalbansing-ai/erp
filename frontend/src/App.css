@@ -1015,6 +1015,30 @@ button[class*="variant-ghost"]:hover {
     scrollbar-width: none;
 }
 
+/* Kiosk viewport-scaled typography */
+.kiosk-title { font-size: clamp(18px, 2.8vh, 36px); font-weight: 800; }
+.kiosk-subtitle { font-size: clamp(12px, 1.8vh, 22px); font-weight: 600; }
+.kiosk-body { font-size: clamp(11px, 1.6vh, 18px); }
+.kiosk-small { font-size: clamp(10px, 1.3vh, 15px); }
+.kiosk-amount-lg { font-size: clamp(20px, 3.5vh, 48px); font-weight: 800; }
+.kiosk-amount-md { font-size: clamp(16px, 2.5vh, 32px); font-weight: 700; }
+.kiosk-btn-text { font-size: clamp(14px, 2vh, 24px); font-weight: 700; }
+
+/* Kiosk card style - flat white, no shadow, subtle corners */
+.kiosk-card {
+    background: white;
+    border-radius: 6px;
+    box-shadow: none;
+    overflow: hidden;
+}
+.kiosk-card-row {
+    border-bottom: 1px solid #f1f5f9;
+    padding: clamp(8px, 1.4vh, 18px) clamp(12px, 1.5vw, 24px);
+}
+.kiosk-card-row:last-child {
+    border-bottom: none;
+}
+
 /* Gradient Background */
 .kiosk-bg-gradient {
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
