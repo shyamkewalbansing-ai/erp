@@ -204,10 +204,11 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           </div>
           <div style={{ width: '6vw' }} />
         </div>
-        <div className="flex-1 flex gap-[1vw] min-h-0" style={{ paddingBottom: '1.5vh' }}>
+        <div className="flex-1 flex items-center justify-center gap-[1.5vw] min-h-0" style={{ paddingBottom: '1.5vh' }}>
           {/* Cash */}
           <button onClick={() => setPayMethod('cash')} data-testid="pay-method-cash"
-            className="kiosk-card flex-1 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition active:scale-[0.98] cursor-pointer min-w-0">
+            className="kiosk-card flex flex-col items-center justify-center text-center hover:bg-slate-50 transition active:scale-[0.98] cursor-pointer"
+            style={{ width: 'clamp(160px, 20vw, 280px)', height: 'clamp(160px, 28vh, 320px)' }}>
             <div className="rounded-lg bg-green-50 flex items-center justify-center" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
               <Banknote style={{ width: '4vh', height: '4vh' }} className="text-green-500" />
             </div>
@@ -217,7 +218,8 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           {/* Mope */}
           {!mopeLoading && mopeEnabled && (
             <button onClick={() => { setPayMethod('mope'); handleMopePayment(); }} data-testid="pay-method-mope"
-              className="kiosk-card flex-1 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition active:scale-[0.98] cursor-pointer min-w-0">
+              className="kiosk-card flex flex-col items-center justify-center text-center hover:bg-slate-50 transition active:scale-[0.98] cursor-pointer"
+              style={{ width: 'clamp(160px, 20vw, 280px)', height: 'clamp(160px, 28vh, 320px)' }}>
               <div className="rounded-lg bg-emerald-50 flex items-center justify-center" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
                 <QrCode style={{ width: '4vh', height: '4vh' }} className="text-emerald-600" />
               </div>
@@ -229,7 +231,8 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           {/* Card/SumUp */}
           {!sumupLoading && sumupEnabled && (
             <button onClick={() => { setPayMethod('card'); handleCardPayment(); }} data-testid="pay-method-card"
-              className="kiosk-card flex-1 flex flex-col items-center justify-center text-center hover:bg-slate-50 transition active:scale-[0.98] cursor-pointer min-w-0">
+              className="kiosk-card flex flex-col items-center justify-center text-center hover:bg-slate-50 transition active:scale-[0.98] cursor-pointer"
+              style={{ width: 'clamp(160px, 20vw, 280px)', height: 'clamp(160px, 28vh, 320px)' }}>
               <div className="rounded-lg bg-blue-50 flex items-center justify-center" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
                 <CreditCard style={{ width: '4vh', height: '4vh' }} className="text-blue-500" />
               </div>
