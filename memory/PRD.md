@@ -1,12 +1,12 @@
 # Vastgoed Kiosk ERP - Product Requirements Document
 
 ## Original Problem Statement
-Full-stack ERP system for real estate/apartment rent payments with a tenant-facing Kiosk, Admin Dashboard, and Superadmin Dashboard.
+Full-stack ERP system for real estate/apartment rent payments with a tenant-facing Kiosk, Admin Dashboard, and Superadmin Dashboard. The kiosk must be an exact 1:1 replica of an Albert Heijn self-checkout kiosk: flat design, no decorative backgrounds, viewport-adaptive scaling.
 
 ## Core Architecture
 - **Backend**: FastAPI + MongoDB (kiosk.py ~3000 lines)
 - **Frontend**: React + TailwindCSS + Shadcn/UI
-- **Kiosk Design**: Albert Heijn self-checkout style (orange theme, floating white cards, touch-friendly)
+- **Kiosk Design**: Albert Heijn self-checkout style (orange bg, flat white cards, fixed white bottom bar)
 
 ## User Personas
 - **Tenants**: Use kiosk to pay rent via Cash, Mope QR, or SumUp Card
@@ -16,14 +16,24 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 ## Implemented Features
 
 ### Kiosk (Tenant-Facing)
-- Professional kiosk design: solid orange background, clean flat white cards with minimal rounding (rounded-lg) and subtle shadows
-- Thick white bottom bar with company name and tenant info (12vh height)
-- Viewport-adaptive: fills screen on any size, scrollable content when needed, no decorative background elements
+- Professional kiosk design: solid orange background, flat white cards (kiosk-card class), no shadows
+- Fixed white bottom bar (12vh height) with company name and tenant info
+- **Viewport-adaptive scaling (ALL screens)**: fills screen on any size (12"-17"+) using clamp(), vh, vw. No scrollbars on any screen.
 - PIN entry, apartment selection, tenant overview, payment flow
 - Payment methods: Cash, Mope (QR), SumUp (Card)
 - Receipt generation with auto-print
-- **Betalingsgeschiedenis**: popup overlay met laatste 10 betalingen per huurder
-- Responsive: works in both landscape AND portrait mode (md:flex-row breakpoint)
+- Betalingsgeschiedenis: popup overlay with last 10 payments per tenant
+- Responsive: works in both landscape AND portrait mode
+
+### Viewport Scaling (Completed 25 Mar 2026)
+- KioskPinEntry.jsx - Refactored to viewport CSS
+- KioskWelcome.jsx - Refactored to viewport CSS
+- KioskApartmentSelect.jsx - Refactored to viewport CSS
+- KioskTenantOverview.jsx - Refactored to viewport CSS
+- KioskPaymentSelect.jsx - Refactored to viewport CSS
+- KioskPaymentConfirm.jsx - Fixed syntax errors + refactored to viewport CSS
+- KioskReceipt.jsx - Refactored to viewport CSS
+- KioskLayout.jsx - Uses kiosk-fullscreen, overflow-hidden
 
 ### Payment Integrations
 - **SumUp Pinbetaling**: Per-company API key, merchant code, currency (EUR/USD), exchange rate for SRD conversion
@@ -58,6 +68,9 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - `POST /api/kiosk/public/{id}/payments` - Register payment
 
 ## Pending/Upcoming Tasks
+### P0
+- Integrate real Mope API key (waiting for Hakrinbank credentials from user)
+
 ### P1
 - Modernize "Kwitanties" (Receipts) tab with unified table style
 
@@ -73,7 +86,7 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 
 ## 3rd Party Integrations
 - SumUp Online Checkout API (per-company keys)
-- Mope/Hakrinbank Payment API (per-company keys)
+- Mope/Hakrinbank Payment API (per-company keys, currently MOCKED)
 - Shelly Smart Relays (local HTTP)
 - WhatsApp Business API
 
@@ -81,3 +94,4 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - Superadmin: admin@facturatie.sr / Bharat7755
 - Test company: shyam@kewalbansing.net / Bharat7755
 - Kiosk PIN: 5678
+- Company ID: ca1240d5-1c1c-41b4-9d88-0798fa7cb8c1
