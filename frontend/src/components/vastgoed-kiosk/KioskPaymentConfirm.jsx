@@ -231,6 +231,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
               <p className="kiosk-subtitle text-slate-900 font-bold" style={{ marginBottom: '0.5vh' }}>Mope</p>
               <p className="kiosk-small text-slate-400">Scan QR-code met Mope app</p>
               <p className="kiosk-small text-emerald-600 font-semibold" style={{ marginTop: '1vh' }}>{formatSRD(paymentData.amount)}</p>
+              <img src="/mope-logo.png" alt="Mopé" style={{ height: 'clamp(24px, 4vh, 44px)', width: 'auto', objectFit: 'contain', marginTop: '1vh', borderRadius: 'clamp(4px, 0.6vh, 8px)' }} />
             </button>
           )}
           {/* Card/SumUp */}
