@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
-import { Building2, ArrowLeft, Delete } from 'lucide-react';
+import { Building2, ArrowLeft, Delete, ScanFace, KeyRound } from 'lucide-react';
 import axios from 'axios';
+import FaceCapture from './FaceCapture';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
@@ -8,9 +9,15 @@ export default function KioskPinEntry({ companyId, companyName, onSuccess, onBac
   const [pin, setPin] = useState(['', '', '', '']);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [mode, setMode] = useState('pin'); // pin | face
+  const [faceEnabled, setFaceEnabled] = useState(false);
   const inputRefs = [useRef(), useRef(), useRef(), useRef()];
 
   useEffect(() => { inputRefs[0].current?.focus(); }, []);
+
+  useEffect(() => {
+    axios.get(`${API}/public/${companyId}/face/admin-status`).then(res => setFaceEnabled(res.data.enabled)).catch(() => {});
+  }, [companyId]);
 
   const handlePinChange = (index, value) => {
     if (value && !/^\d$/.test(value)) return;
@@ -50,6 +57,19 @@ export default function KioskPinEntry({ companyId, companyName, onSuccess, onBac
     } finally { setLoading(false); }
   };
 
+  const handleFaceCapture = async (descriptor) => {
+    setLoading(true); setError('');
+    try {
+      const res = await axios.post(`${API}/public/${companyId}/face/verify-admin`, { descriptor });
+      sessionStorage.setItem(`kiosk_pin_verified_${companyId}`, 'true');
+      if (res.data.token) localStorage.setItem('kiosk_token', res.data.token);
+      setTimeout(() => onSuccess(), 800);
+    } catch {
+      setError('Gezicht niet herkend. Probeer opnieuw.');
+      setMode('pin');
+    } finally { setLoading(false); }
+  };
+
   return (
     <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
       {/* Header */}
@@ -70,43 +90,73 @@ export default function KioskPinEntry({ companyId, companyName, onSuccess, onBac
       {/* Content */}
       <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
         <div className="kiosk-card flex flex-col items-center" style={{ width: 'clamp(280px, 30vw, 440px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2.5vw, 48px)' }}>
-          <h2 className="kiosk-title text-slate-900" style={{ marginBottom: '0.5vh' }}>Voer PIN in</h2>
-          <p className="kiosk-body text-slate-400" style={{ marginBottom: '3vh' }}>4-cijferige toegangscode</p>
 
-          {/* PIN dots */}
-          <div className="flex justify-center" style={{ gap: '1.2vw', marginBottom: '2vh' }}>
-            {pin.map((digit, index) => (
-              <input key={index} ref={inputRefs[index]} type="password" inputMode="numeric" maxLength={1}
-                value={digit} onChange={(e) => handlePinChange(index, e.target.value)} onKeyDown={(e) => handleKeyDown(index, e)}
-                className={`text-center font-bold rounded-lg border-2 transition-all outline-none ${
-                  error ? 'border-red-400 bg-red-50' : digit ? 'border-orange-500 bg-orange-50' : 'border-slate-200 bg-slate-50 focus:border-orange-500'
-                }`}
-                style={{ width: 'clamp(40px, 5vw, 72px)', height: 'clamp(48px, 7vh, 80px)', fontSize: 'clamp(18px, 2.5vh, 32px)' }}
-                disabled={loading}
-                data-testid={`pin-input-${index}`} />
-            ))}
-          </div>
+          {/* Mode toggle */}
+          {faceEnabled && (
+            <div className="flex bg-slate-100 rounded-lg w-full" style={{ padding: '0.4vh', marginBottom: '2.5vh' }}>
+              <button onClick={() => { setMode('pin'); setError(''); }} data-testid="mode-pin"
+                className={`flex-1 flex items-center justify-center gap-2 rounded-md transition kiosk-body font-bold ${mode === 'pin' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                style={{ padding: '0.8vh 0' }}>
+                <KeyRound style={{ width: '1.8vh', height: '1.8vh' }} />
+                PIN
+              </button>
+              <button onClick={() => { setMode('face'); setError(''); }} data-testid="mode-face"
+                className={`flex-1 flex items-center justify-center gap-2 rounded-md transition kiosk-body font-bold ${mode === 'face' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                style={{ padding: '0.8vh 0' }}>
+                <ScanFace style={{ width: '1.8vh', height: '1.8vh' }} />
+                Face ID
+              </button>
+            </div>
+          )}
 
-          {error && <p className="kiosk-body text-red-500 text-center font-semibold" style={{ marginBottom: '1.5vh' }}>{error}</p>}
+          {mode === 'pin' ? (
+            <>
+              <h2 className="kiosk-title text-slate-900" style={{ marginBottom: '0.5vh' }}>Voer PIN in</h2>
+              <p className="kiosk-body text-slate-400" style={{ marginBottom: '3vh' }}>4-cijferige toegangscode</p>
 
-          {/* Keypad */}
-          <div className="grid grid-cols-3 w-full" style={{ gap: 'clamp(4px, 0.6vh, 10px)' }}>
-            {['1','2','3','4','5','6','7','8','9','_e','0','DEL'].map((key) => (
-              key === '_e' ? <div key={key} /> : (
-                <button key={key} onClick={() => handleKeypadPress(key)} disabled={loading}
-                  data-testid={`keypad-${key}`}
-                  className={`font-bold rounded-lg transition active:scale-95 disabled:opacity-50 flex items-center justify-center ${
-                    key === 'DEL' ? 'bg-slate-100 text-red-500 hover:bg-red-50'
-                    : 'bg-slate-50 text-slate-900 hover:bg-orange-50 hover:text-orange-600 border border-slate-100'
-                  }`}
-                  style={{ height: 'clamp(36px, 5.5vh, 56px)', fontSize: 'clamp(16px, 2.2vh, 26px)' }}>
-                  {key === 'DEL' ? <Delete style={{ width: '2.2vh', height: '2.2vh' }} /> : key}
-                </button>
-              )
-            ))}
-          </div>
+              {/* PIN dots */}
+              <div className="flex justify-center" style={{ gap: '1.2vw', marginBottom: '2vh' }}>
+                {pin.map((digit, index) => (
+                  <input key={index} ref={inputRefs[index]} type="password" inputMode="numeric" maxLength={1}
+                    value={digit} onChange={(e) => handlePinChange(index, e.target.value)} onKeyDown={(e) => handleKeyDown(index, e)}
+                    className={`text-center font-bold rounded-lg border-2 transition-all outline-none ${
+                      error ? 'border-red-400 bg-red-50' : digit ? 'border-orange-500 bg-orange-50' : 'border-slate-200 bg-slate-50 focus:border-orange-500'
+                    }`}
+                    style={{ width: 'clamp(40px, 5vw, 72px)', height: 'clamp(48px, 7vh, 80px)', fontSize: 'clamp(18px, 2.5vh, 32px)' }}
+                    disabled={loading}
+                    data-testid={`pin-input-${index}`} />
+                ))}
+              </div>
 
-          {loading && <p className="kiosk-small text-slate-400 animate-pulse" style={{ marginTop: '2vh' }}>Verifi&euml;ren...</p>}
+              {error && <p className="kiosk-body text-red-500 text-center font-semibold" style={{ marginBottom: '1.5vh' }}>{error}</p>}
+
+              {/* Keypad */}
+              <div className="grid grid-cols-3 w-full" style={{ gap: 'clamp(4px, 0.6vh, 10px)' }}>
+                {['1','2','3','4','5','6','7','8','9','_e','0','DEL'].map((key) => (
+                  key === '_e' ? <div key={key} /> : (
+                    <button key={key} onClick={() => handleKeypadPress(key)} disabled={loading}
+                      data-testid={`keypad-${key}`}
+                      className={`font-bold rounded-lg transition active:scale-95 disabled:opacity-50 flex items-center justify-center ${
+                        key === 'DEL' ? 'bg-slate-100 text-red-500 hover:bg-red-50'
+                        : 'bg-slate-50 text-slate-900 hover:bg-orange-50 hover:text-orange-600 border border-slate-100'
+                      }`}
+                      style={{ height: 'clamp(36px, 5.5vh, 56px)', fontSize: 'clamp(16px, 2.2vh, 26px)' }}>
+                      {key === 'DEL' ? <Delete style={{ width: '2.2vh', height: '2.2vh' }} /> : key}
+                    </button>
+                  )
+                ))}
+              </div>
+
+              {loading && <p className="kiosk-small text-slate-400 animate-pulse" style={{ marginTop: '2vh' }}>Verifi&euml;ren...</p>}
+            </>
+          ) : (
+            <>
+              <h2 className="kiosk-title text-slate-900" style={{ marginBottom: '0.5vh' }}>Face ID</h2>
+              <p className="kiosk-body text-slate-400" style={{ marginBottom: '2vh' }}>Kijk in de camera om in te loggen</p>
+              {error && <p className="kiosk-body text-red-500 text-center font-semibold" style={{ marginBottom: '1.5vh' }}>{error}</p>}
+              <FaceCapture mode="verify" onCapture={handleFaceCapture} onCancel={() => setMode('pin')} />
+            </>
+          )}
         </div>
       </div>
     </div>

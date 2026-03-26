@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Building2, Keyboard, User } from 'lucide-react';
+import { ArrowLeft, Building2, Keyboard, User, ScanFace } from 'lucide-react';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
-export default function KioskApartmentSelect({ onBack, onSelect, companyId, codeOnly = false }) {
+export default function KioskApartmentSelect({ onBack, onSelect, companyId, codeOnly = false, onSwitchToFace }) {
   const [mode, setMode] = useState(codeOnly ? 'code' : 'grid');
   const [apartments, setApartments] = useState([]);
   const [tenants, setTenants] = useState([]);
@@ -80,7 +80,14 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId, code
             </button>
           </div>
         )}
-        {codeOnly && <div style={{ width: '6vw' }} />}
+        {codeOnly && onSwitchToFace && (
+          <button onClick={onSwitchToFace} data-testid="switch-to-face"
+            className="flex items-center gap-1 rounded-lg transition kiosk-small font-bold text-white bg-white/20 backdrop-blur-sm hover:bg-white/30"
+            style={{ padding: '0.8vh 1.2vw' }}>
+            <ScanFace style={{ width: '1.6vh', height: '1.6vh' }} /> Face ID
+          </button>
+        )}
+        {codeOnly && !onSwitchToFace && <div style={{ width: '6vw' }} />}
       </div>
 
       {error && (

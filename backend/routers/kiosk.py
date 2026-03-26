@@ -3100,3 +3100,99 @@ async def superadmin_payments(admin=Depends(get_superadmin)):
             company_cache[cid] = comp.get("name", "") if comp else ""
         p["company_name"] = company_cache[cid]
     return payments
+
+
+# ====== FACE ID ENDPOINTS ======
+
+class FaceRegisterRequest(BaseModel):
+    descriptor: List[float]
+
+class FaceVerifyRequest(BaseModel):
+    descriptor: List[float]
+
+# Register face for company admin (PIN screen face login)
+@router.post("/public/{company_id}/face/register-admin")
+async def register_admin_face(company_id: str, req: FaceRegisterRequest):
+    company = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    await db.kiosk_companies.update_one(
+        {"company_id": company_id},
+        {"$set": {"face_descriptor": req.descriptor, "face_id_enabled": True}}
+    )
+    return {"success": True, "message": "Face ID geregistreerd"}
+
+# Verify face for company admin (PIN screen alternative)
+@router.post("/public/{company_id}/face/verify-admin")
+async def verify_admin_face(company_id: str, req: FaceVerifyRequest):
+    company = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
+    if not company or not company.get("face_descriptor"):
+        raise HTTPException(status_code=404, detail="Geen Face ID geregistreerd")
+    stored = company["face_descriptor"]
+    distance = sum((a - b) ** 2 for a, b in zip(stored, req.descriptor)) ** 0.5
+    if distance < 0.6:
+        session_key = f"kiosk_pin_verified_{company_id}"
+        token = jwt.encode({"company_id": company_id, "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)}, JWT_SECRET, algorithm=JWT_ALGORITHM)
+        return {"success": True, "token": token, "distance": round(distance, 4)}
+    raise HTTPException(status_code=401, detail="Gezicht niet herkend")
+
+# Check if admin face is registered
+@router.get("/public/{company_id}/face/admin-status")
+async def admin_face_status(company_id: str):
+    company = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0, "company_id": 1, "face_id_enabled": 1, "face_descriptor": 1})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    return {"enabled": bool(company.get("face_id_enabled") and company.get("face_descriptor"))}
+
+# Register face for tenant
+@router.post("/public/{company_id}/tenant/{tenant_id}/face/register")
+async def register_tenant_face(company_id: str, tenant_id: str, req: FaceRegisterRequest):
+    tenant = await db.kiosk_tenants.find_one({"tenant_id": tenant_id, "company_id": company_id}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    await db.kiosk_tenants.update_one(
+        {"tenant_id": tenant_id},
+        {"$set": {"face_descriptor": req.descriptor, "face_id_enabled": True}}
+    )
+    return {"success": True, "message": "Face ID geregistreerd voor huurder"}
+
+# Verify tenant face - returns matching tenant
+@router.post("/public/{company_id}/face/verify-tenant")
+async def verify_tenant_face(company_id: str, req: FaceVerifyRequest):
+    tenants = await db.kiosk_tenants.find(
+        {"company_id": company_id, "face_id_enabled": True, "face_descriptor": {"$exists": True}, "status": "active"},
+        {"_id": 0, "tenant_id": 1, "name": 1, "apartment_number": 1, "tenant_code": 1, "face_descriptor": 1,
+         "outstanding_rent": 1, "service_costs": 1, "fines": 1, "monthly_rent": 1, "apartment_id": 1}
+    ).to_list(500)
+    best_match = None
+    best_distance = 999
+    for t in tenants:
+        stored = t.get("face_descriptor", [])
+        if not stored:
+            continue
+        distance = sum((a - b) ** 2 for a, b in zip(stored, req.descriptor)) ** 0.5
+        if distance < best_distance:
+            best_distance = distance
+            best_match = t
+    if best_match and best_distance < 0.6:
+        best_match.pop("face_descriptor", None)
+        return {**best_match, "distance": round(best_distance, 4)}
+    raise HTTPException(status_code=401, detail="Gezicht niet herkend")
+
+# Delete face for admin
+@router.delete("/public/{company_id}/face/admin")
+async def delete_admin_face(company_id: str):
+    await db.kiosk_companies.update_one(
+        {"company_id": company_id},
+        {"$set": {"face_id_enabled": False}, "$unset": {"face_descriptor": ""}}
+    )
+    return {"success": True}
+
+# Delete face for tenant
+@router.delete("/public/{company_id}/tenant/{tenant_id}/face")
+async def delete_tenant_face(company_id: str, tenant_id: str):
+    await db.kiosk_tenants.update_one(
+        {"tenant_id": tenant_id},
+        {"$set": {"face_id_enabled": False}, "$unset": {"face_descriptor": ""}}
+    )
+    return {"success": True}

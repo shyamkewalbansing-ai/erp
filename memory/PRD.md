@@ -76,6 +76,15 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - Visible mode badge in bottom bar (Touch/Desktop indicator)
 - CSS classes: .kiosk-touch, .kiosk-compact, .kiosk-large on root element
 
+### Face ID via Webcam (Completed 26 Mar 2026)
+- Browser-based face recognition using face-api.js (no external API needed)
+- Admin: register face in settings, login with Face ID instead of PIN on /vastgoed
+- Tenants: face registered by admin, login with Face ID on /huurders
+- Optional: users can always choose PIN/code or Face ID
+- Backend endpoints: register, verify, delete face descriptors for admin and tenants
+- FaceCapture.jsx reusable component with webcam feed and visual guides
+- Models served from /public/models (tiny_face_detector, face_landmark_68, face_recognition)
+
 ### Huurders Kiosk Route (Completed 26 Mar 2026)
 - `/huurders/:companyId` - separate public route for tenants
 - No PIN, no welcome screen - starts directly at apartment selection

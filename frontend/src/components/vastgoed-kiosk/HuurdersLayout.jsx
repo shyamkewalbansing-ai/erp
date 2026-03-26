@@ -1,13 +1,14 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Building2, Hand } from 'lucide-react';
+import { Building2, Hand, ScanFace, KeyRound } from 'lucide-react';
 import axios from 'axios';
 import KioskApartmentSelect from './KioskApartmentSelect';
 import KioskTenantOverview from './KioskTenantOverview';
 import KioskPaymentSelect from './KioskPaymentSelect';
 import KioskPaymentConfirm from './KioskPaymentConfirm';
 import KioskReceipt from './KioskReceipt';
+import FaceCapture from './FaceCapture';
 import VirtualKeyboard from './VirtualKeyboard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
@@ -39,7 +40,9 @@ export default function HuurdersLayout() {
   const navigate = useNavigate();
   const kioskMode = useKioskMode();
   const [step, setStep] = useState('loading');
+  const [loginMode, setLoginMode] = useState('code'); // code | face
   const [tenant, setTenant] = useState(null);
+  const [faceError, setFaceError] = useState('');
   const [paymentData, setPaymentData] = useState(null);
   const [paymentResult, setPaymentResult] = useState(null);
   const [companyName, setCompanyName] = useState('');
@@ -74,6 +77,8 @@ export default function HuurdersLayout() {
     setTenant(null);
     setPaymentData(null);
     setPaymentResult(null);
+    setLoginMode('code');
+    setFaceError('');
     setStep('select');
   }, []);
 
@@ -103,12 +108,53 @@ export default function HuurdersLayout() {
           </div>
         );
       case 'select':
+        if (loginMode === 'face') {
+          return (
+            <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
+              <div className="flex items-center justify-between" style={{ height: '7vh', padding: '0 0.5vw' }}>
+                <div style={{ width: '6vw' }} />
+                <span className="kiosk-subtitle text-white">Inloggen</span>
+                <div className="flex gap-[0.5vw]">
+                  <button onClick={() => { setLoginMode('code'); setFaceError(''); }} data-testid="login-mode-code"
+                    className="flex items-center gap-1 rounded-lg transition kiosk-small font-bold text-white bg-white/20 backdrop-blur-sm hover:bg-white/30"
+                    style={{ padding: '0.8vh 1.2vw' }}>
+                    <KeyRound style={{ width: '1.6vh', height: '1.6vh' }} /> Code
+                  </button>
+                  <button data-testid="login-mode-face"
+                    className="flex items-center gap-1 rounded-lg transition kiosk-small font-bold bg-white text-orange-600"
+                    style={{ padding: '0.8vh 1.2vw' }}>
+                    <ScanFace style={{ width: '1.6vh', height: '1.6vh' }} /> Face ID
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
+                <div className="kiosk-card flex flex-col items-center" style={{ width: 'clamp(340px, 35vw, 500px)', padding: 'clamp(20px, 3vh, 44px) clamp(20px, 2.5vw, 48px)' }}>
+                  <h2 className="kiosk-title text-slate-900" style={{ marginBottom: '0.5vh' }}>Face ID</h2>
+                  <p className="kiosk-body text-slate-400" style={{ marginBottom: '2vh' }}>Kijk in de camera om in te loggen</p>
+                  {faceError && <p className="kiosk-body text-red-500 text-center font-semibold" style={{ marginBottom: '1.5vh' }}>{faceError}</p>}
+                  <FaceCapture mode="verify" onCapture={async (descriptor) => {
+                    setFaceError('');
+                    try {
+                      const res = await axios.post(`${API}/public/${companyId}/face/verify-tenant`, { descriptor });
+                      setTenant(res.data);
+                      setTimeout(() => goTo('overview'), 600);
+                    } catch {
+                      setFaceError('Gezicht niet herkend. Probeer opnieuw.');
+                      setLoginMode('code');
+                    }
+                  }} onCancel={() => setLoginMode('code')} />
+                </div>
+              </div>
+            </div>
+          );
+        }
         return (
           <KioskApartmentSelect
             onBack={() => reset()}
             onSelect={(t) => { setTenant(t); goTo('overview'); }}
             companyId={companyId}
             codeOnly={true}
+            onSwitchToFace={() => { setLoginMode('face'); setFaceError(''); }}
           />
         );
       case 'overview':
