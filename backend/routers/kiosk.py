@@ -1275,7 +1275,8 @@ async def list_tenants(company: dict = Depends(get_current_company)):
             "current_billing_month": current_billing_month,
             "overdue_months": overdue_months,
             "status": t.get("status", "active"),
-            "created_at": t.get("created_at")
+            "created_at": t.get("created_at"),
+            "face_id_enabled": bool(t.get("face_id_enabled") and t.get("face_descriptor"))
         })
     
     return result

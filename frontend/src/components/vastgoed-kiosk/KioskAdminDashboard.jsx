@@ -5,11 +5,12 @@ import {
   ArrowLeft, DollarSign, Loader2, Settings, ExternalLink,
   Copy, Check, Receipt, Zap, Crown, Search, Calendar,
   AlertTriangle, User, Banknote, FileText, Save, Eye, LogIn, MessageSquare,
-  Phone, Mail, Landmark, UserCog, TrendingUp, TrendingDown, Briefcase
+  Phone, Mail, Landmark, UserCog, TrendingUp, TrendingDown, Briefcase, ScanFace, Camera, XCircle
 } from 'lucide-react';
 import axios from 'axios';
 import ReceiptTicket from './ReceiptTicket';
 import VirtualKeyboard from './VirtualKeyboard';
+import FaceCapture from './FaceCapture';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
@@ -322,6 +323,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
           onClose={() => setShowTenantModal(false)}
           onSave={() => { setShowTenantModal(false); loadData(); }}
           token={token}
+          companyId={company?.company_id}
         />
       )}
 
@@ -570,6 +572,7 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Service</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Boetes</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Totaal</th>
+                  <th className="text-center p-4 text-sm font-medium text-slate-500">Face ID</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Status</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
                 </tr>
@@ -631,6 +634,15 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                       </td>
                       <td className={`p-4 text-right font-black ${total > 0 ? 'text-orange-600' : 'text-slate-800'}`}>
                         {formatSRD(total)}
+                      </td>
+                      <td className="p-4 text-center">
+                        {tenant.face_id_enabled ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-600" data-testid={`face-badge-${tenant.tenant_id}`}>
+                            <ScanFace className="w-3 h-3" /> Actief
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-300">—</span>
+                        )}
                       </td>
                       <td className="p-4">
                         {hasArrears ? (
@@ -1726,6 +1738,168 @@ function SettingsTab({ company, token, onRefresh }) {
             </div>
           </>
         )}
+      </div>
+
+      {/* Face ID Section */}
+      <FaceIdSettings company={company} token={token} onRefresh={onRefresh} />
+    </div>
+  );
+}
+
+// ============== FACE ID SETTINGS ==============
+function FaceIdSettings({ company, token, onRefresh }) {
+  const [adminFaceEnabled, setAdminFaceEnabled] = useState(!!company?.face_id_enabled);
+  const [showAdminCapture, setShowAdminCapture] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [tenants, setTenants] = useState([]);
+  const [tenantCapture, setTenantCapture] = useState(null); // tenant_id being captured
+
+  useEffect(() => {
+    axios.get(`${API}/admin/tenants`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(res => setTenants(res.data)).catch(() => {});
+    axios.get(`${API}/public/${company.company_id}/face/admin-status`)
+      .then(res => setAdminFaceEnabled(res.data.enabled)).catch(() => {});
+  }, [company.company_id, token]);
+
+  const handleAdminRegister = async (descriptor) => {
+    setSaving(true);
+    try {
+      await axios.post(`${API}/public/${company.company_id}/face/register-admin`, { descriptor });
+      setAdminFaceEnabled(true);
+      setShowAdminCapture(false);
+      onRefresh();
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Registratie mislukt');
+    } finally { setSaving(false); }
+  };
+
+  const handleAdminDelete = async () => {
+    if (!window.confirm('Weet u zeker dat u Face ID wilt verwijderen?')) return;
+    try {
+      await axios.delete(`${API}/public/${company.company_id}/face/admin`);
+      setAdminFaceEnabled(false);
+      onRefresh();
+    } catch { alert('Verwijderen mislukt'); }
+  };
+
+  const handleTenantRegister = async (tenantId, descriptor) => {
+    try {
+      await axios.post(`${API}/public/${company.company_id}/tenant/${tenantId}/face/register`, { descriptor });
+      setTenantCapture(null);
+      // Refresh tenants list
+      const res = await axios.get(`${API}/admin/tenants`, { headers: { Authorization: `Bearer ${token}` } });
+      setTenants(res.data);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Registratie mislukt');
+    }
+  };
+
+  const handleTenantDelete = async (tenantId) => {
+    if (!window.confirm('Face ID verwijderen voor deze huurder?')) return;
+    try {
+      await axios.delete(`${API}/public/${company.company_id}/tenant/${tenantId}/face`);
+      const res = await axios.get(`${API}/admin/tenants`, { headers: { Authorization: `Bearer ${token}` } });
+      setTenants(res.data);
+    } catch { alert('Verwijderen mislukt'); }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 p-6 mt-6" data-testid="face-id-settings">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+          <ScanFace className="w-5 h-5 text-violet-600" />
+        </div>
+        <div>
+          <h3 className="text-lg font-bold text-slate-800">Face ID</h3>
+          <p className="text-sm text-slate-400">Gezichtsherkenning via webcam voor inloggen</p>
+        </div>
+      </div>
+
+      {/* Admin Face ID */}
+      <div className="bg-slate-50 rounded-xl p-5 mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h4 className="text-sm font-bold text-slate-800">Beheerder Face ID</h4>
+            <p className="text-xs text-slate-400">Inloggen op /vastgoed kiosk met gezichtsherkenning ipv PIN</p>
+          </div>
+          {adminFaceEnabled ? (
+            <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">
+              <Check className="w-3.5 h-3.5" /> Geregistreerd
+            </span>
+          ) : (
+            <span className="text-xs font-medium text-slate-400">Niet actief</span>
+          )}
+        </div>
+        {showAdminCapture ? (
+          <div className="bg-white rounded-xl p-4">
+            <FaceCapture mode="register" onCapture={handleAdminRegister} onCancel={() => setShowAdminCapture(false)} buttonLabel="Registreer beheerder" />
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <button onClick={() => setShowAdminCapture(true)} data-testid="admin-face-register-btn"
+              className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 text-sm font-medium transition">
+              <Camera className="w-4 h-4" />
+              {adminFaceEnabled ? 'Opnieuw registreren' : 'Gezicht registreren'}
+            </button>
+            {adminFaceEnabled && (
+              <button onClick={handleAdminDelete} data-testid="admin-face-delete-btn"
+                className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm font-medium transition">
+                <Trash2 className="w-4 h-4" /> Verwijderen
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Tenant Face ID */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <h4 className="text-sm font-bold text-slate-800">Huurder Face ID</h4>
+            <p className="text-xs text-slate-400">Huurders kunnen inloggen op /huurders kiosk met Face ID</p>
+          </div>
+        </div>
+        <div className="space-y-2">
+          {tenants.filter(t => t.status === 'active').map(t => (
+            <div key={t.tenant_id} className="bg-slate-50 rounded-xl p-4" data-testid={`tenant-face-${t.tenant_id}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-orange-100 flex items-center justify-center text-sm font-bold text-orange-600">
+                    {t.name?.charAt(0) || '?'}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-800">{t.name}</p>
+                    <p className="text-xs text-slate-400">Appt. {t.apartment_number} · {t.tenant_code}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {t.face_id_enabled ? (
+                    <>
+                      <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                        <Check className="w-3 h-3" /> Face ID
+                      </span>
+                      <button onClick={() => setTenantCapture(t.tenant_id)} className="text-xs text-violet-600 hover:text-violet-700 font-medium">Opnieuw</button>
+                      <button onClick={() => handleTenantDelete(t.tenant_id)} className="text-xs text-red-500 hover:text-red-600 font-medium">Verwijder</button>
+                    </>
+                  ) : (
+                    <button onClick={() => setTenantCapture(t.tenant_id)}
+                      className="flex items-center gap-1 px-3 py-1.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 text-xs font-medium transition">
+                      <Camera className="w-3.5 h-3.5" /> Registreer
+                    </button>
+                  )}
+                </div>
+              </div>
+              {tenantCapture === t.tenant_id && (
+                <div className="mt-4 bg-white rounded-xl p-4 border border-slate-200">
+                  <FaceCapture mode="register" onCapture={(desc) => handleTenantRegister(t.tenant_id, desc)} onCancel={() => setTenantCapture(null)} buttonLabel={`Registreer ${t.name}`} />
+                </div>
+              )}
+            </div>
+          ))}
+          {tenants.filter(t => t.status === 'active').length === 0 && (
+            <p className="text-sm text-slate-400 text-center py-4">Geen actieve huurders gevonden</p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -2846,7 +3020,7 @@ function ApartmentModal({ apartment, onClose, onSave, token }) {
   );
 }
 
-function TenantModal({ tenant, apartments, onClose, onSave, token }) {
+function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) {
   const [name, setName] = useState(tenant?.name || '');
   const [apartmentId, setApartmentId] = useState(tenant?.apartment_id || '');
   const [email, setEmail] = useState(tenant?.email || '');
@@ -2860,6 +3034,9 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
   const [leaseStart, setLeaseStart] = useState('');
   const [leaseEnd, setLeaseEnd] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showFaceCapture, setShowFaceCapture] = useState(false);
+  const [faceRegistered, setFaceRegistered] = useState(!!tenant?.face_id_enabled);
+  const [faceSaving, setFaceSaving] = useState(false);
 
   const availableApartments = apartments.filter(a => a.status !== 'occupied' || a.apartment_id === tenant?.apartment_id);
 
@@ -2889,6 +3066,27 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleFaceRegister = async (descriptor) => {
+    if (!tenant || !companyId) return;
+    setFaceSaving(true);
+    try {
+      await axios.post(`${API}/public/${companyId}/tenant/${tenant.tenant_id}/face/register`, { descriptor });
+      setFaceRegistered(true);
+      setShowFaceCapture(false);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Face ID registratie mislukt');
+    } finally { setFaceSaving(false); }
+  };
+
+  const handleFaceDelete = async () => {
+    if (!tenant || !companyId) return;
+    if (!window.confirm('Face ID verwijderen voor deze huurder?')) return;
+    try {
+      await axios.delete(`${API}/public/${companyId}/tenant/${tenant.tenant_id}/face`);
+      setFaceRegistered(false);
+    } catch { alert('Verwijderen mislukt'); }
   };
 
   return (
@@ -2986,6 +3184,46 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
                 <p className="text-xs text-slate-400 mt-1">Automatisch een huurovereenkomst aanmaken</p>
               </div>
             </>
+          )}
+          {/* Face ID Section - only when editing existing tenant */}
+          {tenant && companyId && (
+            <div className="border-t border-slate-200 pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <ScanFace className="w-4 h-4 text-violet-600" />
+                  <p className="text-sm font-semibold text-slate-700">Face ID</p>
+                </div>
+                {faceRegistered && (
+                  <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                    <Check className="w-3 h-3" /> Geregistreerd
+                  </span>
+                )}
+              </div>
+              {showFaceCapture ? (
+                <div className="bg-slate-50 rounded-xl p-4">
+                  <FaceCapture
+                    mode="register"
+                    onCapture={handleFaceRegister}
+                    onCancel={() => setShowFaceCapture(false)}
+                    buttonLabel={`Registreer ${tenant.name}`}
+                  />
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => setShowFaceCapture(true)} data-testid="tenant-modal-face-register-btn"
+                    className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 text-sm font-medium transition">
+                    <Camera className="w-4 h-4" />
+                    {faceRegistered ? 'Opnieuw registreren' : 'Gezicht registreren'}
+                  </button>
+                  {faceRegistered && (
+                    <button type="button" onClick={handleFaceDelete} data-testid="tenant-modal-face-delete-btn"
+                      className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm font-medium transition">
+                      <Trash2 className="w-4 h-4" /> Verwijderen
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           )}
           <div className="flex gap-3">
             <button type="button" onClick={onClose} className="flex-1 py-3 border rounded-xl">Annuleren</button>
