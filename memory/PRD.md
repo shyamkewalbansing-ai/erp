@@ -104,6 +104,16 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - Reuses existing kiosk components with `hideCash` prop
 - Each company gets their own unique huurders link
 
+### Kiosk Login Terminal (Completed 26 Mar 2026)
+- Redesigned /vastgoed login from split-screen website layout to centered kiosk terminal
+- Full-screen centered card with "Welkom" heading and login method buttons
+- PIN login opens as a modal popup overlay (not page replacement)
+- Live clock displayed in top-right corner for kiosk terminal feel
+- Removed "Schermtoetsenbord (touchscreen)" button entirely
+- Large touch-friendly buttons: PIN (primary), Wachtwoord, Face ID
+- All forms have "Terug" back button to return to main screen
+- Outfit font for modern kiosk typography
+
 ## Pending/Upcoming Tasks
 ### P0
 - Integrate real Mope API key (waiting for Hakrinbank credentials from user)
