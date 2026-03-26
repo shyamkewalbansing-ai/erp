@@ -76,6 +76,13 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - Visible mode badge in bottom bar (Touch/Desktop indicator)
 - CSS classes: .kiosk-touch, .kiosk-compact, .kiosk-large on root element
 
+### Huurders Kiosk Route (Completed 26 Mar 2026)
+- `/huurders/:companyId` - separate public route for tenants
+- No PIN, no welcome screen - starts directly at apartment selection
+- Only Mope and Pinpas payment methods (no cash)
+- Reuses existing kiosk components with `hideCash` prop
+- Each company gets their own unique huurders link
+
 ## Pending/Upcoming Tasks
 ### P0
 - Integrate real Mope API key (waiting for Hakrinbank credentials from user)
