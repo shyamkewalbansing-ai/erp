@@ -4,8 +4,8 @@ import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
-export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
-  const [mode, setMode] = useState('grid');
+export default function KioskApartmentSelect({ onBack, onSelect, companyId, codeOnly = false }) {
+  const [mode, setMode] = useState(codeOnly ? 'code' : 'grid');
   const [apartments, setApartments] = useState([]);
   const [tenants, setTenants] = useState([]);
   const [searchCode, setSearchCode] = useState('');
@@ -63,21 +63,24 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
           <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
           <span className="kiosk-body">Terug</span>
         </button>
-        <span className="kiosk-subtitle text-white">Kies uw appartement</span>
-        <div className="flex gap-[0.5vw]">
-          <button onClick={() => { setMode('grid'); setError(''); }} data-testid="mode-grid"
-            className={`flex items-center gap-1 rounded-lg transition kiosk-small font-bold ${mode === 'grid' ? 'bg-white text-orange-600' : 'text-white bg-white/20 backdrop-blur-sm hover:bg-white/30'}`}
-            style={{ padding: '0.8vh 1.2vw' }}>
-            <Building2 style={{ width: '1.6vh', height: '1.6vh' }} />
-            <span>Appartement</span>
-          </button>
-          <button onClick={() => { setMode('code'); setError(''); }} data-testid="mode-code"
-            className={`flex items-center gap-1 rounded-lg transition kiosk-small font-bold ${mode === 'code' ? 'bg-white text-orange-600' : 'text-white bg-white/20 backdrop-blur-sm hover:bg-white/30'}`}
-            style={{ padding: '0.8vh 1.2vw' }}>
-            <Keyboard style={{ width: '1.6vh', height: '1.6vh' }} />
-            <span>Code</span>
-          </button>
-        </div>
+        <span className="kiosk-subtitle text-white">{codeOnly ? 'Voer uw huurderscode in' : 'Kies uw appartement'}</span>
+        {!codeOnly && (
+          <div className="flex gap-[0.5vw]">
+            <button onClick={() => { setMode('grid'); setError(''); }} data-testid="mode-grid"
+              className={`flex items-center gap-1 rounded-lg transition kiosk-small font-bold ${mode === 'grid' ? 'bg-white text-orange-600' : 'text-white bg-white/20 backdrop-blur-sm hover:bg-white/30'}`}
+              style={{ padding: '0.8vh 1.2vw' }}>
+              <Building2 style={{ width: '1.6vh', height: '1.6vh' }} />
+              <span>Appartement</span>
+            </button>
+            <button onClick={() => { setMode('code'); setError(''); }} data-testid="mode-code"
+              className={`flex items-center gap-1 rounded-lg transition kiosk-small font-bold ${mode === 'code' ? 'bg-white text-orange-600' : 'text-white bg-white/20 backdrop-blur-sm hover:bg-white/30'}`}
+              style={{ padding: '0.8vh 1.2vw' }}>
+              <Keyboard style={{ width: '1.6vh', height: '1.6vh' }} />
+              <span>Code</span>
+            </button>
+          </div>
+        )}
+        {codeOnly && <div style={{ width: '6vw' }} />}
       </div>
 
       {error && (
@@ -129,7 +132,7 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
           </div>
         ) : (
           <div className="flex items-center justify-center h-full" style={{ padding: '0 0.5vw' }}>
-            <div className="kiosk-card" style={{ width: 'clamp(300px, 35vw, 520px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
+            <div className="kiosk-card" style={{ width: codeOnly ? 'clamp(400px, 55vw, 760px)' : 'clamp(300px, 35vw, 520px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
               <p className="kiosk-body text-slate-400 text-center" style={{ marginBottom: '2vh' }}>Voer uw huurderscode in</p>
               <div className="bg-slate-50 border-2 border-slate-200 rounded-lg text-center" style={{ padding: 'clamp(10px, 2vh, 24px)', marginBottom: '2vh' }}>
                 <span className="font-mono font-extrabold text-slate-900" style={{ fontSize: 'clamp(20px, 3vh, 40px)', letterSpacing: '0.2em' }}>
@@ -137,16 +140,17 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
                 </span>
               </div>
               {/* Letter keys */}
-              <div className="grid grid-cols-9" style={{ gap: 'clamp(2px, 0.3vw, 6px)', marginBottom: '1vh' }}>
+              <div className="grid grid-cols-9" style={{ gap: 'clamp(3px, 0.4vw, 8px)', marginBottom: '1vh' }}>
                 {['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((key) => (
                   <button key={key} onClick={() => handleKeypadPress(key)}
-                    className="bg-slate-50 text-slate-700 hover:bg-orange-50 hover:text-orange-600 border border-slate-100 rounded font-bold transition active:scale-95 flex items-center justify-center"
-                    style={{ height: 'clamp(28px, 4vh, 44px)', fontSize: 'clamp(10px, 1.4vh, 16px)' }}>
+                    className="bg-slate-50 text-slate-700 hover:bg-orange-50 hover:text-orange-600 border border-slate-100 rounded-lg font-bold transition active:scale-95 flex items-center justify-center"
+                    style={{ height: 'clamp(36px, 5vh, 52px)', fontSize: 'clamp(14px, 2vh, 24px)' }}>
                     {key}
                   </button>
                 ))}
                 <button onClick={() => handleKeypadPress('DEL')}
-                  className="bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 rounded font-bold transition active:scale-95 flex items-center justify-center kiosk-small">
+                  className="bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 rounded-lg font-bold transition active:scale-95 flex items-center justify-center"
+                  style={{ height: 'clamp(36px, 5vh, 52px)', fontSize: 'clamp(14px, 2vh, 24px)' }}>
                   DEL
                 </button>
               </div>

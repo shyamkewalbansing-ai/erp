@@ -108,6 +108,7 @@ export default function HuurdersLayout() {
             onBack={() => reset()}
             onSelect={(t) => { setTenant(t); goTo('overview'); }}
             companyId={companyId}
+            codeOnly={true}
           />
         );
       case 'overview':
