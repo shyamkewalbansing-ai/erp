@@ -3197,3 +3197,33 @@ async def delete_tenant_face(company_id: str, tenant_id: str):
         {"$set": {"face_id_enabled": False}, "$unset": {"face_descriptor": ""}}
     )
     return {"success": True}
+
+
+# Global Face ID login - search across ALL companies (for /vastgoed login page)
+@router.post("/public/face/verify-global")
+async def verify_global_face(req: FaceVerifyRequest):
+    companies = await db.kiosk_companies.find(
+        {"face_id_enabled": True, "face_descriptor": {"$exists": True}, "status": "active"},
+        {"_id": 0, "company_id": 1, "name": 1, "face_descriptor": 1}
+    ).to_list(500)
+    best_match = None
+    best_distance = 999
+    for c in companies:
+        stored = c.get("face_descriptor", [])
+        if not stored:
+            continue
+        distance = sum((a - b) ** 2 for a, b in zip(stored, req.descriptor)) ** 0.5
+        if distance < best_distance:
+            best_distance = distance
+            best_match = c
+    if best_match and best_distance < 0.6:
+        company_id = best_match["company_id"]
+        token = jwt.encode({"company_id": company_id, "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)}, JWT_SECRET, algorithm=JWT_ALGORITHM)
+        return {
+            "success": True,
+            "token": token,
+            "company_id": company_id,
+            "name": best_match.get("name", ""),
+            "distance": round(best_distance, 4)
+        }
+    raise HTTPException(status_code=401, detail="Gezicht niet herkend")

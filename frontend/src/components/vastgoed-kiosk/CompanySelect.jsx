@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Building2, LogIn, UserPlus, X, Eye, EyeOff, Loader2, Lock, Delete, Shield, ScanFace, KeyRound, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import FaceCapture from './FaceCapture';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
@@ -75,6 +76,7 @@ function KioskLoginScreen({ onSuccess }) {
   const navigate = useNavigate();
   const [view, setView] = useState('main'); // main, password, register, superadmin
   const [showPinModal, setShowPinModal] = useState(false);
+  const [showFaceModal, setShowFaceModal] = useState(false);
 
   // Shared form state
   const [email, setEmail] = useState('');
@@ -188,7 +190,7 @@ function KioskLoginScreen({ onSuccess }) {
                   Wachtwoord
                 </button>
                 <button
-                  onClick={() => { /* Face ID TODO */ }}
+                  onClick={() => setShowFaceModal(true)}
                   data-testid="kiosk-face-login-btn"
                   className="h-20 bg-white text-slate-800 border-2 border-slate-200 hover:border-violet-500 hover:bg-violet-50 rounded-2xl flex items-center justify-center gap-3 text-lg md:text-xl font-semibold transition-all active:scale-[0.97]"
                 >
@@ -225,6 +227,14 @@ function KioskLoginScreen({ onSuccess }) {
           <PinModal
             onSuccess={onSuccess}
             onClose={() => setShowPinModal(false)}
+          />
+        )}
+
+        {/* Face ID Modal */}
+        {showFaceModal && (
+          <FaceIdModal
+            onSuccess={onSuccess}
+            onClose={() => setShowFaceModal(false)}
           />
         )}
       </div>
@@ -669,6 +679,79 @@ function PinModal({ onSuccess, onClose }) {
 
         {loading && (
           <div className="flex items-center justify-center gap-2 mt-6 text-slate-400">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <span className="text-sm font-medium">Verifi&euml;ren...</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ============ FACE ID MODAL (Popup) ============
+function FaceIdModal({ onSuccess, onClose }) {
+  const navigate = useNavigate();
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleFaceCapture = async (descriptor) => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await axios.post(`${API}/public/face/verify-global`, { descriptor });
+      localStorage.setItem('kiosk_token', res.data.token);
+      sessionStorage.setItem(`kiosk_pin_verified_${res.data.company_id}`, 'true');
+      onSuccess({ company_id: res.data.company_id, name: res.data.name, token: res.data.token });
+    } catch {
+      setError('Gezicht niet herkend. Zorg dat uw gezicht is geregistreerd in Instellingen.');
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" data-testid="face-modal-overlay">
+      <div
+        className="bg-white rounded-3xl shadow-2xl w-full max-w-lg p-8 md:p-10 relative"
+        style={{ fontFamily: 'Outfit, sans-serif', animation: 'scaleIn 0.2s ease-out' }}
+        data-testid="face-modal"
+      >
+        <style>{`@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }`}</style>
+
+        {/* Close */}
+        <button
+          onClick={onClose}
+          data-testid="face-modal-close"
+          className="absolute top-5 right-5 w-10 h-10 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-400 hover:text-slate-600 transition active:scale-90"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* Title */}
+        <div className="text-center mb-6">
+          <div className="w-14 h-14 rounded-2xl bg-violet-600 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-violet-600/20">
+            <ScanFace className="w-8 h-8 text-white" />
+          </div>
+          <h3 className="text-2xl font-bold text-slate-900 tracking-tight">Face ID</h3>
+          <p className="text-sm text-slate-400 mt-1">Kijk recht in de camera om in te loggen</p>
+        </div>
+
+        {/* Error */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-center text-sm font-medium" data-testid="face-error-message">
+            {error}
+          </div>
+        )}
+
+        {/* Face Capture */}
+        <div className="flex justify-center">
+          <FaceCapture
+            mode="verify"
+            onCapture={handleFaceCapture}
+            onCancel={onClose}
+          />
+        </div>
+
+        {loading && (
+          <div className="flex items-center justify-center gap-2 mt-4 text-slate-400">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span className="text-sm font-medium">Verifi&euml;ren...</span>
           </div>
