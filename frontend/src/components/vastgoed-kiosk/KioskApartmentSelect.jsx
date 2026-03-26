@@ -132,7 +132,7 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId, code
           </div>
         ) : (
           <div className="flex items-center justify-center h-full" style={{ padding: '0 0.5vw' }}>
-            <div className="kiosk-card" style={{ width: codeOnly ? 'clamp(500px, 65vw, 900px)' : 'clamp(300px, 35vw, 520px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
+            <div className="kiosk-card" style={{ width: codeOnly ? 'clamp(500px, 65vw, 900px)' : 'clamp(300px, 35vw, 520px)', padding: codeOnly ? 'clamp(20px, 4vh, 52px) clamp(20px, 2.5vw, 48px)' : 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
               <p className="kiosk-body text-slate-400 text-center" style={{ marginBottom: '2vh' }}>Voer uw huurderscode in</p>
               <div className="bg-slate-50 border-2 border-slate-200 rounded-lg text-center" style={{ padding: 'clamp(10px, 2vh, 24px)', marginBottom: '2vh' }}>
                 <span className="font-mono font-extrabold text-slate-900" style={{ fontSize: 'clamp(20px, 3vh, 40px)', letterSpacing: '0.2em' }}>
@@ -144,13 +144,13 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId, code
                 {['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'].map((key) => (
                   <button key={key} onClick={() => handleKeypadPress(key)}
                     className="bg-slate-50 text-slate-700 hover:bg-orange-50 hover:text-orange-600 border border-slate-100 rounded-lg font-bold transition active:scale-95 flex items-center justify-center"
-                    style={{ height: 'clamp(36px, 5vh, 52px)', fontSize: 'clamp(14px, 2vh, 24px)' }}>
+                    style={{ height: 'clamp(40px, 5.8vh, 58px)', fontSize: 'clamp(14px, 2vh, 24px)' }}>
                     {key}
                   </button>
                 ))}
                 <button onClick={() => handleKeypadPress('DEL')}
                   className="bg-red-50 text-red-500 hover:bg-red-100 border border-red-100 rounded-lg font-bold transition active:scale-95 flex items-center justify-center"
-                  style={{ height: 'clamp(36px, 5vh, 52px)', fontSize: 'clamp(14px, 2vh, 24px)' }}>
+                  style={{ height: 'clamp(40px, 5.8vh, 58px)', fontSize: 'clamp(14px, 2vh, 24px)' }}>
                   DEL
                 </button>
               </div>
@@ -159,13 +159,13 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId, code
                 {['1','2','3','4','5','6','7','8','9','0'].map((key) => (
                   <button key={key} onClick={() => handleKeypadPress(key)}
                     className="bg-slate-50 text-slate-900 hover:bg-orange-50 hover:text-orange-600 border border-slate-100 rounded-lg font-bold transition active:scale-95 flex items-center justify-center"
-                    style={{ height: 'clamp(36px, 5vh, 52px)', fontSize: 'clamp(14px, 2vh, 24px)' }}>
+                    style={{ height: 'clamp(40px, 5.8vh, 58px)', fontSize: 'clamp(14px, 2vh, 24px)' }}>
                     {key}
                   </button>
                 ))}
                 <button onClick={() => handleKeypadPress('OK')} data-testid="code-ok-btn"
                   className="col-span-2 bg-orange-500 text-white hover:bg-orange-600 rounded-lg font-bold transition active:scale-95 flex items-center justify-center"
-                  style={{ height: 'clamp(36px, 5vh, 52px)', fontSize: 'clamp(14px, 2vh, 24px)' }}>
+                  style={{ height: 'clamp(40px, 5.8vh, 58px)', fontSize: 'clamp(14px, 2vh, 24px)' }}>
                   OK
                 </button>
               </div>
