@@ -84,6 +84,18 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - Backend endpoints: register, verify, delete face descriptors for admin and tenants
 - FaceCapture.jsx reusable component with webcam feed and visual guides
 - Models served from /public/models (tiny_face_detector, face_landmark_68, face_recognition)
+- Face ID Registration UI in Admin Dashboard:
+  - Settings tab: FaceIdSettings component with admin + tenant face registration
+  - Huurders tab: Face ID column with status badges (Actief/—)
+  - TenantModal: Face ID section with register/delete when editing existing tenant
+- Face ID backend endpoints:
+  - POST /api/kiosk/public/{company_id}/face/register-admin
+  - POST /api/kiosk/public/{company_id}/face/verify-admin
+  - GET /api/kiosk/public/{company_id}/face/admin-status
+  - POST /api/kiosk/public/{company_id}/tenant/{tenant_id}/face/register
+  - POST /api/kiosk/public/{company_id}/face/verify-tenant
+  - DELETE /api/kiosk/public/{company_id}/face/admin
+  - DELETE /api/kiosk/public/{company_id}/tenant/{tenant_id}/face
 
 ### Huurders Kiosk Route (Completed 26 Mar 2026)
 - `/huurders/:companyId` - separate public route for tenants
