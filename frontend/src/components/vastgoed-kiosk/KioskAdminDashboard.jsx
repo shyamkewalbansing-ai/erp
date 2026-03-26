@@ -1752,36 +1752,55 @@ function SettingsTab({ company, token, onRefresh }) {
 
 // ============== FACE ID SETTINGS ==============
 function FaceIdSettings({ company, token, onRefresh }) {
-  const [adminFaceEnabled, setAdminFaceEnabled] = useState(!!company?.face_id_enabled);
+  const [adminFaces, setAdminFaces] = useState([]);
   const [showAdminCapture, setShowAdminCapture] = useState(false);
+  const [newFaceLabel, setNewFaceLabel] = useState('');
   const [saving, setSaving] = useState(false);
   const [tenants, setTenants] = useState([]);
-  const [tenantCapture, setTenantCapture] = useState(null); // tenant_id being captured
+  const [tenantCapture, setTenantCapture] = useState(null);
+
+  const loadAdminStatus = () => {
+    axios.get(`${API}/public/${company.company_id}/face/admin-status`)
+      .then(res => setAdminFaces(res.data.faces || [])).catch(() => {});
+  };
 
   useEffect(() => {
     axios.get(`${API}/admin/tenants`, { headers: { Authorization: `Bearer ${token}` } })
       .then(res => setTenants(res.data)).catch(() => {});
-    axios.get(`${API}/public/${company.company_id}/face/admin-status`)
-      .then(res => setAdminFaceEnabled(res.data.enabled)).catch(() => {});
+    loadAdminStatus();
   }, [company.company_id, token]);
 
   const handleAdminRegister = async (descriptor) => {
     setSaving(true);
     try {
-      await axios.post(`${API}/public/${company.company_id}/face/register-admin`, { descriptor });
-      setAdminFaceEnabled(true);
+      await axios.post(`${API}/public/${company.company_id}/face/register-admin`, {
+        descriptor,
+        label: newFaceLabel.trim() || `Beheerder ${adminFaces.length + 1}`
+      });
       setShowAdminCapture(false);
+      setNewFaceLabel('');
+      loadAdminStatus();
       onRefresh();
     } catch (err) {
       alert(err.response?.data?.detail || 'Registratie mislukt');
     } finally { setSaving(false); }
   };
 
-  const handleAdminDelete = async () => {
-    if (!window.confirm('Weet u zeker dat u Face ID wilt verwijderen?')) return;
+  const handleAdminDeleteOne = async (index) => {
+    const face = adminFaces[index];
+    if (!window.confirm(`Face ID "${face.label}" verwijderen?`)) return;
+    try {
+      await axios.delete(`${API}/public/${company.company_id}/face/admin?index=${index}`);
+      loadAdminStatus();
+      onRefresh();
+    } catch { alert('Verwijderen mislukt'); }
+  };
+
+  const handleAdminDeleteAll = async () => {
+    if (!window.confirm('ALLE Face IDs verwijderen voor beheerder?')) return;
     try {
       await axios.delete(`${API}/public/${company.company_id}/face/admin`);
-      setAdminFaceEnabled(false);
+      loadAdminStatus();
       onRefresh();
     } catch { alert('Verwijderen mislukt'); }
   };
@@ -1824,34 +1843,76 @@ function FaceIdSettings({ company, token, onRefresh }) {
         <div className="flex items-center justify-between mb-3">
           <div>
             <h4 className="text-sm font-bold text-slate-800">Beheerder Face ID</h4>
-            <p className="text-xs text-slate-400">Inloggen op /vastgoed kiosk met gezichtsherkenning ipv PIN</p>
+            <p className="text-xs text-slate-400">Meerdere gezichten registreren voor kiosk-toegang</p>
           </div>
-          {adminFaceEnabled ? (
-            <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">
-              <Check className="w-3.5 h-3.5" /> Geregistreerd
-            </span>
-          ) : (
-            <span className="text-xs font-medium text-slate-400">Niet actief</span>
-          )}
+          <div className="flex items-center gap-2">
+            {adminFaces.length > 0 && (
+              <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">
+                <Check className="w-3.5 h-3.5" /> {adminFaces.length} geregistreerd
+              </span>
+            )}
+          </div>
         </div>
-        {showAdminCapture ? (
-          <div className="bg-white rounded-xl p-4">
-            <FaceCapture mode="register" onCapture={handleAdminRegister} onCancel={() => setShowAdminCapture(false)} buttonLabel="Registreer beheerder" />
-          </div>
-        ) : (
-          <div className="flex gap-2">
-            <button onClick={() => setShowAdminCapture(true)} data-testid="admin-face-register-btn"
-              className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 text-sm font-medium transition">
-              <Camera className="w-4 h-4" />
-              {adminFaceEnabled ? 'Opnieuw registreren' : 'Gezicht registreren'}
-            </button>
-            {adminFaceEnabled && (
-              <button onClick={handleAdminDelete} data-testid="admin-face-delete-btn"
-                className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm font-medium transition">
-                <Trash2 className="w-4 h-4" /> Verwijderen
+
+        {/* Registered faces list */}
+        {adminFaces.length > 0 && (
+          <div className="space-y-2 mb-4">
+            {adminFaces.map((face, idx) => (
+              <div key={idx} className="flex items-center justify-between bg-white rounded-lg px-4 py-3 border border-slate-100" data-testid={`admin-face-${idx}`}>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-violet-100 flex items-center justify-center">
+                    <ScanFace className="w-4 h-4 text-violet-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">{face.label}</p>
+                    {face.registered_at && (
+                      <p className="text-xs text-slate-400">{new Date(face.registered_at).toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleAdminDeleteOne(idx)}
+                  data-testid={`admin-face-delete-${idx}`}
+                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition"
+                >
+                  <Trash2 className="w-3.5 h-3.5" /> Verwijder
+                </button>
+              </div>
+            ))}
+            {adminFaces.length > 1 && (
+              <button
+                onClick={handleAdminDeleteAll}
+                data-testid="admin-face-delete-all"
+                className="text-xs font-medium text-red-400 hover:text-red-600 transition mt-1"
+              >
+                Alles verwijderen
               </button>
             )}
           </div>
+        )}
+
+        {/* Add new face */}
+        {showAdminCapture ? (
+          <div className="bg-white rounded-xl p-4 border border-violet-200">
+            <div className="mb-3">
+              <label className="block text-xs font-semibold text-slate-600 mb-1">Naam / Label</label>
+              <input
+                type="text"
+                value={newFaceLabel}
+                onChange={e => setNewFaceLabel(e.target.value)}
+                data-testid="admin-face-label-input"
+                className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:border-violet-500 focus:ring-2 focus:ring-violet-500/10 outline-none"
+                placeholder={`Beheerder ${adminFaces.length + 1}`}
+              />
+            </div>
+            <FaceCapture mode="register" onCapture={handleAdminRegister} onCancel={() => { setShowAdminCapture(false); setNewFaceLabel(''); }} buttonLabel="Gezicht vastleggen" />
+          </div>
+        ) : (
+          <button onClick={() => setShowAdminCapture(true)} data-testid="admin-face-register-btn"
+            className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 text-sm font-medium transition">
+            <Camera className="w-4 h-4" />
+            {adminFaces.length > 0 ? 'Nieuw gezicht toevoegen' : 'Gezicht registreren'}
+          </button>
         )}
       </div>
 
