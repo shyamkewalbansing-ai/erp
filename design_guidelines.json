@@ -1,117 +1,117 @@
 {
-  "design_system": {
-    "name": "Emerald Horizon",
-    "philosophy": "Structured, Floating, Data-First. Moving away from generic glassmorphism to distinct, card-based layouts.",
-    "typography": {
-      "headings": {
-        "family": "Outfit, sans-serif",
-        "weights": {
-          "bold": 700,
-          "medium": 500
-        },
-        "tracking": "-0.02em"
-      },
-      "body": {
-        "family": "Plus Jakarta Sans, sans-serif",
-        "weights": {
-          "regular": 400,
-          "medium": 500,
-          "semibold": 600
-        }
-      }
+  "theme": "LIGHT",
+  "archetype": "4 (Swiss & High-Contrast)",
+  "design_philosophy": "Kiosk Terminal Optimization: Prioritize the '2-Second Rule'. Minimalist interface, massive touch targets, ultra-high contrast, and clear hierarchy. Eliminate split-screen website patterns in favor of a centered, focused self-checkout aesthetic using an orange primary palette.",
+  "colors": {
+    "primary": {
+      "DEFAULT": "#FF5C00",
+      "foreground": "#FFFFFF",
+      "hover": "#E05200"
     },
-    "colors": {
-      "primary": {
-        "base": "#0caf60",
-        "hover": "#059669",
-        "active": "#047857",
-        "subtle": "rgba(12, 175, 96, 0.1)"
-      },
-      "light_mode": {
-        "background": "#F8FAFC",
-        "surface": "#FFFFFF",
-        "text_primary": "#0F172A",
-        "text_secondary": "#64748B",
-        "border": "#E2E8F0"
-      },
-      "dark_mode": {
-        "background": "#020617",
-        "surface": "#0F172A",
-        "text_primary": "#F8FAFC",
-        "text_secondary": "#94A3B8",
-        "border": "#1E293B"
-      }
+    "background": "#F4F5F7",
+    "surface": {
+      "DEFAULT": "#FFFFFF",
+      "secondary": "#F9FAFB"
     },
-    "spacing": {
-      "sidebar_width": "280px",
-      "sidebar_collapsed_width": "80px",
-      "header_height": "70px",
-      "card_radius": "16px",
-      "container_padding": "24px"
+    "text": {
+      "primary": "#0A0A0A",
+      "secondary": "#4B5563",
+      "muted": "#9CA3AF"
+    },
+    "border": "#E5E7EB",
+    "status": {
+      "success": "#10B981",
+      "error": "#EF4444"
     }
+  },
+  "typography": {
+    "font_family": {
+      "heading": "Outfit, sans-serif",
+      "body": "Outfit, sans-serif"
+    },
+    "scale": {
+      "h1": "text-5xl md:text-6xl tracking-tight font-bold",
+      "h2": "text-3xl md:text-4xl tracking-tight font-semibold",
+      "body": "text-lg md:text-xl leading-relaxed",
+      "button": "text-xl md:text-2xl font-semibold"
+    },
+    "anti_patterns": [
+      "Avoid Inter for headings",
+      "Avoid small text below 16px for interactive elements"
+    ]
+  },
+  "layout_spacing": {
+    "philosophy": "Generous Spacing: Large touch targets for kiosk environment.",
+    "container": "max-w-4xl mx-auto h-screen flex flex-col items-center justify-center p-8",
+    "gap_strategy": "gap-8 md:gap-12",
+    "touch_targets": "Minimum height 80px for primary buttons, 64px for secondary."
   },
   "components": {
-    "sidebar": {
-      "style": "floating",
-      "desktop_behavior": "Floating panel with 16px margin from edges, rounded-2xl corners. Detached from header.",
-      "mobile_behavior": "Full height drawer, slide-over.",
-      "navigation_items": {
-        "style": "pill",
-        "active_state": "bg-emerald-500/10 text-emerald-600 font-semibold border-l-4 border-emerald-500",
-        "hover_state": "hover:bg-slate-100 dark:hover:bg-slate-800 hover:translate-x-1 transition-all"
-      }
+    "buttons": {
+      "primary": "Massive full-width or large grid blocks. bg-[#FF5C00] text-white hover:bg-[#E05200] rounded-xl shadow-lg transition-transform active:scale-95 h-24 text-2xl flex items-center justify-center gap-4",
+      "secondary": "bg-white text-[#0A0A0A] border-2 border-[#E5E7EB] hover:border-[#FF5C00] hover:bg-orange-50 rounded-xl transition-all h-20 text-xl flex items-center justify-center gap-4"
     },
-    "header": {
-      "style": "minimal_sticky",
-      "layout": "Flex row, detached from sidebar on desktop.",
-      "elements": {
-        "user_profile": "Compact pill with avatar and name. No gradients.",
-        "theme_toggle": "Icon only, subtle border.",
-        "notifications": "Bell icon with emerald dot."
-      }
+    "numpad_modal": {
+      "description": "Popup form for PIN entry. Must not replace view. Use Shadcn Dialog.",
+      "grid": "grid grid-cols-3 gap-4 p-6",
+      "key": "h-20 w-full text-3xl font-bold bg-[#F4F5F7] rounded-xl flex items-center justify-center active:bg-[#FF5C00] active:text-white transition-colors cursor-pointer",
+      "display": "text-center text-4xl tracking-[0.5em] font-bold py-8 border-b-2 border-border mb-6 min-h-[100px]"
     },
-    "dashboard": {
-      "layout": "Bento Grid (CSS Grid)",
-      "cards": {
-        "style": "Flat surface, subtle 1px border, no heavy shadows. Focus on typography.",
-        "hover": "Translate Y -2px, subtle emerald glow."
-      }
+    "cards": {
+      "style": "bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 p-10 md:p-16 w-full max-w-2xl"
+    },
+    "inputs": {
+      "style": "h-16 text-xl px-6 rounded-xl border-2 border-border focus:border-[#FF5C00] focus:ring-4 focus:ring-[#FF5C00]/20 bg-[#F9FAFB]"
     }
   },
-  "assets": {
-    "images": {
-      "user_avatar": "https://images.unsplash.com/photo-1655249493799-9cee4fe983bb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NjZ8MHwxfHNlYXJjaHwxfHxwcm9mZXNzaW9uYWwlMjBidXNpbmVzcyUyMHBvcnRyYWl0JTIwaGVhZHNob3R8ZW58MHx8fHwxNzcwMjQxNDM3fDA&ixlib=rb-4.1.0&q=85",
-      "hero_background": "https://images.unsplash.com/photo-1670279975784-fa58f2365971?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1Nzl8MHwxfHNlYXJjaHwxfHxhYnN0cmFjdCUyMGdlb21ldHJpYyUyMDNkJTIwc2hhcGVzJTIwZW1lcmFsZCUyMGdyZWVuJTIwd2hpdGUlMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc3MDI0MTQzOXww&ixlib=rb-4.1.0&q=85",
-      "logo_placeholder": "https://customer-assets.emergentagent.com/job_suriname-rentals/artifacts/ltu8gy30_logo_dark_1760568268.webp"
-    }
+  "motion_interactions": {
+    "buttons": "Immediate response, slight scale down on active (tap). No slow fades.",
+    "modal": "Slide up or scale up entrance animation using Framer Motion or Shadcn defaults."
   },
-  "implementation_steps": [
-    {
-      "file": "/app/frontend/src/App.css",
-      "action": "replace_content",
-      "instructions": "Replace the entire CSS with the new 'Emerald Horizon' system. Key changes: Remove global glassmorphism. Add .sidebar-floating class. Update root variables for cleaner, flatter colors. Ensure .sidebar has 'position: fixed; top: 1rem; bottom: 1rem; left: 1rem; border-radius: 1rem;' for the floating effect on desktop."
+  "icons": {
+    "library": "lucide-react",
+    "sizing": "w-8 h-8 md:w-10 md:h-10",
+    "notes": "Use bold, easily recognizable icons for PIN, Face ID, and Key (Password)."
+  },
+  "page_structure": {
+    "header": "Subtle top bar with logo and live clock/date to enforce the kiosk terminal feel.",
+    "main_content": {
+      "type": "Centered Card",
+      "elements": [
+        "Greeting / Brand Name (e.g., 'Welkom bij Vastgoed')",
+        "Instruction ('Kies een inlogmethode')",
+        "Grid of massive buttons for login options"
+      ]
     },
-    {
-      "file": "/app/frontend/src/components/Layout.js",
-      "action": "update_structure",
-      "instructions": "Refactor the layout structure. 1. Wrap the Sidebar in a container that allows it to float on desktop. 2. Update the Header to be 'sticky top-0' but respect the sidebar's space. 3. Ensure the 'main' content area has appropriate padding-left to account for the floating sidebar (approx 300px). 4. Update NavLink classes to match the new 'pill' style defined in CSS."
-    },
-    {
-      "file": "/app/frontend/tailwind.config.js",
-      "action": "verify",
-      "instructions": "Ensure 'emerald' color palette is available. (It usually is by default in Tailwind, but check if it needs to be explicitly added to 'extend')."
-    }
-  ],
-  "universal_guidelines": {
-    "do_not": [
-      "Do not use heavy gradients for backgrounds.",
-      "Do not use 'Inter' font for headings.",
-      "Do not make the sidebar full-height on desktop (keep it floating)."
-    ],
-    "must_do": [
-      "Use #0caf60 for primary actions.",
-      "Ensure high contrast for text (WCAG AA).",
-      "Use 'Outfit' for all headings."
+    "actions_layout": "Grid of 1 column or 2 columns based on screen size. Primary action (PIN) gets full width, others share space.",
+    "removed_features": [
+      "Schermtoetsenbord (touchscreen) button must be completely absent."
     ]
-  }
+  },
+  "image_urls": {
+    "kiosk_background": {
+      "url": "https://images.unsplash.com/photo-1620121692029-d088224ddc74?ixlib=rb-4.0.3&auto=format&fit=crop&w=2832&q=80",
+      "description": "Optional: very subtle abstract light orange/grey gradient background to overlay with #F4F5F7 (opacity 0.1) if pure CSS feels too plain.",
+      "category": "background"
+    },
+    "brand_logo": {
+      "url": "",
+      "description": "Use purely text-based 'Vastgoed' or a simple SVG icon if no logo is provided.",
+      "category": "logo"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Delete any split-screen layout code. Use a single-page full-screen centered flex layout.",
+    "Set background to #F4F5F7.",
+    "Create a massive central card (max-w-2xl) with rounded-3xl and soft shadow.",
+    "Add a top-right or top-center live clock to make it feel like a true KIOSK.",
+    "Implement 'Inloggen met PIN code' as a Dialog (modal) containing a custom CSS grid Numpad. Do not route to a new page.",
+    "Make the PIN numpad keys very large (h-20 or more) with large numbers.",
+    "Provide standard email/password login either as an expandable accordion inside the main card or a secondary view, but keep PIN as the prominent quick-action.",
+    "Add Face ID as a secondary button with an icon.",
+    "Ensure the primary color #FF5C00 is used for the most important CTAs and focus rings.",
+    "Remove 'Schermtoetsenbord' entirely.",
+    "All buttons must have 'active:scale-95' or similar touch-feedback.",
+    "Add data-testid to all buttons and inputs."
+  ]
 }
