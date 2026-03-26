@@ -118,6 +118,7 @@ export default function HuurdersLayout() {
             companyId={companyId}
             onBack={() => goTo('select')}
             onPay={() => goTo('payment')}
+            variant="huurder"
           />
         );
       case 'payment':
