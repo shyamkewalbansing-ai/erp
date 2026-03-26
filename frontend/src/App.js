@@ -173,6 +173,7 @@ const VastgoedKioskLayout = lazy(() => import("./components/vastgoed-kiosk/Kiosk
 const VastgoedKioskCompanySelect = lazy(() => import("./components/vastgoed-kiosk/CompanySelect"));
 const VastgoedKioskAdmin = lazy(() => import("./components/vastgoed-kiosk/KioskAdminDashboard"));
 const VastgoedSuperAdmin = lazy(() => import("./components/vastgoed-kiosk/SuperAdminDashboard"));
+const HuurdersLayout = lazy(() => import("./components/vastgoed-kiosk/HuurdersLayout"));
 
 
 // Loading component for lazy loaded pages - minimal flash
@@ -664,6 +665,11 @@ function MainAppRoutes() {
         <Route path="/vastgoed/:companyId" element={
           <SafeSuspense>
             <VastgoedKioskLayout />
+          </SafeSuspense>
+        } />
+        <Route path="/huurders/:companyId" element={
+          <SafeSuspense>
+            <HuurdersLayout />
           </SafeSuspense>
         } />
         

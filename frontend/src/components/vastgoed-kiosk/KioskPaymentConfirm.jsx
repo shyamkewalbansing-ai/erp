@@ -10,7 +10,7 @@ function formatSRD(amount) {
 }
 const TYPE_LABELS = { rent: 'Huur', partial_rent: 'Gedeeltelijke betaling', service_costs: 'Servicekosten', fines: 'Boetes' };
 
-export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuccess, companyId }) {
+export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuccess, companyId, hideCash = false }) {
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [payMethod, setPayMethod] = useState(null);
@@ -206,18 +206,19 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
         </div>
         <div className="flex-1 flex items-center justify-center gap-[1.5vw] min-h-0" style={{ paddingBottom: '1.5vh' }}>
           {/* Cash */}
-          <button onClick={() => setPayMethod('cash')} data-testid="pay-method-cash"
-            className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1"
-            style={{ width: 'clamp(240px, 28vw, 440px)', height: 'clamp(240px, 52vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
-            onMouseEnter={e => e.currentTarget.style.borderColor = '#22c55e'}
-            onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-            <div className="rounded-full bg-green-50 group-hover:bg-green-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
-              <Banknote style={{ width: '4vh', height: '4vh' }} className="text-green-500" />
-            </div>
-            <p className="kiosk-subtitle text-slate-900 font-bold" style={{ marginBottom: '0.5vh' }}>Contant</p>
-            <p className="kiosk-small text-slate-400">Betaal met contant geld</p>
-            <div className="w-full absolute bottom-0 left-0 bg-green-500 transition-all duration-200" style={{ height: '0.5vh', opacity: 0 }} />
-          </button>
+          {!hideCash && (
+            <button onClick={() => setPayMethod('cash')} data-testid="pay-method-cash"
+              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1"
+              style={{ width: 'clamp(240px, 28vw, 440px)', height: 'clamp(240px, 52vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = '#22c55e'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
+              <div className="rounded-full bg-green-50 group-hover:bg-green-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
+                <Banknote style={{ width: '4vh', height: '4vh' }} className="text-green-500" />
+              </div>
+              <p className="kiosk-subtitle text-slate-900 font-bold" style={{ marginBottom: '0.5vh' }}>Contant</p>
+              <p className="kiosk-small text-slate-400">Betaal met contant geld</p>
+            </button>
+          )}
           {/* Mope */}
           {!mopeLoading && mopeEnabled && (
             <button onClick={() => { setPayMethod('mope'); handleMopePayment(); }} data-testid="pay-method-mope"
