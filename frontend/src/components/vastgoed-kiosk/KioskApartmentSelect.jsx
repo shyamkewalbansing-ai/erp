@@ -132,7 +132,7 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId, code
           </div>
         ) : (
           <div className="flex items-center justify-center h-full" style={{ padding: '0 0.5vw' }}>
-            <div className="kiosk-card" style={{ width: codeOnly ? 'clamp(400px, 55vw, 760px)' : 'clamp(300px, 35vw, 520px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
+            <div className="kiosk-card" style={{ width: codeOnly ? 'clamp(500px, 65vw, 900px)' : 'clamp(300px, 35vw, 520px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
               <p className="kiosk-body text-slate-400 text-center" style={{ marginBottom: '2vh' }}>Voer uw huurderscode in</p>
               <div className="bg-slate-50 border-2 border-slate-200 rounded-lg text-center" style={{ padding: 'clamp(10px, 2vh, 24px)', marginBottom: '2vh' }}>
                 <span className="font-mono font-extrabold text-slate-900" style={{ fontSize: 'clamp(20px, 3vh, 40px)', letterSpacing: '0.2em' }}>
