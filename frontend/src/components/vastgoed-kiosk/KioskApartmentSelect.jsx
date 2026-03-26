@@ -64,16 +64,16 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
           <span className="kiosk-body">Terug</span>
         </button>
         <span className="kiosk-subtitle text-white">Kies uw appartement</span>
-        <div className="flex bg-white/20 rounded-lg" style={{ padding: '0.4vh' }}>
+        <div className="flex gap-[0.5vw]">
           <button onClick={() => { setMode('grid'); setError(''); }} data-testid="mode-grid"
-            className={`flex items-center gap-1 rounded-md transition kiosk-small font-bold ${mode === 'grid' ? 'bg-white text-orange-600' : 'text-white bg-white/10 hover:bg-white/20'}`}
-            style={{ padding: '0.6vh 1vw' }}>
+            className={`flex items-center gap-1 rounded-lg transition kiosk-small font-bold ${mode === 'grid' ? 'bg-white text-orange-600' : 'text-white bg-white/20 backdrop-blur-sm hover:bg-white/30'}`}
+            style={{ padding: '0.8vh 1.2vw' }}>
             <Building2 style={{ width: '1.6vh', height: '1.6vh' }} />
             <span>Appartement</span>
           </button>
           <button onClick={() => { setMode('code'); setError(''); }} data-testid="mode-code"
-            className={`flex items-center gap-1 rounded-md transition kiosk-small font-bold ${mode === 'code' ? 'bg-white text-orange-600' : 'text-white bg-white/10 hover:bg-white/20'}`}
-            style={{ padding: '0.6vh 1vw' }}>
+            className={`flex items-center gap-1 rounded-lg transition kiosk-small font-bold ${mode === 'code' ? 'bg-white text-orange-600' : 'text-white bg-white/20 backdrop-blur-sm hover:bg-white/30'}`}
+            style={{ padding: '0.8vh 1.2vw' }}>
             <Keyboard style={{ width: '1.6vh', height: '1.6vh' }} />
             <span>Code</span>
           </button>
