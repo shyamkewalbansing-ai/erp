@@ -89,28 +89,39 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
       {/* Content */}
       <div className="flex-1 min-h-0 overflow-auto" style={{ paddingBottom: '1.5vh' }}>
         {mode === 'grid' ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 h-full" style={{ gap: 'clamp(6px, 0.8vw, 14px)', padding: '0 0.5vw' }}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 h-full" style={{ gap: 'clamp(8px, 1vw, 16px)', padding: '0 0.5vw' }}>
             {apartments.map((apt) => {
               const tenant = tenants.find(t => t.apartment_id === apt.apartment_id && t.status === 'active');
               const hasTenant = !!tenant;
               return (
                 <button key={apt.apartment_id} onClick={() => handleApartmentClick(apt)} disabled={!hasTenant}
                   data-testid={`apt-${apt.number}`}
-                  className={`kiosk-card flex flex-col items-center justify-center text-center transition ${
-                    hasTenant ? 'hover:bg-slate-50 cursor-pointer active:scale-[0.98]' : 'opacity-40 cursor-not-allowed'
+                  className={`group bg-white flex flex-col items-center justify-center text-center transition-all duration-200 overflow-hidden ${
+                    hasTenant ? 'cursor-pointer hover:-translate-y-1' : 'opacity-35 cursor-not-allowed'
                   }`}
-                  style={{ padding: 'clamp(8px, 1.5vh, 20px) clamp(4px, 0.5vw, 12px)' }}>
-                  <span className="kiosk-amount-md text-slate-900" style={{ marginBottom: '0.5vh' }}>{apt.number}</span>
+                  style={{
+                    padding: 'clamp(10px, 1.8vh, 24px) clamp(6px, 0.8vw, 16px)',
+                    borderRadius: 'clamp(12px, 1.6vh, 20px)',
+                    boxShadow: hasTenant ? '0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)' : '0 2px 8px rgba(0,0,0,0.03)',
+                    border: '2px solid transparent',
+                  }}
+                  onMouseEnter={e => { if (hasTenant) e.currentTarget.style.borderColor = '#f97316'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'transparent'; }}>
+                  <div className={`rounded-full flex items-center justify-center ${hasTenant ? 'bg-orange-50 group-hover:bg-orange-100' : 'bg-slate-50'}`}
+                    style={{ width: 'clamp(36px, 5.5vh, 56px)', height: 'clamp(36px, 5.5vh, 56px)', marginBottom: '1.2vh', transition: 'background 0.2s' }}>
+                    <Building2 style={{ width: '2.5vh', height: '2.5vh' }} className={hasTenant ? 'text-orange-500' : 'text-slate-300'} />
+                  </div>
+                  <span className="kiosk-subtitle font-extrabold text-slate-900" style={{ marginBottom: '0.4vh' }}>{apt.number}</span>
                   {hasTenant ? (
                     <>
                       <div className="flex items-center gap-1 text-slate-400" style={{ marginBottom: '0.8vh' }}>
-                        <User style={{ width: '1.5vh', height: '1.5vh' }} />
+                        <User style={{ width: '1.4vh', height: '1.4vh' }} />
                         <span className="kiosk-small truncate" style={{ maxWidth: '10vw' }}>{tenant.name}</span>
                       </div>
-                      <span className="kiosk-small font-bold text-green-600 bg-green-50 rounded" style={{ padding: '0.3vh 0.8vw' }}>Bezet</span>
+                      <span className="kiosk-small font-bold text-green-600 bg-green-50 rounded-full" style={{ padding: '0.3vh 1vw' }}>Bezet</span>
                     </>
                   ) : (
-                    <span className="kiosk-small text-slate-300">Leeg</span>
+                    <span className="kiosk-small text-slate-300" style={{ marginTop: '0.3vh' }}>Leeg</span>
                   )}
                 </button>
               );
