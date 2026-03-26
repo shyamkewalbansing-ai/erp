@@ -14,7 +14,7 @@ import FaceCapture from './FaceCapture';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
-export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthenticated = false, onBack }) {
+export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthenticated = false, onBack, onLock }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [company, setCompany] = useState(null);
@@ -52,11 +52,15 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('kiosk_token');
-    Object.keys(sessionStorage).forEach(key => {
-      if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
-    });
-    navigate('/vastgoed');
+    if (onLock) {
+      onLock();
+    } else {
+      localStorage.removeItem('kiosk_token');
+      Object.keys(sessionStorage).forEach(key => {
+        if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
+      });
+      navigate('/vastgoed');
+    }
   };
 
   useEffect(() => {

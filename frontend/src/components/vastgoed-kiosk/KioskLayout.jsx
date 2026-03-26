@@ -172,7 +172,15 @@ export default function KioskLayout() {
             onStart={() => goTo('select')} 
             onAdmin={() => goTo('admin')}
             companyName={companyName} 
-            companyId={companyId} 
+            companyId={companyId}
+            onLock={() => {
+              localStorage.removeItem('kiosk_token');
+              Object.keys(sessionStorage).forEach(key => {
+                if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
+              });
+              setPinVerified(false);
+              goTo('pin');
+            }}
           />
         );
       case 'admin':
@@ -181,6 +189,14 @@ export default function KioskLayout() {
             companyId={companyId}
             pinAuthenticated={pinVerified}
             onBack={() => goTo('welcome')}
+            onLock={() => {
+              localStorage.removeItem('kiosk_token');
+              Object.keys(sessionStorage).forEach(key => {
+                if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
+              });
+              setPinVerified(false);
+              goTo('pin');
+            }}
           />
         );
       case 'select':

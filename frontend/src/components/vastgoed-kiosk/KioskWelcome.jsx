@@ -1,15 +1,19 @@
 import { Building2, ArrowRight, Banknote, Droplets, Receipt, Settings, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function KioskWelcome({ onStart, onAdmin, companyName, companyId }) {
+export default function KioskWelcome({ onStart, onAdmin, companyName, companyId, onLock }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    localStorage.removeItem('kiosk_token');
-    Object.keys(sessionStorage).forEach(key => {
-      if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
-    });
-    navigate('/vastgoed');
+    if (onLock) {
+      onLock();
+    } else {
+      localStorage.removeItem('kiosk_token');
+      Object.keys(sessionStorage).forEach(key => {
+        if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
+      });
+      navigate('/vastgoed');
+    }
   };
 
   return (
