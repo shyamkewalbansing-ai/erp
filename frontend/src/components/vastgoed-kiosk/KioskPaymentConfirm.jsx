@@ -268,7 +268,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
       <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
         <div className="flex items-center" style={{ height: '7vh', padding: '0 0.5vw' }}>
           <button onClick={() => setPayMethod(null)} disabled={processing}
-            className="flex items-center gap-2 text-white font-bold opacity-80 hover:opacity-100 transition disabled:opacity-50">
+            className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg disabled:opacity-50" style={{ padding: '0.8vh 1.2vw' }}>
             <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
             <span className="kiosk-body">Terug</span>
           </button>
@@ -314,7 +314,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
       <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
         <div className="flex items-center" style={{ height: '7vh', padding: '0 0.5vw' }}>
           <button onClick={() => { setPayMethod(null); setMopeStatus('idle'); setError(''); if (mopePollRef.current) clearInterval(mopePollRef.current); }}
-            className="flex items-center gap-2 text-white font-bold opacity-80 hover:opacity-100 transition">
+            className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }}>
             <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
             <span className="kiosk-body">Terug</span>
           </button>
@@ -376,7 +376,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
     <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
       <div className="flex items-center" style={{ height: '7vh', padding: '0 0.5vw' }}>
         <button onClick={() => { setPayMethod(null); setCardStatus('idle'); setError(''); widgetMounted.current = false; if (pollRef.current) clearInterval(pollRef.current); }}
-          className="flex items-center gap-2 text-white font-bold opacity-80 hover:opacity-100 transition">
+          className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }}>
           <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
           <span className="kiosk-body">Terug</span>
         </button>

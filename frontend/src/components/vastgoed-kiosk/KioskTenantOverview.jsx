@@ -42,7 +42,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId }
     <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
       {/* Header - small colored zone */}
       <div className="flex items-center justify-between" style={{ height: '7vh', padding: '0 0.5vw' }}>
-        <button onClick={onBack} className="flex items-center gap-2 text-white font-bold opacity-80 hover:opacity-100 transition" data-testid="back-btn">
+        <button onClick={onBack} className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }} data-testid="back-btn">
           <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
           <span className="kiosk-body">Terug</span>
         </button>

@@ -59,23 +59,23 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId }) {
     <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
       {/* Header */}
       <div className="flex items-center justify-between" style={{ height: '7vh', padding: '0 0.5vw' }}>
-        <button onClick={onBack} className="flex items-center gap-2 text-white font-bold opacity-80 hover:opacity-100 transition" data-testid="apt-back-btn">
+        <button onClick={onBack} className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }} data-testid="apt-back-btn">
           <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
           <span className="kiosk-body">Terug</span>
         </button>
         <span className="kiosk-subtitle text-white">Kies uw appartement</span>
         <div className="flex bg-white/20 rounded-lg" style={{ padding: '0.4vh' }}>
           <button onClick={() => { setMode('grid'); setError(''); }} data-testid="mode-grid"
-            className={`flex items-center gap-1 rounded-md transition kiosk-small font-bold ${mode === 'grid' ? 'bg-white text-orange-600' : 'text-white hover:bg-white/15'}`}
+            className={`flex items-center gap-1 rounded-md transition kiosk-small font-bold ${mode === 'grid' ? 'bg-white text-orange-600' : 'text-white bg-white/10 hover:bg-white/20'}`}
             style={{ padding: '0.6vh 1vw' }}>
             <Building2 style={{ width: '1.6vh', height: '1.6vh' }} />
-            <span className="hidden sm:inline">Appartement</span>
+            <span>Appartement</span>
           </button>
           <button onClick={() => { setMode('code'); setError(''); }} data-testid="mode-code"
-            className={`flex items-center gap-1 rounded-md transition kiosk-small font-bold ${mode === 'code' ? 'bg-white text-orange-600' : 'text-white hover:bg-white/15'}`}
+            className={`flex items-center gap-1 rounded-md transition kiosk-small font-bold ${mode === 'code' ? 'bg-white text-orange-600' : 'text-white bg-white/10 hover:bg-white/20'}`}
             style={{ padding: '0.6vh 1vw' }}>
             <Keyboard style={{ width: '1.6vh', height: '1.6vh' }} />
-            <span className="hidden sm:inline">Code</span>
+            <span>Code</span>
           </button>
         </div>
       </div>
