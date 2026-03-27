@@ -44,13 +44,18 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
         }
         setStatus('ready');
         setMessage(mode === 'register' ? 'Kijk recht in de camera' : 'Gezicht herkennen...');
-        if (mode === 'verify') {
+        if (mode === 'verify' || mode === 'verify-continuous') {
           setTimeout(() => { if (!cancelled) detectFace(); }, 500);
         }
       } catch (err) {
         if (!cancelled) {
-          setStatus('error');
-          setMessage(err.name === 'NotAllowedError' ? 'Camera toegang geweigerd' : 'Camera kon niet worden gestart');
+          if (mode === 'verify-continuous') {
+            // Auto-retry camera in continuous mode after a delay
+            setTimeout(() => { if (!cancelled) init(); }, 3000);
+          } else {
+            setStatus('error');
+            setMessage(err.name === 'NotAllowedError' ? 'Camera toegang geweigerd' : 'Camera kon niet worden gestart');
+          }
         }
       }
     };
@@ -64,7 +69,14 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
     setMessage('Gezicht detecteren...');
     let attempts = 0;
     const tryDetect = async () => {
+      if (!videoRef.current || !streamRef.current) return;
       if (attempts > 20) {
+        // In continuous mode, just restart detection silently
+        if (mode === 'verify-continuous') {
+          attempts = 0;
+          setTimeout(tryDetect, 500);
+          return;
+        }
         setStatus('ready');
         setMessage('Geen gezicht gevonden. Probeer opnieuw.');
         return;
@@ -75,10 +87,16 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
         .withFaceDescriptor();
       if (detection) {
         const descriptor = Array.from(detection.descriptor);
-        setStatus('success');
-        setMessage(mode === 'register' ? 'Gezicht geregistreerd!' : 'Gezicht herkend!');
-        stopCamera();
-        onCapture(descriptor);
+        if (mode === 'verify-continuous') {
+          // Don't stop camera — send descriptor, then keep scanning after a short pause
+          onCapture(descriptor);
+          setTimeout(tryDetect, 1500);
+        } else {
+          setStatus('success');
+          setMessage(mode === 'register' ? 'Gezicht geregistreerd!' : 'Gezicht herkend!');
+          stopCamera();
+          onCapture(descriptor);
+        }
       } else {
         setTimeout(tryDetect, 300);
       }
@@ -103,7 +121,7 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
       }
       setStatus('ready');
       setMessage(mode === 'register' ? 'Kijk recht in de camera' : 'Gezicht herkennen...');
-      if (mode === 'verify') setTimeout(detectFace, 500);
+      if (mode === 'verify' || mode === 'verify-continuous') setTimeout(detectFace, 500);
     } catch {
       setStatus('error');
       setMessage('Camera kon niet worden gestart');
@@ -132,7 +150,7 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
             <CheckCircle className="text-green-400" style={{ width: '6vh', height: '6vh' }} />
           </div>
         )}
-        {status === 'error' && (
+        {status === 'error' && mode !== 'verify-continuous' && (
           <div className="absolute inset-0 bg-slate-900 flex items-center justify-center">
             <XCircle className="text-red-400" style={{ width: '4vh', height: '4vh' }} />
           </div>
@@ -142,7 +160,7 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
       {/* Status message */}
       <p className={`kiosk-body font-semibold text-center ${status === 'success' ? 'text-green-600' : status === 'error' ? 'text-red-500' : 'text-slate-600'}`}
         style={{ marginBottom: '1.5vh' }}>
-        {message}
+        {mode === 'verify-continuous' && status !== 'loading' ? 'Gezicht detecteren...' : message}
       </p>
 
       {/* Action buttons */}
@@ -155,13 +173,13 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
             {buttonLabel || 'Registreer gezicht'}
           </button>
         )}
-        {status === 'detecting' && (
+        {status === 'detecting' && mode !== 'verify-continuous' && (
           <div className="flex items-center gap-2 text-orange-500">
             <Loader2 className="animate-spin" style={{ width: '2vh', height: '2vh' }} />
             <span className="kiosk-body font-semibold">Detecteren...</span>
           </div>
         )}
-        {(status === 'error' || (status === 'ready' && mode === 'verify')) && (
+        {mode !== 'verify-continuous' && (status === 'error' || (status === 'ready' && mode === 'verify')) && (
           <button onClick={handleRetry} data-testid="face-retry-btn"
             className="bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg flex items-center justify-center gap-2 transition kiosk-body font-bold"
             style={{ padding: 'clamp(8px, 1.5vh, 18px) clamp(16px, 2vw, 32px)' }}>
@@ -169,7 +187,7 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
             Opnieuw
           </button>
         )}
-        {onCancel && status !== 'success' && (
+        {onCancel && status !== 'success' && mode !== 'verify-continuous' && (
           <button onClick={() => { stopCamera(); onCancel(); }} data-testid="face-cancel-btn"
             className="bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-lg flex items-center justify-center gap-2 transition kiosk-body font-bold"
             style={{ padding: 'clamp(8px, 1.5vh, 18px) clamp(16px, 2vw, 32px)' }}>

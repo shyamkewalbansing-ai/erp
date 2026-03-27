@@ -97,6 +97,13 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
   - DELETE /api/kiosk/public/{company_id}/face/admin
   - DELETE /api/kiosk/public/{company_id}/tenant/{tenant_id}/face
 
+### Huurders Face ID Only (Updated 27 Mar 2026)
+- `/huurders` route toont nu alleen Face ID login, geen huurderscode invoer meer
+- FaceCapture component heeft nieuwe `verify-continuous` mode: 
+  - Blijft altijd doordraaien, geen foutmeldingen, geen "Opnieuw" knop
+  - Bij niet-herkend gezicht: automatisch opnieuw scannen
+  - Bij camera-fout: automatisch opnieuw proberen na 3 seconden
+
 ### Huurders Kiosk Route (Completed 26 Mar 2026)
 - `/huurders/:companyId` - separate public route for tenants
 - No PIN, no welcome screen - starts directly at apartment selection
