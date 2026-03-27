@@ -98,12 +98,60 @@ function playPaperFeedSound(durationMs = 3500) {
   } catch {}
 }
 
+/* Confetti canvas burst */
+function launchConfetti(canvasEl) {
+  if (!canvasEl) return;
+  const ctx = canvasEl.getContext('2d');
+  const W = canvasEl.width = canvasEl.offsetWidth;
+  const H = canvasEl.height = canvasEl.offsetHeight;
+  const colors = ['#22c55e','#f97316','#3b82f6','#eab308','#ec4899','#14b8a6','#ffffff'];
+  const particles = Array.from({ length: 80 }, () => ({
+    x: W / 2, y: H * 0.35,
+    vx: (Math.random() - 0.5) * 14,
+    vy: (Math.random() - 1) * 12 - 2,
+    w: Math.random() * 8 + 4,
+    h: Math.random() * 6 + 2,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    rot: Math.random() * 360,
+    rotV: (Math.random() - 0.5) * 15,
+    gravity: 0.18 + Math.random() * 0.08,
+    opacity: 1,
+    decay: 0.008 + Math.random() * 0.006
+  }));
+  let raf;
+  const draw = () => {
+    ctx.clearRect(0, 0, W, H);
+    let alive = false;
+    particles.forEach(p => {
+      if (p.opacity <= 0) return;
+      alive = true;
+      p.x += p.vx;
+      p.vy += p.gravity;
+      p.y += p.vy;
+      p.rot += p.rotV;
+      p.opacity -= p.decay;
+      p.vx *= 0.99;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, p.opacity);
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    if (alive) raf = requestAnimationFrame(draw);
+  };
+  raf = requestAnimationFrame(draw);
+  setTimeout(() => { cancelAnimationFrame(raf); ctx.clearRect(0, 0, W, H); }, 4000);
+}
+
 export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) {
   const [countdown, setCountdown] = useState(12);
   const [stampData, setStampData] = useState(null);
   const [phase, setPhase] = useState('show');
   const timerRef = useRef(null);
   const hasPrintedRef = useRef(false);
+  const confettiRef = useRef(null);
 
   useEffect(() => {
     if (companyId) axios.get(`${API}/public/${companyId}/company/stamp`).then(r => setStampData(r.data)).catch(() => {});
@@ -118,7 +166,10 @@ export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) 
         playPaperFeedSound(3500);
         silentPrint();
       }, 2500);
-      setTimeout(() => setPhase('done'), 6500);
+      setTimeout(() => {
+        setPhase('done');
+        setTimeout(() => launchConfetti(confettiRef.current), 300);
+      }, 6500);
     }
   }, [payment]);
 
@@ -168,8 +219,6 @@ export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) 
 
   if (!payment) return null;
 
-  const date = new Date(payment.created_at);
-
   return (
     <div className="h-full bg-orange-500 flex flex-col overflow-hidden" style={{ padding: '1.5vh 1.5vw 0' }}
       data-testid="huurders-receipt-screen">
@@ -178,27 +227,39 @@ export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) 
           0% { transform: translateY(0); }
           100% { transform: translateY(115vh); }
         }
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(20px); }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(30px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        @keyframes popIn {
-          0% { transform: scale(0); opacity: 0; }
-          60% { transform: scale(1.15); }
-          100% { transform: scale(1); opacity: 1; }
+        @keyframes scaleIn {
+          0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+          60% { transform: scale(1.1) rotate(4deg); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
         @keyframes receiptAppear {
           from { opacity: 0; transform: scale(0.96); }
           to { opacity: 1; transform: scale(1); }
         }
-        @keyframes pulseRing {
-          0% { box-shadow: 0 0 0 0 rgba(34,197,94,0.4); }
-          70% { box-shadow: 0 0 0 20px rgba(34,197,94,0); }
-          100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+        @keyframes glowPulse {
+          0%, 100% { box-shadow: 0 0 20px rgba(34,197,94,0.3), 0 0 60px rgba(34,197,94,0.1); }
+          50% { box-shadow: 0 0 30px rgba(34,197,94,0.5), 0 0 80px rgba(34,197,94,0.2); }
         }
-        @keyframes countdownPulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.05); }
+        @keyframes shimmer {
+          0% { background-position: -200% center; }
+          100% { background-position: 200% center; }
+        }
+        @keyframes countTick {
+          0% { transform: scale(1); }
+          15% { transform: scale(1.12); }
+          30% { transform: scale(1); }
+        }
+        @keyframes badgeSlide {
+          from { opacity: 0; transform: translateY(10px) scale(0.9); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes progressShrink {
+          from { transform: scaleX(1); }
+          to { transform: scaleX(0); }
         }
         .receipt-eject {
           animation: ejectDown 3.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
@@ -206,11 +267,18 @@ export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) 
         .receipt-appear {
           animation: receiptAppear 0.4s ease-out forwards;
         }
+        .done-icon { animation: scaleIn 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        .done-title { animation: slideUp 0.5s ease-out 0.2s forwards; opacity: 0; }
+        .done-amount { animation: slideUp 0.5s ease-out 0.35s forwards; opacity: 0; }
+        .done-details { animation: slideUp 0.5s ease-out 0.5s forwards; opacity: 0; }
+        .done-badge { animation: badgeSlide 0.4s ease-out 0.65s forwards; opacity: 0; }
+        .done-btn { animation: slideUp 0.4s ease-out 0.75s forwards; opacity: 0; }
+        .done-countdown { animation: slideUp 0.4s ease-out 0.85s forwards; opacity: 0; }
       `}</style>
 
       {/* Header */}
       <div className="flex items-center justify-center flex-shrink-0" style={{ height: '6vh' }}>
-        <span className="kiosk-subtitle text-white">Betaling voltooid</span>
+        <span className="kiosk-subtitle text-white font-bold tracking-wide">Betaling voltooid</span>
       </div>
 
       {/* Content */}
@@ -218,121 +286,179 @@ export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) 
 
         {phase === 'done' ? (
           /* ============ DONE: Modern huurders success layout ============ */
-          <div className="flex-1 kiosk-card flex flex-col items-center justify-center text-center relative" style={{ padding: 'clamp(16px, 2.5vh, 32px)' }}>
-            {/* Success icon with pulse ring */}
-            <div style={{
-              animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',
-              width: 'clamp(64px, 10vh, 100px)', height: 'clamp(64px, 10vh, 100px)',
-              marginBottom: '2vh',
+          <div className="flex-1 kiosk-card flex flex-col items-center justify-center text-center relative overflow-hidden"
+            style={{ padding: 'clamp(16px, 2vh, 28px)' }}>
+
+            {/* Confetti canvas overlay */}
+            <canvas ref={confettiRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 10 }} />
+
+            {/* Success icon with glow */}
+            <div className="done-icon" style={{
+              width: 'clamp(72px, 11vh, 110px)', height: 'clamp(72px, 11vh, 110px)',
               borderRadius: '50%',
-              background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+              background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              animationDelay: '0s'
+              animation: 'scaleIn 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards, glowPulse 2s ease-in-out 0.8s infinite',
+              marginBottom: 'clamp(8px, 1.5vh, 16px)'
             }}>
-              <div style={{ animation: 'pulseRing 2s ease-out infinite', borderRadius: '50%', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <CheckCircle style={{ width: '5vh', height: '5vh' }} className="text-white" />
-              </div>
+              <CheckCircle style={{ width: '5.5vh', height: '5.5vh' }} className="text-white" strokeWidth={2.5} />
             </div>
 
-            <h1 style={{ animation: 'fadeUp 0.5s ease-out 0.15s forwards', opacity: 0, marginBottom: '0.5vh' }}
-              className="kiosk-title text-slate-900 tracking-tight">Betaling geslaagd!</h1>
+            <h1 className="done-title font-black tracking-tight text-slate-900"
+              style={{ fontSize: 'clamp(22px, 4vh, 40px)', marginBottom: 'clamp(4px, 0.8vh, 10px)' }}>
+              Betaling geslaagd!
+            </h1>
 
-            {/* Big amount display */}
-            <div style={{
-              animation: 'fadeUp 0.5s ease-out 0.3s forwards', opacity: 0,
-              marginBottom: '2.5vh', marginTop: '1vh',
-              background: '#f0fdf4', borderRadius: 'clamp(12px, 1.5vh, 20px)',
-              padding: 'clamp(12px, 2vh, 28px) clamp(24px, 4vw, 60px)',
-              border: '2px solid #bbf7d0'
+            {/* Amount with shimmer effect */}
+            <div className="done-amount" style={{
+              marginBottom: 'clamp(12px, 2vh, 24px)',
+              background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)',
+              borderRadius: 'clamp(16px, 2vh, 24px)',
+              padding: 'clamp(12px, 2vh, 24px) clamp(28px, 5vw, 72px)',
+              border: '2px solid #86efac',
+              position: 'relative', overflow: 'hidden'
             }}>
-              <span className="text-green-600 font-black tracking-tight" style={{
+              {/* Shimmer overlay */}
+              <div style={{
+                position: 'absolute', inset: 0, opacity: 0.4,
+                background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.8) 50%, transparent 100%)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 3s ease-in-out infinite'
+              }} />
+              <span className="relative text-green-600 font-black tracking-tighter" style={{
                 fontFamily: "'JetBrains Mono', 'Courier New', monospace",
-                fontSize: 'clamp(28px, 5.5vh, 56px)'
+                fontSize: 'clamp(32px, 6vh, 64px)', zIndex: 1
               }}>
                 {formatSRD(payment.amount)}
               </span>
             </div>
 
-            {/* Details row */}
-            <div style={{
-              animation: 'fadeUp 0.5s ease-out 0.45s forwards', opacity: 0,
-              display: 'flex', gap: 'clamp(16px, 3vw, 48px)',
-              marginBottom: '2.5vh', flexWrap: 'wrap', justifyContent: 'center'
-            }}>
+            {/* Details chips */}
+            <div className="done-details flex flex-wrap justify-center" style={{ gap: 'clamp(8px, 1vw, 16px)', marginBottom: 'clamp(12px, 2vh, 20px)' }}>
               {[
                 { label: 'Kwitantie', value: kwNr },
                 { label: 'Betaalwijze', value: METHOD_LABELS[payment.payment_method] || 'Contant' },
                 { label: 'Huurder', value: payment.tenant_name || tenant?.name || '' },
-                { label: 'Openstaand', value: remaining > 0 ? formatSRD(remaining) : 'Voldaan' },
+                { label: 'Openstaand', value: remaining > 0 ? formatSRD(remaining) : 'Voldaan', accent: remaining <= 0 },
               ].map((item, i) => (
-                <div key={i} className="flex flex-col items-center" style={{ minWidth: '80px' }}>
-                  <span className="uppercase tracking-widest text-slate-400 font-bold" style={{ fontSize: 'clamp(9px, 1.1vh, 12px)', marginBottom: '2px' }}>{item.label}</span>
-                  <span className="text-slate-800 font-semibold" style={{ fontSize: 'clamp(13px, 1.8vh, 18px)' }}>{item.value}</span>
+                <div key={i} className="flex flex-col items-center rounded-xl" style={{
+                  background: item.accent ? '#f0fdf4' : '#f8fafc',
+                  border: `1px solid ${item.accent ? '#bbf7d0' : '#e2e8f0'}`,
+                  padding: 'clamp(6px, 1vh, 12px) clamp(12px, 1.5vw, 24px)',
+                  minWidth: 'clamp(80px, 10vw, 140px)'
+                }}>
+                  <span className="uppercase tracking-widest font-bold" style={{
+                    fontSize: 'clamp(8px, 1vh, 11px)',
+                    color: item.accent ? '#16a34a' : '#94a3b8',
+                    marginBottom: '2px'
+                  }}>{item.label}</span>
+                  <span className="font-semibold" style={{
+                    fontSize: 'clamp(12px, 1.6vh, 17px)',
+                    color: item.accent ? '#16a34a' : '#1e293b'
+                  }}>{item.value}</span>
                 </div>
               ))}
             </div>
 
             {/* Receipt printed badge */}
-            <div style={{ animation: 'fadeUp 0.5s ease-out 0.55s forwards', opacity: 0, marginBottom: '2vh' }}>
-              <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-full" style={{ padding: 'clamp(6px, 1vh, 12px) clamp(14px, 2vw, 24px)' }}>
-                <Receipt style={{ width: '1.8vh', height: '1.8vh' }} className="text-orange-500" />
+            <div className="done-badge" style={{ marginBottom: 'clamp(10px, 1.8vh, 20px)' }}>
+              <div className="flex items-center gap-2 rounded-full" style={{
+                padding: 'clamp(6px, 1vh, 12px) clamp(14px, 2vw, 24px)',
+                background: 'linear-gradient(135deg, #fff7ed, #ffedd5)',
+                border: '1px solid #fdba74'
+              }}>
+                <Receipt style={{ width: 'clamp(14px, 1.8vh, 20px)', height: 'clamp(14px, 1.8vh, 20px)' }} className="text-orange-500" />
                 <span className="text-orange-600 font-bold" style={{ fontSize: 'clamp(11px, 1.4vh, 16px)' }}>Uw bon is geprint</span>
               </div>
             </div>
 
-            {/* Done button */}
-            <div style={{ animation: 'fadeUp 0.5s ease-out 0.7s forwards', opacity: 0, width: '100%', maxWidth: '22vw' }}>
+            {/* Done button with progress bar */}
+            <div className="done-btn" style={{ width: '100%', maxWidth: 'clamp(200px, 24vw, 380px)' }}>
               <button onClick={onDone} data-testid="huurders-receipt-done-btn"
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl flex items-center justify-center gap-2 transition kiosk-body font-bold active:scale-95"
-                style={{ padding: 'clamp(12px, 2.5vh, 28px)' }}>
-                <Home style={{ width: '2.5vh', height: '2.5vh' }} /> Klaar
+                className="w-full text-white rounded-2xl flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer font-bold relative overflow-hidden"
+                style={{
+                  padding: 'clamp(12px, 2.2vh, 24px)',
+                  fontSize: 'clamp(15px, 2.2vh, 22px)',
+                  background: 'linear-gradient(135deg, #ea580c, #f97316)',
+                  boxShadow: '0 8px 30px -8px rgba(249,115,22,0.5)'
+                }}>
+                <Home style={{ width: '2.2vh', height: '2.2vh' }} />
+                <span>Klaar</span>
               </button>
             </div>
 
-            {/* Countdown */}
-            <div style={{ animation: 'fadeUp 0.5s ease-out 0.85s forwards', opacity: 0, marginTop: '2.5vh' }}>
-              <div className="flex items-center justify-center gap-2">
-                <Clock style={{ width: '2vh', height: '2vh' }} className="text-slate-300" />
-                <div className="text-slate-300 font-black" style={{
-                  fontSize: 'clamp(36px, 7vh, 80px)', lineHeight: 1,
-                  animation: 'countdownPulse 1s ease-in-out infinite'
-                }}>{countdown}</div>
+            {/* Countdown with circular progress */}
+            <div className="done-countdown flex flex-col items-center" style={{ marginTop: 'clamp(10px, 1.5vh, 20px)' }}>
+              <div style={{ position: 'relative', width: 'clamp(48px, 7vh, 72px)', height: 'clamp(48px, 7vh, 72px)' }}>
+                {/* Background ring */}
+                <svg viewBox="0 0 60 60" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+                  <circle cx="30" cy="30" r="26" fill="none" stroke="#f1f5f9" strokeWidth="3" />
+                  <circle cx="30" cy="30" r="26" fill="none" stroke="#f97316" strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 26}`}
+                    strokeDashoffset={`${2 * Math.PI * 26 * (1 - countdown / 12)}`}
+                    transform="rotate(-90 30 30)"
+                    style={{ transition: 'stroke-dashoffset 0.9s ease' }}
+                  />
+                </svg>
+                <div style={{
+                  position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 'clamp(18px, 3vh, 30px)', fontWeight: 900, color: '#334155',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  animation: 'countTick 1s ease-in-out infinite'
+                }}>
+                  {countdown}
+                </div>
               </div>
-              <p className="kiosk-small text-slate-400 mt-1">sec</p>
             </div>
           </div>
 
         ) : (
           /* ============ SHOW + EJECT: Receipt visible (same animation) ============ */
           <div className="flex-1 flex gap-[1.5vw]">
-            {/* Left: Success message panel */}
+            {/* Left: Success message */}
             <div className="kiosk-card flex flex-col items-center justify-center text-center" style={{ flex: '1', padding: 'clamp(16px, 3vh, 40px)' }}>
-              <div style={{
-                animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',
-                width: '10vh', height: '10vh', marginBottom: '2.5vh',
+              <div className="done-icon" style={{
+                width: 'clamp(64px, 10vh, 96px)', height: 'clamp(64px, 10vh, 96px)',
+                marginBottom: 'clamp(12px, 2.5vh, 28px)',
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                animation: 'scaleIn 0.6s cubic-bezier(0.34,1.56,0.64,1) forwards, glowPulse 2s ease-in-out 0.8s infinite'
               }}>
-                <CheckCircle style={{ width: '5vh', height: '5vh' }} className="text-white" />
+                <CheckCircle style={{ width: '5vh', height: '5vh' }} className="text-white" strokeWidth={2.5} />
               </div>
-              <h1 className="kiosk-title text-slate-900" style={{ marginBottom: '0.8vh' }}>Betaling geslaagd!</h1>
-              <p className="kiosk-body text-slate-400" style={{ marginBottom: '1vh' }}>Kwitantie: {kwNr}</p>
-              {/* Amount shown during print phase too */}
+              <h1 className="kiosk-title text-slate-900 font-black tracking-tight" style={{ marginBottom: '0.8vh' }}>Betaling geslaagd!</h1>
+              <p className="kiosk-body text-slate-400" style={{ marginBottom: '1.2vh' }}>Kwitantie: {kwNr}</p>
+
+              {/* Amount display */}
               <div style={{
-                background: '#f0fdf4', borderRadius: '12px',
-                padding: 'clamp(8px, 1.5vh, 16px) clamp(16px, 2.5vw, 32px)',
-                border: '1px solid #bbf7d0', marginBottom: '2vh'
+                background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+                borderRadius: '16px',
+                padding: 'clamp(10px, 1.5vh, 20px) clamp(20px, 3vw, 40px)',
+                border: '2px solid #86efac',
+                marginBottom: '2vh',
+                position: 'relative', overflow: 'hidden'
               }}>
-                <span className="text-green-600 font-bold" style={{
+                <div style={{
+                  position: 'absolute', inset: 0, opacity: 0.4,
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent)',
+                  backgroundSize: '200% 100%',
+                  animation: 'shimmer 3s ease-in-out infinite'
+                }} />
+                <span className="relative text-green-600 font-bold" style={{
                   fontFamily: "'JetBrains Mono', monospace",
-                  fontSize: 'clamp(20px, 3.5vh, 36px)'
+                  fontSize: 'clamp(22px, 3.8vh, 40px)', zIndex: 1
                 }}>
                   {formatSRD(payment.amount)}
                 </span>
               </div>
+
               {phase === 'ejecting' && (
-                <p className="kiosk-body text-orange-500 font-bold animate-pulse">Bon wordt geprint...</p>
+                <div className="flex items-center gap-2" style={{ animation: 'slideUp 0.3s ease-out forwards' }}>
+                  <div className="w-2 h-2 rounded-full bg-orange-400 animate-pulse" />
+                  <p className="kiosk-body text-orange-500 font-bold">Bon wordt geprint...</p>
+                </div>
               )}
             </div>
 

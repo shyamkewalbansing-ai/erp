@@ -40,7 +40,7 @@ export default function HuurdersLayout() {
   const navigate = useNavigate();
   const kioskMode = useKioskMode();
   const [step, setStep] = useState('loading');
-  const [loginMode, setLoginMode] = useState('code'); // code | face
+  const [loginMode, setLoginMode] = useState('code');
   const [tenant, setTenant] = useState(null);
   const [faceError, setFaceError] = useState('');
   const [paymentData, setPaymentData] = useState(null);
