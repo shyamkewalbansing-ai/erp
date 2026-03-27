@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { CheckCircle, Home } from 'lucide-react';
 import ReceiptTicket from './ReceiptTicket';
 import axios from 'axios';
@@ -6,47 +6,121 @@ import axios from 'axios';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 const PRINT_SERVER_URL = 'http://localhost:5555';
 
+// Printer sound generator using Web Audio API
+function playPrinterSound(durationMs = 3500) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Layer 1: Paper feed motor hum (low frequency)
+    const motorOsc = ctx.createOscillator();
+    const motorGain = ctx.createGain();
+    motorOsc.type = 'sawtooth';
+    motorOsc.frequency.value = 85;
+    motorGain.gain.value = 0.04;
+    motorOsc.connect(motorGain).connect(ctx.destination);
+
+    // Layer 2: Thermal head clicking (rapid noise bursts)
+    const clickInterval = 60; // ms between clicks
+    const totalClicks = Math.floor(durationMs / clickInterval);
+
+    for (let i = 0; i < totalClicks; i++) {
+      const startTime = ctx.currentTime + (i * clickInterval) / 1000;
+      const bufferSize = 200;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let j = 0; j < bufferSize; j++) {
+        data[j] = (Math.random() * 2 - 1) * 0.15;
+      }
+      const noise = ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const clickGain = ctx.createGain();
+      const vol = 0.03 + Math.random() * 0.02;
+      clickGain.gain.setValueAtTime(vol, startTime);
+      clickGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.03);
+
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.value = 2000 + Math.random() * 1500;
+      filter.Q.value = 5;
+
+      noise.connect(filter).connect(clickGain).connect(ctx.destination);
+      noise.start(startTime);
+      noise.stop(startTime + 0.04);
+    }
+
+    // Layer 3: Paper tear sound at end
+    const tearTime = ctx.currentTime + durationMs / 1000 - 0.2;
+    const tearBuffer = ctx.createBuffer(1, 4000, ctx.sampleRate);
+    const tearData = tearBuffer.getChannelData(0);
+    for (let j = 0; j < 4000; j++) {
+      tearData[j] = (Math.random() * 2 - 1) * 0.3 * Math.exp(-j / 800);
+    }
+    const tearNoise = ctx.createBufferSource();
+    tearNoise.buffer = tearBuffer;
+    const tearGain = ctx.createGain();
+    tearGain.gain.setValueAtTime(0.08, tearTime);
+    tearGain.gain.exponentialRampToValueAtTime(0.001, tearTime + 0.3);
+    tearNoise.connect(tearGain).connect(ctx.destination);
+    tearNoise.start(tearTime);
+
+    // Start motor
+    motorOsc.start();
+    motorOsc.stop(ctx.currentTime + durationMs / 1000);
+
+    // Cleanup
+    setTimeout(() => ctx.close(), durationMs + 500);
+  } catch {}
+}
+
 export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
-  const [countdown, setCountdown] = useState(15);
+  const [countdown, setCountdown] = useState(12);
   const [stampData, setStampData] = useState(null);
-  const [printPhase, setPrintPhase] = useState('idle'); // idle → feeding → printing → done
+  const [phase, setPhase] = useState('show'); // show → ejecting → done
   const timerRef = useRef(null);
   const hasPrintedRef = useRef(false);
 
   useEffect(() => {
-    if (companyId) { axios.get(`${API}/public/${companyId}/company/stamp`).then(res => setStampData(res.data)).catch(() => {}); }
+    if (companyId) {
+      axios.get(`${API}/public/${companyId}/company/stamp`).then(res => setStampData(res.data)).catch(() => {});
+    }
   }, [companyId]);
 
-  // Start animation + silent auto-print
+  // Phase flow: show receipt → wait → eject with sound → done
   useEffect(() => {
     if (payment && !hasPrintedRef.current) {
       hasPrintedRef.current = true;
-      // Animation sequence: feeding → printing → done
-      setPrintPhase('feeding');
-      setTimeout(() => setPrintPhase('printing'), 800);
+      // Show receipt for 2.5 seconds, then start eject animation
       setTimeout(() => {
-        setPrintPhase('done');
-        silentPrint(); // Auto-print to USB receipt printer
-      }, 4000);
+        setPhase('ejecting');
+        playPrinterSound(3500);
+        silentPrint();
+      }, 2500);
+      // After eject animation finishes
+      setTimeout(() => {
+        setPhase('done');
+      }, 6500);
     }
   }, [payment]);
 
-  // Countdown timer - starts after animation
+  // Countdown timer
   useEffect(() => {
     if (!payment) return;
     const startDelay = setTimeout(() => {
       timerRef.current = setInterval(() => {
-        setCountdown(prev => { if (prev <= 1) { clearInterval(timerRef.current); onDone(); return 0; } return prev - 1; });
+        setCountdown(prev => {
+          if (prev <= 1) { clearInterval(timerRef.current); onDone(); return 0; }
+          return prev - 1;
+        });
       }, 1000);
-    }, 4500);
+    }, 6800);
     return () => { clearTimeout(startDelay); clearInterval(timerRef.current); };
   }, [payment, onDone]);
 
-  if (!payment) return null;
-  const kwNr = payment.kwitantie_nummer || payment.receipt_number || '';
+  const kwNr = payment?.kwitantie_nummer || payment?.receipt_number || '';
 
-  // Silent print - sends structured data to print server for USB receipt printer
-  const silentPrint = async () => {
+  const silentPrint = useCallback(async () => {
+    if (!payment) return;
     const printData = {
       company_name: stampData?.stamp_company_name || 'Vastgoed Beheer',
       address: stampData?.stamp_address || '',
@@ -72,27 +146,19 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
         });
       }
     } catch {}
-  };
+  }, [payment, tenant, stampData, kwNr]);
+
+  if (!payment) return null;
 
   return (
-    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
+    <div className="h-full bg-orange-500 flex flex-col overflow-hidden" style={{ padding: '1.5vh 1.5vw 0' }}>
       <style>{`
-        @keyframes receiptSlideDown {
-          0% { transform: translateY(-102%); }
-          3% { transform: translateY(-100%); }
-          100% { transform: translateY(0%); }
-        }
-        @keyframes feedPulse {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 1; }
-        }
-        @keyframes printerVibrate {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-0.5px); }
-          75% { transform: translateX(0.5px); }
+        @keyframes ejectDown {
+          0% { transform: translateY(0); }
+          100% { transform: translateY(115vh); }
         }
         @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(16px); }
+          from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
         }
         @keyframes popIn {
@@ -100,114 +166,87 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
           60% { transform: scale(1.15); }
           100% { transform: scale(1); opacity: 1; }
         }
-        .receipt-slide {
-          animation: receiptSlideDown 3s cubic-bezier(0.15, 0.6, 0.35, 1) forwards;
+        @keyframes receiptAppear {
+          from { opacity: 0; transform: scale(0.96); }
+          to { opacity: 1; transform: scale(1); }
         }
-        .printer-vibrate {
-          animation: printerVibrate 0.06s linear infinite;
+        .receipt-eject {
+          animation: ejectDown 3.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        .receipt-appear {
+          animation: receiptAppear 0.4s ease-out forwards;
         }
       `}</style>
 
       {/* Header */}
-      <div className="flex items-center justify-center" style={{ height: '6vh' }}>
+      <div className="flex items-center justify-center flex-shrink-0" style={{ height: '6vh' }}>
         <span className="kiosk-subtitle text-white">Betaling voltooid</span>
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex gap-[1.5vw] min-h-0" style={{ paddingBottom: '1.5vh' }}>
+      <div className="flex-1 flex min-h-0 overflow-hidden" style={{ paddingBottom: '1.5vh' }}>
 
-        {/* Left - Success + Done */}
-        <div className="kiosk-card flex flex-col items-center justify-center text-center" style={{ flex: '1', padding: 'clamp(16px, 3vh, 40px) clamp(12px, 2vw, 40px)' }}>
-          {/* Check icon */}
-          <div style={{ animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards', width: '10vh', height: '10vh', marginBottom: '2.5vh' }}
-            className="rounded-full bg-green-50 flex items-center justify-center">
-            <CheckCircle style={{ width: '5vh', height: '5vh' }} className="text-green-500" />
-          </div>
-
-          <h1 style={{ animation: 'fadeUp 0.5s ease-out 0.2s forwards', opacity: 0, marginBottom: '0.8vh' }}
-            className="kiosk-title text-slate-900">Betaling geslaagd!</h1>
-          <p style={{ animation: 'fadeUp 0.5s ease-out 0.4s forwards', opacity: 0, marginBottom: '4vh' }}
-            className="kiosk-body text-slate-400">Kwitantie: {kwNr}</p>
-
-          {/* Klaar button */}
-          <div style={{ animation: 'fadeUp 0.5s ease-out 4s forwards', opacity: 0, width: '100%', maxWidth: '18vw' }}>
-            <button onClick={onDone} data-testid="receipt-done-btn"
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl flex items-center justify-center gap-2 transition kiosk-body font-bold active:scale-95"
-              style={{ padding: 'clamp(10px, 2vh, 24px)' }}>
-              <Home style={{ width: '2.5vh', height: '2.5vh' }} /> Klaar
-            </button>
-          </div>
-
-          {/* Countdown */}
-          <div style={{ animation: 'fadeUp 0.5s ease-out 4.2s forwards', opacity: 0, marginTop: '4vh' }}>
-            <div className="text-slate-200 font-black" style={{ fontSize: 'clamp(40px, 8vh, 90px)', lineHeight: 1 }}>{countdown}</div>
-            <p className="kiosk-small text-slate-400 mt-1">sec</p>
-          </div>
-        </div>
-
-        {/* Right - Receipt Printer */}
-        <div className="flex flex-col" style={{ flex: '0.7', maxWidth: '360px' }}>
-          {/* Printer body top */}
-          <div className="rounded-t-2xl flex-shrink-0 relative" style={{ height: 'clamp(28px, 4vh, 44px)', background: '#1e293b' }}>
-            {/* Printer brand label */}
-            <div className="absolute left-4 top-1/2 -translate-y-1/2">
-              <span style={{ fontSize: 'clamp(8px, 1.2vh, 12px)', color: '#475569', fontFamily: 'monospace', letterSpacing: '2px' }}>KIOSK</span>
+        {phase === 'done' ? (
+          /* ============ DONE: Full success screen ============ */
+          <div className="flex-1 kiosk-card flex flex-col items-center justify-center text-center" style={{ padding: 'clamp(16px, 3vh, 40px)' }}>
+            <div style={{ animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards', width: '12vh', height: '12vh', marginBottom: '3vh' }}
+              className="rounded-full bg-green-50 flex items-center justify-center">
+              <CheckCircle style={{ width: '6vh', height: '6vh' }} className="text-green-500" />
             </div>
-            {/* Status LED */}
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
-              {printPhase === 'done' ? (
-                <div className="rounded-full bg-green-400" style={{ width: 'clamp(6px, 0.8vh, 10px)', height: 'clamp(6px, 0.8vh, 10px)' }} />
-              ) : (
-                <>
-                  {[0, 1, 2].map(i => (
-                    <div key={i} className="rounded-full" style={{
-                      width: 'clamp(5px, 0.7vh, 8px)', height: 'clamp(5px, 0.7vh, 8px)',
-                      background: printPhase === 'feeding' || printPhase === 'printing' ? '#4ade80' : '#334155',
-                      animation: printPhase !== 'idle' ? `feedPulse 0.5s ease-in-out ${i * 0.12}s infinite` : 'none'
-                    }} />
-                  ))}
-                </>
+            <h1 style={{ animation: 'fadeUp 0.5s ease-out 0.2s forwards', opacity: 0, marginBottom: '1vh' }}
+              className="kiosk-title text-slate-900">Betaling geslaagd!</h1>
+            <p style={{ animation: 'fadeUp 0.5s ease-out 0.35s forwards', opacity: 0, marginBottom: '1vh' }}
+              className="kiosk-body text-slate-400">Kwitantie: {kwNr}</p>
+            <p style={{ animation: 'fadeUp 0.5s ease-out 0.5s forwards', opacity: 0, marginBottom: '4vh' }}
+              className="kiosk-body text-green-500 font-bold">Uw bon is geprint</p>
+
+            <div style={{ animation: 'fadeUp 0.5s ease-out 0.7s forwards', opacity: 0, width: '100%', maxWidth: '20vw' }}>
+              <button onClick={onDone} data-testid="receipt-done-btn"
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white rounded-xl flex items-center justify-center gap-2 transition kiosk-body font-bold active:scale-95"
+                style={{ padding: 'clamp(12px, 2.5vh, 28px)' }}>
+                <Home style={{ width: '2.5vh', height: '2.5vh' }} /> Klaar
+              </button>
+            </div>
+
+            <div style={{ animation: 'fadeUp 0.5s ease-out 0.9s forwards', opacity: 0, marginTop: '4vh' }}>
+              <div className="text-slate-200 font-black" style={{ fontSize: 'clamp(44px, 9vh, 100px)', lineHeight: 1 }}>{countdown}</div>
+              <p className="kiosk-small text-slate-400 mt-1">sec</p>
+            </div>
+          </div>
+
+        ) : (
+          /* ============ SHOW + EJECT: Receipt visible ============ */
+          <div className="flex-1 flex gap-[1.5vw]">
+            {/* Left: Mini success */}
+            <div className="kiosk-card flex flex-col items-center justify-center text-center" style={{ flex: '1', padding: 'clamp(16px, 3vh, 40px)' }}>
+              <div style={{ animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards', width: '10vh', height: '10vh', marginBottom: '2.5vh' }}
+                className="rounded-full bg-green-50 flex items-center justify-center">
+                <CheckCircle style={{ width: '5vh', height: '5vh' }} className="text-green-500" />
+              </div>
+              <h1 className="kiosk-title text-slate-900" style={{ marginBottom: '0.8vh' }}>Betaling geslaagd!</h1>
+              <p className="kiosk-body text-slate-400" style={{ marginBottom: '2vh' }}>Kwitantie: {kwNr}</p>
+              {phase === 'ejecting' && (
+                <p className="kiosk-body text-orange-500 font-bold animate-pulse">Bon wordt geprint...</p>
               )}
             </div>
-            {/* Paper slot */}
-            <div style={{ position: 'absolute', left: '10%', right: '10%', bottom: 0, height: 'clamp(4px, 0.6vh, 7px)', background: '#0f172a', borderRadius: '3px 3px 0 0' }} />
-          </div>
 
-          {/* Receipt paper area */}
-          <div
-            className={`flex-1 relative bg-[#f1f5f9] overflow-hidden ${printPhase === 'feeding' ? 'printer-vibrate' : ''}`}
-            style={{ borderLeft: '2px solid #1e293b', borderRight: '2px solid #1e293b' }}
-          >
-            {/* The receipt that slides out */}
-            <div
-              className={printPhase === 'printing' ? 'receipt-slide' : ''}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                display: 'flex',
-                justifyContent: 'center',
-                padding: 'clamp(4px, 0.5vh, 8px) clamp(2px, 0.3vw, 6px)',
-                transform: printPhase === 'done' ? 'translateY(0%)' : (printPhase === 'idle' || printPhase === 'feeding') ? 'translateY(-102%)' : undefined
-              }}
-              data-testid="receipt-paper"
-            >
-              <ReceiptTicket payment={payment} tenant={tenant} preview={true} stampData={stampData} />
+            {/* Right: Receipt (appears, then ejects down) */}
+            <div className="flex flex-col items-center justify-start overflow-hidden" style={{ flex: '0.7', maxWidth: '360px' }}>
+              <div
+                className={phase === 'show' ? 'receipt-appear' : phase === 'ejecting' ? 'receipt-eject' : ''}
+                style={{ width: '100%', display: 'flex', justifyContent: 'center' }}
+                data-testid="receipt-paper"
+              >
+                <div className="bg-white rounded-lg shadow-lg" style={{ overflow: 'hidden' }}>
+                  <ReceiptTicket payment={payment} tenant={tenant} preview={true} stampData={stampData} />
+                </div>
+              </div>
             </div>
-
-            {/* Top shadow (paper edge coming out of slot) */}
-            {(printPhase === 'printing' || printPhase === 'done') && (
-              <div className="absolute top-0 left-0 right-0 z-10 pointer-events-none" style={{ height: '12px', background: 'linear-gradient(to bottom, rgba(0,0,0,0.1), transparent)' }} />
-            )}
           </div>
-
-          {/* Printer body bottom */}
-          <div className="rounded-b-2xl flex-shrink-0" style={{ height: 'clamp(10px, 1.5vh, 16px)', background: '#1e293b' }} />
-        </div>
+        )}
       </div>
 
-      {/* Hidden receipt for USB printer */}
+      {/* Hidden print content for USB printer */}
       <div className="print-receipt-content" style={{ display: 'none' }}>
         <ReceiptTicket payment={payment} tenant={tenant} preview={false} stampData={stampData} />
       </div>
