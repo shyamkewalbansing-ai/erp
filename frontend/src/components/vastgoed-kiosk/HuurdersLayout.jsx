@@ -7,7 +7,7 @@ import KioskApartmentSelect from './KioskApartmentSelect';
 import KioskTenantOverview from './KioskTenantOverview';
 import KioskPaymentSelect from './KioskPaymentSelect';
 import KioskPaymentConfirm from './KioskPaymentConfirm';
-import KioskReceipt from './KioskReceipt';
+import HuurdersReceipt from './HuurdersReceipt';
 import FaceCapture from './FaceCapture';
 import VirtualKeyboard from './VirtualKeyboard';
 
@@ -188,7 +188,7 @@ export default function HuurdersLayout() {
         );
       case 'receipt':
         return (
-          <KioskReceipt
+          <HuurdersReceipt
             payment={paymentResult}
             tenant={tenant}
             companyId={companyId}
