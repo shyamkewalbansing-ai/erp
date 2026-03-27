@@ -130,7 +130,7 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
       {/* Content - two panels */}
       <div className="flex-1 flex gap-[1vw] min-h-0" style={{ paddingBottom: '1.5vh' }}>
         {/* Left - Success card */}
-        <div className="kiosk-card flex-1 flex flex-col items-center justify-center text-center min-w-0" style={{ padding: 'clamp(12px, 2vh, 32px) clamp(12px, 2vw, 40px)' }}>
+        <div className="kiosk-card flex flex-col items-center justify-center text-center min-w-0" style={{ flex: '1.2', padding: 'clamp(12px, 2vh, 32px) clamp(12px, 2vw, 40px)' }}>
           {/* Animated check icon */}
           <div className="check-pop rounded-full bg-green-50 flex items-center justify-center" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
             <CheckCircle style={{ width: '4vh', height: '4vh' }} className="text-green-500" />
@@ -166,7 +166,7 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
         </div>
 
         {/* Right - Receipt with print animation */}
-        <div className="kiosk-card flex-1 flex flex-col min-w-0 relative" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="kiosk-card flex flex-col min-w-0 relative" style={{ flex: '0.8', maxWidth: '380px', padding: 0, overflow: 'hidden' }}>
           {/* Printer slot - the dark bar at the top */}
           <div className="relative z-20 flex-shrink-0" style={{ height: 'clamp(14px, 2.2vh, 22px)', background: '#1e293b', borderRadius: '12px 12px 0 0' }}>
             {/* Paper slot opening */}
@@ -187,17 +187,18 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
           </div>
 
           {/* Receipt container with overflow hidden for the slide effect */}
-          <div className={`flex-1 relative overflow-hidden ${printPhase === 'feeding' ? 'printer-feeding' : ''}`} style={{ background: '#f8fafc' }}>
+          <div className={`flex-1 relative overflow-y-auto overflow-x-hidden ${printPhase === 'feeding' ? 'printer-feeding' : ''}`} style={{ background: '#f8fafc' }}>
             {/* The receipt paper that slides down */}
             <div
               className={printPhase === 'printing' || printPhase === 'done' ? 'receipt-printing' : ''}
               style={{
                 position: 'absolute',
-                inset: 0,
+                top: 0,
+                left: 0,
+                right: 0,
                 display: 'flex',
-                alignItems: 'center',
                 justifyContent: 'center',
-                padding: 'clamp(8px, 1vh, 16px)',
+                padding: 'clamp(4px, 0.5vh, 8px)',
                 transform: printPhase === 'idle' || printPhase === 'feeding' ? 'translateY(-105%)' : undefined
               }}
               data-testid="receipt-paper"
