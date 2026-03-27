@@ -1,74 +1,61 @@
 <analysis>**original_problem_statement**: 
-The user wants to migrate a standalone React/Python KIOSK application (for real estate/apartment rent payments) into their existing full-stack ERP system.
+The user is migrating a standalone React/Python KIOSK application into their full-stack ERP system. The UI must be an exact 1:1 replica of an Albert Heijn self-checkout kiosk (no scrollbars, fully responsive via //, flat design). The application includes Face ID login via webcam, PIN authentication, tenant-specific routes (), receipt printing integrations, and modern sound/animation effects for Kiosk terminals.
 
-New Product Requirements from this session:
-- **Complete Kiosk Redesign**: Iteratively redesign the entire tenant-facing Kiosk UI to match the look and feel of a professional, physical self-service terminal (specifically the Albert Heijn self-checkout). This includes a full-screen orange-themed background, large floating white cards, 3D-esque design elements, and large touch-friendly buttons.
-- **SumUp Payment Integration**: Integrate SumUp as a payment option in the Kiosk.
-    - This should be a per-company setting in the Admin Dashboard, where each company can enter their own SumUp API Key and Merchant Code.
-    - Since SumUp does not support the local currency (SRD), the system must handle currency conversion.
-    - Companies must be able to select a supported currency (e.g., EUR, USD) and set a custom exchange rate (e.g., 40 SRD to 1 EUR).
-    - The Kiosk should display the SRD amount to the tenant, but the SumUp transaction should be processed in the selected foreign currency at the correct converted amount.
-- **UI/UX Fixes**:
-    - Ensure currency amounts (e.g., SRD 3,500.00) always display on a single line.
-    - Make all Kiosk pages, including the Payment Successful screen, have a consistent design.
-    - Fix an issue causing automatic printing to trigger twice.
-    - Ensure all navigation buttons (Back, Next, Toggles) are always visible and legible against the new background.
-
-**User's preferred language**: Dutch (You MUST INSTRUCT the next agent to respond in Dutch ONLY)
+**User's preferred language**: Dutch (You MUST automatically detect the user's primary language from their messages inside the <trajectory> tag and INSTRUCT next agent to respond in the user's preferred language only. The language here is **DUTCH**.)
 
 **what currently exists?** 
-A full-stack Vastgoed Kiosk ERP with a tenant Kiosk, Admin Dashboard, and Superadmin Dashboard. The application has undergone a major frontend redesign of the entire Kiosk flow to mimic a physical self-service terminal (Albert Heijn style) with an orange theme and floating cards. A SumUp payment integration has been added, allowing each company to configure their API keys, a processing currency (like EUR/USD), and an exchange rate to convert from SRD.
+A fully functional Vastgoed Kiosk UI and backend. Face ID handles multiple registrations per admin and individual tenant registrations. The  layout is fully modernized into a centered KIOSK format with PIN modal overlay. A first-time PIN setup flow exists. Receipt printing is fully automated with a  script for USB printers, featuring a realistic kassabon design, Web Audio API sound effects (cha-ching & paper feed), and CSS slide-down ejection animations. 
 
 **Last working item**: 
-    - Last item agent was working: Implementing a currency exchange rate for SumUp payments. The agent added the backend logic to convert SRD amounts to the company's chosen currency (e.g., EUR) using a configurable exchange rate. The frontend Admin Dashboard was also updated to include an input field for this exchange rate.
+    - Last item agent was working: Creating a modern KIOSK payment success layout specifically for the  route. The agent generated design guidelines and successfully created the  component, but the session ended before it could be integrated into the main layout.
     - Status: IN PROGRESS
     - Agent Testing Done: N
-    - Which testing method agent to use? Manual testing by the main agent is required. The flow is: 1. Log in as admin, go to Settings. 2. Enable SumUp, set currency to EUR, and enter an exchange rate (e.g., 40). 3. Save settings. 4. Go to the Kiosk, select a tenant with debt. 5. Proceed to payment confirmation and verify the Pay with Card button shows the correct converted amount (e.g., Betaal SRD 100,00 / EUR 2,50 met pinpas). 6. Check backend logs to confirm the API call to SumUp uses the converted amount.
+    - Which testing method agent to use? Screenshot tool (to verify the new  receipt UI layout works and renders correctly after payment).
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:  
-  Issue 1: Test and verify the SumUp currency exchange rate implementation (P0)
-     - Attempted fixes: The agent has written the code for the backend conversion and the frontend input fields.
+  Issue 1: Integrate and test  (P0)
+     - Attempted fixes: Component was successfully created but is not yet imported or used.
      - Next debug checklist: 
-        1.  In , confirm the  is correctly saved via the  function and sent to the  endpoint.
-        2.  In , check the  endpoint. Verify that it correctly fetches  and  from the company's settings.
-        3.  Confirm the calculation  is correct and that the  passed to the SumUp API is this converted value.
-        4.  In , verify the  and  are fetched from the  endpoint and used to display the converted amount to the user.
-     - Why fix this issue and what will be achieved with the fix? To ensure tenants are charged the correct amount in a supported currency, resolving the user's primary concern about the EUR/SRD discrepancy.
-     - Status:  IN PROGRESS
+        1. Open 
+        2. Replace the  import/usage at the  step (around line 191) with the newly created  component.
+        3. Verify the properties passed to the component match its expected props.
+     - Why fix this issue and what will be achieved with the fix? It completes the user's explicit request to give the  payment completion screen a distinct, modern KIOSK layout.
+     - Status: IN PROGRESS
      - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Both.
-     - Blocked on other issue: None.
+     - Should Test frontend/backend/both after fix? Frontend (Screenshot tool)
 
 **In progress Task List**: 
-  - None beyond the pending issue.
+  Task 1: Complete  modern payment success screen
+     - Where to resume: .
+     - What will be achieved with this? Tenants will see a massive, high-contrast, modern success screen after paying via the tenant portal.
+     - Status: IN PROGRESS
+     - Should Test frontend/backend/both after fix? Frontend
+     - Blocked on something: None.
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - P1: Modernize Kwitanties (Receipts) tab - Rebuild using the unified table style.
-    - P2: Maandelijks financieel rapport (Automated monthly financial report).
+    - P0: Integrate real Mope API key (User currently using mock mode, needs to provide Hakrinbank credentials).
+    - P1: Modernize Kwitanties (Receipts) tab - Rebuild using the unified table style in the Admin Dashboard.
     
     Future Tasks:
+    - P2: Maandelijks financieel rapport (Automated monthly financial report).
     - P2: CSV/PDF export van betalingsrapporten.
     - P2: Wachtwoord vergeten functionaliteit (Backend/Email).
     - P2: Multi-building support per bedrijf.
-    - **Refactoring**:  (~3000 lines) and  (~2800 lines) are becoming unmaintainable and should be broken down into smaller, feature-specific files.
+    - Refactoring (P1):  (>3300 lines) and  (>3200 lines) MUST be split into smaller modules.
 
 **Completed work in this session**
-- **Feature: Complete Kiosk Redesign**: Rebuilt all 7 Kiosk pages to match a professional Albert Heijn self-checkout style. This involved multiple iterations:
-    - Implemented a full-screen orange gradient background with large, floating white cards.
-    - Enhanced cards to be larger, with better shadows and text for a touch-friendly feel.
-    - Enriched the background with decorative 3D-like elements (circles, lines, glows).
-- **Feature: SumUp Payment Integration (Initial Implementation)**:
-    - Added a SumUp Pinbetaling section to the Admin Dashboard for companies to input their API Key and Merchant Code.
-    - Added a Pay with Card option to the Kiosk payment flow, which initiates a SumUp checkout.
-    - Added a currency selector (EUR, USD, etc.) in the admin settings.
-- **Bug Fixes & UI Polish**:
-    - Fixed amounts wrapping to a new line by adding .
-    - Made all navigation and toggle buttons visible against the new orange background using a glassmorphism effect.
-    - Added a Terug naar start (Back to Start) button on the tenant overview page when there is no debt.
-    - Ensured the Betaling geslaagd! (Payment Successful) page has the same consistent orange design.
-    - Resolved a bug where automatic receipt printing was triggered twice.
+- Face ID registration per tenant in  (DONE)
+- Redesigned  company select layout to strict kiosk style (no on-screen keyboard, PIN modal overlay) (DONE)
+- Global Face ID verification endpoint for login screen (DONE)
+- Logout flow fixed to return to PIN lock screen instead of main login (DONE)
+- Multiple Admin Face IDs supported with individual deletion (DONE)
+- Receipt redesigned to true kassabon style (monospace, narrow, dashed lines) (DONE)
+- Created  to handle automated local USB ESC/POS printing (DONE)
+- Implemented sequential CSS printer animations (receipt visible -> ejects downward) (DONE)
+- Integrated Web Audio API for success chime and paper-feed sound effects (DONE)
+- First-time PIN setup screen implemented to replace Kiosk Not Available (DONE)
 
 **Earlier issues found/mentioned but not fixed**
    - None.
@@ -80,74 +67,73 @@ A full-stack Vastgoed Kiosk ERP with a tenant Kiosk, Admin Dashboard, and Supera
 
 
 **Key Technical Concepts**
-- **UI/UX Redesign**: Heavy use of TailwindCSS for a modern, physical-kiosk aesthetic, including , , , , and decorative pseudo-elements.
-- **SumUp Integration**: Uses SumUp's Online Checkout REST API.
-    - Frontend initiates a payment by calling a new backend endpoint ().
-    - Backend creates a checkout with SumUp using , passing the company's API key.
-    - Frontend polls a  endpoint to check for payment success.
-- **Currency Conversion**: A custom exchange rate stored per-company is used to convert SRD amounts into a SumUp-supported currency (e.g., EUR) before creating the checkout.
+- **Viewport Scaling:** Kiosk elements exclusively use , , and . 
+- **Web Audio API:** Used inside  to synthesize procedural sound effects (cha-ching and motor noise).
+- **USB ESC/POS Printing:** Bypassed browser print dialog completely using  calls to a local Python daemon () acting as a bridge to standard receipt printers.
+- **Face ID:** Uses local  models. Now stores an array of descriptors () for multiple faces per entity.
 
 **key DB schema**
-- : Added  (boolean),  (str),  (str),  (str, e.g., 'EUR'), and  (float).
+- :  (string),  (array of objects: ).
+- :  (bool),  (list of floats).
 
 **changes in tech stack**
-- No new packages, but  is now used for communicating with the SumUp API.
+- Added  as a standalone local utility for USB ticket printing.
+- Web Audio API adopted for native sound synthesis.
 
 **All files of reference**
-- : Modified to add SumUp settings and checkout endpoints, including currency conversion logic.
-- : Modified to add the SumUp settings UI, including the new currency and exchange rate fields.
-- : Rewritten to include Contant (Cash) and Pinpas (Card) payment options and the SumUp polling logic.
-- All other Kiosk components under  were rewritten for the new design.
+-  (Must be updated to include )
+-  (Newly created)
+-  
+- 
+- 
+- 
 
 **Areas that need refactoring**: 
-The  and  files continue to grow, making them difficult to maintain. The addition of the complex SumUp logic further highlights the need to split these monolithic files into smaller, more focused modules.
+ and  are massively monolithic and need splitting.
 
 **key api endpoints**
-- **SumUp Endpoints (New)**:
-  - : Updated to save SumUp settings (, , , etc.).
-  - : Checks if SumUp is configured and returns the currency/exchange rate.
-  - : Creates a SumUp checkout, performing currency conversion.
-  - : Polls for the status of a SumUp transaction.
+-  - Checks all companies for face match on login.
+-  - Registers multiple faces.
+-  - First time PIN initialization.
 
 **Critical Info for New Agent**
-- **Language:** You MUST reply in Dutch.
-- **Priority Task:** The most critical task is to test and finalize the SumUp currency exchange rate feature. The code is written but completely untested. Follow the test plan outlined in Last working item.
-- **User Focus:** The user is highly focused on visual design and user experience. Be prepared for detailed feedback on UI elements. They want the app to feel like a real, polished kiosk.
-- **SaaS Context**: Remember that SumUp settings are configured per-company. The solution must work in a multi-tenant environment.
+- **Language:** Reply strictly in **Dutch**.
+- **Task continuation:** You are actively in the middle of replacing the  payment success screen. You just generated  via design subagent, but haven't integrated it yet. Open  and swap it in. 
+- **Audio/Animations:** Do not strip out the  or  logic in —the user loves the specific timing and sounds generated for the receipt ejection. 
 
 **documents and test reports created in this job**
--  (updated with Kiosk redesign and SumUp requirements)
--  (from testing the kiosk redesign)
+-  (Updated regularly with completed tasks)
+-  (Face ID Tenant tests)
+-  (CompanySelect Redesign tests)
+-  (Contains layout specs for HuurdersReceipt)
 
 **Last 10 User Messages and any pending HUMAN messages** 
-1. User: SumUp shows EUR but my rent is in SRD.
-2. Agent: Explained SRD isn't supported and proposed making currency selectable.
-3. User: My rent is 100 SRD but SumUp sees it as 100 EUR. This is wrong. It needs to convert based on the exchange rate.
-4. Agent: Understood. Proposed adding an exchange rate field.
-5. Agent: Implemented backend logic for currency conversion.
-6. Agent: Implemented Admin Dashboard UI for exchange rate.
-7. Agent: Implemented frontend Kiosk changes to show converted amounts.
-8. Agent: Verified code linting and backend restart.
-9. Agent: Summarized the implemented changes (currency selection + exchange rate).
-10. **(No further user messages. The agent finished after implementation without testing.)**
+1. User: Make the receipt print animation slide down out of a printer slot.
+2. User: Change the receipt layout to a standard narrow kassabon.
+3. User: Remove the print buttons. Make it print automatically and look like it's sliding out of a real USB printer.
+4. User: How does the USB printer connect? Also, when there's no PIN, let them set it up instead of showing Kiosk Not Available. (Agent built print server and SetPinScreen).
+5. User: I don't want the receipt sliding down and staying on screen. Flow should be: show receipt -> then slowly eject downwards + add sound effects. (Agent implemented 3-phase flow with Web Audio API).
+6. User: Can you give the  Betaling voltooid screen a completely different, modern KIOSK layout?
+*Agent generated design specs and created  but session ended before integration.*
 
 **Project Health Check:**
 - Broken: None
-- Mocked: None
+- Mocked: Mope Payment Gateway (Needs Hakrinbank credentials)
 
 **3rd Party Integrations**
-- Shelly Smart Relays (Local HTTP API) - Requires User/Local network setup.
-- WhatsApp Business API - Requires User API Key/Token.
-- **SumUp Online Checkout API** - Requires a company-specific API Key and Merchant Code.
+- SumUp Online Checkout API - Requires user API Key
+- Mope Payment API - Requires user API Key (Mocked)
+- WhatsApp Business API - Requires User API Key
 
 **Testing status**
-  - Testing agent used after significant changes: YES (for the UI redesign)
+  - Testing agent used after significant changes: YES (For UI navigation flows).
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: None.
-  - Known regressions: None, but the latest feature is untested.
+  - Known regressions: None.
 
 **Credentials to test flow:**
 - **Superadmin:**  / 
+- **Kiosk Company (Demo):** KEWALBANSING (PIN: , or  for new test companies)
 
 **What agent forgot to execute**
-The agent did not perform any testing (manual, curl, or screenshot) after implementing the currency exchange rate functionality. The entire feature, from saving the rate in the admin panel to the final calculation in the checkout process, is unverified.</analysis>
+The agent generated the  file using the design agent, but failed to inject it into  before the session timed out. The user's request is thus unfulfilled on the frontend. This is your immediate priority.</analysis>
