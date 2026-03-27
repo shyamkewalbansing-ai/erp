@@ -122,10 +122,10 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - Outfit font for modern kiosk typography
 
 ### Huurders Modern Betalingsscherm (Updated 27 Mar 2026)
-- HuurdersReceipt.jsx: Twee-panelen layout na betaling voor `/huurders` route
-- Links: Huurder financieel overzicht (naam, appt, openstaande huur/service/boetes, donkere totaal-balk)
-- Rechts: Succes-kaart met "Alles betaald!" / "Betaling geslaagd!" + "Terug naar start" knop
-- Circulaire SVG countdown timer, automatisch printen, success geluid
+- HuurdersReceipt.jsx: 3-fase flow voor `/huurders` route
+- Fase 1 (show): "Betaling voltooid" tekst bovenaan + kassabon eronder (verticaal gecentreerd)
+- Fase 2 (eject): Kassabon schuift naar beneden met papiergeluid + success geluid
+- Fase 3 (done): Twee-panelen overzicht (links: huurder financieel, rechts: "Alles betaald!" + countdown)
 - Geïntegreerd in HuurdersLayout.jsx
 
 ### Kassabon-stijl Kwitantie (Completed 27 Mar 2026)

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { CheckCircle, Home, User, FileText, AlertTriangle, Building2 } from 'lucide-react';
+import ReceiptTicket from './ReceiptTicket';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
@@ -42,48 +43,109 @@ function playSuccessSound() {
   } catch {}
 }
 
+function playPaperFeedSound(durationMs = 3500) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = ctx.currentTime;
+    const dur = durationMs / 1000;
+    const bufferSize = ctx.sampleRate * dur;
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const noiseData = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) noiseData[i] = (Math.random() * 2 - 1) * 0.12;
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = 3000;
+    bandpass.Q.value = 1.5;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.06, t);
+    noiseGain.gain.linearRampToValueAtTime(0.1, t + 0.3);
+    noiseGain.gain.setValueAtTime(0.1, t + dur - 0.4);
+    noiseGain.gain.linearRampToValueAtTime(0, t + dur);
+    noise.connect(bandpass).connect(noiseGain).connect(ctx.destination);
+    noise.start(t);
+    noise.stop(t + dur);
+    const tickRate = 40;
+    const totalTicks = Math.floor(dur * tickRate);
+    for (let i = 0; i < totalTicks; i++) {
+      const tickTime = t + (i / tickRate);
+      const tickBuf = ctx.createBuffer(1, 80, ctx.sampleRate);
+      const tickData = tickBuf.getChannelData(0);
+      for (let j = 0; j < 80; j++) tickData[j] = (Math.random() * 2 - 1) * 0.2 * Math.exp(-j / 15);
+      const tick = ctx.createBufferSource();
+      tick.buffer = tickBuf;
+      const tickGain = ctx.createGain();
+      tickGain.gain.value = 0.04;
+      const tickFilter = ctx.createBiquadFilter();
+      tickFilter.type = 'highpass';
+      tickFilter.frequency.value = 800;
+      tick.connect(tickFilter).connect(tickGain).connect(ctx.destination);
+      tick.start(tickTime);
+      tick.stop(tickTime + 0.015);
+    }
+    const tearTime = t + dur - 0.15;
+    const tearBuf = ctx.createBuffer(1, 3000, ctx.sampleRate);
+    const tearData = tearBuf.getChannelData(0);
+    for (let j = 0; j < 3000; j++) tearData[j] = (Math.random() * 2 - 1) * 0.4 * Math.exp(-j / 500);
+    const tear = ctx.createBufferSource();
+    tear.buffer = tearBuf;
+    const tearGain = ctx.createGain();
+    tearGain.gain.value = 0.12;
+    tear.connect(tearGain).connect(ctx.destination);
+    tear.start(tearTime);
+    setTimeout(() => ctx.close(), durationMs + 500);
+  } catch {}
+}
+
 export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) {
   const [countdown, setCountdown] = useState(15);
   const [stampData, setStampData] = useState(null);
+  const [phase, setPhase] = useState('show'); // show -> ejecting -> done
   const timerRef = useRef(null);
-  const soundRef = useRef(false);
+  const hasPrintedRef = useRef(false);
 
   useEffect(() => {
     if (companyId) axios.get(`${API}/public/${companyId}/company/stamp`).then(r => setStampData(r.data)).catch(() => {});
   }, [companyId]);
 
   useEffect(() => {
-    if (payment && !soundRef.current) {
-      soundRef.current = true;
+    if (payment && !hasPrintedRef.current) {
+      hasPrintedRef.current = true;
       playSuccessSound();
-      silentPrint();
+      setTimeout(() => {
+        setPhase('ejecting');
+        playPaperFeedSound(3500);
+        silentPrint();
+      }, 2500);
+      setTimeout(() => setPhase('done'), 6500);
     }
   }, [payment]);
 
   useEffect(() => {
     if (!payment) return;
-    const delay = setTimeout(() => {
+    const startDelay = setTimeout(() => {
       timerRef.current = setInterval(() => {
         setCountdown(p => { if (p <= 1) { clearInterval(timerRef.current); onDone(); return 0; } return p - 1; });
       }, 1000);
-    }, 1000);
-    return () => { clearTimeout(delay); clearInterval(timerRef.current); };
+    }, 6800);
+    return () => { clearTimeout(startDelay); clearInterval(timerRef.current); };
   }, [payment, onDone]);
+
+  const kwNr = payment?.kwitantie_nummer || payment?.receipt_number || '';
 
   const silentPrint = useCallback(async () => {
     if (!payment) return;
     try {
       const hc = await fetch(`${PRINT_SERVER_URL}/health`, { method: 'GET', mode: 'cors' }).catch(() => null);
       if (hc?.ok) {
-        const remaining = (payment.remaining_rent || 0) + (payment.remaining_service || 0) + (payment.remaining_fines || 0);
+        const rem = (payment.remaining_rent || 0) + (payment.remaining_service || 0) + (payment.remaining_fines || 0);
         await fetch(`${PRINT_SERVER_URL}/print`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             company_name: stampData?.stamp_company_name || 'Vastgoed Beheer',
-            address: stampData?.stamp_address || '',
-            phone: stampData?.stamp_phone || '',
-            receipt_number: payment.kwitantie_nummer || payment.receipt_number || '',
+            address: stampData?.stamp_address || '', phone: stampData?.stamp_phone || '',
+            receipt_number: kwNr,
             date: new Date(payment.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' }),
             time: new Date(payment.created_at).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
             tenant_name: payment.tenant_name || tenant?.name || '',
@@ -92,12 +154,12 @@ export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) 
             amount: Number(payment.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
             total: Number(payment.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
             payment_method: METHOD_LABELS[payment.payment_method] || payment.payment_method || 'Contant',
-            remaining_total: Number(remaining).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            remaining_total: Number(rem).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
           })
         });
       }
     } catch {}
-  }, [payment, tenant, stampData]);
+  }, [payment, tenant, stampData, kwNr]);
 
   if (!payment) return null;
 
@@ -108,178 +170,207 @@ export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) 
   const allPaid = totalRemaining <= 0;
 
   return (
-    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}
+    <div className="h-full bg-orange-500 flex flex-col overflow-hidden" style={{ padding: '1.5vh 1.5vw 0' }}
       data-testid="huurders-receipt-screen">
+      <style>{`
+        @keyframes ejectDown {
+          0% { transform: translateY(0); }
+          100% { transform: translateY(120vh); }
+        }
+        @keyframes receiptAppear {
+          from { opacity: 0; transform: translateY(10px) scale(0.97); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes popIn {
+          0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+          60% { transform: scale(1.08) rotate(2deg); }
+          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .receipt-eject { animation: ejectDown 3.8s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        .receipt-appear { animation: receiptAppear 0.5s ease-out forwards; }
+      `}</style>
 
-      {/* Header */}
-      <div className="flex items-center justify-center flex-shrink-0" style={{ height: '7vh', padding: '0 0.5vw' }}>
-        <span className="kiosk-subtitle text-white font-black tracking-wide" style={{ fontStyle: 'italic' }}>Uw overzicht</span>
-      </div>
-
-      {/* Two-panel content */}
-      <div className="flex-1 flex min-h-0 overflow-hidden" style={{ gap: '1.5vw', paddingBottom: '1.5vh' }}>
-
-        {/* LEFT PANEL: Tenant financial overview */}
-        <div className="kiosk-card flex flex-col" style={{ flex: '1.4', padding: 0, overflow: 'hidden' }}>
-
-          {/* Tenant header */}
-          <div className="flex items-center justify-between" style={{ padding: 'clamp(16px, 2.5vh, 32px) clamp(16px, 2vw, 32px)' }}>
-            <div className="flex items-center" style={{ gap: 'clamp(10px, 1.2vw, 20px)' }}>
-              <div className="rounded-xl bg-orange-50 flex items-center justify-center" style={{ width: 'clamp(40px, 6vh, 60px)', height: 'clamp(40px, 6vh, 60px)' }}>
-                <User style={{ width: '3vh', height: '3vh' }} className="text-orange-400" />
-              </div>
-              <div>
-                <p className="font-bold text-slate-900" style={{ fontSize: 'clamp(16px, 2.2vh, 24px)' }}>
-                  {payment.tenant_name || tenant?.name || ''}
-                </p>
-                <p className="text-slate-400" style={{ fontSize: 'clamp(12px, 1.5vh, 16px)' }}>
-                  Appt. {payment.apartment_number || tenant?.apartment_number || ''} - {payment.tenant_code || tenant?.tenant_code || ''}
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="uppercase tracking-wider text-slate-400 font-bold" style={{ fontSize: 'clamp(9px, 1vh, 12px)' }}>Maandhuur</p>
-              <p className="font-black text-slate-900" style={{ fontSize: 'clamp(18px, 2.8vh, 30px)' }}>
-                {formatSRD(tenant?.monthly_rent || tenant?.rent_amount || 0)}
-              </p>
-            </div>
+      {phase !== 'done' ? (
+        /* ===== SHOW + EJECT: Tekst bovenaan, kassabon eronder ===== */
+        <>
+          {/* Header */}
+          <div className="flex items-center justify-center flex-shrink-0" style={{ height: '6vh' }}>
+            <span className="kiosk-subtitle text-white font-bold">Betaling voltooid</span>
           </div>
 
-          {/* Divider */}
-          <div style={{ borderBottom: '1px solid #f1f5f9', margin: '0 clamp(16px, 2vw, 32px)' }} />
-
-          {/* Financial breakdown */}
-          <div className="flex-1 flex flex-col justify-center" style={{ padding: 'clamp(12px, 1.5vh, 20px) clamp(16px, 2vw, 32px)' }}>
-
-            {/* Openstaande huur */}
-            <div className="flex items-center justify-between" style={{ padding: 'clamp(12px, 1.8vh, 24px) 0', borderBottom: '1px solid #f8fafc' }}>
-              <div className="flex items-center" style={{ gap: 'clamp(10px, 1vw, 16px)' }}>
-                <div className="rounded-lg bg-slate-50 flex items-center justify-center" style={{ width: 'clamp(32px, 4.5vh, 48px)', height: 'clamp(32px, 4.5vh, 48px)' }}>
-                  <Building2 style={{ width: '2.2vh', height: '2.2vh' }} className="text-slate-300" />
+          <div className="flex-1 flex flex-col items-center min-h-0 overflow-hidden" style={{ paddingBottom: '1.5vh' }}>
+            {/* Success text block */}
+            <div className="flex flex-col items-center text-center flex-shrink-0" style={{ marginBottom: 'clamp(10px, 1.5vh, 20px)' }}>
+              <div style={{
+                animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',
+                width: 'clamp(48px, 7vh, 72px)', height: 'clamp(48px, 7vh, 72px)',
+                borderRadius: '50%', marginBottom: 'clamp(6px, 1vh, 12px)',
+                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center'
+              }}>
+                <CheckCircle style={{ width: '3.5vh', height: '3.5vh' }} className="text-white" strokeWidth={2.5} />
+              </div>
+              <h1 className="text-white font-black" style={{ fontSize: 'clamp(18px, 2.8vh, 30px)', marginBottom: '0.3vh' }}>
+                Betaling geslaagd!
+              </h1>
+              <p className="text-white/70 font-medium" style={{ fontSize: 'clamp(13px, 1.6vh, 18px)' }}>
+                {formatSRD(payment.amount)} - {kwNr}
+              </p>
+              {phase === 'ejecting' && (
+                <div className="flex items-center gap-2" style={{ marginTop: '0.8vh' }}>
+                  <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                  <p className="text-white/80 font-bold" style={{ fontSize: 'clamp(12px, 1.4vh, 16px)' }}>Bon wordt geprint...</p>
                 </div>
-                <div>
-                  <p className="font-semibold text-slate-800" style={{ fontSize: 'clamp(14px, 1.8vh, 20px)' }}>Openstaande huur</p>
-                  <p className="text-slate-400" style={{ fontSize: 'clamp(11px, 1.3vh, 14px)' }}>
-                    {remainingRent <= 0 ? 'Geen achterstand' : 'Achterstallig bedrag'}
+              )}
+            </div>
+
+            {/* Kassabon centered underneath */}
+            <div className="flex-1 flex justify-center overflow-hidden" style={{ width: '100%' }}>
+              <div className={phase === 'show' ? 'receipt-appear' : 'receipt-eject'}
+                data-testid="receipt-paper"
+                style={{ display: 'flex', justifyContent: 'center' }}>
+                <div className="bg-white rounded-t-lg shadow-2xl" style={{ overflow: 'hidden' }}>
+                  <ReceiptTicket payment={payment} tenant={tenant} preview={true} stampData={stampData} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+
+      ) : (
+        /* ===== DONE: Two-panel details after kassabon is gone ===== */
+        <>
+          {/* Header */}
+          <div className="flex items-center justify-center flex-shrink-0" style={{ height: '6vh' }}>
+            <span className="kiosk-subtitle text-white font-bold">Uw overzicht</span>
+          </div>
+
+          <div className="flex-1 flex min-h-0 overflow-hidden" style={{ gap: '1.5vw', paddingBottom: '1.5vh' }}>
+            {/* LEFT: Tenant financial overview */}
+            <div className="kiosk-card flex flex-col" style={{ flex: '1.4', padding: 0, overflow: 'hidden', animation: 'fadeUp 0.5s ease-out forwards' }}>
+              <div className="flex items-center justify-between" style={{ padding: 'clamp(16px, 2.5vh, 32px) clamp(16px, 2vw, 32px)' }}>
+                <div className="flex items-center" style={{ gap: 'clamp(10px, 1.2vw, 20px)' }}>
+                  <div className="rounded-xl bg-orange-50 flex items-center justify-center" style={{ width: 'clamp(40px, 6vh, 60px)', height: 'clamp(40px, 6vh, 60px)' }}>
+                    <User style={{ width: '3vh', height: '3vh' }} className="text-orange-400" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-slate-900" style={{ fontSize: 'clamp(16px, 2.2vh, 24px)' }}>
+                      {payment.tenant_name || tenant?.name || ''}
+                    </p>
+                    <p className="text-slate-400" style={{ fontSize: 'clamp(12px, 1.5vh, 16px)' }}>
+                      Appt. {payment.apartment_number || tenant?.apartment_number || ''} - {payment.tenant_code || tenant?.tenant_code || ''}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="uppercase tracking-wider text-slate-400 font-bold" style={{ fontSize: 'clamp(9px, 1vh, 12px)' }}>Maandhuur</p>
+                  <p className="font-black text-slate-900" style={{ fontSize: 'clamp(18px, 2.8vh, 30px)' }}>
+                    {formatSRD(tenant?.monthly_rent || tenant?.rent_amount || 0)}
                   </p>
                 </div>
               </div>
-              <span className={`font-bold ${remainingRent <= 0 ? 'text-emerald-500' : 'text-orange-500'}`} style={{ fontSize: 'clamp(15px, 2vh, 22px)' }}>
-                {formatSRD(remainingRent)}
-              </span>
-            </div>
 
-            {/* Servicekosten */}
-            <div className="flex items-center justify-between" style={{ padding: 'clamp(12px, 1.8vh, 24px) 0', borderBottom: '1px solid #f8fafc' }}>
-              <div className="flex items-center" style={{ gap: 'clamp(10px, 1vw, 16px)' }}>
-                <div className="rounded-lg bg-slate-50 flex items-center justify-center" style={{ width: 'clamp(32px, 4.5vh, 48px)', height: 'clamp(32px, 4.5vh, 48px)' }}>
-                  <FileText style={{ width: '2.2vh', height: '2.2vh' }} className="text-slate-300" />
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-800" style={{ fontSize: 'clamp(14px, 1.8vh, 20px)' }}>Servicekosten</p>
-                  <p className="text-slate-400" style={{ fontSize: 'clamp(11px, 1.3vh, 14px)' }}>Water, stroom, overig</p>
-                </div>
+              <div style={{ borderBottom: '1px solid #f1f5f9', margin: '0 clamp(16px, 2vw, 32px)' }} />
+
+              <div className="flex-1 flex flex-col justify-center" style={{ padding: 'clamp(12px, 1.5vh, 20px) clamp(16px, 2vw, 32px)' }}>
+                {[
+                  { icon: Building2, label: 'Openstaande huur', sub: remainingRent <= 0 ? 'Geen achterstand' : 'Achterstallig bedrag', amount: remainingRent },
+                  { icon: FileText, label: 'Servicekosten', sub: 'Water, stroom, overig', amount: remainingService },
+                  { icon: AlertTriangle, label: 'Boetes', sub: 'Openstaande boetes', amount: remainingFines },
+                ].map((row, i) => (
+                  <div key={i} className="flex items-center justify-between" style={{ padding: 'clamp(12px, 1.8vh, 24px) 0', borderBottom: i < 2 ? '1px solid #f8fafc' : 'none' }}>
+                    <div className="flex items-center" style={{ gap: 'clamp(10px, 1vw, 16px)' }}>
+                      <div className="rounded-lg bg-slate-50 flex items-center justify-center" style={{ width: 'clamp(32px, 4.5vh, 48px)', height: 'clamp(32px, 4.5vh, 48px)' }}>
+                        <row.icon style={{ width: '2.2vh', height: '2.2vh' }} className="text-slate-300" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-800" style={{ fontSize: 'clamp(14px, 1.8vh, 20px)' }}>{row.label}</p>
+                        <p className="text-slate-400" style={{ fontSize: 'clamp(11px, 1.3vh, 14px)' }}>{row.sub}</p>
+                      </div>
+                    </div>
+                    <span className={`font-bold ${row.amount <= 0 ? 'text-emerald-500' : 'text-orange-500'}`} style={{ fontSize: 'clamp(15px, 2vh, 22px)' }}>
+                      {formatSRD(row.amount)}
+                    </span>
+                  </div>
+                ))}
               </div>
-              <span className={`font-bold ${remainingService <= 0 ? 'text-emerald-500' : 'text-orange-500'}`} style={{ fontSize: 'clamp(15px, 2vh, 22px)' }}>
-                {formatSRD(remainingService)}
-              </span>
-            </div>
 
-            {/* Boetes */}
-            <div className="flex items-center justify-between" style={{ padding: 'clamp(12px, 1.8vh, 24px) 0' }}>
-              <div className="flex items-center" style={{ gap: 'clamp(10px, 1vw, 16px)' }}>
-                <div className="rounded-lg bg-slate-50 flex items-center justify-center" style={{ width: 'clamp(32px, 4.5vh, 48px)', height: 'clamp(32px, 4.5vh, 48px)' }}>
-                  <AlertTriangle style={{ width: '2.2vh', height: '2.2vh' }} className="text-slate-300" />
-                </div>
-                <div>
-                  <p className="font-semibold text-slate-800" style={{ fontSize: 'clamp(14px, 1.8vh, 20px)' }}>Boetes</p>
-                  <p className="text-slate-400" style={{ fontSize: 'clamp(11px, 1.3vh, 14px)' }}>Openstaande boetes</p>
-                </div>
+              <div className="flex items-center justify-between" style={{
+                background: '#0f172a',
+                padding: 'clamp(14px, 2.5vh, 28px) clamp(16px, 2vw, 32px)',
+                borderRadius: '0 0 clamp(12px, 1.5vh, 20px) clamp(12px, 1.5vh, 20px)'
+              }}>
+                <span className="text-slate-400 font-medium" style={{ fontSize: 'clamp(13px, 1.6vh, 18px)' }}>Totaal openstaand</span>
+                <span className="text-white font-black" style={{
+                  fontSize: 'clamp(22px, 3.5vh, 36px)',
+                  fontFamily: "'JetBrains Mono', monospace", fontStyle: 'italic'
+                }}>{formatSRD(totalRemaining)}</span>
               </div>
-              <span className={`font-bold ${remainingFines <= 0 ? 'text-emerald-500' : 'text-orange-500'}`} style={{ fontSize: 'clamp(15px, 2vh, 22px)' }}>
-                {formatSRD(remainingFines)}
-              </span>
+            </div>
+
+            {/* RIGHT: Success card */}
+            <div className="kiosk-card flex flex-col items-center justify-center text-center"
+              style={{ flex: '0.8', padding: 'clamp(16px, 3vh, 40px)', animation: 'fadeUp 0.5s ease-out 0.15s forwards', opacity: 0 }}>
+
+              <div className="rounded-full bg-emerald-50 flex items-center justify-center" style={{
+                width: 'clamp(64px, 10vh, 100px)', height: 'clamp(64px, 10vh, 100px)',
+                marginBottom: 'clamp(12px, 2.5vh, 28px)', border: '3px solid #bbf7d0',
+                animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.3s forwards', opacity: 0
+              }}>
+                <CheckCircle style={{ width: '5vh', height: '5vh' }} className="text-emerald-500" />
+              </div>
+
+              <h2 className="font-black text-emerald-500 tracking-tight" style={{
+                fontSize: 'clamp(24px, 4vh, 42px)', marginBottom: 'clamp(4px, 0.8vh, 10px)',
+                animation: 'fadeUp 0.4s ease-out 0.5s forwards', opacity: 0
+              }}>{allPaid ? 'Alles betaald!' : 'Betaling geslaagd!'}</h2>
+
+              <p className="text-slate-400 font-medium" style={{
+                fontSize: 'clamp(13px, 1.6vh, 18px)', marginBottom: 'clamp(20px, 4vh, 40px)',
+                animation: 'fadeUp 0.4s ease-out 0.6s forwards', opacity: 0
+              }}>{allPaid ? 'Geen openstaand saldo' : `Openstaand: ${formatSRD(totalRemaining)}`}</p>
+
+              <button onClick={onDone} data-testid="huurders-receipt-done-btn"
+                className="w-full rounded-2xl text-white font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                style={{
+                  maxWidth: 'clamp(200px, 22vw, 340px)', padding: 'clamp(14px, 2.5vh, 28px)',
+                  fontSize: 'clamp(16px, 2.2vh, 22px)', background: '#f97316',
+                  boxShadow: '0 8px 30px -8px rgba(249,115,22,0.4)',
+                  animation: 'fadeUp 0.4s ease-out 0.7s forwards', opacity: 0
+                }}>
+                <Home style={{ width: '2.2vh', height: '2.2vh' }} /> Terug naar start
+              </button>
+
+              <div style={{
+                marginTop: 'clamp(16px, 3vh, 32px)', position: 'relative',
+                width: 'clamp(44px, 6vh, 64px)', height: 'clamp(44px, 6vh, 64px)',
+                animation: 'fadeUp 0.4s ease-out 0.8s forwards', opacity: 0
+              }}>
+                <svg viewBox="0 0 60 60" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+                  <circle cx="30" cy="30" r="26" fill="none" stroke="#f1f5f9" strokeWidth="3" />
+                  <circle cx="30" cy="30" r="26" fill="none" stroke="#f97316" strokeWidth="3"
+                    strokeLinecap="round" strokeDasharray={`${2 * Math.PI * 26}`}
+                    strokeDashoffset={`${2 * Math.PI * 26 * (1 - countdown / 15)}`}
+                    transform="rotate(-90 30 30)" style={{ transition: 'stroke-dashoffset 0.9s ease' }} />
+                </svg>
+                <div style={{
+                  position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 'clamp(16px, 2.5vh, 26px)', fontWeight: 900, color: '#64748b',
+                  fontFamily: "'JetBrains Mono', monospace"
+                }}>{countdown}</div>
+              </div>
             </div>
           </div>
+        </>
+      )}
 
-          {/* Total outstanding bar */}
-          <div className="flex items-center justify-between" style={{
-            background: '#0f172a',
-            padding: 'clamp(14px, 2.5vh, 28px) clamp(16px, 2vw, 32px)',
-            borderRadius: '0 0 clamp(12px, 1.5vh, 20px) clamp(12px, 1.5vh, 20px)'
-          }}>
-            <span className="text-slate-400 font-medium" style={{ fontSize: 'clamp(13px, 1.6vh, 18px)' }}>Totaal openstaand</span>
-            <span className="text-white font-black" style={{
-              fontSize: 'clamp(22px, 3.5vh, 36px)',
-              fontFamily: "'JetBrains Mono', monospace",
-              fontStyle: 'italic'
-            }}>
-              {formatSRD(totalRemaining)}
-            </span>
-          </div>
-        </div>
-
-        {/* RIGHT PANEL: Success / Status card */}
-        <div className="kiosk-card flex flex-col items-center justify-center text-center" style={{ flex: '0.8', padding: 'clamp(16px, 3vh, 40px)' }}>
-
-          {/* Success icon */}
-          <div className="rounded-full bg-emerald-50 flex items-center justify-center" style={{
-            width: 'clamp(64px, 10vh, 100px)', height: 'clamp(64px, 10vh, 100px)',
-            marginBottom: 'clamp(12px, 2.5vh, 28px)',
-            border: '3px solid #bbf7d0'
-          }}>
-            <CheckCircle style={{ width: '5vh', height: '5vh' }} className="text-emerald-500" />
-          </div>
-
-          {/* Status text */}
-          <h2 className="font-black text-emerald-500 tracking-tight" style={{
-            fontSize: 'clamp(24px, 4vh, 42px)',
-            marginBottom: 'clamp(4px, 0.8vh, 10px)'
-          }}>
-            {allPaid ? 'Alles betaald!' : 'Betaling geslaagd!'}
-          </h2>
-          <p className="text-slate-400 font-medium" style={{
-            fontSize: 'clamp(13px, 1.6vh, 18px)',
-            marginBottom: 'clamp(20px, 4vh, 40px)'
-          }}>
-            {allPaid ? 'Geen openstaand saldo' : `Openstaand: ${formatSRD(totalRemaining)}`}
-          </p>
-
-          {/* Done button */}
-          <button onClick={onDone} data-testid="huurders-receipt-done-btn"
-            className="w-full rounded-2xl text-white font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
-            style={{
-              maxWidth: 'clamp(200px, 22vw, 340px)',
-              padding: 'clamp(14px, 2.5vh, 28px)',
-              fontSize: 'clamp(16px, 2.2vh, 22px)',
-              background: '#f97316',
-              boxShadow: '0 8px 30px -8px rgba(249,115,22,0.4)'
-            }}>
-            <Home style={{ width: '2.2vh', height: '2.2vh' }} />
-            Terug naar start
-          </button>
-
-          {/* Countdown */}
-          <div style={{ marginTop: 'clamp(16px, 3vh, 32px)', position: 'relative', width: 'clamp(44px, 6vh, 64px)', height: 'clamp(44px, 6vh, 64px)' }}>
-            <svg viewBox="0 0 60 60" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
-              <circle cx="30" cy="30" r="26" fill="none" stroke="#f1f5f9" strokeWidth="3" />
-              <circle cx="30" cy="30" r="26" fill="none" stroke="#f97316" strokeWidth="3"
-                strokeLinecap="round"
-                strokeDasharray={`${2 * Math.PI * 26}`}
-                strokeDashoffset={`${2 * Math.PI * 26 * (1 - countdown / 15)}`}
-                transform="rotate(-90 30 30)"
-                style={{ transition: 'stroke-dashoffset 0.9s ease' }}
-              />
-            </svg>
-            <div style={{
-              position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 'clamp(16px, 2.5vh, 26px)', fontWeight: 900, color: '#64748b',
-              fontFamily: "'JetBrains Mono', monospace"
-            }}>
-              {countdown}
-            </div>
-          </div>
-        </div>
+      {/* Hidden print content */}
+      <div className="print-receipt-content" style={{ display: 'none' }}>
+        <ReceiptTicket payment={payment} tenant={tenant} preview={false} stampData={stampData} />
       </div>
     </div>
   );
