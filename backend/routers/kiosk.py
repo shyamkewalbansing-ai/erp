@@ -681,6 +681,24 @@ async def verify_kiosk_pin(company_id: str, data: KioskPinVerify):
     
     return {"valid": True, "message": "PIN correct", "token": token}
 
+
+@router.post("/public/{company_id}/set-pin")
+async def set_initial_pin(company_id: str, data: KioskPinVerify):
+    """Set PIN for the first time (only works if no PIN is set yet)"""
+    company = await db.kiosk_companies.find_one({"company_id": company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    if company.get("kiosk_pin"):
+        raise HTTPException(status_code=400, detail="PIN is al ingesteld. Gebruik Instellingen om te wijzigen.")
+    if not data.pin or len(data.pin) != 4 or not data.pin.isdigit():
+        raise HTTPException(status_code=400, detail="PIN moet 4 cijfers zijn")
+    await db.kiosk_companies.update_one({"company_id": company_id}, {"$set": {"kiosk_pin": data.pin}})
+    token = jwt.encode(
+        {"company_id": company_id, "exp": datetime.now(timezone.utc) + timedelta(hours=8)},
+        JWT_SECRET, algorithm="HS256"
+    )
+    return {"success": True, "message": "PIN code ingesteld!", "token": token}
+
 @router.get("/public/{company_id}/company/stamp")
 async def get_company_stamp(company_id: str):
     """Get company stamp info for receipts (public)"""

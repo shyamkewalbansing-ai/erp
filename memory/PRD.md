@@ -114,6 +114,23 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - All forms have "Terug" back button to return to main screen
 - Outfit font for modern kiosk typography
 
+### Kassabon-stijl Kwitantie (Completed 27 Mar 2026)
+- ReceiptTicket redesigned als echte kassabon: monospace font, donkere sectie-balken, stippellijnen
+- Structuur: Header → KWITANTIE balk → Bonnr/Datum/Huurder → TOTALEN → BetaalWijze → Openstaand → Footer
+- Printer-animatie: kassabon schuift uit donkere printer-behuizing naar beneden
+- Automatisch USB bonprinter koppeling via lokale print server (localhost:5555)
+- Print server script: /app/print_server.py (ESC/POS compatibel: Epson, Star, Bixolon)
+
+### PIN Code Zelf Kiezen (Completed 27 Mar 2026)
+- Nieuwe bedrijven zien nu "Kies uw PIN code" in plaats van "Kiosk Niet Beschikbaar"
+- 2-staps flow: Kies PIN → Bevestig PIN → Automatisch opgeslagen → Kiosk start
+- Backend endpoint: POST /api/kiosk/public/{company_id}/set-pin
+- Werkt alleen als er nog geen PIN is ingesteld (beveiliging)
+
+### Uitloggen naar Lock Screen (Completed 26 Mar 2026)
+- Uitloggen navigeert nu terug naar PIN lock screen (niet naar loginpagina)
+- Werkt op zowel Welkomstscherm als Admin Dashboard
+
 ## Pending/Upcoming Tasks
 ### P0
 - Integrate real Mope API key (waiting for Hakrinbank credentials from user)

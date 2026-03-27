@@ -10,6 +10,7 @@ import KioskTenantOverview from './KioskTenantOverview';
 import KioskPaymentSelect from './KioskPaymentSelect';
 import KioskPaymentConfirm from './KioskPaymentConfirm';
 import KioskReceipt from './KioskReceipt';
+import SetPinScreen from './SetPinScreen';
 import KioskAdminDashboard from './KioskAdminDashboard';
 import VirtualKeyboard from './VirtualKeyboard';
 
@@ -141,21 +142,16 @@ export default function KioskLayout() {
         );
       case 'no-pin':
         return (
-          <div className="min-h-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm mx-6 text-center">
-              <div className="w-16 h-16 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-5">
-                <Lock className="w-8 h-8 text-red-400" />
-              </div>
-              <h1 className="text-xl font-bold text-slate-900 mb-2">Kiosk Niet Beschikbaar</h1>
-              <p className="text-sm text-slate-400 mb-6">De beheerder heeft nog geen PIN code ingesteld.</p>
-              <button 
-                onClick={() => navigate('/vastgoed')}
-                className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl transition shadow-lg shadow-orange-500/25"
-              >
-                Terug naar Home
-              </button>
-            </div>
-          </div>
+          <SetPinScreen
+            companyId={companyId}
+            companyName={companyName}
+            onSuccess={() => {
+              setRequiresPin(true);
+              setPinVerified(true);
+              goTo('welcome');
+            }}
+            onBack={() => navigate('/vastgoed')}
+          />
         );
       case 'pin':
         return (

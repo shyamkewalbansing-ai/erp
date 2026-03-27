@@ -45,35 +45,32 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
   if (!payment) return null;
   const kwNr = payment.kwitantie_nummer || payment.receipt_number || '';
 
-  // Silent print - tries local print server (USB printer) first, falls back to browser print
+  // Silent print - sends structured data to print server for USB receipt printer
   const silentPrint = async () => {
-    const getHTML = () => { const el = document.querySelector('.print-receipt-content'); return el ? el.innerHTML : null; };
+    const printData = {
+      company_name: stampData?.stamp_company_name || 'Vastgoed Beheer',
+      address: stampData?.stamp_address || '',
+      phone: stampData?.stamp_phone || '',
+      receipt_number: kwNr,
+      date: new Date(payment.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      time: new Date(payment.created_at).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
+      tenant_name: payment.tenant_name || tenant?.name || '',
+      apartment: `${payment.apartment_number || tenant?.apartment_number || ''} / ${payment.tenant_code || tenant?.tenant_code || ''}`,
+      payment_type: { rent: 'Huurbetaling', monthly_rent: 'Huurbetaling', partial_rent: 'Gedeelt. huurbetaling', service_costs: 'Servicekosten', fines: 'Boetes', deposit: 'Borgsom' }[payment.payment_type] || payment.payment_type,
+      amount: Number(payment.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      total: Number(payment.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      payment_method: { cash: 'Contant', card: 'Pinpas', mope: 'Mope', bank: 'Bank' }[payment.payment_method] || payment.payment_method || 'Contant',
+      remaining_total: Number((payment.remaining_rent || 0) + (payment.remaining_service || 0) + (payment.remaining_fines || 0)).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    };
     try {
       const hc = await fetch(`${PRINT_SERVER_URL}/health`, { method: 'GET', mode: 'cors' }).catch(() => null);
       if (hc?.ok) {
-        const html = getHTML();
-        if (html) {
-          await fetch(`${PRINT_SERVER_URL}/print`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ html, receipt_number: kwNr })
-          });
-          return;
-        }
+        await fetch(`${PRINT_SERVER_URL}/print`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(printData)
+        });
       }
-    } catch {}
-    // Fallback: silent iframe print
-    try {
-      const html = getHTML();
-      if (!html) return;
-      const iframe = document.createElement('iframe');
-      Object.assign(iframe.style, { position: 'fixed', right: '0', bottom: '0', width: '0', height: '0', border: 'none', visibility: 'hidden' });
-      document.body.appendChild(iframe);
-      const doc = iframe.contentDocument || iframe.contentWindow.document;
-      doc.open();
-      doc.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Kwitantie ${kwNr}</title><style>@page{size:80mm auto;margin:0}*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}body{width:80mm;background:white;font-family:'Courier New',monospace}</style></head><body>${html}</body></html>`);
-      doc.close();
-      iframe.onload = () => { setTimeout(() => { try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch {} setTimeout(() => { if (iframe.parentNode) document.body.removeChild(iframe); }, 2000); }, 500); };
     } catch {}
   };
 
