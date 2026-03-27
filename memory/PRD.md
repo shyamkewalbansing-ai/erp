@@ -125,8 +125,7 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - HuurdersReceipt.jsx: 3-fase flow voor `/huurders` route
 - Fase 1 (show): "Betaling voltooid" tekst bovenaan + kassabon eronder (verticaal gecentreerd)
 - Fase 2 (eject): Kassabon schuift naar beneden met papiergeluid + success geluid
-- Fase 3 (done): Twee-panelen overzicht (links: huurder financieel, rechts: "Alles betaald!" + countdown)
-- Geïntegreerd in HuurdersLayout.jsx
+- Fase 3 (done): Eén grote gecentreerde kaart met succes icoon, details grid (bedrag/kwitantie/betaalwijze/openstaand), donkere totaal-balk, "Terug naar start" knop + countdown
 
 ### Kassabon-stijl Kwitantie (Completed 27 Mar 2026)
 - ReceiptTicket redesigned als echte kassabon: monospace font, donkere sectie-balken, stippellijnen

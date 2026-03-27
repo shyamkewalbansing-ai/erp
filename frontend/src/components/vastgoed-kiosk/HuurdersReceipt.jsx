@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { CheckCircle, Home, User, FileText, AlertTriangle, Building2 } from 'lucide-react';
+import { CheckCircle, Home } from 'lucide-react';
 import ReceiptTicket from './ReceiptTicket';
 import axios from 'axios';
 
@@ -242,113 +242,92 @@ export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) 
         </>
 
       ) : (
-        /* ===== DONE: Two-panel details after kassabon is gone ===== */
+        /* ===== DONE: Eén grote gecentreerde kaart ===== */
         <>
-          {/* Header */}
           <div className="flex items-center justify-center flex-shrink-0" style={{ height: '6vh' }}>
-            <span className="kiosk-subtitle text-white font-bold">Uw overzicht</span>
+            <span className="kiosk-subtitle text-white font-bold">Betaling voltooid</span>
           </div>
 
-          <div className="flex-1 flex min-h-0 overflow-hidden" style={{ gap: '1.5vw', paddingBottom: '1.5vh' }}>
-            {/* LEFT: Tenant financial overview */}
-            <div className="kiosk-card flex flex-col" style={{ flex: '1.4', padding: 0, overflow: 'hidden', animation: 'fadeUp 0.5s ease-out forwards' }}>
-              <div className="flex items-center justify-between" style={{ padding: 'clamp(16px, 2.5vh, 32px) clamp(16px, 2vw, 32px)' }}>
-                <div className="flex items-center" style={{ gap: 'clamp(10px, 1.2vw, 20px)' }}>
-                  <div className="rounded-xl bg-orange-50 flex items-center justify-center" style={{ width: 'clamp(40px, 6vh, 60px)', height: 'clamp(40px, 6vh, 60px)' }}>
-                    <User style={{ width: '3vh', height: '3vh' }} className="text-orange-400" />
-                  </div>
-                  <div>
-                    <p className="font-bold text-slate-900" style={{ fontSize: 'clamp(16px, 2.2vh, 24px)' }}>
-                      {payment.tenant_name || tenant?.name || ''}
-                    </p>
-                    <p className="text-slate-400" style={{ fontSize: 'clamp(12px, 1.5vh, 16px)' }}>
-                      Appt. {payment.apartment_number || tenant?.apartment_number || ''} - {payment.tenant_code || tenant?.tenant_code || ''}
-                    </p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="uppercase tracking-wider text-slate-400 font-bold" style={{ fontSize: 'clamp(9px, 1vh, 12px)' }}>Maandhuur</p>
-                  <p className="font-black text-slate-900" style={{ fontSize: 'clamp(18px, 2.8vh, 30px)' }}>
-                    {formatSRD(tenant?.monthly_rent || tenant?.rent_amount || 0)}
-                  </p>
-                </div>
-              </div>
-
-              <div style={{ borderBottom: '1px solid #f1f5f9', margin: '0 clamp(16px, 2vw, 32px)' }} />
-
-              <div className="flex-1 flex flex-col justify-center" style={{ padding: 'clamp(12px, 1.5vh, 20px) clamp(16px, 2vw, 32px)' }}>
-                {[
-                  { icon: Building2, label: 'Openstaande huur', sub: remainingRent <= 0 ? 'Geen achterstand' : 'Achterstallig bedrag', amount: remainingRent },
-                  { icon: FileText, label: 'Servicekosten', sub: 'Water, stroom, overig', amount: remainingService },
-                  { icon: AlertTriangle, label: 'Boetes', sub: 'Openstaande boetes', amount: remainingFines },
-                ].map((row, i) => (
-                  <div key={i} className="flex items-center justify-between" style={{ padding: 'clamp(12px, 1.8vh, 24px) 0', borderBottom: i < 2 ? '1px solid #f8fafc' : 'none' }}>
-                    <div className="flex items-center" style={{ gap: 'clamp(10px, 1vw, 16px)' }}>
-                      <div className="rounded-lg bg-slate-50 flex items-center justify-center" style={{ width: 'clamp(32px, 4.5vh, 48px)', height: 'clamp(32px, 4.5vh, 48px)' }}>
-                        <row.icon style={{ width: '2.2vh', height: '2.2vh' }} className="text-slate-300" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-slate-800" style={{ fontSize: 'clamp(14px, 1.8vh, 20px)' }}>{row.label}</p>
-                        <p className="text-slate-400" style={{ fontSize: 'clamp(11px, 1.3vh, 14px)' }}>{row.sub}</p>
-                      </div>
-                    </div>
-                    <span className={`font-bold ${row.amount <= 0 ? 'text-emerald-500' : 'text-orange-500'}`} style={{ fontSize: 'clamp(15px, 2vh, 22px)' }}>
-                      {formatSRD(row.amount)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center justify-between" style={{
-                background: '#0f172a',
-                padding: 'clamp(14px, 2.5vh, 28px) clamp(16px, 2vw, 32px)',
-                borderRadius: '0 0 clamp(12px, 1.5vh, 20px) clamp(12px, 1.5vh, 20px)'
-              }}>
-                <span className="text-slate-400 font-medium" style={{ fontSize: 'clamp(13px, 1.6vh, 18px)' }}>Totaal openstaand</span>
-                <span className="text-white font-black" style={{
-                  fontSize: 'clamp(22px, 3.5vh, 36px)',
-                  fontFamily: "'JetBrains Mono', monospace", fontStyle: 'italic'
-                }}>{formatSRD(totalRemaining)}</span>
-              </div>
-            </div>
-
-            {/* RIGHT: Success card */}
-            <div className="kiosk-card flex flex-col items-center justify-center text-center"
-              style={{ flex: '0.8', padding: 'clamp(16px, 3vh, 40px)', animation: 'fadeUp 0.5s ease-out 0.15s forwards', opacity: 0 }}>
-
+          <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
+            <div className="kiosk-card flex flex-col items-center text-center" style={{
+              width: 'clamp(400px, 50vw, 700px)',
+              padding: 'clamp(20px, 3vh, 40px) clamp(24px, 3vw, 48px)',
+              animation: 'fadeUp 0.5s ease-out forwards'
+            }}>
+              {/* Success icon */}
               <div className="rounded-full bg-emerald-50 flex items-center justify-center" style={{
-                width: 'clamp(64px, 10vh, 100px)', height: 'clamp(64px, 10vh, 100px)',
-                marginBottom: 'clamp(12px, 2.5vh, 28px)', border: '3px solid #bbf7d0',
-                animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.3s forwards', opacity: 0
+                width: 'clamp(56px, 8vh, 84px)', height: 'clamp(56px, 8vh, 84px)',
+                border: '3px solid #bbf7d0', marginBottom: 'clamp(8px, 1.5vh, 16px)',
+                animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s forwards', opacity: 0
               }}>
-                <CheckCircle style={{ width: '5vh', height: '5vh' }} className="text-emerald-500" />
+                <CheckCircle style={{ width: '4vh', height: '4vh' }} className="text-emerald-500" />
               </div>
 
               <h2 className="font-black text-emerald-500 tracking-tight" style={{
-                fontSize: 'clamp(24px, 4vh, 42px)', marginBottom: 'clamp(4px, 0.8vh, 10px)',
-                animation: 'fadeUp 0.4s ease-out 0.5s forwards', opacity: 0
+                fontSize: 'clamp(22px, 3.5vh, 38px)', marginBottom: '0.3vh',
+                animation: 'fadeUp 0.4s ease-out 0.35s forwards', opacity: 0
               }}>{allPaid ? 'Alles betaald!' : 'Betaling geslaagd!'}</h2>
 
               <p className="text-slate-400 font-medium" style={{
-                fontSize: 'clamp(13px, 1.6vh, 18px)', marginBottom: 'clamp(20px, 4vh, 40px)',
-                animation: 'fadeUp 0.4s ease-out 0.6s forwards', opacity: 0
-              }}>{allPaid ? 'Geen openstaand saldo' : `Openstaand: ${formatSRD(totalRemaining)}`}</p>
+                fontSize: 'clamp(12px, 1.5vh, 16px)', marginBottom: 'clamp(12px, 2vh, 24px)',
+                animation: 'fadeUp 0.4s ease-out 0.45s forwards', opacity: 0
+              }}>{payment.tenant_name || tenant?.name || ''} - Appt. {payment.apartment_number || ''}</p>
 
-              <button onClick={onDone} data-testid="huurders-receipt-done-btn"
-                className="w-full rounded-2xl text-white font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
-                style={{
-                  maxWidth: 'clamp(200px, 22vw, 340px)', padding: 'clamp(14px, 2.5vh, 28px)',
-                  fontSize: 'clamp(16px, 2.2vh, 22px)', background: '#f97316',
-                  boxShadow: '0 8px 30px -8px rgba(249,115,22,0.4)',
-                  animation: 'fadeUp 0.4s ease-out 0.7s forwards', opacity: 0
+              {/* Details grid */}
+              <div style={{
+                width: '100%', marginBottom: 'clamp(12px, 2vh, 24px)',
+                animation: 'fadeUp 0.4s ease-out 0.55s forwards', opacity: 0
+              }}>
+                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #f1f5f9' }}>
+                  {[
+                    { label: 'Betaald bedrag', value: formatSRD(payment.amount), bold: true },
+                    { label: 'Kwitantie', value: kwNr },
+                    { label: 'Betaalwijze', value: METHOD_LABELS[payment.payment_method] || 'Contant' },
+                    { label: 'Openstaande huur', value: formatSRD(remainingRent), green: remainingRent <= 0 },
+                    { label: 'Servicekosten', value: formatSRD(remainingService), green: remainingService <= 0 },
+                    { label: 'Boetes', value: formatSRD(remainingFines), green: remainingFines <= 0 },
+                  ].map((row, i) => (
+                    <div key={i} className="flex items-center justify-between" style={{
+                      padding: 'clamp(8px, 1.2vh, 14px) clamp(14px, 1.8vw, 24px)',
+                      background: i % 2 === 0 ? '#f8fafc' : 'white'
+                    }}>
+                      <span className="text-slate-500" style={{ fontSize: 'clamp(12px, 1.5vh, 16px)' }}>{row.label}</span>
+                      <span className={`font-bold ${row.green ? 'text-emerald-500' : row.bold ? 'text-slate-900' : 'text-slate-700'}`}
+                        style={{ fontSize: 'clamp(13px, 1.6vh, 17px)' }}>{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Total bar */}
+                <div className="flex items-center justify-between rounded-b-xl" style={{
+                  background: '#0f172a', padding: 'clamp(10px, 1.8vh, 20px) clamp(14px, 1.8vw, 24px)',
+                  marginTop: '-1px'
                 }}>
-                <Home style={{ width: '2.2vh', height: '2.2vh' }} /> Terug naar start
+                  <span className="text-slate-400 font-medium" style={{ fontSize: 'clamp(12px, 1.5vh, 16px)' }}>Totaal openstaand</span>
+                  <span className="text-white font-black" style={{
+                    fontSize: 'clamp(18px, 2.8vh, 28px)',
+                    fontFamily: "'JetBrains Mono', monospace", fontStyle: 'italic'
+                  }}>{formatSRD(totalRemaining)}</span>
+                </div>
+              </div>
+
+              {/* Button */}
+              <button onClick={onDone} data-testid="huurders-receipt-done-btn"
+                className="rounded-2xl text-white font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                style={{
+                  width: 'clamp(200px, 20vw, 320px)', padding: 'clamp(12px, 2vh, 24px)',
+                  fontSize: 'clamp(15px, 2vh, 20px)', background: '#f97316',
+                  boxShadow: '0 8px 30px -8px rgba(249,115,22,0.4)',
+                  animation: 'fadeUp 0.4s ease-out 0.65s forwards', opacity: 0
+                }}>
+                <Home style={{ width: '2vh', height: '2vh' }} /> Terug naar start
               </button>
 
+              {/* Countdown */}
               <div style={{
-                marginTop: 'clamp(16px, 3vh, 32px)', position: 'relative',
-                width: 'clamp(44px, 6vh, 64px)', height: 'clamp(44px, 6vh, 64px)',
-                animation: 'fadeUp 0.4s ease-out 0.8s forwards', opacity: 0
+                marginTop: 'clamp(12px, 2vh, 20px)', position: 'relative',
+                width: 'clamp(40px, 5vh, 56px)', height: 'clamp(40px, 5vh, 56px)',
+                animation: 'fadeUp 0.4s ease-out 0.75s forwards', opacity: 0
               }}>
                 <svg viewBox="0 0 60 60" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
                   <circle cx="30" cy="30" r="26" fill="none" stroke="#f1f5f9" strokeWidth="3" />
@@ -359,7 +338,7 @@ export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) 
                 </svg>
                 <div style={{
                   position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 'clamp(16px, 2.5vh, 26px)', fontWeight: 900, color: '#64748b',
+                  fontSize: 'clamp(14px, 2vh, 22px)', fontWeight: 900, color: '#64748b',
                   fontFamily: "'JetBrains Mono', monospace"
                 }}>{countdown}</div>
               </div>
