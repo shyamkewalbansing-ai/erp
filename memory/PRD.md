@@ -116,9 +116,10 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 
 ### Huurders Modern Betalingsscherm (Completed 27 Mar 2026)
 - HuurdersReceipt.jsx: Eigen modern KIOSK success screen voor `/huurders` route
-- Groot betaald bedrag display, details grid, countdown timer, auto-print
+- Behoudt volledige 3-fase animatie-flow (toon kassabon → eject met geluid → klaar-scherm)
+- Behoudt alle geluidseffecten (cha-ching, paper feed, motor ticks, tear)
+- Modernere "klaar" fase: groen gradient icoon, groot bedrag display, details grid, pulserende ring
 - Geïntegreerd in HuurdersLayout.jsx (vervangt KioskReceipt voor huurders)
-- Eigen geluidseffecten (success chime) en framer-motion animaties
 
 ### Kassabon-stijl Kwitantie (Completed 27 Mar 2026)
 - ReceiptTicket redesigned als echte kassabon: monospace font, donkere sectie-balken, stippellijnen
