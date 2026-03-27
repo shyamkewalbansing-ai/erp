@@ -6,69 +6,110 @@ import axios from 'axios';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 const PRINT_SERVER_URL = 'http://localhost:5555';
 
-// Printer sound generator using Web Audio API
-function playPrinterSound(durationMs = 3500) {
+// Success "cha-ching" sound when payment succeeds
+function playSuccessSound() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = ctx.currentTime;
 
-    // Layer 1: Paper feed motor hum (low frequency)
-    const motorOsc = ctx.createOscillator();
-    const motorGain = ctx.createGain();
-    motorOsc.type = 'sawtooth';
-    motorOsc.frequency.value = 85;
-    motorGain.gain.value = 0.04;
-    motorOsc.connect(motorGain).connect(ctx.destination);
+    // Bright chime - two ascending tones
+    [523.25, 659.25, 783.99].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, t + i * 0.12);
+      gain.gain.linearRampToValueAtTime(0.25, t + i * 0.12 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.12 + 0.5);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(t + i * 0.12);
+      osc.stop(t + i * 0.12 + 0.6);
+    });
 
-    // Layer 2: Thermal head clicking (rapid noise bursts)
-    const clickInterval = 60; // ms between clicks
-    const totalClicks = Math.floor(durationMs / clickInterval);
+    // Soft shimmer overlay
+    const shimmer = ctx.createOscillator();
+    const shimmerGain = ctx.createGain();
+    shimmer.type = 'triangle';
+    shimmer.frequency.value = 1568;
+    shimmerGain.gain.setValueAtTime(0, t + 0.25);
+    shimmerGain.gain.linearRampToValueAtTime(0.08, t + 0.3);
+    shimmerGain.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+    shimmer.connect(shimmerGain).connect(ctx.destination);
+    shimmer.start(t + 0.25);
+    shimmer.stop(t + 1);
 
-    for (let i = 0; i < totalClicks; i++) {
-      const startTime = ctx.currentTime + (i * clickInterval) / 1000;
-      const bufferSize = 200;
-      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let j = 0; j < bufferSize; j++) {
-        data[j] = (Math.random() * 2 - 1) * 0.15;
+    setTimeout(() => ctx.close(), 1500);
+  } catch {}
+}
+
+// Paper feed / receipt ejecting sound
+function playPaperFeedSound(durationMs = 3500) {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const t = ctx.currentTime;
+    const dur = durationMs / 1000;
+
+    // Continuous paper sliding friction (filtered white noise)
+    const bufferSize = ctx.sampleRate * dur;
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const noiseData = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      noiseData[i] = (Math.random() * 2 - 1) * 0.12;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuffer;
+
+    const bandpass = ctx.createBiquadFilter();
+    bandpass.type = 'bandpass';
+    bandpass.frequency.value = 3000;
+    bandpass.Q.value = 1.5;
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.06, t);
+    noiseGain.gain.linearRampToValueAtTime(0.1, t + 0.3);
+    noiseGain.gain.setValueAtTime(0.1, t + dur - 0.4);
+    noiseGain.gain.linearRampToValueAtTime(0, t + dur);
+
+    noise.connect(bandpass).connect(noiseGain).connect(ctx.destination);
+    noise.start(t);
+    noise.stop(t + dur);
+
+    // Stepper motor ticks (rhythmic low clicks)
+    const tickRate = 40; // ticks per second
+    const totalTicks = Math.floor(dur * tickRate);
+    for (let i = 0; i < totalTicks; i++) {
+      const tickTime = t + (i / tickRate);
+      const tickBuf = ctx.createBuffer(1, 80, ctx.sampleRate);
+      const tickData = tickBuf.getChannelData(0);
+      for (let j = 0; j < 80; j++) {
+        tickData[j] = (Math.random() * 2 - 1) * 0.2 * Math.exp(-j / 15);
       }
-      const noise = ctx.createBufferSource();
-      noise.buffer = buffer;
-
-      const clickGain = ctx.createGain();
-      const vol = 0.03 + Math.random() * 0.02;
-      clickGain.gain.setValueAtTime(vol, startTime);
-      clickGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.03);
-
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.value = 2000 + Math.random() * 1500;
-      filter.Q.value = 5;
-
-      noise.connect(filter).connect(clickGain).connect(ctx.destination);
-      noise.start(startTime);
-      noise.stop(startTime + 0.04);
+      const tick = ctx.createBufferSource();
+      tick.buffer = tickBuf;
+      const tickGain = ctx.createGain();
+      tickGain.gain.value = 0.04;
+      const tickFilter = ctx.createBiquadFilter();
+      tickFilter.type = 'highpass';
+      tickFilter.frequency.value = 800;
+      tick.connect(tickFilter).connect(tickGain).connect(ctx.destination);
+      tick.start(tickTime);
+      tick.stop(tickTime + 0.015);
     }
 
-    // Layer 3: Paper tear sound at end
-    const tearTime = ctx.currentTime + durationMs / 1000 - 0.2;
-    const tearBuffer = ctx.createBuffer(1, 4000, ctx.sampleRate);
-    const tearData = tearBuffer.getChannelData(0);
-    for (let j = 0; j < 4000; j++) {
-      tearData[j] = (Math.random() * 2 - 1) * 0.3 * Math.exp(-j / 800);
+    // Paper tear at the end
+    const tearTime = t + dur - 0.15;
+    const tearBuf = ctx.createBuffer(1, 3000, ctx.sampleRate);
+    const tearData = tearBuf.getChannelData(0);
+    for (let j = 0; j < 3000; j++) {
+      tearData[j] = (Math.random() * 2 - 1) * 0.4 * Math.exp(-j / 500);
     }
-    const tearNoise = ctx.createBufferSource();
-    tearNoise.buffer = tearBuffer;
+    const tear = ctx.createBufferSource();
+    tear.buffer = tearBuf;
     const tearGain = ctx.createGain();
-    tearGain.gain.setValueAtTime(0.08, tearTime);
-    tearGain.gain.exponentialRampToValueAtTime(0.001, tearTime + 0.3);
-    tearNoise.connect(tearGain).connect(ctx.destination);
-    tearNoise.start(tearTime);
+    tearGain.gain.value = 0.12;
+    tear.connect(tearGain).connect(ctx.destination);
+    tear.start(tearTime);
 
-    // Start motor
-    motorOsc.start();
-    motorOsc.stop(ctx.currentTime + durationMs / 1000);
-
-    // Cleanup
     setTimeout(() => ctx.close(), durationMs + 500);
   } catch {}
 }
@@ -86,14 +127,16 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
     }
   }, [companyId]);
 
-  // Phase flow: show receipt → wait → eject with sound → done
+  // Phase flow: show receipt with success sound → wait → eject with paper sound → done
   useEffect(() => {
     if (payment && !hasPrintedRef.current) {
       hasPrintedRef.current = true;
-      // Show receipt for 2.5 seconds, then start eject animation
+      // Play success chime immediately
+      playSuccessSound();
+      // After 2.5s, start eject animation with paper feed sound
       setTimeout(() => {
         setPhase('ejecting');
-        playPrinterSound(3500);
+        playPaperFeedSound(3500);
         silentPrint();
       }, 2500);
       // After eject animation finishes
