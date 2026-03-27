@@ -1,117 +1,113 @@
 {
-  "theme": "LIGHT",
-  "archetype": "4 (Swiss & High-Contrast)",
-  "design_philosophy": "Kiosk Terminal Optimization: Prioritize the '2-Second Rule'. Minimalist interface, massive touch targets, ultra-high contrast, and clear hierarchy. Eliminate split-screen website patterns in favor of a centered, focused self-checkout aesthetic using an orange primary palette.",
-  "colors": {
-    "primary": {
-      "DEFAULT": "#FF5C00",
-      "foreground": "#FFFFFF",
-      "hover": "#E05200"
-    },
-    "background": "#F4F5F7",
-    "surface": {
-      "DEFAULT": "#FFFFFF",
-      "secondary": "#F9FAFB"
-    },
-    "text": {
-      "primary": "#0A0A0A",
-      "secondary": "#4B5563",
-      "muted": "#9CA3AF"
-    },
-    "border": "#E5E7EB",
-    "status": {
-      "success": "#10B981",
-      "error": "#EF4444"
+  "theme": "light",
+  "archetype": "Archetype 4: Swiss & High-Contrast (Kiosk Variant)",
+  "design_philosophy": "The UI must communicate instant visual confirmation and extreme clarity. The interaction is for a large touch screen (kiosk), meaning enormous typography, massive touch targets, and high-contrast readable elements. We abandon the 'admin receipt' look for a premium, Apple-style self-service terminal experience.",
+  "typography": {
+    "heading": "Outfit",
+    "body": "Plus Jakarta Sans",
+    "mono": "JetBrains Mono",
+    "hierarchy": {
+      "h1": "text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter text-gray-900",
+      "h2": "text-3xl sm:text-4xl font-bold tracking-tight text-gray-900",
+      "amount": "text-5xl sm:text-7xl lg:text-8xl font-black font-mono tracking-tighter text-emerald-600",
+      "body": "text-lg sm:text-xl lg:text-2xl text-gray-600",
+      "mono_data": "font-mono text-xl sm:text-2xl lg:text-3xl font-semibold text-gray-900",
+      "label": "text-sm sm:text-base lg:text-lg uppercase tracking-widest text-gray-500 font-bold"
     }
   },
-  "typography": {
-    "font_family": {
-      "heading": "Outfit, sans-serif",
-      "body": "Outfit, sans-serif"
-    },
-    "scale": {
-      "h1": "text-5xl md:text-6xl tracking-tight font-bold",
-      "h2": "text-3xl md:text-4xl tracking-tight font-semibold",
-      "body": "text-lg md:text-xl leading-relaxed",
-      "button": "text-xl md:text-2xl font-semibold"
-    },
-    "anti_patterns": [
-      "Avoid Inter for headings",
-      "Avoid small text below 16px for interactive elements"
-    ]
+  "colors": {
+    "background": "#F8FAFC",
+    "card_bg": "rgba(255, 255, 255, 0.95)",
+    "primary_text": "#111827",
+    "secondary_text": "#64748B",
+    "accent_success": "#059669",
+    "accent_success_bg": "#D1FAE5",
+    "border": "#E2E8F0"
   },
   "layout_spacing": {
-    "philosophy": "Generous Spacing: Large touch targets for kiosk environment.",
-    "container": "max-w-4xl mx-auto h-screen flex flex-col items-center justify-center p-8",
-    "gap_strategy": "gap-8 md:gap-12",
-    "touch_targets": "Minimum height 80px for primary buttons, 64px for secondary."
+    "page_padding": "p-8 sm:p-12 lg:p-16",
+    "card_padding": "p-10 sm:p-14 lg:p-20",
+    "gap_massive": "gap-16",
+    "gap_large": "gap-10",
+    "gap_medium": "gap-6",
+    "gap_small": "gap-3"
   },
   "components": {
-    "buttons": {
-      "primary": "Massive full-width or large grid blocks. bg-[#FF5C00] text-white hover:bg-[#E05200] rounded-xl shadow-lg transition-transform active:scale-95 h-24 text-2xl flex items-center justify-center gap-4",
-      "secondary": "bg-white text-[#0A0A0A] border-2 border-[#E5E7EB] hover:border-[#FF5C00] hover:bg-orange-50 rounded-xl transition-all h-20 text-xl flex items-center justify-center gap-4"
+    "kiosk_container": {
+      "description": "Full screen layout with the custom background, centering the main content block.",
+      "styles": "min-h-screen w-full flex items-center justify-center bg-cover bg-center bg-no-repeat relative"
     },
-    "numpad_modal": {
-      "description": "Popup form for PIN entry. Must not replace view. Use Shadcn Dialog.",
-      "grid": "grid grid-cols-3 gap-4 p-6",
-      "key": "h-20 w-full text-3xl font-bold bg-[#F4F5F7] rounded-xl flex items-center justify-center active:bg-[#FF5C00] active:text-white transition-colors cursor-pointer",
-      "display": "text-center text-4xl tracking-[0.5em] font-bold py-8 border-b-2 border-border mb-6 min-h-[100px]"
+    "receipt_bento_card": {
+      "description": "A massive, ultra-premium glassmorphism-inspired white card holding all the data. It uses a strong shadow to pop off the screen.",
+      "styles": "w-full max-w-5xl mx-auto bg-white/95 backdrop-blur-xl shadow-[0_30px_100px_-15px_rgba(0,0,0,0.15)] rounded-[40px] border border-white p-12 lg:p-16 flex flex-col gap-12 relative overflow-hidden"
     },
-    "cards": {
-      "style": "bg-white rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white/20 p-10 md:p-16 w-full max-w-2xl"
+    "success_header": {
+      "description": "Top section with animated checkmark and success title.",
+      "styles": "flex flex-col items-center justify-center text-center gap-6"
     },
-    "inputs": {
-      "style": "h-16 text-xl px-6 rounded-xl border-2 border-border focus:border-[#FF5C00] focus:ring-4 focus:ring-[#FF5C00]/20 bg-[#F9FAFB]"
+    "amount_display_box": {
+      "description": "A dedicated high-contrast block for the total paid amount.",
+      "styles": "w-full bg-emerald-50 rounded-3xl p-10 flex flex-col items-center justify-center text-center gap-2 border border-emerald-100"
+    },
+    "receipt_details_grid": {
+      "description": "A 2-column CSS grid displaying the receipt data pairs cleanly.",
+      "styles": "grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 w-full px-4"
+    },
+    "data_pair": {
+      "description": "A label and value pair.",
+      "styles": "flex flex-col gap-2 items-start"
+    },
+    "done_button": {
+      "description": "Massive touch target for the kiosk with an internal shrinking progress bar indicating timeout.",
+      "styles": "relative overflow-hidden w-full max-w-2xl mx-auto h-28 bg-gray-900 rounded-3xl text-3xl font-bold text-white transition-transform active:scale-95 flex items-center justify-center cursor-pointer shadow-2xl hover:bg-gray-800"
+    },
+    "done_button_progress": {
+      "description": "The absolute div inside the done button that animates width from 100% to 0%.",
+      "styles": "absolute inset-0 bg-white/20 origin-left"
     }
   },
-  "motion_interactions": {
-    "buttons": "Immediate response, slight scale down on active (tap). No slow fades.",
-    "modal": "Slide up or scale up entrance animation using Framer Motion or Shadcn defaults."
-  },
-  "icons": {
-    "library": "lucide-react",
-    "sizing": "w-8 h-8 md:w-10 md:h-10",
-    "notes": "Use bold, easily recognizable icons for PIN, Face ID, and Key (Password)."
-  },
-  "page_structure": {
-    "header": "Subtle top bar with logo and live clock/date to enforce the kiosk terminal feel.",
-    "main_content": {
-      "type": "Centered Card",
-      "elements": [
-        "Greeting / Brand Name (e.g., 'Welkom bij Vastgoed')",
-        "Instruction ('Kies een inlogmethode')",
-        "Grid of massive buttons for login options"
-      ]
+  "animations": {
+    "page_enter": {
+      "type": "framer-motion",
+      "props": "initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}"
     },
-    "actions_layout": "Grid of 1 column or 2 columns based on screen size. Primary action (PIN) gets full width, others share space.",
-    "removed_features": [
-      "Schermtoetsenbord (touchscreen) button must be completely absent."
-    ]
-  },
-  "image_urls": {
-    "kiosk_background": {
-      "url": "https://images.unsplash.com/photo-1620121692029-d088224ddc74?ixlib=rb-4.0.3&auto=format&fit=crop&w=2832&q=80",
-      "description": "Optional: very subtle abstract light orange/grey gradient background to overlay with #F4F5F7 (opacity 0.1) if pure CSS feels too plain.",
-      "category": "background"
+    "success_icon_scale": {
+      "type": "framer-motion",
+      "props": "initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', bounce: 0.5, duration: 0.8 }}"
     },
-    "brand_logo": {
-      "url": "",
-      "description": "Use purely text-based 'Vastgoed' or a simple SVG icon if no logo is provided.",
-      "category": "logo"
+    "button_progress": {
+      "type": "framer-motion",
+      "props": "initial={{ scaleX: 1 }} animate={{ scaleX: 0 }} transition={{ duration: 10, ease: 'linear' }}"
     }
+  },
+  "audio_effects": {
+    "instruction": "Retain the exact `playSuccessSound()` and `playPaperFeedSound()` AudioContext logic from the current KioskReceipt.jsx. Execute them in a useEffect on mount."
+  },
+  "accessibility": {
+    "contrast": "Maintained high contrast text (gray-900 on white, emerald-600 on emerald-50).",
+    "touch_targets": "Button is h-28 (112px), well above kiosk minimum sizes."
   },
   "instructions_to_main_agent": [
-    "Delete any split-screen layout code. Use a single-page full-screen centered flex layout.",
-    "Set background to #F4F5F7.",
-    "Create a massive central card (max-w-2xl) with rounded-3xl and soft shadow.",
-    "Add a top-right or top-center live clock to make it feel like a true KIOSK.",
-    "Implement 'Inloggen met PIN code' as a Dialog (modal) containing a custom CSS grid Numpad. Do not route to a new page.",
-    "Make the PIN numpad keys very large (h-20 or more) with large numbers.",
-    "Provide standard email/password login either as an expandable accordion inside the main card or a secondary view, but keep PIN as the prominent quick-action.",
-    "Add Face ID as a secondary button with an icon.",
-    "Ensure the primary color #FF5C00 is used for the most important CTAs and focus rings.",
-    "Remove 'Schermtoetsenbord' entirely.",
-    "All buttons must have 'active:scale-95' or similar touch-feedback.",
-    "Add data-testid to all buttons and inputs."
-  ]
+    "You are building the UI for `/huurders/:companyId` (Tenant Kiosk). Do not just render the admin `<ReceiptTicket />` component. Build a completely new, bespoke KIOSK layout for the payment success screen using pure Tailwind and HTML elements.",
+    "Target file: Create or update the relevant payment success component (e.g. `PaymentConfirm.jsx` or create `TenantPaymentSuccessScreen.jsx` based on how routing is set up in HuurdersLayout). Verify which file handles the success state for the tenant kiosk.",
+    "Use Framer Motion to orchestrate a beautiful entrance: Card slides up, Checkmark pops in, Amount scales up.",
+    "Make sure to extract all required data from the `payment` object passed as prop (receipt number, date, tenant name, apartment, payment method, amount paid, remaining balance).",
+    "Keep the `AudioContext` sound generation functions exactly as they are in the current codebase (e.g. `playSuccessSound()`) but trigger them appropriately when the success screen renders.",
+    "Implement the 'Klaar' (Done) button with a visual countdown: use a framer-motion `motion.div` inside the button that scales on the X-axis (`scaleX: 0`) over the 10 or 12 seconds countdown duration.",
+    "Do NOT use 'Inter' for headings. Use 'Outfit' for headings and 'JetBrains Mono' for all data values.",
+    "Ensure `data-testid` attributes are placed on the main container, the amount, and the done button.",
+    "Apply the generated `kiosk_bg` image as the background of the main wrapper using inline style or Tailwind arbitrary value: `backgroundImage: 'url(...)', backgroundSize: 'cover'`."
+  ],
+  "media": {
+    "images": {
+      "kiosk_bg": {
+        "url": "https://static.prod-images.emergentagent.com/jobs/543d1584-8ed8-49c0-9f0d-1f4c4dcb9d22/images/1adb050b1ae8a688c85b3259ce0b713f0f1738f2fcb84aa25a0ed33f6888be4d.png",
+        "description": "A subtle, ultra-modern minimalist geometric background texture. Apply to the outermost screen wrapper."
+      }
+    },
+    "icons": {
+      "success": "Lucide CheckCircle (size: w-32 h-32 or w-40 h-40)",
+      "home": "Lucide Home (for the Klaar button)"
+    }
+  }
 }
