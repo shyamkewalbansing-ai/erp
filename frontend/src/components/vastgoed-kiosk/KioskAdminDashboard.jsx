@@ -156,7 +156,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   ];
 
   return (
-    <div className="h-screen flex flex-col bg-slate-100 overflow-hidden">
+    <div className="fixed inset-0 flex flex-col bg-slate-100" style={{ overflow: 'hidden' }}>
       {/* Header - fixed */}
       <header className="bg-white border-b border-slate-200 py-3 sm:py-4 px-3 sm:px-4 lg:px-8 shadow-sm flex-shrink-0 z-20">
         <div className="w-full flex items-center justify-between">
@@ -202,7 +202,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
       </header>
 
       {/* Tabs - fixed */}
-      <div className="bg-slate-100 px-3 sm:px-4 lg:px-8 pt-4 pb-2 flex-shrink-0 z-10">
+      <div className="bg-slate-100 border-b border-slate-200 px-3 sm:px-4 lg:px-8 pt-4 pb-2 flex-shrink-0 z-10">
         <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
           {TABS.map(tab => (
             <button
@@ -222,7 +222,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
       </div>
 
       {/* Scrollable content area */}
-      <div className="flex-1 overflow-y-auto px-3 sm:px-4 lg:px-8 pb-6">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 lg:px-8 py-4 pb-6">
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && <DashboardTab dashboard={dashboard} payments={payments} leases={leases} formatSRD={formatSRD} />}
