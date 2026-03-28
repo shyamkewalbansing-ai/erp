@@ -468,55 +468,27 @@ function EmployeePortalRoutes() {
   );
 }
 
-// Check if running on vastgoed subdomain
-const isVastgoedSubdomain = () => window.location.hostname.startsWith('vastgoed.');
-
-// Vastgoed Kiosk routes for subdomain (runs at root /)
-function VastgoedSubdomainRoutes() {
-  return (
-    <SafeSuspense>
-      <Routes>
-        <Route path="/" element={<VastgoedKioskCompanySelect />} />
-        <Route path="/admin" element={<VastgoedKioskAdmin />} />
-        <Route path="/:companyId" element={<VastgoedKioskLayout />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </SafeSuspense>
-  );
-}
-
 // Main App with both portals
 function AppWithRoutes() {
-  const vastgoedSubdomain = isVastgoedSubdomain();
-  
   return (
     <BrowserRouter>
       <AuthProvider>
-        {vastgoedSubdomain ? (
-          <>
-            <VastgoedSubdomainRoutes />
-            <Toaster richColors position="top-right" />
-          </>
-        ) : (
-          <>
-            <Routes>
-              {/* Tenant Portal Routes */}
-              <Route path="/huurder/*" element={<TenantPortalRoutes />} />
-              
-              {/* Employee Portal Routes */}
-              <Route path="/werknemer/*" element={<EmployeePortalRoutes />} />
-              
-              {/* Auto Dealer Customer Portal Routes */}
-              <Route path="/klant-portaal/*" element={<AutoDealerCustomerPortalRoutes />} />
-              
-              {/* Main App Routes */}
-              <Route path="/*" element={<MainAppRoutes />} />
-            </Routes>
-            <Toaster richColors position="top-right" />
-            <OfflineSyncIndicator />
-            <BoekhoudingOfflineManager />
-          </>
-        )}
+        <Routes>
+          {/* Tenant Portal Routes */}
+          <Route path="/huurder/*" element={<TenantPortalRoutes />} />
+          
+          {/* Employee Portal Routes */}
+          <Route path="/werknemer/*" element={<EmployeePortalRoutes />} />
+          
+          {/* Auto Dealer Customer Portal Routes */}
+          <Route path="/klant-portaal/*" element={<AutoDealerCustomerPortalRoutes />} />
+          
+          {/* Main App Routes */}
+          <Route path="/*" element={<MainAppRoutes />} />
+        </Routes>
+        <Toaster richColors position="top-right" />
+        <OfflineSyncIndicator />
+        <BoekhoudingOfflineManager />
       </AuthProvider>
     </BrowserRouter>
   );
@@ -537,111 +509,43 @@ function AutoDealerCustomerPortalRoutes() {
   );
 }
 
-// Helper function to check if current domain is a subdomain
-function isSubdomain() {
-  const hostname = window.location.hostname;
-  // Main domains that should show landing page
-  const mainDomains = ['facturatie.sr', 'www.facturatie.sr', 'localhost', '127.0.0.1'];
-  
-  // Check if it's a main domain
-  if (mainDomains.includes(hostname)) {
-    return false;
-  }
-  
-  // Preview environment - use path-based routing, not subdomain
-  if (hostname.includes('.preview.emergentagent.com')) {
-    // Only treat /app/* paths as subdomain behavior
-    return window.location.pathname.startsWith('/app');
-  }
-  
-  // Check if it's a subdomain of facturatie.sr
-  if (hostname.endsWith('.facturatie.sr')) {
-    return true;
-  }
-  
-  // Any other domain is treated as custom domain (subdomain behavior)
-  return true;
-}
-
-// Helper to check if we should redirect to app subdomain
-function shouldRedirectToApp() {
-  const hostname = window.location.hostname;
-  return hostname === 'facturatie.sr' || hostname === 'www.facturatie.sr';
-}
-
-// Component that redirects main domain /login to app.facturatie.sr/login
-function MainDomainAuthRedirect() {
-  if (shouldRedirectToApp()) {
-    const path = window.location.pathname;
-    window.location.href = `https://app.facturatie.sr${path}`;
-    return null;
-  }
-  return null;
-}
-
 // Main App Routes (existing)
 function MainAppRoutes() {
-  const onSubdomain = isSubdomain();
-  const onMainDomain = shouldRedirectToApp();
-  
   return (
     <SafeSuspense>
       <Routes>
-        {/* Landing Page - Only on main domain */}
-        <Route path="/" element={
-          onSubdomain ? <Navigate to="/login" replace /> : <LandingPage />
-        } />
+        {/* Landing Page */}
+        <Route path="/" element={<LandingPage />} />
         
-        {/* Public pages - Only on main domain */}
-        {!onSubdomain && (
-          <>
-            <Route path="/modules" element={<ModulesPage />} />
-            <Route path="/modules-overzicht" element={<ModulesOverviewPage />} />
-            <Route path="/modules/:slug" element={<ModuleDetailPage />} />
-            <Route path="/prijzen" element={<PrijzenPage />} />
-            <Route path="/over-ons" element={<OverOnsPage />} />
-            <Route path="/voorwaarden" element={<VoorwaardenPage />} />
-            <Route path="/privacy" element={<PrivacyPage />} />
-            <Route path="/faq" element={<FaqPage />} />
-            <Route path="/help" element={<FaqPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/demo" element={<DemoPage />} />
-            <Route path="/invoice" element={<PublicInvoiceGenerator />} />
-            <Route path="/invoice-generator" element={<PublicInvoiceGenerator />} />
-            
-            {/* Gratis Factuur Dashboard System - Separate Auth */}
-            <Route path="/invoice/login" element={<GratisFactuurAuth />} />
-            <Route path="/invoice/register" element={<GratisFactuurAuth />} />
-            <Route path="/invoice/dashboard" element={<GratisFactuurDashboard />} />
-            <Route path="/invoice/klanten" element={<GratisFactuurKlanten />} />
-            <Route path="/invoice/facturen" element={<GratisFactuurFacturen />} />
-            <Route path="/invoice/facturen/nieuw" element={<PublicInvoiceGenerator showSaveOption={true} />} />
-            <Route path="/invoice/facturen/:id" element={<PublicInvoiceGenerator showSaveOption={true} />} />
-            <Route path="/invoice/facturen/:id/bewerken" element={<PublicInvoiceGenerator showSaveOption={true} />} />
-            <Route path="/invoice/betalingen" element={<GratisFactuurFacturen />} />
-            <Route path="/invoice/instellingen" element={<GratisFactuurInstellingen />} />
-            
-            {/* Staff Chat Dashboard - Public access with own auth */}
-            <Route path="/staff-chat" element={<StaffChatDashboard />} />
-          </>
-        )}
+        {/* Public pages */}
+        <Route path="/modules" element={<ModulesPage />} />
+        <Route path="/modules-overzicht" element={<ModulesOverviewPage />} />
+        <Route path="/modules/:slug" element={<ModuleDetailPage />} />
+        <Route path="/prijzen" element={<PrijzenPage />} />
+        <Route path="/over-ons" element={<OverOnsPage />} />
+        <Route path="/voorwaarden" element={<VoorwaardenPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/faq" element={<FaqPage />} />
+        <Route path="/help" element={<FaqPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/demo" element={<DemoPage />} />
+        <Route path="/invoice" element={<PublicInvoiceGenerator />} />
+        <Route path="/invoice-generator" element={<PublicInvoiceGenerator />} />
         
-        {/* Redirect public pages to login on subdomains */}
-        {onSubdomain && (
-          <>
-            <Route path="/modules" element={<Navigate to="/login" replace />} />
-            <Route path="/modules-overzicht" element={<Navigate to="/login" replace />} />
-            <Route path="/modules/:slug" element={<Navigate to="/login" replace />} />
-            <Route path="/prijzen" element={<Navigate to="/login" replace />} />
-            <Route path="/over-ons" element={<Navigate to="/login" replace />} />
-            <Route path="/voorwaarden" element={<Navigate to="/login" replace />} />
-            <Route path="/privacy" element={<Navigate to="/login" replace />} />
-            <Route path="/faq" element={<Navigate to="/login" replace />} />
-            <Route path="/help" element={<Navigate to="/login" replace />} />
-            <Route path="/contact" element={<Navigate to="/login" replace />} />
-            <Route path="/demo" element={<Navigate to="/login" replace />} />
-          </>
-        )}
+        {/* Gratis Factuur Dashboard System - Separate Auth */}
+        <Route path="/invoice/login" element={<GratisFactuurAuth />} />
+        <Route path="/invoice/register" element={<GratisFactuurAuth />} />
+        <Route path="/invoice/dashboard" element={<GratisFactuurDashboard />} />
+        <Route path="/invoice/klanten" element={<GratisFactuurKlanten />} />
+        <Route path="/invoice/facturen" element={<GratisFactuurFacturen />} />
+        <Route path="/invoice/facturen/nieuw" element={<PublicInvoiceGenerator showSaveOption={true} />} />
+        <Route path="/invoice/facturen/:id" element={<PublicInvoiceGenerator showSaveOption={true} />} />
+        <Route path="/invoice/facturen/:id/bewerken" element={<PublicInvoiceGenerator showSaveOption={true} />} />
+        <Route path="/invoice/betalingen" element={<GratisFactuurFacturen />} />
+        <Route path="/invoice/instellingen" element={<GratisFactuurInstellingen />} />
+        
+        {/* Staff Chat Dashboard - Public access with own auth */}
+        <Route path="/staff-chat" element={<StaffChatDashboard />} />
         
         {/* Public Spa Booking Portal - Always available */}
         <Route path="/booking/spa/:workspaceId" element={<SpaBookingPage />} />
@@ -683,17 +587,15 @@ function MainAppRoutes() {
         {/* Mobile Bon Upload - Public page for QR code scanning */}
         <Route path="/upload/suribet/:sessionId" element={<SuribetMobileUpload />} />
         
-        {/* Dynamic CMS Pages - Only on main domain */}
-        <Route path="/pagina/:slug" element={
-          onSubdomain ? <Navigate to="/login" replace /> : <CMSPage />
-        } />
+        {/* Dynamic CMS Pages */}
+        <Route path="/pagina/:slug" element={<CMSPage />} />
         
-        {/* Auth Routes - Redirect to app subdomain on main domain */}
+        {/* Auth Routes */}
         <Route path="/login" element={
-          onMainDomain ? <MainDomainAuthRedirect /> : <PublicRoute><Login /></PublicRoute>
+          <PublicRoute><Login /></PublicRoute>
         } />
         <Route path="/register" element={
-          onMainDomain ? <MainDomainAuthRedirect /> : <PublicRoute><Register /></PublicRoute>
+          <PublicRoute><Register /></PublicRoute>
         } />
         <Route path="/reset-wachtwoord/:token" element={<ResetPassword />} />
         
