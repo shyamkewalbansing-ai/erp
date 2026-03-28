@@ -2146,11 +2146,11 @@ function KasTab({ token, tenants, formatSRD }) {
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Omschrijving</label>
-                <input value={description} onChange={e => setDescription(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Bijv. Onderhoud dak" required data-testid="kas-description-input" />
+                <input value={description} onChange={e => setDescription(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder={formType === 'income' ? 'Bijv. Huur pand 3, Borg ontvangen' : 'Bijv. Onderhoud dak, EBS rekening'} required data-testid="kas-description-input" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Categorie</label>
-                <input value={category} onChange={e => setCategory(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Bijv. Onderhoud, Huur, Nutsvoorzieningen" data-testid="kas-category-input" />
+                <input value={category} onChange={e => setCategory(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder={formType === 'income' ? 'Bijv. Huur, Borg, Overig' : 'Bijv. Onderhoud, Nutsvoorzieningen, Materialen'} data-testid="kas-category-input" />
               </div>
               <div className="flex gap-2">
                 <button type="submit" disabled={saving} className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50" data-testid="kas-submit-btn">
