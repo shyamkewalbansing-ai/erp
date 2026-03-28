@@ -45,7 +45,7 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
         setStatus('ready');
         setMessage(mode === 'register' ? 'Kijk recht in de camera' : 'Gezicht herkennen...');
         if (mode === 'verify' || mode === 'verify-continuous') {
-          setTimeout(() => { if (!cancelled) detectFace(); }, 500);
+          if (!cancelled) detectFace();
         }
       } catch (err) {
         if (!cancelled) {
@@ -70,11 +70,10 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
     let attempts = 0;
     const tryDetect = async () => {
       if (!videoRef.current || !streamRef.current) return;
-      if (attempts > 20) {
-        // In continuous mode, just restart detection silently
+      if (attempts > 30) {
         if (mode === 'verify-continuous') {
           attempts = 0;
-          setTimeout(tryDetect, 500);
+          setTimeout(tryDetect, 200);
           return;
         }
         setStatus('ready');
@@ -82,15 +81,14 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
         return;
       }
       attempts++;
-      const detection = await faceapi.detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.5 }))
+      const detection = await faceapi.detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.35 }))
         .withFaceLandmarks()
         .withFaceDescriptor();
       if (detection) {
         const descriptor = Array.from(detection.descriptor);
         if (mode === 'verify-continuous') {
-          // Don't stop camera — send descriptor, then keep scanning after a short pause
           onCapture(descriptor);
-          setTimeout(tryDetect, 1500);
+          setTimeout(tryDetect, 1000);
         } else {
           setStatus('success');
           setMessage(mode === 'register' ? 'Gezicht geregistreerd!' : 'Gezicht herkend!');
@@ -98,7 +96,7 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
           onCapture(descriptor);
         }
       } else {
-        setTimeout(tryDetect, 300);
+        setTimeout(tryDetect, 150);
       }
     };
     tryDetect();
