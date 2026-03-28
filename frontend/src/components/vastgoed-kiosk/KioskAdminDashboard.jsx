@@ -2125,8 +2125,11 @@ function KasTab({ token, tenants, formatSRD }) {
       {/* Boekingen Tabel */}
       <div className="bg-white rounded-xl border border-slate-200">
         <div className="p-4 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3">
-          <h2 className="font-semibold text-slate-900">Uitgaven Overzicht</h2>
+          <h2 className="font-semibold text-slate-900">Boekingen Overzicht</h2>
           <div className="flex gap-2">
+            <button onClick={() => { setFormType('income'); setShowForm(true); }} className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600" data-testid="add-income-btn">
+              <TrendingUp className="w-4 h-4" /> Inkomsten Registreren
+            </button>
             <button onClick={() => { setFormType('expense'); setShowForm(true); }} className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600" data-testid="add-expense-btn">
               <TrendingDown className="w-4 h-4" /> Uitgave Registreren
             </button>

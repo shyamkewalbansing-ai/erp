@@ -1,64 +1,68 @@
 <analysis>**original_problem_statement**: 
-The user is migrating a standalone React/Python KIOSK application into their full-stack ERP system. The UI must be an exact 1:1 replica of an Albert Heijn self-checkout kiosk (no scrollbars, fully responsive via //, flat design). The application includes Face ID login via webcam, PIN authentication, tenant-specific routes (), receipt printing integrations, and modern sound/animation effects for Kiosk terminals.
+The user is migrating a standalone React/Python KIOSK application into a full-stack ERP system. The UI must be an exact 1:1 replica of an Albert Heijn self-checkout kiosk (no scrollbars, fully responsive via //, flat design). The application includes Face ID login via webcam, PIN authentication, tenant-specific routes (), receipt printing integrations, and modern sound/animation effects for Kiosk terminals. PRODUCT REQUIREMENTS: Continuous Face ID on kiosk screens, animated 3-phase receipt flows, fixed non-scrolling dashboard headers, and integration of local payment methods (Mope, Uni5Pay).
 
 **User's preferred language**: Dutch (You MUST automatically detect the user's primary language from their messages inside the <trajectory> tag and INSTRUCT next agent to respond in the user's preferred language only. The language here is **DUTCH**.)
 
 **what currently exists?** 
-A fully functional Vastgoed Kiosk UI and backend. Face ID handles multiple registrations per admin and individual tenant registrations. The  layout is fully modernized into a centered KIOSK format with PIN modal overlay. A first-time PIN setup flow exists. Receipt printing is fully automated with a  script for USB printers, featuring a realistic kassabon design, Web Audio API sound effects (cha-ching & paper feed), and CSS slide-down ejection animations. 
+A fully functional Vastgoed Kiosk UI and backend. The  route is strictly Face ID only with continuous scanning (no PIN entry). A 3-phase animated receipt flow exists for tenant payments. Admin dashboard exists with sticky/fixed headers. Mock payment integrations for Mope and Uni5Pay are functional via QR code simulation. New companies generate a URL-safe slug (e.g., ) as their  instead of a UUID.
 
 **Last working item**: 
-    - Last item agent was working: Creating a modern KIOSK payment success layout specifically for the  route. The agent generated design guidelines and successfully created the  component, but the session ended before it could be integrated into the main layout.
+    - Last item agent was working: Modifying the  (Bank/Kas) in the Admin Dashboard. The user requested adding an Inkomsten Registreren (Register Income) button and making the Categorie field a free-text input rather than a strict dropdown. The agent executed a  to add this, but the session ended immediately after.
     - Status: IN PROGRESS
     - Agent Testing Done: N
-    - Which testing method agent to use? Screenshot tool (to verify the new  receipt UI layout works and renders correctly after payment).
+    - Which testing method agent to use? Screenshot tool (to verify the new UI elements in the Bank/Kas tab render correctly) and Manual testing (to verify the Inkomsten Registreren form opens and successfully saves an income entry).
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:  
-  Issue 1: Integrate and test  (P0)
-     - Attempted fixes: Component was successfully created but is not yet imported or used.
+  Issue 1: Verify and complete the KasTab (Bank/Kas) UI enhancements (P0)
+     - Attempted fixes: The agent successfully ran a  on  but did not verify or test the changes.
      - Next debug checklist: 
-        1. Open 
-        2. Replace the  import/usage at the  step (around line 191) with the newly created  component.
-        3. Verify the properties passed to the component match its expected props.
-     - Why fix this issue and what will be achieved with the fix? It completes the user's explicit request to give the  payment completion screen a distinct, modern KIOSK layout.
+        1. Open the Admin Dashboard -> Bank/Kas tab.
+        2. Take a screenshot to confirm Inkomsten Registreren is visible alongside expenses.
+        3. Click the button to ensure the modal opens properly and allows setting a positive amount.
+        4. Check that the Categorie field allows typing a custom category.
+        5. Submit a test income and ensure it reflects in the totals/entries.
+     - Why fix this issue and what will be achieved with the fix? It directly addresses the user's last message requesting income registration and free-text categories.
      - Status: IN PROGRESS
      - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Frontend (Screenshot tool)
+     - Should Test frontend/backend/both after fix? Both (Frontend via Screenshot tool, Backend by confirming the entry saves correctly).
+     - Blocked on other issue: None.
 
 **In progress Task List**: 
-  Task 1: Complete  modern payment success screen
-     - Where to resume: .
-     - What will be achieved with this? Tenants will see a massive, high-contrast, modern success screen after paying via the tenant portal.
+  Task 1: Complete Bank/Kas tab enhancements (P0)
+     - Where to resume:  (specifically the  component).
+     - What will be achieved with this? Full income and expense tracking in the cash register module.
      - Status: IN PROGRESS
-     - Should Test frontend/backend/both after fix? Frontend
+     - Should Test frontend/backend/both after fix? Both
      - Blocked on something: None.
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - P0: Integrate real Mope API key (User currently using mock mode, needs to provide Hakrinbank credentials).
+    - P0: Integrate real Mope and Uni5Pay API keys (User currently using mock mode, waiting for credentials from Hakrinbank/Uni5Pay).
     - P1: Modernize Kwitanties (Receipts) tab - Rebuild using the unified table style in the Admin Dashboard.
-    
+    - P1: WhatsApp message receipt feature (User agreed to send a WhatsApp receipt to tenants automatically after payment, backend has some WhatsApp logic but it needs tying to the receipt flow).
+    - Refactoring (P1):  (>3400 lines) and  (>3300 lines) MUST be split into smaller modules.
+
     Future Tasks:
     - P2: Maandelijks financieel rapport (Automated monthly financial report).
     - P2: CSV/PDF export van betalingsrapporten.
     - P2: Wachtwoord vergeten functionaliteit (Backend/Email).
     - P2: Multi-building support per bedrijf.
-    - Refactoring (P1):  (>3300 lines) and  (>3200 lines) MUST be split into smaller modules.
 
 **Completed work in this session**
-- Face ID registration per tenant in  (DONE)
-- Redesigned  company select layout to strict kiosk style (no on-screen keyboard, PIN modal overlay) (DONE)
-- Global Face ID verification endpoint for login screen (DONE)
-- Logout flow fixed to return to PIN lock screen instead of main login (DONE)
-- Multiple Admin Face IDs supported with individual deletion (DONE)
-- Receipt redesigned to true kassabon style (monospace, narrow, dashed lines) (DONE)
-- Created  to handle automated local USB ESC/POS printing (DONE)
-- Implemented sequential CSS printer animations (receipt visible -> ejects downward) (DONE)
-- Integrated Web Audio API for success chime and paper-feed sound effects (DONE)
-- First-time PIN setup screen implemented to replace Kiosk Not Available (DONE)
+-  fully modernized with a 3-phase flow: Text+Receipt -> Slide Down Eject -> Single Centered Card details (DONE)
+-  layout locked strictly to continuous Face ID (No PIN entry, no error popups, faster scanning) (DONE)
+- Uni5Pay mock integration implemented (Checkout API, Status Polling, QR frontend UI) (DONE)
+- Uni5Pay settings toggle added to Admin Dashboard (DONE)
+- Company ID generation refactored from UUID to URL-safe Company Name slug (DONE)
+- Admin Dashboard layout container made  so header and tabs never scroll, only content scrolls (DONE)
 
 **Earlier issues found/mentioned but not fixed**
-   - None.
+   - Issue 1: Real payment gateways are currently mocked.
+   - Debug checklist: Await user credentials for Mope and Uni5Pay to switch from Mock mode to Production mode.
+   - Why to solve this issue and what will be achieved with this? Required for processing actual real-world tenant payments.
+   - Should Test frontend/backend/both after fix: Both
+   - Is recurring issue? N
 
 **Known issue recurrence from previous fork**
   - None.
@@ -67,73 +71,72 @@ A fully functional Vastgoed Kiosk UI and backend. Face ID handles multiple regis
 
 
 **Key Technical Concepts**
-- **Viewport Scaling:** Kiosk elements exclusively use , , and . 
-- **Web Audio API:** Used inside  to synthesize procedural sound effects (cha-ching and motor noise).
-- **USB ESC/POS Printing:** Bypassed browser print dialog completely using  calls to a local Python daemon () acting as a bridge to standard receipt printers.
-- **Face ID:** Uses local  models. Now stores an array of descriptors () for multiple faces per entity.
+- **Continuous Face ID:** Uses local  models. The  route now uses a  mode that suppresses error popups and retries instantly for a seamless kiosk experience.
+- **Payment Mocking:** Mope and Uni5Pay simulate a payment flow using local polling intervals ( ->  -> ).
+- **Slugified IDs:** The system now uses URL-safe company names (e.g., ) instead of UUIDs.
 
 **key DB schema**
-- :  (string),  (array of objects: ).
-- :  (bool),  (list of floats).
+- :  (slugified string), , , , .
 
 **changes in tech stack**
-- Added  as a standalone local utility for USB ticket printing.
-- Web Audio API adopted for native sound synthesis.
+- Added Uni5Pay to the mocked payment providers list.
 
 **All files of reference**
--  (Must be updated to include )
--  (Newly created)
--  
+-  (Actively being edited for  changes)
+- 
 - 
 - 
 - 
 
 **Areas that need refactoring**: 
- and  are massively monolithic and need splitting.
+ (>3400 lines) and  (>3300 lines) are massively monolithic and need splitting.
 
 **key api endpoints**
--  - Checks all companies for face match on login.
--  - Registers multiple faces.
--  - First time PIN initialization.
+-  - Mock Uni5Pay payment creation.
+-  - Mock Uni5Pay status polling.
+-  - Registers company and creates slugified ID.
 
 **Critical Info for New Agent**
 - **Language:** Reply strictly in **Dutch**.
-- **Task continuation:** You are actively in the middle of replacing the  payment success screen. You just generated  via design subagent, but haven't integrated it yet. Open  and swap it in. 
-- **Audio/Animations:** Do not strip out the  or  logic in —the user loves the specific timing and sounds generated for the receipt ejection. 
+- **Task continuation:** The very last action taken was editing  to add Inkomsten Registreren and a free-text Categorie field to the . The AI did the edit but the session ended before verification. **Your first step is to test and verify the Bank/Kas tab works with these new changes.**
+- **Company URL changes:** Be aware that the demo company ID is no longer a UUID. If you need to access the tenant route manually, the URL is now .
 
 **documents and test reports created in this job**
--  (Updated regularly with completed tasks)
--  (Face ID Tenant tests)
--  (CompanySelect Redesign tests)
--  (Contains layout specs for HuurdersReceipt)
+-  (Updated)
 
 **Last 10 User Messages and any pending HUMAN messages** 
-1. User: Make the receipt print animation slide down out of a printer slot.
-2. User: Change the receipt layout to a standard narrow kassabon.
-3. User: Remove the print buttons. Make it print automatically and look like it's sliding out of a real USB printer.
-4. User: How does the USB printer connect? Also, when there's no PIN, let them set it up instead of showing Kiosk Not Available. (Agent built print server and SetPinScreen).
-5. User: I don't want the receipt sliding down and staying on screen. Flow should be: show receipt -> then slowly eject downwards + add sound effects. (Agent implemented 3-phase flow with Web Audio API).
-6. User: Can you give the  Betaling voltooid screen a completely different, modern KIOSK layout?
-*Agent generated design specs and created  but session ended before integration.*
+1. User: Make the  layout into a two-panel design.
+2. User: Combine the two-panel design with the 3-phase eject animation.
+3. User: Make the final phase a single centered card instead of two panels.
+4. User: Make FaceID scan continuously without the Opnieuw (Retry) button and remove the PIN code option from .
+5. User: Can you mock Uni5Pay as a payment method? (Agent added backend/frontend mocks).
+6. User: I don't see Uni5Pay in the Admin Dashboard settings. (Agent added the toggle/input to the dashboard).
+7. User: Can the Company ID become the Company Name instead of a UUID upon registration? (Agent slugified the company ID).
+8. User: Make the Admin Dashboard header and tabs completely fixed so they don't scroll with the content. (Agent applied  and ).
+9. User: Bij Bank/Kas, moet Inkomsten Registreren nog erbij komen en bij Categorie zelf invoeren
+*Agent performed code replacement to add the Income button and free-text category field to KasTab, but session ended before testing.*
 
 **Project Health Check:**
 - Broken: None
-- Mocked: Mope Payment Gateway (Needs Hakrinbank credentials)
+- Mocked: Mope Payment Gateway, Uni5Pay Payment Gateway (Needs real credentials to go live).
 
 **3rd Party Integrations**
 - SumUp Online Checkout API - Requires user API Key
 - Mope Payment API - Requires user API Key (Mocked)
+- Uni5Pay - Requires user API Key (Mocked)
 - WhatsApp Business API - Requires User API Key
 
 **Testing status**
-  - Testing agent used after significant changes: YES (For UI navigation flows).
+  - Testing agent used after significant changes: NO
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: None.
   - Known regressions: None.
 
 **Credentials to test flow:**
 - **Superadmin:**  / 
-- **Kiosk Company (Demo):** KEWALBANSING (PIN: , or  for new test companies)
+- **Kiosk Company (Demo):**  / 
+- **Kiosk PIN:** 
+- **Company Slug (For  URLs):** 
 
 **What agent forgot to execute**
-The agent generated the  file using the design agent, but failed to inject it into  before the session timed out. The user's request is thus unfulfilled on the frontend. This is your immediate priority.</analysis>
+The agent modified the  component in  to include the Inkomsten Registreren button and free-text category input as requested, but the session ended immediately. The agent forgot to take a screenshot to visually verify the change and did not test if the form submits income correctly. Validate this first.</analysis>
