@@ -156,9 +156,9 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   ];
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 py-3 sm:py-4 px-3 sm:px-4 lg:px-8 shadow-sm">
+    <div className="h-screen flex flex-col bg-slate-100 overflow-hidden">
+      {/* Header - fixed */}
+      <header className="bg-white border-b border-slate-200 py-3 sm:py-4 px-3 sm:px-4 lg:px-8 shadow-sm flex-shrink-0 z-20">
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-3 lg:gap-4">
             <button onClick={handleBack} className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition">
@@ -201,9 +201,9 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
         </div>
       </header>
 
-      <div className="w-full px-3 sm:px-4 lg:px-8 py-4 sm:py-6">
-        {/* Tabs */}
-        <div className="flex gap-1.5 sm:gap-2 mb-6 sm:mb-8 overflow-x-auto pb-1 scrollbar-hide" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+      {/* Tabs - fixed */}
+      <div className="bg-slate-100 px-3 sm:px-4 lg:px-8 pt-4 pb-2 flex-shrink-0 z-10">
+        <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
           {TABS.map(tab => (
             <button
               key={tab.id}
@@ -219,6 +219,10 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Scrollable content area */}
+      <div className="flex-1 overflow-y-auto px-3 sm:px-4 lg:px-8 pb-6">
 
         {/* Dashboard Tab */}
         {activeTab === 'dashboard' && <DashboardTab dashboard={dashboard} payments={payments} leases={leases} formatSRD={formatSRD} />}
