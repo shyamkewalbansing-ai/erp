@@ -25,7 +25,20 @@ import api, { getLandingSettings } from '../lib/api';
 
 // Helper to check if on subdomain/custom domain
 function getWorkspaceFromDomain() {
-  return null;
+  const hostname = window.location.hostname;
+  const mainDomains = ['facturatie.sr', 'www.facturatie.sr', 'app.facturatie.sr', 'localhost', '127.0.0.1'];
+  
+  if (mainDomains.includes(hostname)) {
+    return null;
+  }
+  
+  // Extract subdomain from facturatie.sr
+  if (hostname.endsWith('.facturatie.sr')) {
+    return hostname.replace('.facturatie.sr', '');
+  }
+  
+  // Custom domain - return the full domain
+  return hostname;
 }
 
 export default function Login() {

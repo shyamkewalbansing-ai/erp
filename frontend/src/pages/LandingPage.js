@@ -45,9 +45,9 @@ const getAppUrl = (path = '') => {
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return path;
   }
-  // If on main domain, use same domain
+  // If on main domain, redirect to app subdomain
   if (hostname === 'facturatie.sr' || hostname === 'www.facturatie.sr') {
-    return path;
+    return `https://app.facturatie.sr${path}`;
   }
   // Otherwise use same domain
   return path;
