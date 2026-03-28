@@ -50,16 +50,6 @@ const Admin = lazy(() => import("./pages/Admin"));
 const Instellingen = lazy(() => import("./pages/Instellingen"));
 const WorkspacesPage = lazy(() => import("./pages/WorkspacesPage"));
 const DomeinenPage = lazy(() => import("./pages/DomeinenPage"));
-const HRM = lazy(() => import("./pages/HRM"));
-const HRMDashboard = lazy(() => import("./pages/HRMDashboard"));
-const HRMPersoneel = lazy(() => import("./pages/HRMPersoneel"));
-const HRMWerving = lazy(() => import("./pages/HRMWerving"));
-const HRMContracten = lazy(() => import("./pages/HRMContracten"));
-const HRMDocumenten = lazy(() => import("./pages/HRMDocumenten"));
-const HRMVerlof = lazy(() => import("./pages/HRMVerlof"));
-const HRMAanwezigheid = lazy(() => import("./pages/HRMAanwezigheid"));
-const HRMLoonlijst = lazy(() => import("./pages/HRMLoonlijst"));
-const HRMInstellingen = lazy(() => import("./pages/HRMInstellingen"));
 const MijnModules = lazy(() => import("./pages/MijnModules"));
 const WebsiteBeheer = lazy(() => import("./pages/WebsiteBeheer"));
 const CMSPage = lazy(() => import("./pages/CMSPage"));
@@ -78,41 +68,9 @@ const FaqPage = lazy(() => import("./pages/FaqPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 const DemoPage = lazy(() => import("./pages/DemoPage"));
 
-// Public Spa Booking Portal
-const SpaBookingPage = lazy(() => import("./pages/SpaBookingPage"));
-
 // Employee Portal
 const EmployeePortalLogin = lazy(() => import("./pages/EmployeePortalLogin"));
 const EmployeePortalDashboard = lazy(() => import("./pages/EmployeePortalDashboard"));
-
-// Auto Dealer Module
-const AutoDealerDashboard = lazy(() => import("./pages/AutoDealerDashboard"));
-const AutoDealerVoertuigen = lazy(() => import("./pages/AutoDealerVoertuigen"));
-const AutoDealerKlanten = lazy(() => import("./pages/AutoDealerKlanten"));
-const AutoDealerVerkopen = lazy(() => import("./pages/AutoDealerVerkopen"));
-
-// Auto Dealer Customer Portal
-const AutoDealerPortalLogin = lazy(() => import("./pages/AutoDealerPortalLogin"));
-const AutoDealerPortalDashboard = lazy(() => import("./pages/AutoDealerPortalDashboard"));
-const AutoDealerPortalPurchases = lazy(() => import("./pages/AutoDealerPortalPurchases"));
-
-// Beauty Spa Module
-const BeautySpaDashboard = lazy(() => import("./pages/BeautySpaDashboard"));
-const BeautySpaClients = lazy(() => import("./pages/beautyspa/ClientsPage"));
-const BeautySpaAppointments = lazy(() => import("./pages/beautyspa/AppointmentsPage"));
-const BeautySpaTreatments = lazy(() => import("./pages/beautyspa/TreatmentsPage"));
-const BeautySpaProducts = lazy(() => import("./pages/beautyspa/ProductsPage"));
-const BeautySpaPOS = lazy(() => import("./pages/beautyspa/POSPage"));
-const BeautySpaStaff = lazy(() => import("./pages/beautyspa/StaffPage"));
-const BeautySpaQueue = lazy(() => import("./pages/beautyspa/QueuePage"));
-const BeautySpaReports = lazy(() => import("./pages/beautyspa/ReportsPage"));
-const BeautySpaVouchers = lazy(() => import("./pages/beautyspa/VouchersPage"));
-
-// Handleiding Pages
-const VastgoedHandleiding = lazy(() => import("./pages/handleiding/VastgoedHandleidingPage"));
-const HRMHandleiding = lazy(() => import("./pages/handleiding/HRMHandleidingPage"));
-const AutoDealerHandleiding = lazy(() => import("./pages/handleiding/AutoDealerHandleidingPage"));
-const BeautySpaHandleiding = lazy(() => import("./pages/handleiding/BeautySpaHandleidingPage"));
 
 // Boekhouding Module - Complete Finance OS
 const BoekhoudingDashboard = lazy(() => import("./pages/boekhouding/DashboardPage"));
@@ -155,18 +113,6 @@ const SchuldbeheerRekeningen = lazy(() => import("./pages/schuldbeheer/Rekeninge
 const SchuldbeheerPlanning = lazy(() => import("./pages/schuldbeheer/PlanningPage"));
 const SchuldbeheerRapportages = lazy(() => import("./pages/schuldbeheer/RapportagesPage"));
 const SchuldbeheerDocumenten = lazy(() => import("./pages/schuldbeheer/DocumentenPage"));
-
-// Suribet Module
-const SuribetDashboard = lazy(() => import("./pages/suribet/DashboardPage"));
-const SuribetMachines = lazy(() => import("./pages/suribet/MachinesPage"));
-const SuribetDagrapporten = lazy(() => import("./pages/suribet/DagrapportenPage"));
-const SuribetKasboek = lazy(() => import("./pages/suribet/KasboekPage"));
-const SuribetUitbetalingen = lazy(() => import("./pages/suribet/UitbetalingenPage"));
-const SuribetWerknemers = lazy(() => import("./pages/suribet/WerknemersPage"));
-const SuribetLoonuitbetaling = lazy(() => import("./pages/suribet/LoonuitbetalingPage"));
-const SuribetWerknemerPortaal = lazy(() => import("./pages/suribet/WerknemerPortaal"));
-const SuribetPortaalLink = lazy(() => import("./pages/suribet/PortaalLinkPage"));
-const SuribetMobileUpload = lazy(() => import("./pages/suribet/MobileUploadPage"));
 
 // Vastgoed Kiosk Module - Public Pages (connects to external KIOSK backend)
 const VastgoedKioskLayout = lazy(() => import("./components/vastgoed-kiosk/KioskLayout"));
@@ -341,20 +287,12 @@ const SmartRedirect = () => {
 
         // Module routes mapping
         const moduleRoutes = {
-          'vastgoed_beheer': '/app/dashboard',
-          'hrm': '/app/hrm',
-          'autodealer': '/app/autodealer',
-          'beauty': '/app/beautyspa',
-          'suribet': '/app/suribet',
           'boekhouding': '/app/boekhouding',
           'schuldbeheer': '/app/schuldbeheer',
-          'pompstation': '/app/pompstation',
-          'ai-chatbot': '/app/chatbot',
-          'cms': '/app/cms'
         };
 
-        // Default order - same as Layout.js sidebar
-        const defaultOrder = ['boekhouding', 'schuldbeheer', 'vastgoed_beheer', 'suribet', 'autodealer', 'beauty', 'hrm', 'pompstation'];
+        // Default order
+        const defaultOrder = ['boekhouding', 'schuldbeheer'];
 
         // Get ordered modules (same logic as Layout.js getOrderedModules)
         let orderedModules = defaultOrder;
@@ -480,8 +418,6 @@ function AppWithRoutes() {
           {/* Employee Portal Routes */}
           <Route path="/werknemer/*" element={<EmployeePortalRoutes />} />
           
-          {/* Auto Dealer Customer Portal Routes */}
-          <Route path="/klant-portaal/*" element={<AutoDealerCustomerPortalRoutes />} />
           
           {/* Main App Routes */}
           <Route path="/*" element={<MainAppRoutes />} />
@@ -491,21 +427,6 @@ function AppWithRoutes() {
         <BoekhoudingOfflineManager />
       </AuthProvider>
     </BrowserRouter>
-  );
-}
-
-// Auto Dealer Customer Portal Routes
-function AutoDealerCustomerPortalRoutes() {
-  return (
-    <SafeSuspense>
-      <Routes>
-        <Route path="/login" element={<AutoDealerPortalLogin />} />
-        <Route path="/" element={<AutoDealerPortalDashboard />} />
-        <Route path="/aankopen" element={<AutoDealerPortalPurchases />} />
-        <Route path="/aankopen/:id" element={<AutoDealerPortalPurchases />} />
-        <Route path="*" element={<Navigate to="/klant-portaal" replace />} />
-      </Routes>
-    </SafeSuspense>
   );
 }
 
@@ -612,9 +533,6 @@ function MainAppRoutes() {
           </>
         )}
         
-        {/* Public Spa Booking Portal - Always available */}
-        <Route path="/booking/spa/:workspaceId" element={<SpaBookingPage />} />
-        
         {/* Vastgoed Kiosk - Public Pages (connects to external KIOSK backend) */}
         <Route path="/vastgoed" element={
           <SafeSuspense>
@@ -645,12 +563,6 @@ function MainAppRoutes() {
         {/* AI Assistant Standalone Page - Always available */}
         <Route path="/ai" element={<AIAssistantPage />} />
         <Route path="/assistent" element={<AIAssistantPage />} />
-        
-        {/* Public Suribet Werknemer Portal - Always available */}
-        <Route path="/portal/suribet/:userId" element={<SuribetWerknemerPortaal />} />
-        
-        {/* Mobile Bon Upload - Public page for QR code scanning */}
-        <Route path="/upload/suribet/:sessionId" element={<SuribetMobileUpload />} />
         
         {/* Dynamic CMS Pages - Only on main domain */}
         <Route path="/pagina/:slug" element={
@@ -696,44 +608,6 @@ function MainAppRoutes() {
           <Route path="dashboard" element={
             <SubscriptionRoute><Dashboard /></SubscriptionRoute>
           } />
-          <Route path="tenants" element={
-            <SubscriptionRoute><Tenants /></SubscriptionRoute>
-          } />
-          <Route path="apartments" element={
-            <SubscriptionRoute><Apartments /></SubscriptionRoute>
-          } />
-          <Route path="payments" element={
-            <SubscriptionRoute><Payments /></SubscriptionRoute>
-          } />
-          <Route path="facturen" element={
-            <SubscriptionRoute><Facturen /></SubscriptionRoute>
-          } />
-          <Route path="leningen" element={
-            <SubscriptionRoute><Leningen /></SubscriptionRoute>
-          } />
-          <Route path="contracten" element={
-            <SubscriptionRoute><Contracten /></SubscriptionRoute>
-          } />
-          <Route path="deposits" element={
-            <SubscriptionRoute><Deposits /></SubscriptionRoute>
-          } />
-          <Route path="kasgeld" element={
-            <SubscriptionRoute><Kasgeld /></SubscriptionRoute>
-          } />
-          <Route path="onderhoud" element={
-            <SubscriptionRoute><Onderhoud /></SubscriptionRoute>
-          } />
-          <Route path="meterstanden" element={
-            <SubscriptionRoute><Meterstanden /></SubscriptionRoute>
-          } />
-          <Route path="werknemers" element={
-            <SubscriptionRoute><Werknemers /></SubscriptionRoute>
-          } />
-          <Route path="vastgoed/handleiding" element={
-            <SubscriptionRoute><VastgoedHandleiding /></SubscriptionRoute>
-          } />
-          {/* Vastgoed module redirect */}
-          <Route path="vastgoed" element={<Navigate to="/app/dashboard" replace />} />
           <Route path="abonnement" element={<Abonnement />} />
           <Route path="instellingen" element={<Instellingen />} />
           <Route path="betaalmethodes" element={<BetaalmethodesPage />} />
@@ -754,117 +628,7 @@ function MainAppRoutes() {
             <AdminRoute><WebsiteBeheer /></AdminRoute>
           } />
           
-          {/* HRM Module Routes */}
-          <Route path="hrm" element={
-            <SubscriptionRoute requiredAddon="hrm"><HRMDashboard /></SubscriptionRoute>
-          } />
-          <Route path="hrm/personeel" element={
-            <SubscriptionRoute requiredAddon="hrm"><HRMPersoneel /></SubscriptionRoute>
-          } />
-          <Route path="hrm/werving" element={
-            <SubscriptionRoute requiredAddon="hrm"><HRMWerving /></SubscriptionRoute>
-          } />
-          <Route path="hrm/contracten" element={
-            <SubscriptionRoute requiredAddon="hrm"><HRMContracten /></SubscriptionRoute>
-          } />
-          <Route path="hrm/documenten" element={
-            <SubscriptionRoute requiredAddon="hrm"><HRMDocumenten /></SubscriptionRoute>
-          } />
-          <Route path="hrm/verlof" element={
-            <SubscriptionRoute requiredAddon="hrm"><HRMVerlof /></SubscriptionRoute>
-          } />
-          <Route path="hrm/aanwezigheid" element={
-            <SubscriptionRoute requiredAddon="hrm"><HRMAanwezigheid /></SubscriptionRoute>
-          } />
-          <Route path="hrm/loonlijst" element={
-            <SubscriptionRoute requiredAddon="hrm"><HRMLoonlijst /></SubscriptionRoute>
-          } />
-          <Route path="hrm/instellingen" element={
-            <SubscriptionRoute requiredAddon="hrm"><HRMInstellingen /></SubscriptionRoute>
-          } />
-          <Route path="hrm/handleiding" element={
-            <SubscriptionRoute requiredAddon="hrm"><HRMHandleiding /></SubscriptionRoute>
-          } />
-          
-          {/* Auto Dealer Module Routes */}
-          <Route path="autodealer" element={
-            <SubscriptionRoute requiredAddon="autodealer"><AutoDealerDashboard /></SubscriptionRoute>
-          } />
-          <Route path="autodealer/voertuigen" element={
-            <SubscriptionRoute requiredAddon="autodealer"><AutoDealerVoertuigen /></SubscriptionRoute>
-          } />
-          <Route path="autodealer/klanten" element={
-            <SubscriptionRoute requiredAddon="autodealer"><AutoDealerKlanten /></SubscriptionRoute>
-          } />
-          <Route path="autodealer/verkopen" element={
-            <SubscriptionRoute requiredAddon="autodealer"><AutoDealerVerkopen /></SubscriptionRoute>
-          } />
-          <Route path="autodealer/handleiding" element={
-            <SubscriptionRoute requiredAddon="autodealer"><AutoDealerHandleiding /></SubscriptionRoute>
-          } />
-          
-          {/* Beauty Spa Module Routes */}
-          <Route path="beautyspa" element={
-            <SubscriptionRoute requiredAddon="beauty"><BeautySpaDashboard /></SubscriptionRoute>
-          } />
-          <Route path="beautyspa/clients" element={
-            <SubscriptionRoute requiredAddon="beauty"><BeautySpaClients /></SubscriptionRoute>
-          } />
-          <Route path="beautyspa/appointments" element={
-            <SubscriptionRoute requiredAddon="beauty"><BeautySpaAppointments /></SubscriptionRoute>
-          } />
-          <Route path="beautyspa/treatments" element={
-            <SubscriptionRoute requiredAddon="beauty"><BeautySpaTreatments /></SubscriptionRoute>
-          } />
-          <Route path="beautyspa/products" element={
-            <SubscriptionRoute requiredAddon="beauty"><BeautySpaProducts /></SubscriptionRoute>
-          } />
-          <Route path="beautyspa/pos" element={
-            <SubscriptionRoute requiredAddon="beauty"><BeautySpaPOS /></SubscriptionRoute>
-          } />
-          <Route path="beautyspa/staff" element={
-            <SubscriptionRoute requiredAddon="beauty"><BeautySpaStaff /></SubscriptionRoute>
-          } />
-          <Route path="beautyspa/queue" element={
-            <SubscriptionRoute requiredAddon="beauty"><BeautySpaQueue /></SubscriptionRoute>
-          } />
-          <Route path="beautyspa/reports" element={
-            <SubscriptionRoute requiredAddon="beauty"><BeautySpaReports /></SubscriptionRoute>
-          } />
-          <Route path="beautyspa/vouchers" element={
-            <SubscriptionRoute requiredAddon="beauty"><BeautySpaVouchers /></SubscriptionRoute>
-          } />
-          <Route path="beautyspa/handleiding" element={
-            <SubscriptionRoute requiredAddon="beauty"><BeautySpaHandleiding /></SubscriptionRoute>
-          } />
-          
-          {/* Suribet Module Routes */}
-          <Route path="suribet" element={
-            <SubscriptionRoute requiredAddon="suribet"><SuribetDashboard /></SubscriptionRoute>
-          } />
-          <Route path="suribet/machines" element={
-            <SubscriptionRoute requiredAddon="suribet"><SuribetMachines /></SubscriptionRoute>
-          } />
-          <Route path="suribet/dagrapporten" element={
-            <SubscriptionRoute requiredAddon="suribet"><SuribetDagrapporten /></SubscriptionRoute>
-          } />
-          <Route path="suribet/uitbetalingen" element={
-            <SubscriptionRoute requiredAddon="suribet"><SuribetUitbetalingen /></SubscriptionRoute>
-          } />
-          <Route path="suribet/kasboek" element={
-            <SubscriptionRoute requiredAddon="suribet"><SuribetKasboek /></SubscriptionRoute>
-          } />
-          <Route path="suribet/werknemers" element={
-            <SubscriptionRoute requiredAddon="suribet"><SuribetWerknemers /></SubscriptionRoute>
-          } />
-          <Route path="suribet/loonuitbetaling" element={
-            <SubscriptionRoute requiredAddon="suribet"><SuribetLoonuitbetaling /></SubscriptionRoute>
-          } />
-          <Route path="suribet/portaal" element={
-            <SubscriptionRoute requiredAddon="suribet"><SuribetPortaalLink /></SubscriptionRoute>
-          } />
-          
-          {/* Boekhouding Module Routes - binnen bestaande Layout */}
+          {/* Boekhouding Module Routes */}
           <Route path="boekhouding" element={<BoekhoudingDashboard />} />
           <Route path="boekhouding/grootboek" element={<BoekhoudingGrootboek />} />
           <Route path="boekhouding/debiteuren" element={<BoekhoudingDebiteuren />} />
@@ -921,18 +685,8 @@ function MainAppRoutes() {
           </ProtectedRoute>
         } />
         
-        {/* Redirect old routes to new app routes */}
+        {/* Redirect old routes */}
         <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
-        <Route path="/tenants" element={<Navigate to="/app/tenants" replace />} />
-        <Route path="/apartments" element={<Navigate to="/app/apartments" replace />} />
-        <Route path="/payments" element={<Navigate to="/app/payments" replace />} />
-        <Route path="/facturen" element={<Navigate to="/app/facturen" replace />} />
-        <Route path="/leningen" element={<Navigate to="/app/leningen" replace />} />
-        <Route path="/contracten" element={<Navigate to="/app/contracten" replace />} />
-        <Route path="/deposits" element={<Navigate to="/app/deposits" replace />} />
-        <Route path="/kasgeld" element={<Navigate to="/app/kasgeld" replace />} />
-        <Route path="/onderhoud" element={<Navigate to="/app/onderhoud" replace />} />
-        <Route path="/werknemers" element={<Navigate to="/app/werknemers" replace />} />
         
         {/* 404 - redirect to landing */}
         <Route path="*" element={<Navigate to="/" replace />} />

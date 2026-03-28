@@ -131,11 +131,6 @@ export default function Dashboard() {
         addon.status === 'active' || addon.status === 'trial'
       );
       
-      const hasVastgoed = activeModules.some(addon => 
-        addon.addon_slug === 'vastgoed_beheer'
-      );
-      setHasVastgoedAddon(hasVastgoed);
-      
       if (activeModules.length === 0) {
         // Show order popup for users without active modules
         await loadAvailableModules();
@@ -152,7 +147,7 @@ export default function Dashboard() {
       
       // Get user's module order from localStorage or use default
       const savedOrder = localStorage.getItem('moduleOrder');
-      const defaultOrder = ['vastgoed_beheer', 'suribet', 'hrm', 'autodealer', 'beauty', 'boekhouding', 'schuldbeheer'];
+      const defaultOrder = ['boekhouding', 'schuldbeheer'];
       const moduleOrder = savedOrder ? JSON.parse(savedOrder) : defaultOrder;
       
       // Find first active module based on user's module order
@@ -162,29 +157,18 @@ export default function Dashboard() {
       // Redirect to the first active module's dashboard
       if (firstActiveModule) {
         const moduleRoutes = {
-          'vastgoed_beheer': '/app/vastgoed',
-          'hrm': '/app/hrm',
-          'autodealer': '/app/autodealer',
-          'beauty': '/app/beauty',
-          'suribet': '/app/suribet',
           'boekhouding': '/app/boekhouding',
           'schuldbeheer': '/app/schuldbeheer'
         };
         
         const targetRoute = moduleRoutes[firstActiveModule];
-        if (targetRoute && firstActiveModule !== 'vastgoed_beheer') {
-          // Redirect to the first module's page
+        if (targetRoute) {
           navigate(targetRoute, { replace: true });
           return;
         }
       }
       
-      // Default: Load vastgoed dashboard if it's the first active module
-      if (hasVastgoed) {
-        await fetchDashboard();
-      } else {
-        setLoading(false);
-      }
+      setLoading(false);
     } catch (error) {
       console.error('Error checking addons:', error);
       setAddonsChecked(true);

@@ -150,6 +150,20 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - Backend: handmatige inkomsten worden nu correct meegeteld bij totalen en weergegeven in de tabel
 - Zowel inkomsten als uitgaven verschijnen in het Boekingen Overzicht
 
+### Modules Verwijderd uit /app ERP (28 Mar 2026)
+- Vastgoed Beheer module verwijderd uit /app sidebar, routes en dashboard
+- HRM Module verwijderd uit /app sidebar, routes en dashboard
+- Auto Dealer module verwijderd uit /app sidebar, routes en dashboard (incl. klant-portaal)
+- Suribet module verwijderd uit /app sidebar, routes en dashboard (incl. publieke portalen)
+- Beauty Spa module verwijderd uit /app sidebar, routes en dashboard (incl. booking)
+- Alleen Boekhouding en Schuldbeheer modules blijven in /app
+- Standalone kiosk routes /vastgoed en /huurders blijven intact
+
+### Subdomain Routing Vereenvoudigd (28 Mar 2026)
+- vastgoed.facturatie.sr subdomain-routing verwijderd
+- /vastgoed en /huurders werken nu alleen via normale paden
+- app.facturatie.sr logica intact gelaten
+
 ## Pending/Upcoming Tasks
 ### P0
 - Integrate real Mope API key (waiting for Hakrinbank credentials from user)

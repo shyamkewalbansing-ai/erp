@@ -84,74 +84,6 @@ import { toast } from 'sonner';
 // Server IP from environment variable for DNS instructions
 const SERVER_IP = process.env.REACT_APP_SERVER_IP || '72.62.174.80';
 
-// Navigation items for Vastgoed Beheer add-on
-const vastgoedNavItems = [
-  { to: '/app/dashboard', icon: LayoutDashboard, label: 'Dashboard', addon: 'vastgoed_beheer' },
-  { to: '/app/tenants', icon: Users, label: 'Huurders', addon: 'vastgoed_beheer' },
-  { to: '/app/apartments', icon: Building2, label: 'Appartementen', addon: 'vastgoed_beheer' },
-  { to: '/app/contracten', icon: FileSignature, label: 'Contracten', addon: 'vastgoed_beheer' },
-  { to: '/app/payments', icon: CreditCard, label: 'Betalingen', addon: 'vastgoed_beheer' },
-  { to: '/app/facturen', icon: FileText, label: 'Facturen', addon: 'vastgoed_beheer' },
-  { to: '/app/leningen', icon: HandCoins, label: 'Leningen', addon: 'vastgoed_beheer' },
-  { to: '/app/deposits', icon: Wallet, label: 'Borg', addon: 'vastgoed_beheer' },
-  { to: '/app/kasgeld', icon: Banknote, label: 'Kasgeld', addon: 'vastgoed_beheer' },
-  { to: '/app/onderhoud', icon: Wrench, label: 'Onderhoud', addon: 'vastgoed_beheer' },
-  { to: '/app/meterstanden', icon: Zap, label: 'Meterstanden', addon: 'vastgoed_beheer' },
-  { to: '/app/werknemers', icon: Users2, label: 'Werknemers', addon: 'vastgoed_beheer' },
-  { to: '/app/vastgoed/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'vastgoed_beheer' },
-];
-
-// Navigation items for HRM add-on
-const hrmNavItems = [
-  { to: '/app/hrm', icon: LayoutDashboard, label: 'HRM Dashboard', addon: 'hrm' },
-  { to: '/app/hrm/personeel', icon: Users, label: 'Personeel', addon: 'hrm' },
-  { to: '/app/hrm/werving', icon: Target, label: 'Werving', addon: 'hrm' },
-  { to: '/app/hrm/contracten', icon: FileSignature, label: 'Contracten', addon: 'hrm' },
-  { to: '/app/hrm/documenten', icon: FileText, label: 'Documenten', addon: 'hrm' },
-  { to: '/app/hrm/verlof', icon: Calendar, label: 'Verlof', addon: 'hrm' },
-  { to: '/app/hrm/aanwezigheid', icon: Clock, label: 'Aanwezigheid', addon: 'hrm' },
-  { to: '/app/hrm/loonlijst', icon: Banknote, label: 'Loonlijst', addon: 'hrm' },
-  { to: '/app/hrm/instellingen', icon: Settings, label: 'HRM Instellingen', addon: 'hrm' },
-  { to: '/app/hrm/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'hrm' },
-];
-
-// Navigation items for Auto Dealer add-on
-const autoDealerNavItems = [
-  { to: '/app/autodealer', icon: LayoutDashboard, label: 'Auto Dashboard', addon: 'autodealer' },
-  { to: '/app/autodealer/voertuigen', icon: Car, label: 'Voertuigen', addon: 'autodealer' },
-  { to: '/app/autodealer/klanten', icon: Users, label: 'Klanten', addon: 'autodealer' },
-  { to: '/app/autodealer/verkopen', icon: ShoppingCart, label: 'Verkopen', addon: 'autodealer' },
-  { to: '/klant-portaal', icon: Globe, label: 'Klant Portaal', addon: 'autodealer', external: true },
-  { to: '/app/autodealer/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'autodealer' },
-];
-
-// Beauty Spa Module
-const beautySpaItems = [
-  { to: '/app/beautyspa', icon: Sparkles, label: 'Spa Dashboard', addon: 'beauty' },
-  { to: '/app/beautyspa/clients', icon: Users, label: 'Klanten', addon: 'beauty' },
-  { to: '/app/beautyspa/appointments', icon: Calendar, label: 'Afspraken', addon: 'beauty' },
-  { to: '/app/beautyspa/treatments', icon: Scissors, label: 'Behandelingen', addon: 'beauty' },
-  { to: '/app/beautyspa/products', icon: Package, label: 'Producten', addon: 'beauty' },
-  { to: '/app/beautyspa/pos', icon: ShoppingCart, label: 'Kassa (POS)', addon: 'beauty' },
-  { to: '/app/beautyspa/staff', icon: UserCog, label: 'Personeel', addon: 'beauty' },
-  { to: '/app/beautyspa/reports', icon: BarChart3, label: 'Rapportages', addon: 'beauty' },
-  { to: '/app/beautyspa/queue', icon: Clock, label: 'Wachtrij', addon: 'beauty' },
-  { to: '/app/beautyspa/vouchers', icon: Gift, label: 'Vouchers', addon: 'beauty' },
-  { to: '/app/beautyspa/handleiding', icon: BookOpen, label: 'Handleiding', addon: 'beauty' },
-];
-
-// Suribet Retailer Management module navigation
-const suribetNavItems = [
-  { to: '/app/suribet', icon: LayoutDashboard, label: 'Dashboard', addon: 'suribet' },
-  { to: '/app/suribet/dagrapporten', icon: FileText, label: 'Dagrapporten', addon: 'suribet' },
-  { to: '/app/suribet/uitbetalingen', icon: Banknote, label: 'Uitbetalingen', addon: 'suribet' },
-  { to: '/app/suribet/machines', icon: Gamepad2, label: 'Machines', addon: 'suribet' },
-  { to: '/app/suribet/kasboek', icon: Wallet, label: 'Kasboek', addon: 'suribet' },
-  { to: '/app/suribet/werknemers', icon: Users2, label: 'Werknemers', addon: 'suribet' },
-  { to: '/app/suribet/loonuitbetaling', icon: Banknote, label: 'Loonuitbetaling', addon: 'suribet' },
-  { to: '/app/suribet/portaal', icon: Link, label: 'Suribet', addon: 'suribet', isPortalLink: true },
-];
-
 // Boekhouding Module navigation - Complete Finance OS sidebar
 const boekhoudingNavItems = [
   { to: '/app/boekhouding', icon: LayoutDashboard, label: 'Dashboard', addon: 'boekhouding' },
@@ -305,18 +237,13 @@ export default function Layout() {
 
   // Module configurations for dynamic sidebar rendering
   const moduleConfigs = {
-    vastgoed_beheer: { name: 'Vastgoed Beheer', items: vastgoedNavItems, icon: Building2 },
-    hrm: { name: 'HRM Module', items: hrmNavItems, icon: Users },
-    autodealer: { name: 'Auto Dealer', items: autoDealerNavItems, icon: Car },
-    beauty: { name: 'Beauty Spa', items: beautySpaItems, icon: Sparkles },
-    suribet: { name: 'Suribet', items: suribetNavItems, icon: Gamepad2 },
     boekhouding: { name: 'Boekhouding', items: boekhoudingNavItems, icon: Calculator },
     schuldbeheer: { name: 'Schuldbeheer', items: schuldbeheerNavItems, icon: Wallet },
   };
 
   // Get modules in the correct order based on user preference
   const getOrderedModules = () => {
-    const defaultOrder = ['boekhouding', 'vastgoed_beheer', 'suribet', 'autodealer', 'beauty', 'hrm', 'schuldbeheer'];
+    const defaultOrder = ['boekhouding', 'schuldbeheer'];
     
     if (moduleOrder.length === 0) {
       return defaultOrder;
