@@ -2550,12 +2550,16 @@ async def list_kas_entries(company: dict = Depends(get_current_company)):
     """List all cash register entries - expenses only. Income comes from payments."""
     company_id = company["company_id"]
     
-    # Kas entries = only expenses and salaries
+    # All kas entries (income, expense, salary)
     entries = await db.kiosk_kas.find({"company_id": company_id}).sort("created_at", -1).to_list(1000)
     
-    # Total income = sum of all rent payments (from kiosk_payments)
+    # Total income from rent payments (kiosk_payments)
     payments = await db.kiosk_payments.find({"company_id": company_id}).to_list(10000)
-    total_income = sum(p.get("amount", 0) for p in payments)
+    payment_income = sum(p.get("amount", 0) for p in payments)
+    
+    # Manual income from kas entries
+    manual_income = sum(e.get("amount", 0) for e in entries if e.get("entry_type") == "income")
+    total_income = payment_income + manual_income
     
     # Total expense = sum of all kas entries (expenses + salaries)
     total_expense = sum(e.get("amount", 0) for e in entries if e.get("entry_type") in ("expense", "salary"))
@@ -2563,8 +2567,6 @@ async def list_kas_entries(company: dict = Depends(get_current_company)):
     
     result_entries = []
     for e in entries:
-        if e.get("entry_type") == "income":
-            continue  # Skip old income entries
         result_entries.append({
             "entry_id": e["entry_id"],
             "entry_type": e["entry_type"],

@@ -2043,7 +2043,7 @@ function KasTab({ token, tenants, formatSRD }) {
   const [formType, setFormType] = useState('income');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('other');
+  const [category, setCategory] = useState('');
   const [relatedTenant, setRelatedTenant] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -2071,7 +2071,7 @@ function KasTab({ token, tenants, formatSRD }) {
         related_tenant_id: relatedTenant || null
       }, { headers: { Authorization: `Bearer ${token}` } });
       setShowForm(false);
-      setAmount(''); setDescription(''); setCategory('other'); setRelatedTenant('');
+      setAmount(''); setDescription(''); setCategory(''); setRelatedTenant('');
       loadKas();
     } catch { alert('Boeking mislukt'); }
     setSaving(false);
@@ -2150,12 +2150,7 @@ function KasTab({ token, tenants, formatSRD }) {
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Categorie</label>
-                <select value={category} onChange={e => setCategory(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white" data-testid="kas-category-select">
-                  <option value="maintenance">Onderhoud</option>
-                  <option value="utilities">Nutsvoorzieningen</option>
-                  <option value="supplies">Materialen</option>
-                  <option value="other">Overig</option>
-                </select>
+                <input value={category} onChange={e => setCategory(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Bijv. Onderhoud, Huur, Nutsvoorzieningen" data-testid="kas-category-input" />
               </div>
               <div className="flex gap-2">
                 <button type="submit" disabled={saving} className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50" data-testid="kas-submit-btn">

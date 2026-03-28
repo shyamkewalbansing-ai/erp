@@ -144,12 +144,20 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - Uitloggen navigeert nu terug naar PIN lock screen (niet naar loginpagina)
 - Werkt op zowel Welkomstscherm als Admin Dashboard
 
+### Bank/Kas Tab Verbeteringen (Completed 28 Mar 2026)
+- "Inkomsten Registreren" knop toegevoegd naast "Uitgave Registreren"
+- Categorie veld gewijzigd van dropdown naar vrij tekstveld
+- Backend: handmatige inkomsten worden nu correct meegeteld bij totalen en weergegeven in de tabel
+- Zowel inkomsten als uitgaven verschijnen in het Boekingen Overzicht
+
 ## Pending/Upcoming Tasks
 ### P0
 - Integrate real Mope API key (waiting for Hakrinbank credentials from user)
+- Integrate real Uni5Pay API key (waiting for credentials from user)
 
 ### P1
 - Modernize "Kwitanties" (Receipts) tab with unified table style
+- WhatsApp kwitantie versturen na betaling
 
 ### P2
 - Monthly financial report (automated)
@@ -158,8 +166,8 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - Multi-building support per company
 
 ### Refactoring
-- Split KioskAdminDashboard.jsx (~3000 lines) into smaller components
-- Split kiosk.py (~3000 lines) into feature-specific route files
+- Split KioskAdminDashboard.jsx (~3400 lines) into smaller components
+- Split kiosk.py (~3300 lines) into feature-specific route files
 
 ## 3rd Party Integrations
 - SumUp Online Checkout API (per-company keys)
