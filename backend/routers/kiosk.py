@@ -12,6 +12,7 @@ import jwt
 import bcrypt
 import os
 import uuid
+import re
 import httpx
 
 router = APIRouter(prefix="/kiosk", tags=["Kiosk System"])
@@ -33,6 +34,14 @@ def set_database(database):
 
 def generate_uuid():
     return str(uuid.uuid4())
+
+def slugify_company_name(name: str) -> str:
+    """Convert company name to a URL-safe slug for use as company_id"""
+    slug = name.strip().lower()
+    slug = re.sub(r'[^a-z0-9\s-]', '', slug)
+    slug = re.sub(r'[\s]+', '-', slug)
+    slug = re.sub(r'-+', '-', slug).strip('-')
+    return slug or generate_uuid()
 
 async def _send_wa_auto(company_id: str, phone: str, message: str, tenant_id: str = "", tenant_name: str = "", msg_type: str = "auto"):
     """Internal helper: send WhatsApp message if enabled for this company"""
@@ -263,7 +272,11 @@ async def register_company(data: CompanyRegister):
     if existing:
         raise HTTPException(status_code=400, detail="E-mailadres is al geregistreerd")
     
-    company_id = generate_uuid()
+    company_id = slugify_company_name(data.name)
+    # Check if company_id already exists
+    existing_id = await db.kiosk_companies.find_one({"company_id": company_id})
+    if existing_id:
+        raise HTTPException(status_code=400, detail=f"Bedrijfsnaam '{data.name}' is al in gebruik")
     now = datetime.now(timezone.utc)
     
     company = {
