@@ -1059,6 +1059,9 @@ function SettingsTab({ company, token, onRefresh }) {
   // Mope Payment Integration
   const [mopeApiKey, setMopeApiKey] = useState(company?.mope_api_key || '');
   const [mopeEnabled, setMopeEnabled] = useState(company?.mope_enabled || false);
+  // Uni5Pay Payment Integration
+  const [uni5MerchantId, setUni5MerchantId] = useState(company?.uni5pay_merchant_id || '');
+  const [uni5Enabled, setUni5Enabled] = useState(company?.uni5pay_enabled || false);
 
   const handleSaveStamp = async () => {
     setSaving(true);
@@ -1154,6 +1157,22 @@ function SettingsTab({ company, token, onRefresh }) {
       }, { headers: { Authorization: `Bearer ${token}` } });
       onRefresh();
       alert('Mope instellingen opgeslagen!');
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Opslaan mislukt');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveUni5Pay = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/auth/settings`, {
+        uni5pay_merchant_id: uni5MerchantId,
+        uni5pay_enabled: uni5Enabled,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      onRefresh();
+      alert('Uni5Pay instellingen opgeslagen!');
     } catch (err) {
       alert(err.response?.data?.detail || 'Opslaan mislukt');
     } finally {
@@ -1738,6 +1757,47 @@ function SettingsTab({ company, token, onRefresh }) {
               <button onClick={handleSaveMope} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 text-sm font-medium" data-testid="mope-save-btn">
                 <Save className="w-4 h-4" />
                 {saving ? 'Opslaan...' : 'Mope opslaan'}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Uni5Pay Payment Integration */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-bold text-slate-900">Uni5Pay Betaling</h3>
+            <p className="text-sm text-slate-500">Koppel Uni5Pay+ voor QR-code betalingen op de kiosk (SRD)</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-slate-500">Schakel in om Uni5Pay te activeren</p>
+            <button onClick={() => setUni5Enabled(!uni5Enabled)} className={`w-12 h-6 rounded-full transition-all relative ${uni5Enabled ? 'bg-green-500' : 'bg-slate-300'}`} data-testid="uni5pay-toggle">
+              <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all shadow ${uni5Enabled ? 'left-[26px]' : 'left-0.5'}`} />
+            </button>
+          </div>
+        </div>
+        {uni5Enabled && (
+          <>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-slate-600 mb-1 block">Merchant ID</label>
+                <input 
+                  type="text" 
+                  value={uni5MerchantId} 
+                  onChange={e => setUni5MerchantId(e.target.value)} 
+                  placeholder="UNI5_MERCHANT_12345" 
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500 font-mono text-sm" 
+                  data-testid="uni5pay-merchant-id"
+                />
+                <p className="text-xs text-slate-400 mt-1">Ontvangen van Uni5Pay+ na goedkeuring merchant account</p>
+                <p className="text-xs text-blue-500 mt-1">Nog geen account? Registreer via uni5pay.sr/merchants</p>
+              </div>
+            </div>
+            <div className="flex justify-end mt-4">
+              <button onClick={handleSaveUni5Pay} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 text-sm font-medium" data-testid="uni5pay-save-btn">
+                <Save className="w-4 h-4" />
+                {saving ? 'Opslaan...' : 'Uni5Pay opslaan'}
               </button>
             </div>
           </>
