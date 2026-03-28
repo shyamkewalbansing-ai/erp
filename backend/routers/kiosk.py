@@ -161,6 +161,9 @@ class CompanyUpdate(BaseModel):
     # Mope Payment Integration
     mope_api_key: Optional[str] = None
     mope_enabled: Optional[bool] = None
+    # Uni5Pay Payment Integration
+    uni5pay_merchant_id: Optional[str] = None
+    uni5pay_enabled: Optional[bool] = None
 
 class KioskPinVerify(BaseModel):
     pin: str  # 4-digit PIN
@@ -364,7 +367,9 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "sumup_currency": company.get("sumup_currency", "EUR"),
         "sumup_exchange_rate": company.get("sumup_exchange_rate", 1.0),
         "mope_api_key": company.get("mope_api_key", ""),
-        "mope_enabled": company.get("mope_enabled", False)
+        "mope_enabled": company.get("mope_enabled", False),
+        "uni5pay_merchant_id": company.get("uni5pay_merchant_id", ""),
+        "uni5pay_enabled": company.get("uni5pay_enabled", False)
     }
 
 @router.put("/auth/settings")
@@ -643,7 +648,86 @@ async def get_mope_payment_status(company_id: str, payment_id: str):
         raise HTTPException(status_code=500, detail="Verbinding met Mope mislukt")
 
 
-# ============== PUBLIC KIOSK ENDPOINTS (for huurders) ==============
+# ============== UNI5PAY CHECKOUT ENDPOINTS ==============
+
+class Uni5PayCheckoutRequest(BaseModel):
+    amount: float
+    description: str
+    tenant_id: str
+    payment_type: str
+
+@router.get("/public/{company_id}/uni5pay/enabled")
+async def check_uni5pay_enabled(company_id: str):
+    """Check if Uni5Pay is enabled for this company"""
+    company = await db.kiosk_companies.find_one({"company_id": company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    return {
+        "enabled": bool(company.get("uni5pay_enabled") and company.get("uni5pay_merchant_id"))
+    }
+
+@router.post("/public/{company_id}/uni5pay/checkout")
+async def create_uni5pay_checkout(company_id: str, data: Uni5PayCheckoutRequest):
+    """Create a Uni5Pay payment request (mock)"""
+    company = await db.kiosk_companies.find_one({"company_id": company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+
+    merchant_id = company.get("uni5pay_merchant_id", "")
+    if not merchant_id:
+        raise HTTPException(status_code=400, detail="Uni5Pay is niet geconfigureerd. Stel het Merchant ID in via Instellingen.")
+
+    order_id = f"U5P-{company_id[:8]}-{uuid.uuid4().hex[:8]}"
+    payment_id = str(uuid.uuid4())
+    amount_cents = int(round(data.amount * 100))
+
+    # Mock mode: simulate Uni5Pay QR payment
+    mock_qr_url = f"https://uni5pay.sr/pay/{payment_id}"
+    await db.uni5pay_mock_payments.insert_one({
+        "payment_id": payment_id,
+        "company_id": company_id,
+        "amount": data.amount,
+        "amount_cents": amount_cents,
+        "status": "open",
+        "created_at": datetime.now(timezone.utc),
+        "tenant_id": data.tenant_id,
+        "order_id": order_id,
+    })
+    return {
+        "payment_id": payment_id,
+        "payment_url": mock_qr_url,
+        "order_id": order_id,
+        "amount": data.amount,
+        "amount_cents": amount_cents,
+        "mock": True
+    }
+
+@router.get("/public/{company_id}/uni5pay/status/{payment_id}")
+async def get_uni5pay_payment_status(company_id: str, payment_id: str):
+    """Check status of a Uni5Pay payment request (mock: auto-transitions)"""
+    company = await db.kiosk_companies.find_one({"company_id": company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+
+    mock_payment = await db.uni5pay_mock_payments.find_one({"payment_id": payment_id}, {"_id": 0})
+    if not mock_payment:
+        raise HTTPException(status_code=404, detail="Betaalverzoek niet gevonden")
+
+    created = mock_payment.get("created_at", datetime.now(timezone.utc))
+    if created.tzinfo is None:
+        created = created.replace(tzinfo=timezone.utc)
+    elapsed = (datetime.now(timezone.utc) - created).total_seconds()
+    if elapsed > 12:
+        status = "paid"
+    elif elapsed > 8:
+        status = "scanned"
+    else:
+        status = "open"
+    return {
+        "status": status,
+        "amount": mock_payment.get("amount_cents"),
+        "payment_id": payment_id
+    }
 
 @router.get("/public/{company_id}/company")
 async def get_company_public(company_id: str):
@@ -1546,7 +1630,7 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     }
     type_label = type_labels.get(payment_type, payment_type.replace("_", " ").title())
     
-    method_labels = {"cash": "Contant", "bank": "Bank", "pin": "PIN", "card": "Pinpas (SumUp)", "mope": "Mope"}
+    method_labels = {"cash": "Contant", "bank": "Bank", "pin": "PIN", "card": "Pinpas (SumUp)", "mope": "Mope", "uni5pay": "Uni5Pay"}
     method_label = method_labels.get(payment_method, payment_method)
     
     # Format rent month

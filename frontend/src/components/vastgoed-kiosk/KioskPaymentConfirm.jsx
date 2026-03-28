@@ -28,6 +28,13 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   const [mopePaymentUrl, setMopePaymentUrl] = useState('');
   const [mopePaymentId, setMopePaymentId] = useState(null);
   const mopePollRef = useRef(null);
+  // Uni5Pay
+  const [uni5Enabled, setUni5Enabled] = useState(false);
+  const [uni5Loading, setUni5Loading] = useState(true);
+  const [uni5Status, setUni5Status] = useState('idle');
+  const [uni5PaymentUrl, setUni5PaymentUrl] = useState('');
+  const [uni5PaymentId, setUni5PaymentId] = useState(null);
+  const uni5PollRef = useRef(null);
 
   useEffect(() => {
     if (!companyId) return;
@@ -46,9 +53,18 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   }, [companyId]);
 
   useEffect(() => {
+    if (!companyId) return;
+    axios.get(`${API}/public/${companyId}/uni5pay/enabled`)
+      .then(res => setUni5Enabled(res.data.enabled))
+      .catch(() => {})
+      .finally(() => setUni5Loading(false));
+  }, [companyId]);
+
+  useEffect(() => {
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
       if (mopePollRef.current) clearInterval(mopePollRef.current);
+      if (uni5PollRef.current) clearInterval(uni5PollRef.current);
     };
   }, []);
 
@@ -189,6 +205,49 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
     } catch { setError('Betaling geregistreerd bij Mope maar opslaan mislukt.'); }
   };
 
+  // ====== UNI5PAY HANDLERS ======
+  const handleUni5Payment = async () => {
+    setUni5Status('creating'); setError('');
+    try {
+      const res = await axios.post(`${API}/public/${companyId}/uni5pay/checkout`, {
+        amount: paymentData.amount, description: paymentData.description || 'Huurbetaling',
+        tenant_id: tenant.tenant_id, payment_type: paymentData.payment_type
+      });
+      setUni5PaymentId(res.data.payment_id);
+      setUni5PaymentUrl(res.data.payment_url);
+      setUni5Status('qr');
+      startUni5Polling(res.data.payment_id);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Kon Uni5Pay betaalverzoek niet aanmaken');
+      setUni5Status('error');
+    }
+  };
+
+  const startUni5Polling = (payId) => {
+    let attempts = 0;
+    uni5PollRef.current = setInterval(async () => {
+      attempts++;
+      if (attempts > 180) { clearInterval(uni5PollRef.current); setError('Betaling timeout.'); setUni5Status('error'); return; }
+      try {
+        const res = await axios.get(`${API}/public/${companyId}/uni5pay/status/${payId}`);
+        if (res.data.status === 'paid') { clearInterval(uni5PollRef.current); handleUni5Success(); }
+      } catch {}
+    }, 2000);
+  };
+
+  const handleUni5Success = async () => {
+    setUni5Status('done');
+    try {
+      const res = await axios.post(`${API}/public/${companyId}/payments`, {
+        tenant_id: tenant.tenant_id, amount: paymentData.amount,
+        payment_type: paymentData.payment_type, payment_method: 'uni5pay',
+        description: `${paymentData.description} (Uni5Pay)`,
+        rent_month: paymentData.rent_month || null,
+      });
+      setTimeout(() => onSuccess(res.data), 1000);
+    } catch { setError('Betaling geregistreerd bij Uni5Pay maar opslaan mislukt.'); }
+  };
+
   // ====== CHOOSE METHOD SCREEN ======
   if (!payMethod) {
     return (
@@ -233,6 +292,21 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
               <p className="kiosk-small text-slate-400">Scan QR-code met Mope app</p>
               <p className="kiosk-small text-emerald-600 font-semibold" style={{ marginTop: '1vh' }}>{formatSRD(paymentData.amount)}</p>
               <img src="/mope-logo.png" alt="Mopé" style={{ height: 'clamp(24px, 4vh, 44px)', width: 'auto', objectFit: 'contain', marginTop: '1vh', borderRadius: 'clamp(4px, 0.6vh, 8px)' }} />
+            </button>
+          )}
+          {/* Uni5Pay */}
+          {!uni5Loading && uni5Enabled && (
+            <button onClick={() => { setPayMethod('uni5pay'); handleUni5Payment(); }} data-testid="pay-method-uni5pay"
+              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 relative"
+              style={{ width: 'clamp(240px, 28vw, 440px)', height: 'clamp(240px, 52vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = '#dc2626'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
+              <div className="rounded-full bg-red-50 group-hover:bg-red-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
+                <Smartphone style={{ width: '4vh', height: '4vh' }} className="text-red-600" />
+              </div>
+              <p className="kiosk-subtitle text-slate-900 font-bold" style={{ marginBottom: '0.5vh' }}>Uni5Pay</p>
+              <p className="kiosk-small text-slate-400">Scan QR-code met Uni5Pay app</p>
+              <p className="kiosk-small text-red-600 font-semibold" style={{ marginTop: '1vh' }}>{formatSRD(paymentData.amount)}</p>
             </button>
           )}
           {/* Card/SumUp */}
@@ -361,6 +435,69 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
                 {error && <div className="kiosk-body bg-red-50 border border-red-200 text-red-600 rounded-lg text-center font-semibold" style={{ padding: '1vh', marginBottom: '2vh' }}>{error}</div>}
                 <button onClick={() => { setMopeStatus('idle'); setError(''); handleMopePayment(); }} data-testid="mope-retry-btn"
                   className="bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg kiosk-btn-text transition"
+                  style={{ padding: 'clamp(10px, 1.8vh, 24px) clamp(20px, 3vw, 48px)' }}>
+                  Opnieuw proberen
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ====== UNI5PAY QR CODE ======
+  if (payMethod === 'uni5pay') {
+    return (
+      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
+        <div className="flex items-center" style={{ height: '7vh', padding: '0 0.5vw' }}>
+          <button onClick={() => { setPayMethod(null); setUni5Status('idle'); setError(''); if (uni5PollRef.current) clearInterval(uni5PollRef.current); }}
+            className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }}>
+            <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
+            <span className="kiosk-body">Terug</span>
+          </button>
+        </div>
+        <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
+          <div className="kiosk-card flex flex-col items-center text-center" style={{ width: 'clamp(300px, 35vw, 520px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
+            {uni5Status === 'creating' && (
+              <div className="text-center" style={{ padding: '4vh 0' }}>
+                <Loader2 className="text-red-500 animate-spin mx-auto" style={{ width: '5vh', height: '5vh', marginBottom: '2vh' }} />
+                <p className="kiosk-subtitle text-slate-900">Betaalverzoek aanmaken...</p>
+                <p className="kiosk-small text-slate-400" style={{ marginTop: '0.5vh' }}>Even geduld</p>
+              </div>
+            )}
+            {uni5Status === 'qr' && uni5PaymentUrl && (
+              <div className="text-center" data-testid="uni5pay-qr-screen">
+                <div className="bg-red-600 rounded-lg w-full text-center" style={{ padding: 'clamp(8px, 1.5vh, 20px)', marginBottom: '2vh' }}>
+                  <Smartphone className="text-white mx-auto" style={{ width: '3vh', height: '3vh', marginBottom: '0.5vh' }} />
+                  <p className="kiosk-amount-md text-white whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
+                  <p className="kiosk-small text-red-100" style={{ marginTop: '0.3vh' }}>{tenant.name} · Appt. {tenant.apartment_number}</p>
+                </div>
+                <div className="bg-white border-2 border-red-200 rounded-lg inline-block" style={{ padding: 'clamp(8px, 1.5vh, 20px)', marginBottom: '2vh' }} data-testid="uni5pay-qr-code">
+                  <QRCodeSVG value={uni5PaymentUrl} size={Math.min(220, window.innerHeight * 0.25)} level="H" includeMargin={true} bgColor="#ffffff" fgColor="#000000" />
+                </div>
+                <p className="kiosk-body font-bold text-slate-900" style={{ marginBottom: '0.3vh' }}>Scan met uw Uni5Pay app</p>
+                <p className="kiosk-small text-slate-400" style={{ marginBottom: '2vh' }}>Open de Uni5Pay+ app en scan deze QR-code</p>
+                <div className="flex items-center justify-center gap-2 text-red-500 animate-pulse">
+                  <Smartphone style={{ width: '2vh', height: '2vh' }} />
+                  <p className="kiosk-body font-semibold">Wacht op betaling...</p>
+                </div>
+              </div>
+            )}
+            {uni5Status === 'done' && (
+              <div className="text-center" style={{ padding: '4vh 0' }}>
+                <div className="rounded-full bg-green-50 flex items-center justify-center mx-auto" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
+                  <CheckCircle style={{ width: '4vh', height: '4vh' }} className="text-green-500" />
+                </div>
+                <p className="kiosk-title text-green-700">Betaling geslaagd!</p>
+                <p className="kiosk-small text-slate-400" style={{ marginTop: '0.5vh' }}>Kwitantie wordt afgedrukt...</p>
+              </div>
+            )}
+            {uni5Status === 'error' && (
+              <div className="text-center" style={{ padding: '3vh 0' }}>
+                {error && <div className="kiosk-body bg-red-50 border border-red-200 text-red-600 rounded-lg text-center font-semibold" style={{ padding: '1vh', marginBottom: '2vh' }}>{error}</div>}
+                <button onClick={() => { setUni5Status('idle'); setError(''); handleUni5Payment(); }} data-testid="uni5pay-retry-btn"
+                  className="bg-red-600 hover:bg-red-700 text-white rounded-lg kiosk-btn-text transition"
                   style={{ padding: 'clamp(10px, 1.8vh, 24px) clamp(20px, 3vw, 48px)' }}>
                   Opnieuw proberen
                 </button>
