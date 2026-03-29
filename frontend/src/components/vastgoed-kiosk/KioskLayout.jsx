@@ -291,7 +291,7 @@ export default function KioskLayout() {
           exit="exit"
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           className={`absolute inset-0 overflow-y-auto overflow-x-hidden`}
-          style={{ paddingBottom: '12vh' }}
+          style={{ paddingBottom: '7vh' }}
         >
           {renderStep()}
         </motion.div>
@@ -299,7 +299,7 @@ export default function KioskLayout() {
       <VirtualKeyboard />
       {/* Floating bottom bar - kiosk machine style */}
       {step !== 'loading' && step !== 'not-found' && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white flex items-center justify-between" style={{ height: '12vh', padding: '0 clamp(16px, 2vw, 48px)' }} data-testid="kiosk-bottom-bar">
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white flex items-center justify-between" style={{ height: '7vh', padding: '0 clamp(16px, 2vw, 48px)' }} data-testid="kiosk-bottom-bar">
           <div className="flex items-center" style={{ gap: 'clamp(8px, 1vw, 16px)' }}>
             <div className="rounded-lg bg-orange-500 flex items-center justify-center" style={{ width: 'clamp(32px, 4vh, 48px)', height: 'clamp(32px, 4vh, 48px)' }}>
               <Building2 style={{ width: '2.5vh', height: '2.5vh' }} className="text-white" />

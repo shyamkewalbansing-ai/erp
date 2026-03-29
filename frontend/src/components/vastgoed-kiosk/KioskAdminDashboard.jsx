@@ -156,7 +156,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   ];
 
   return (
-    <div className="fixed top-0 left-0 right-0 flex flex-col bg-slate-100" style={{ overflow: 'hidden', bottom: '12vh' }}>
+    <div className="fixed top-0 left-0 right-0 flex flex-col bg-slate-100" style={{ overflow: 'hidden', bottom: '7vh' }}>
       {/* Header - fixed */}
       <header className="bg-white border-b border-slate-200 py-3 sm:py-4 px-3 sm:px-4 lg:px-8 shadow-sm flex-shrink-0 z-20">
         <div className="w-full flex items-center justify-between">
