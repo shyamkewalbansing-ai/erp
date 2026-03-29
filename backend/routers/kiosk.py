@@ -95,7 +95,7 @@ async def _send_wa_auto(company_id: str, phone: str, message: str, tenant_id: st
 
 
 async def _send_twilio_auto(company_id: str, phone: str, message: str, tenant_id: str = "", tenant_name: str = "", msg_type: str = "auto"):
-    """Internal helper: send Twilio SMS if enabled for this company"""
+    """Internal helper: send WhatsApp message via Twilio if enabled for this company"""
     try:
         comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
         if not comp or not comp.get("twilio_enabled") or not comp.get("twilio_account_sid") or not comp.get("twilio_auth_token") or not comp.get("twilio_phone_number"):
@@ -120,12 +120,17 @@ async def _send_twilio_auto(company_id: str, phone: str, message: str, tenant_id
         from twilio.rest import Client as TwilioClient
         twilio_client = TwilioClient(comp["twilio_account_sid"], comp["twilio_auth_token"])
         
+        twilio_from = comp["twilio_phone_number"]
+        # Add whatsapp: prefix for Twilio WhatsApp API
+        if not twilio_from.startswith("whatsapp:"):
+            twilio_from = f"whatsapp:{twilio_from}"
+        
         send_status = "pending"
         try:
             twilio_client.messages.create(
                 body=message,
-                from_=comp["twilio_phone_number"],
-                to=phone_clean
+                from_=twilio_from,
+                to=f"whatsapp:{phone_clean}"
             )
             send_status = "sent"
         except Exception:
@@ -138,7 +143,7 @@ async def _send_twilio_auto(company_id: str, phone: str, message: str, tenant_id
             "tenant_name": tenant_name,
             "phone": phone_clean,
             "message_type": msg_type,
-            "channel": "twilio_sms",
+            "channel": "twilio_whatsapp",
             "message": message,
             "status": send_status,
             "created_at": datetime.now(timezone.utc)
@@ -3254,7 +3259,7 @@ async def send_whatsapp_message(data: WhatsAppMessage, company: dict = Depends(g
         except Exception as e:
             results.append(f"WhatsApp: fout - {str(e)}")
     
-    # Also send via Twilio SMS if enabled
+    # Also send via Twilio WhatsApp if enabled
     if comp.get("twilio_enabled") and comp.get("twilio_account_sid") and comp.get("twilio_auth_token") and comp.get("twilio_phone_number"):
         phone_twilio = phone.replace(" ", "").replace("-", "")
         if not phone_twilio.startswith("+"):
@@ -3263,14 +3268,17 @@ async def send_whatsapp_message(data: WhatsAppMessage, company: dict = Depends(g
         try:
             from twilio.rest import Client as TwilioClient
             tw_client = TwilioClient(comp["twilio_account_sid"], comp["twilio_auth_token"])
+            tw_from = comp["twilio_phone_number"]
+            if not tw_from.startswith("whatsapp:"):
+                tw_from = f"whatsapp:{tw_from}"
             tw_client.messages.create(
                 body=message,
-                from_=comp["twilio_phone_number"],
-                to=phone_twilio
+                from_=tw_from,
+                to=f"whatsapp:{phone_twilio}"
             )
             twilio_sent = True
         except Exception as e:
-            results.append(f"SMS: fout - {str(e)}")
+            results.append(f"Twilio WhatsApp: fout - {str(e)}")
         
         await db.kiosk_wa_messages.insert_one({
             "message_id": generate_uuid(),
@@ -3279,12 +3287,12 @@ async def send_whatsapp_message(data: WhatsAppMessage, company: dict = Depends(g
             "tenant_name": tenant_name,
             "phone": phone_twilio,
             "message_type": data.message_type,
-            "channel": "twilio_sms",
+            "channel": "twilio_whatsapp",
             "message": message,
             "status": "sent" if twilio_sent else "failed",
             "created_at": datetime.now(timezone.utc)
         })
-        results.append(f"SMS: {'verstuurd' if twilio_sent else 'mislukt'}")
+        results.append(f"Twilio WhatsApp: {'verstuurd' if twilio_sent else 'mislukt'}")
     
     if wa_sent or twilio_sent:
         return {"status": "sent", "message": f"Bericht verstuurd naar {tenant_name} ({', '.join(results)})"}
@@ -3405,15 +3413,18 @@ async def send_twilio_sms(request: dict, company: dict = Depends(get_current_com
     try:
         from twilio.rest import Client as TwilioClient
         client = TwilioClient(comp["twilio_account_sid"], comp["twilio_auth_token"])
+        twilio_from = comp["twilio_phone_number"]
+        if not twilio_from.startswith("whatsapp:"):
+            twilio_from = f"whatsapp:{twilio_from}"
         client.messages.create(
             body=message,
-            from_=comp["twilio_phone_number"],
-            to=phone_clean
+            from_=twilio_from,
+            to=f"whatsapp:{phone_clean}"
         )
         send_status = "sent"
     except Exception as e:
         send_status = "failed"
-        raise HTTPException(status_code=500, detail=f"SMS versturen mislukt: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"WhatsApp bericht versturen mislukt: {str(e)}")
     finally:
         await db.kiosk_wa_messages.insert_one({
             "message_id": generate_uuid(),
@@ -3422,13 +3433,13 @@ async def send_twilio_sms(request: dict, company: dict = Depends(get_current_com
             "tenant_name": tenant.get("name", ""),
             "phone": phone_clean,
             "message_type": "reminder",
-            "channel": "twilio_sms",
+            "channel": "twilio_whatsapp",
             "message": message,
             "status": send_status,
             "created_at": datetime.now(timezone.utc)
         })
 
-    return {"message": "SMS verstuurd", "status": "sent"}
+    return {"message": "WhatsApp bericht verstuurd via Twilio", "status": "sent"}
 
 
 # ============== SUPERADMIN ==============

@@ -1783,15 +1783,15 @@ function SettingsTab({ company, token, onRefresh }) {
             <Phone className="w-5 h-5 text-red-500" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900">Twilio SMS</h3>
-            <p className="text-xs text-slate-500">Verstuur SMS berichten naar huurders via Twilio</p>
+            <h3 className="font-bold text-slate-900">Twilio WhatsApp</h3>
+            <p className="text-xs text-slate-500">Verstuur WhatsApp berichten naar huurders via Twilio</p>
           </div>
         </div>
 
         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl mb-4">
           <div>
-            <p className="font-medium text-slate-800">Twilio SMS activeren</p>
-            <p className="text-xs text-slate-500">Schakel in om SMS berichten te versturen naast WhatsApp</p>
+            <p className="font-medium text-slate-800">Twilio WhatsApp activeren</p>
+            <p className="text-xs text-slate-500">Schakel in om WhatsApp berichten te versturen via Twilio</p>
           </div>
           <button onClick={() => setTwilioEnabled(!twilioEnabled)} className={`w-12 h-6 rounded-full transition-all relative ${twilioEnabled ? 'bg-red-500' : 'bg-slate-300'}`}>
             <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all shadow ${twilioEnabled ? 'left-[26px]' : 'left-0.5'}`} />
@@ -1810,8 +1810,8 @@ function SettingsTab({ company, token, onRefresh }) {
                 <input type="password" value={twilioToken} onChange={e => setTwilioToken(e.target.value)} placeholder="Uw Twilio Auth Token" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500 font-mono text-sm" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Telefoonnummer</label>
-                <input type="text" value={twilioPhone} onChange={e => setTwilioPhone(e.target.value)} placeholder="+1234567890" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500 font-mono text-sm" />
+                <label className="block text-sm font-medium text-slate-700 mb-1">WhatsApp Nummer</label>
+                <input type="text" value={twilioPhone} onChange={e => setTwilioPhone(e.target.value)} placeholder="whatsapp:+14155238886" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500 font-mono text-sm" />
               </div>
             </div>
 
@@ -1822,12 +1822,13 @@ function SettingsTab({ company, token, onRefresh }) {
             )}
 
             <div className="bg-slate-50 rounded-xl p-4 mb-4">
-              <p className="font-medium text-slate-700 text-sm mb-2">Hoe krijgt u deze gegevens?</p>
+              <p className="font-medium text-slate-700 text-sm mb-2">Hoe instellen?</p>
               <ol className="text-xs text-slate-500 space-y-1.5 list-decimal pl-4">
                 <li>Ga naar <span className="font-mono text-slate-700">twilio.com/console</span> en maak een account aan</li>
                 <li>Kopieer uw <b>Account SID</b> en <b>Auth Token</b> van het dashboard</li>
-                <li>Koop een telefoonnummer onder <b>Phone Numbers</b></li>
-                <li>Vul het nummer in met landcode (bijv. +1234567890)</li>
+                <li>Ga naar <b>Messaging &gt; Try it out &gt; Send a WhatsApp message</b></li>
+                <li>Activeer de Twilio Sandbox of koppel uw eigen WhatsApp Business nummer</li>
+                <li>Vul het nummer in als <span className="font-mono text-slate-700">whatsapp:+14155238886</span></li>
               </ol>
             </div>
 
@@ -1838,7 +1839,7 @@ function SettingsTab({ company, token, onRefresh }) {
               </button>
               <button onClick={handleSaveTwilio} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 text-sm font-medium">
                 <Save className="w-4 h-4" />
-                {saving ? 'Opslaan...' : 'Twilio opslaan'}
+                {saving ? 'Opslaan...' : 'Opslaan'}
               </button>
             </div>
           </>
@@ -3109,8 +3110,8 @@ function MessagesTab({ token }) {
                       <p className="text-xs text-slate-400 mt-0.5">{formatDate(msg.created_at)}</p>
                     </div>
                     {/* Channel badge */}
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${msg.channel === 'twilio_sms' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
-                      {msg.channel === 'twilio_sms' ? 'SMS' : 'WhatsApp'}
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${msg.channel === 'twilio_whatsapp' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                      {msg.channel === 'twilio_whatsapp' ? 'Twilio' : 'WhatsApp'}
                     </span>
                     {/* Type badge */}
                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap ${typeInfo.color}`}>
