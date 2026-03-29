@@ -126,8 +126,8 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
         window.SumUpCard.mount({
           id: 'sumup-card-container', checkoutId: chkId,
           onResponse: (type, body) => {
-            if (type === 'success' || body?.status === 'PAID') { handleCardSuccess(); }
-            else if (type === 'error') { setError('Kaartbetaling mislukt.'); setCardStatus('error'); widgetMounted.current = false; }
+            if (body?.status === 'PAID') { handleCardSuccess(); }
+            else { setError(body?.status === 'FAILED' ? 'Kaartbetaling afgewezen. Onvoldoende saldo of kaart geweigerd.' : 'Kaartbetaling mislukt.'); setCardStatus('error'); widgetMounted.current = false; }
           },
         });
       } catch { startPolling(chkId); }
