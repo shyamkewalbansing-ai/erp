@@ -3229,7 +3229,17 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
             </div>
             <div>
               <label className="block text-sm font-medium mb-1">Appartement *</label>
-              <select value={apartmentId} onChange={(e) => setApartmentId(e.target.value)} required
+              <select value={apartmentId} onChange={(e) => {
+                  const id = e.target.value;
+                  setApartmentId(id);
+                  if (!tenant && id) {
+                    const apt = availableApartments.find(a => a.apartment_id === id);
+                    if (apt?.monthly_rent) {
+                      setMonthlyRent(apt.monthly_rent);
+                      setDepositRequired(apt.monthly_rent);
+                    }
+                  }
+                }} required
                 className="w-full px-4 py-3 border rounded-xl">
                 <option value="">Selecteer...</option>
                 {availableApartments.map(a => <option key={a.apartment_id} value={a.apartment_id}>{a.number}</option>)}
