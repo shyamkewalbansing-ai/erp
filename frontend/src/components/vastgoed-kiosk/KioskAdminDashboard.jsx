@@ -353,6 +353,22 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
 function DashboardTab({ dashboard, payments, leases, formatSRD }) {
   if (!dashboard) return null;
 
+  // Suriname time (UTC-3)
+  const [srTime, setSrTime] = useState('');
+  useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      setSrTime(now.toLocaleString('nl-NL', {
+        timeZone: 'America/Paramaribo',
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      }));
+    };
+    update();
+    const iv = setInterval(update, 1000);
+    return () => clearInterval(iv);
+  }, []);
+
   // Check expiring leases (within 30 days)
   const now = new Date();
   const in30days = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
@@ -401,8 +417,9 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
 
       {/* Stat Cards */}
       <div className="bg-white rounded-xl border border-slate-200 mb-6">
-        <div className="p-4 border-b border-slate-200">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between">
           <h2 className="font-semibold text-slate-900">Overzicht</h2>
+          <span className="text-sm text-slate-500">{srTime}</span>
         </div>
         {/* Mobile: grid cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:hidden gap-px bg-slate-100">
@@ -3242,7 +3259,7 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
                 }} required
                 className="w-full px-4 py-3 border rounded-xl">
                 <option value="">Selecteer...</option>
-                {apartments.map(a => <option key={a.apartment_id} value={a.apartment_id}>{a.number}{a.monthly_rent ? ` - SRD ${a.monthly_rent.toLocaleString('nl-NL')}` : ''}</option>)}
+                {apartments.filter(a => a.status !== 'occupied' || a.apartment_id === tenant?.apartment_id).map(a => <option key={a.apartment_id} value={a.apartment_id}>{a.number}{a.monthly_rent ? ` - SRD ${a.monthly_rent.toLocaleString('nl-NL')}` : ''}</option>)}
               </select>
             </div>
           </div>

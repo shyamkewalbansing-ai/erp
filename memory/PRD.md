@@ -1,83 +1,92 @@
-# Vastgoed Kiosk ERP - Product Requirements Document
+# Vastgoed Kiosk ERP — Product Requirements Document
 
-## Original Problem Statement
-Full-stack ERP system for real estate/apartment rent payments with a KIOSK terminal (Albert Heijn self-checkout style). Manage Kiosk subscriptions via the ERP SuperAdmin dashboard. Support Face ID scanning and mock/real local payment methods.
+## Origineel Probleem
+Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïntegreerde KIOSK applicatie (Albert Heijn self-checkout stijl). Bevat Face ID login, PIN-code authenticatie, en mock/echte betaalmethoden.
 
-## User Personas
-- **SuperAdmin**: Manages all companies, subscriptions, domains, payments
-- **Company Admin (Kiosk)**: Manages tenants, properties, payments for their company
-- **Tenant (Huurder)**: Uses kiosk to make rent payments via Face ID or PIN
-
-## Tech Stack
-- Frontend: React + Tailwind CSS + Shadcn UI
-- Backend: FastAPI + Python
-- Database: MongoDB (via Motor async driver)
-- Kiosk: face-api.js for Face ID
-
-## Core Requirements
-1. ERP with modules: Boekhouding, Schuldbeheer
-2. Kiosk terminal for rent payments (Face ID + PIN login)
-3. SuperAdmin dashboard for company/subscription management
-4. Subscription blocking for expired companies
-
-## What's Been Implemented
-
-### Completed (Previous Sessions)
-- KasTab: Inkomsten/Uitgaven with free-text categories
-- Subdomain routing removed; Kiosk on standard `/vastgoed` paths
-- 5 modules permanently removed (Vastgoed Beheer, HRM, Auto Dealer, Suribet, Beauty Spa)
-- SuperAdmin Vastgoed Kiosk subscription management
-- "Abonnement Verlopen" blocking for expired subscriptions
-
-### Completed (Current Session - 29 Mar 2026)
-- **Admin Sidebar Migration**: All 13 SuperAdmin tabs moved from horizontal tabs in `Admin.js` to collapsible "Beheerder" section in the main sidebar (`Layout.js`)
-- Each admin tab now has its own URL route: `/app/admin/klanten`, `/app/admin/betalingen`, `/app/admin/modules`, `/app/admin/verzoeken`, `/app/admin/werkruimtes`, `/app/admin/domein-provisioning`, `/app/admin/domeinen`, `/app/admin/betaalmethodes`, `/app/admin/email`, `/app/admin/website`, `/app/admin/systeem`, `/app/admin/live-chat`, `/app/admin/vastgoed-kiosk`
-- `emergentintegrations` removed from `requirements.txt` (was causing production deploy failure)
-- Frontend successfully deployed to production
-
-## Architecture
+## Architectuur
 ```
 /app/
 ├── backend/
-│   ├── routers/kiosk.py          # Kiosk API (monolithic ~3300 lines)
-│   └── server.py                  # Main FastAPI server + ERP auth
-├── frontend/src/
-│   ├── components/
-│   │   ├── Layout.js              # Main sidebar with admin nav items
-│   │   ├── VastgoedKioskManager.jsx
-│   │   └── vastgoed-kiosk/        # Kiosk components
-│   ├── pages/
-│   │   ├── Admin.js               # Admin dashboard (uses URL params for tab)
-│   │   └── App.js                 # Routing
+│   ├── routers/kiosk.py          # Kiosk API logica
+│   └── server.py                 # FastAPI server + ERP auth
+├── frontend/
+│   ├── public/
+│   │   ├── models/               # face-api.js model bestanden (.bin + manifest)
+│   │   └── service-worker.js     # SW v3 — model bestanden uitgesloten van cache
+│   └── src/
+│       ├── components/
+│       │   ├── Layout.js         # Hoofd sidebar (Admin links)
+│       │   ├── VastgoedKioskManager.jsx
+│       │   └── vastgoed-kiosk/
+│       │       ├── KioskLayout.jsx
+│       │       ├── KioskAdminDashboard.jsx  # Admin dashboard (bottom: 12vh fix)
+│       │       ├── FaceCapture.jsx          # Face ID (rAF loop, geluid, responsive)
+│       │       ├── HuurdersLayout.jsx       # Huurders portaal (responsive)
+│       │       ├── KioskApartmentSelect.jsx
+│       │       └── ...overige kiosk componenten
+│       └── pages/
+│           ├── Admin.js
+│           └── App.js
 ```
 
-## Key API Endpoints
-- `GET /api/superadmin/companies` - Fetch kiosk companies
-- `PUT /api/superadmin/companies/{id}/subscription` - Update subscription
+## Wat is geïmplementeerd
 
-## Prioritized Backlog
+### Sprint 1 (vorige sessies)
+- ERP basis: facturen, klanten, producten, boekhouding modules
+- Kiosk terminal: Face ID login, PIN-code, betalingsflow
+- SuperAdmin dashboard met bedrijfsbeheer
+- WhatsApp integratie (backend)
+- SumUp checkout integratie
 
-### P0 (Blocking)
-- None currently
+### Sprint 2 (vorige sessie)
+- SuperAdmin tabs verplaatst naar sidebar in Layout.js
+- `emergentintegrations` verwijderd uit requirements.txt (productie fix)
+- FaceCapture.jsx eerste patches (race condition)
 
-### P1 (Next Up)
-- Modernize "Kwitanties" (Receipts) tab
-- WhatsApp receipt integration (backend logic exists, needs frontend tie-in)
-- Refactoring: Split `Admin.js` (~3700 lines), `KioskAdminDashboard.jsx` (~3400 lines), `kiosk.py` (~3300 lines)
+### Sprint 3 (huidige sessie — 29 maart 2026)
+- **Face ID model .bin fix**: Shard bestanden hernoemd naar .bin extensie + manifesten bijgewerkt — Nginx serveerde index.html i.p.v. binaire modeldata
+- **Service Worker v3**: Cache versie gebumpt, model bestanden uitgesloten van SW caching
+- **FaceCapture.jsx volledig herschreven**:
+  - requestAnimationFrame detectie loop (smooth, geen jank)
+  - Camera start direct (modellen laden op achtergrond)
+  - Geluid bij gezichtsherkenning (Web Audio API twee-tonen chime)
+  - Adaptive camera resolutie (320x240 mobiel, 640x480 desktop)
+  - Professionele scanning UI (hoek brackets + scan line animatie)
+  - Try/catch om detectSingleFace met automatisch model-herlaad
+- **HuurdersLayout.jsx volledig responsive**: Werkt op alle telefoons
+  - Flexbox layout met shrink-0 bottom bar
+  - Responsive tekst, knoppen, spacing
+  - `min-h-dvh` voor correcte mobiele viewport
+- **KioskLayout scroll fix**: overflow-y-auto voor alle stappen
+- **KioskAdminDashboard scroll fix**: `bottom: 12vh` zodat content niet achter bottom bar verdwijnt
+- **Maandhuur auto-fill**: Bij appartement selectie wordt huur + borg automatisch ingevuld
+- **Appartement dropdown filter**: Bezette appartementen verborgen bij nieuwe huurder, zichtbaar wanneer vrij
+- **Surinaamse tijd**: Live klok (America/Paramaribo) op admin dashboard
+- **KioskApartmentSelect**: h-full verwijderd van grid — alle appartementen scrollbaar
 
-### P2 (Future)
-- Monthly financial report automation
-- CSV/PDF export of payment reports
-- Password reset functionality
-- Multi-building support per company
-
-## 3rd Party Integrations
-- SumUp Online Checkout API (needs user API key)
-- Mope Payment API (MOCKED - needs real credentials)
-- Uni5Pay (MOCKED - needs real credentials)
-- WhatsApp Business API (needs user API key)
-
-## Credentials
-- SuperAdmin: admin@facturatie.sr / Bharat7755
+## Inloggegevens
+- SuperAdmin ERP: admin@facturatie.sr / Bharat7755
 - Kiosk Company: shyam@kewalbansing.net / Bharat7755
 - Kiosk PIN: 5678
+
+## Productie Deployment
+- Server: app.facturatie.sr
+- Workflow: git pull → cd frontend → rm -rf build → yarn build → supervisorctl restart
+- NOOIT emergentintegrations in requirements.txt
+- Service Worker actief — cache versie bumpen bij grote wijzigingen
+
+## Geblokkeerd
+- Mope Payment Gateway — wacht op API key
+- Uni5Pay — wacht op API key
+
+## Backlog (prioriteit)
+### P1
+- Kwitanties tab moderniseren (unified table style)
+- WhatsApp bonnetje automatisch sturen na betaling
+- Refactoring: Admin.js (~3700 regels), KioskAdminDashboard.jsx (~3400 regels), kiosk.py (~3300 regels)
+
+### P2
+- Maandelijks financieel rapport (automatisch)
+- CSV/PDF export betalingsrapporten
+- Wachtwoord vergeten functionaliteit
+- Multi-gebouw ondersteuning per bedrijf
