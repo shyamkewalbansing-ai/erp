@@ -351,9 +351,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
 
 // ============== DASHBOARD TAB ==============
 function DashboardTab({ dashboard, payments, leases, formatSRD }) {
-  if (!dashboard) return null;
-
-  // Suriname time (UTC-3)
+  // Suriname time (UTC-3) — hooks must be before any conditional return
   const [srTime, setSrTime] = useState('');
   useEffect(() => {
     const update = () => {
@@ -368,6 +366,8 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
     const iv = setInterval(update, 1000);
     return () => clearInterval(iv);
   }, []);
+
+  if (!dashboard) return null;
 
   // Check expiring leases (within 30 days)
   const now = new Date();

@@ -1189,6 +1189,14 @@ async def update_apartment(apartment_id: str, data: ApartmentUpdate, company: di
         {"apartment_id": apartment_id},
         {"$set": update_data}
     )
+
+    # Sync monthly_rent to linked tenant if rent changed
+    if "monthly_rent" in update_data:
+        await db.kiosk_tenants.update_many(
+            {"apartment_id": apartment_id, "company_id": company["company_id"], "status": "active"},
+            {"$set": {"monthly_rent": update_data["monthly_rent"], "updated_at": datetime.now(timezone.utc)}}
+        )
+
     return {"message": "Appartement bijgewerkt"}
 
 @router.delete("/admin/apartments/{apartment_id}")
