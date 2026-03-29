@@ -1,47 +1,49 @@
 <analysis>**original_problem_statement**: 
-The user is migrating a standalone React/Python KIOSK application into a full-stack ERP system. The UI must be an exact 1:1 replica of an Albert Heijn self-checkout kiosk (no scrollbars, fully responsive via //, flat design). The application includes Face ID login via webcam, PIN authentication, tenant-specific routes (), receipt printing integrations, and modern sound/animation effects for Kiosk terminals. PRODUCT REQUIREMENTS: Continuous Face ID on kiosk screens, animated 3-phase receipt flows, fixed non-scrolling dashboard headers, and integration of local payment methods (Mope, Uni5Pay).
+The user is building a full-stack ERP system for real estate/apartment rent payments and migrating a standalone React/Python KIOSK application into it. The UI must be an exact 1:1 replica of an Albert Heijn self-checkout kiosk (no scrollbars, fully responsive, flat design) for the Kiosk terminal part. PRODUCT REQUIREMENTS: Manage the Kiosk subscriptions via the ERP SuperAdmin dashboard, ensure continuous Face ID scanning, and facilitate mock/real local payment methods.
 
 **User's preferred language**: Dutch (You MUST automatically detect the user's primary language from their messages inside the <trajectory> tag and INSTRUCT next agent to respond in the user's preferred language only. The language here is **DUTCH**.)
 
 **what currently exists?** 
-A fully functional Vastgoed Kiosk UI and backend. The  route is strictly Face ID only with continuous scanning (no PIN entry). A 3-phase animated receipt flow exists for tenant payments. Admin dashboard exists with sticky/fixed headers. Mock payment integrations for Mope and Uni5Pay are functional via QR code simulation. New companies generate a URL-safe slug (e.g., ) as their  instead of a UUID.
+A functional ERP with standard modules (Boekhouding, Schuldbeheer). Kiosk routes ( and ) are functioning on standard paths without subdomain routing. The  supports both expenses and income with free-text categories. The ERP SuperAdmin dashboard () can manage Vastgoed Kiosk company subscriptions, and blocked companies are correctly restricted on the kiosk terminal with an Abonnement Verlopen message. 
 
 **Last working item**: 
-    - Last item agent was working: Modifying the  (Bank/Kas) in the Admin Dashboard. The user requested adding an Inkomsten Registreren (Register Income) button and making the Categorie field a free-text input rather than a strict dropdown. The agent executed a  to add this, but the session ended immediately after.
+    - Last item agent was working: Moving the SuperAdmin dashboard navigation from horizontal in-page tabs inside  into the main application sidebar ().
     - Status: IN PROGRESS
     - Agent Testing Done: N
-    - Which testing method agent to use? Screenshot tool (to verify the new UI elements in the Bank/Kas tab render correctly) and Manual testing (to verify the Inkomsten Registreren form opens and successfully saves an income entry).
+    - Which testing method agent to use? Screenshot tool (to verify the new sidebar rendering and routing).
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:  
-  Issue 1: Verify and complete the KasTab (Bank/Kas) UI enhancements (P0)
-     - Attempted fixes: The agent successfully ran a  on  but did not verify or test the changes.
+  Issue 1: SuperAdmin layout restructuring (P0)
+     - Attempted fixes: The agent tried creating a local sidebar inside , but the user explicitly requested that the tabs should become items in the main  sidebar under a Beheerder (Admin) section.
      - Next debug checklist: 
-        1. Open the Admin Dashboard -> Bank/Kas tab.
-        2. Take a screenshot to confirm Inkomsten Registreren is visible alongside expenses.
-        3. Click the button to ensure the modal opens properly and allows setting a positive amount.
-        4. Check that the Categorie field allows typing a custom category.
-        5. Submit a test income and ensure it reflects in the totals/entries.
-     - Why fix this issue and what will be achieved with the fix? It directly addresses the user's last message requesting income registration and free-text categories.
+        1. Open .
+        2. Create a new array of navigation items for the Admin/Beheerder role (e.g., Klanten, Domeinen, Betalingen, Vastgoed Kiosk).
+        3. Render these items in the sidebar conditionally if the user has the  role.
+        4. Update  to create separate routes for these admin pages (e.g., , ) instead of using internal tab state in .
+     - Why fix this issue and what will be achieved with the fix? It addresses the user's direct feedback that the current horizontal tab layout in the Admin dashboard looks bad and needs to be integrated into the main sidebar.
      - Status: IN PROGRESS
      - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Both (Frontend via Screenshot tool, Backend by confirming the entry saves correctly).
+     - Should Test frontend/backend/both after fix? Frontend (Screenshot tool).
      - Blocked on other issue: None.
 
+  Issue 2: Real payment gateways are currently mocked (P1)
+     - Next debug checklist: Await user credentials for Mope and Uni5Pay to switch from Mock mode to Production mode.
+     - Status: BLOCKED (Awaiting User Credentials)
+
 **In progress Task List**: 
-  Task 1: Complete Bank/Kas tab enhancements (P0)
-     - Where to resume:  (specifically the  component).
-     - What will be achieved with this? Full income and expense tracking in the cash register module.
+  Task 1: Migrate Admin Tabs to Layout Sidebar (P0)
+     - Where to resume:  and . 
+     - What will be achieved with this? A cleaner, unified navigation experience where SuperAdmin controls are part of the main sidebar.
      - Status: IN PROGRESS
-     - Should Test frontend/backend/both after fix? Both
+     - Should Test frontend/backend/both after fix? Frontend
      - Blocked on something: None.
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - P0: Integrate real Mope and Uni5Pay API keys (User currently using mock mode, waiting for credentials from Hakrinbank/Uni5Pay).
     - P1: Modernize Kwitanties (Receipts) tab - Rebuild using the unified table style in the Admin Dashboard.
-    - P1: WhatsApp message receipt feature (User agreed to send a WhatsApp receipt to tenants automatically after payment, backend has some WhatsApp logic but it needs tying to the receipt flow).
-    - Refactoring (P1):  (>3400 lines) and  (>3300 lines) MUST be split into smaller modules.
+    - P1: WhatsApp message receipt feature (Send a WhatsApp receipt to tenants automatically after payment. Backend has WhatsApp logic but needs tying to the receipt flow).
+    - Refactoring (P1):  (>3400 lines),  (>3700 lines), and  (>3300 lines) MUST be split into smaller modules.
 
     Future Tasks:
     - P2: Maandelijks financieel rapport (Automated monthly financial report).
@@ -50,75 +52,73 @@ A fully functional Vastgoed Kiosk UI and backend. The  route is strictly Face ID
     - P2: Multi-building support per bedrijf.
 
 **Completed work in this session**
--  fully modernized with a 3-phase flow: Text+Receipt -> Slide Down Eject -> Single Centered Card details (DONE)
--  layout locked strictly to continuous Face ID (No PIN entry, no error popups, faster scanning) (DONE)
-- Uni5Pay mock integration implemented (Checkout API, Status Polling, QR frontend UI) (DONE)
-- Uni5Pay settings toggle added to Admin Dashboard (DONE)
-- Company ID generation refactored from UUID to URL-safe Company Name slug (DONE)
-- Admin Dashboard layout container made  so header and tabs never scroll, only content scrolls (DONE)
+-  enhanced: Inkomsten Registreren button added, category changed to free-text input, and dynamic placeholders fixed (DONE)
+- Subdomain routing () removed completely; Kiosk now runs on standard  paths (DONE)
+- 5 Modules (Vastgoed Beheer, HRM, Auto Dealer, Suribet, Beauty Spa) permanently removed from the  ERP (DONE)
+- Superadmin dashboard created/extended to include  subscription management (DONE)
+- Kiosk block functionality: Abonnement Verlopen warning screen implemented for tenants with expired subscriptions (DONE)
 
 **Earlier issues found/mentioned but not fixed**
-   - Issue 1: Real payment gateways are currently mocked.
-   - Debug checklist: Await user credentials for Mope and Uni5Pay to switch from Mock mode to Production mode.
-   - Why to solve this issue and what will be achieved with this? Required for processing actual real-world tenant payments.
-   - Should Test frontend/backend/both after fix: Both
-   - Is recurring issue? N
+   None.
 
 **Known issue recurrence from previous fork**
-  - None.
+  - Recurrence count: 0
+  - Status: RESOLVED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Continuous Face ID:** Uses local  models. The  route now uses a  mode that suppresses error popups and retries instantly for a seamless kiosk experience.
-- **Payment Mocking:** Mope and Uni5Pay simulate a payment flow using local polling intervals ( ->  -> ).
-- **Slugified IDs:** The system now uses URL-safe company names (e.g., ) instead of UUIDs.
+- **Continuous Face ID:** Uses local  models for kiosk login.
+- **Subscription Blocking:** Public kiosk routes check the company's subscription status. If  is not active, it intercepts the UI and displays a blocked warning.
+- **SuperAdmin Role:** ERP uses JWT tokens with a  payload to gate access to .
 
 **key DB schema**
-- :  (slugified string), , , , .
+- : Standard ERP users. SuperAdmin has .
+- : ,  (active/blocked), .
 
 **changes in tech stack**
-- Added Uni5Pay to the mocked payment providers list.
+- None.
 
 **All files of reference**
--  (Actively being edited for  changes)
-- 
-- 
+-  (Target for sidebar changes)
+-  (Source of the tabs to be dismantled)
+-  (Needs routing updates for the new sidebar links)
 - 
 - 
 
 **Areas that need refactoring**: 
- (>3400 lines) and  (>3300 lines) are massively monolithic and need splitting.
+ (>3700 lines),  (>3400 lines) and  (>3300 lines) are massively monolithic and need splitting. Breaking down  into sub-pages for the new Layout navigation is the perfect time to start this.
 
 **key api endpoints**
--  - Mock Uni5Pay payment creation.
--  - Mock Uni5Pay status polling.
--  - Registers company and creates slugified ID.
+-  - Fetches kiosk companies for admin panel.
+-  - Updates subscription status/pricing.
 
 **Critical Info for New Agent**
 - **Language:** Reply strictly in **Dutch**.
-- **Task continuation:** The very last action taken was editing  to add Inkomsten Registreren and a free-text Categorie field to the . The AI did the edit but the session ended before verification. **Your first step is to test and verify the Bank/Kas tab works with these new changes.**
-- **Company URL changes:** Be aware that the demo company ID is no longer a UUID. If you need to access the tenant route manually, the URL is now .
+- **Deployment workflow:** The user deploys updates by pulling from Github on their own live server ( -> yarn run v1.22.22
+info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. -> ). **Do not arbitrarily modify ** (like adding emergent-specific test tools) as it breaks their local deployment flow.
+- **Immediate Task:** The user explicitly wants the SuperAdmin navigation tabs (currently inside ) to be moved to the main sidebar in  under a Beheerder section. You need to transition the horizontal tabs from  into standard React Router links (, , etc.) integrated natively into .
 
 **documents and test reports created in this job**
--  (Updated)
+- 
+- 
 
 **Last 10 User Messages and any pending HUMAN messages** 
-1. User: Make the  layout into a two-panel design.
-2. User: Combine the two-panel design with the 3-phase eject animation.
-3. User: Make the final phase a single centered card instead of two panels.
-4. User: Make FaceID scan continuously without the Opnieuw (Retry) button and remove the PIN code option from .
-5. User: Can you mock Uni5Pay as a payment method? (Agent added backend/frontend mocks).
-6. User: I don't see Uni5Pay in the Admin Dashboard settings. (Agent added the toggle/input to the dashboard).
-7. User: Can the Company ID become the Company Name instead of a UUID upon registration? (Agent slugified the company ID).
-8. User: Make the Admin Dashboard header and tabs completely fixed so they don't scroll with the content. (Agent applied  and ).
-9. User: Bij Bank/Kas, moet Inkomsten Registreren nog erbij komen en bij Categorie zelf invoeren
-*Agent performed code replacement to add the Income button and free-text category field to KasTab, but session ended before testing.*
+1. User: Please update  placeholders to be different for income and expense. (Done)
+2. User: Remove the  subdomain logic completely. Make it just normal paths. (Done)
+3. User: Permanently delete Vastgoed Beheer, HRM, Auto Dealer, Suribet, and Beauty Spa modules from the ERP. (Done)
+4. User: How do I update my production server? (Agent provided git pull instructions).
+5. User: I'm getting a git error on my server regarding . (Agent resolved with Saved working directory and index state WIP on main: 315947a1 auto-commit for 6b50a608-a771-4643-8966-1d7b276fcc5f).
+6. User: I want to manage Vastgoed Kiosk subscriptions from the  superadmin dashboard instead of a public path. (Agent implemented  in ).
+7. User: What are the superadmin login details? (Agent provided them).
+8. User: The superadmin dashboard at  doesn't look good. The tabs are horizontally in the middle. They must go to the left sidebar.
+9. Agent: Tried creating a local sidebar inside .
+10. User: Het is fout wat je aan het doen bent alle tabs ,moeten onder de Beheerder komen bij de slidebar (It is wrong what you are doing, all tabs must come under 'Admin' in the main sidebar [Layout.js]). *Pending task execution.*
 
 **Project Health Check:**
 - Broken: None
-- Mocked: Mope Payment Gateway, Uni5Pay Payment Gateway (Needs real credentials to go live).
+- Mocked: Mope Payment Gateway, Uni5Pay Payment Gateway (Needs real credentials).
 
 **3rd Party Integrations**
 - SumUp Online Checkout API - Requires user API Key
@@ -129,14 +129,13 @@ A fully functional Vastgoed Kiosk UI and backend. The  route is strictly Face ID
 **Testing status**
   - Testing agent used after significant changes: NO
   - Troubleshoot agent used after agent stuck in loop: NO
-  - Test files created: None.
-  - Known regressions: None.
+  - Test files created: None
+  - Known regressions: None
 
 **Credentials to test flow:**
-- **Superadmin:**  / 
+- **Superadmin ERP:**  / 
 - **Kiosk Company (Demo):**  / 
 - **Kiosk PIN:** 
-- **Company Slug (For  URLs):** 
 
 **What agent forgot to execute**
-The agent modified the  component in  to include the Inkomsten Registreren button and free-text category input as requested, but the session ended immediately. The agent forgot to take a screenshot to visually verify the change and did not test if the form submits income correctly. Validate this first.</analysis>
+The agent was in the middle of restructuring the Admin tabs when the user corrected the approach (instructing to move them to the main  sidebar). The agent acknowledged the file  but the session ended before any code was modified to implement this layout change. Start directly with moving the Admin navigation into .</analysis>
