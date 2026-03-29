@@ -2525,27 +2525,10 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
     </div>
   </div>
   <div class="letterhead-right">
-    <div class="stamp">
-      <div class="stamp-rect">
-        <svg class="stamp-house" width="46" height="42" viewBox="0 0 52 48" fill="none">
-          <polygon points="12,18 28,6 44,18" fill="#991b1b"/>
-          <rect x="14" y="18" width="28" height="20" fill="#991b1b"/>
-          <rect x="18" y="22" width="6" height="6" fill="white"/>
-          <rect x="28" y="22" width="6" height="6" fill="white"/>
-          <polygon points="2,28 16,18 30,28" fill="#7f1d1d"/>
-          <rect x="4" y="28" width="24" height="16" fill="#7f1d1d"/>
-          <rect x="8" y="31" width="5" height="5" fill="white"/>
-          <rect x="16" y="31" width="5" height="5" fill="white"/>
-          <rect x="8" y="38" width="5" height="6" fill="white"/>
-          <rect x="16" y="38" width="5" height="6" fill="white"/>
-        </svg>
-        <div class="stamp-info">
-          <p class="stamp-name">{stamp_name}</p>
-          <p class="stamp-detail">{stamp_address}</p>
-          <p class="stamp-detail">Tel : {stamp_phone_val}</p>
-          {f'<p class="stamp-detail">Whatsapp : {comp.get("stamp_whatsapp", "")}</p>' if comp.get("stamp_whatsapp") else ''}
-        </div>
-      </div>
+    <div style="font-size: 9pt; color: #555; line-height: 1.5; text-align: right;">
+      <div style="font-size: 11pt; font-weight: bold; color: #2c3e50;">Overeenkomst</div>
+      <div>Datum: {gen_date}</div>
+      <div>Nr. {lease_id[:8].upper()}</div>
     </div>
   </div>
 </div>
