@@ -1,204 +1,83 @@
 # Vastgoed Kiosk ERP - Product Requirements Document
 
 ## Original Problem Statement
-Full-stack ERP system for real estate/apartment rent payments with a tenant-facing Kiosk, Admin Dashboard, and Superadmin Dashboard. The kiosk must be an exact 1:1 replica of an Albert Heijn self-checkout kiosk: flat design, no decorative backgrounds, viewport-adaptive scaling.
-
-## Core Architecture
-- **Backend**: FastAPI + MongoDB (kiosk.py ~3000 lines)
-- **Frontend**: React + TailwindCSS + Shadcn/UI
-- **Kiosk Design**: Albert Heijn self-checkout style (orange bg, flat white cards, fixed white bottom bar)
+Full-stack ERP system for real estate/apartment rent payments with a KIOSK terminal (Albert Heijn self-checkout style). Manage Kiosk subscriptions via the ERP SuperAdmin dashboard. Support Face ID scanning and mock/real local payment methods.
 
 ## User Personas
-- **Tenants**: Use kiosk to pay rent via Cash, Mope QR, or SumUp Card
-- **Company Admins**: Manage tenants, payments, settings per company
-- **Superadmin**: Manages all companies
+- **SuperAdmin**: Manages all companies, subscriptions, domains, payments
+- **Company Admin (Kiosk)**: Manages tenants, properties, payments for their company
+- **Tenant (Huurder)**: Uses kiosk to make rent payments via Face ID or PIN
 
-## Implemented Features
+## Tech Stack
+- Frontend: React + Tailwind CSS + Shadcn UI
+- Backend: FastAPI + Python
+- Database: MongoDB (via Motor async driver)
+- Kiosk: face-api.js for Face ID
 
-### Kiosk (Tenant-Facing)
-- Professional kiosk design: solid orange background, flat white cards (kiosk-card class), no shadows
-- Fixed white bottom bar (12vh height) with company name and tenant info
-- **Viewport-adaptive scaling (ALL screens)**: fills screen on any size (12"-17"+) using clamp(), vh, vw. No scrollbars on any screen.
-- PIN entry, apartment selection, tenant overview, payment flow
-- Payment methods: Cash, Mope (QR), SumUp (Card)
-- Receipt generation with auto-print
-- Betalingsgeschiedenis: popup overlay with last 10 payments per tenant
-- Responsive: works in both landscape AND portrait mode
+## Core Requirements
+1. ERP with modules: Boekhouding, Schuldbeheer
+2. Kiosk terminal for rent payments (Face ID + PIN login)
+3. SuperAdmin dashboard for company/subscription management
+4. Subscription blocking for expired companies
 
-### Viewport Scaling (Completed 25 Mar 2026)
-- KioskPinEntry.jsx - Refactored to viewport CSS
-- KioskWelcome.jsx - Refactored to viewport CSS
-- KioskApartmentSelect.jsx - Refactored to viewport CSS
-- KioskTenantOverview.jsx - Refactored to viewport CSS
-- KioskPaymentSelect.jsx - Refactored to viewport CSS
-- KioskPaymentConfirm.jsx - Fixed syntax errors + refactored to viewport CSS
-- KioskReceipt.jsx - Refactored to viewport CSS
-- KioskLayout.jsx - Uses kiosk-fullscreen, overflow-hidden
+## What's Been Implemented
 
-### Payment Integrations
-- **SumUp Pinbetaling**: Per-company API key, merchant code, currency (EUR/USD), exchange rate for SRD conversion
-- **Mope QR Betaling**: Per-company API key, QR code generation, status polling (open/scanned/paid)
-  - Mock mode: key starting with `mock_` auto-transitions payment status
-  - Real mode: connects to https://api.mope.sr API
+### Completed (Previous Sessions)
+- KasTab: Inkomsten/Uitgaven with free-text categories
+- Subdomain routing removed; Kiosk on standard `/vastgoed` paths
+- 5 modules permanently removed (Vastgoed Beheer, HRM, Auto Dealer, Suribet, Beauty Spa)
+- SuperAdmin Vastgoed Kiosk subscription management
+- "Abonnement Verlopen" blocking for expired subscriptions
 
-### Admin Dashboard
-- Tenant management (CRUD, import)
-- Payment overview, receipts
-- Settings: Company info, billing, WhatsApp, SumUp, Mope
-- Kiosk PIN management
+### Completed (Current Session - 29 Mar 2026)
+- **Admin Sidebar Migration**: All 13 SuperAdmin tabs moved from horizontal tabs in `Admin.js` to collapsible "Beheerder" section in the main sidebar (`Layout.js`)
+- Each admin tab now has its own URL route: `/app/admin/klanten`, `/app/admin/betalingen`, `/app/admin/modules`, `/app/admin/verzoeken`, `/app/admin/werkruimtes`, `/app/admin/domein-provisioning`, `/app/admin/domeinen`, `/app/admin/betaalmethodes`, `/app/admin/email`, `/app/admin/website`, `/app/admin/systeem`, `/app/admin/live-chat`, `/app/admin/vastgoed-kiosk`
+- `emergentintegrations` removed from `requirements.txt` (was causing production deploy failure)
+- Frontend successfully deployed to production
 
-### Superadmin Dashboard
-- Company management, activation/deactivation
-
-## Database Schema (key collections)
-- `kiosk_companies`: company settings including sumup_*/mope_* fields
-- `kiosk_tenants`: tenant info, outstanding rent/service costs/fines
-- `kiosk_payments`: payment records with payment_method (cash/card/mope)
-- `kiosk_apartments`: apartment records
-- `mope_mock_payments`: mock Mope payment tracking
+## Architecture
+```
+/app/
+├── backend/
+│   ├── routers/kiosk.py          # Kiosk API (monolithic ~3300 lines)
+│   └── server.py                  # Main FastAPI server + ERP auth
+├── frontend/src/
+│   ├── components/
+│   │   ├── Layout.js              # Main sidebar with admin nav items
+│   │   ├── VastgoedKioskManager.jsx
+│   │   └── vastgoed-kiosk/        # Kiosk components
+│   ├── pages/
+│   │   ├── Admin.js               # Admin dashboard (uses URL params for tab)
+│   │   └── App.js                 # Routing
+```
 
 ## Key API Endpoints
-- `PUT /api/kiosk/auth/settings` - Save company settings (SumUp + Mope)
-- `GET /api/kiosk/public/{id}/sumup/enabled` - Check SumUp config + exchange rate
-- `POST /api/kiosk/public/{id}/sumup/checkout` - Create SumUp checkout
-- `GET /api/kiosk/public/{id}/mope/enabled` - Check Mope config
-- `POST /api/kiosk/public/{id}/mope/checkout` - Create Mope payment (+ mock)
-- `GET /api/kiosk/public/{id}/mope/status/{pid}` - Poll Mope status
-- `GET /api/kiosk/public/{id}/tenant/{tid}/payments` - Tenant payment history
-- `POST /api/kiosk/public/{id}/payments` - Register payment
+- `GET /api/superadmin/companies` - Fetch kiosk companies
+- `PUT /api/superadmin/companies/{id}/subscription` - Update subscription
 
-### Automatic Device Detection (Completed 25 Mar 2026)
-- Touch detection via navigator.maxTouchPoints / ontouchstart
-- Screen size categories: compact (≤800px), normal, large (>1080px)
-- Touch mode: larger buttons (min 48px touch targets), bigger fonts
-- Compact mode: tighter spacing, smaller fonts for small screens
-- Large mode: bigger fonts and icons for large monitors
-- Visible mode badge in bottom bar (Touch/Desktop indicator)
-- CSS classes: .kiosk-touch, .kiosk-compact, .kiosk-large on root element
+## Prioritized Backlog
 
-### Face ID via Webcam (Completed 26 Mar 2026)
-- Browser-based face recognition using face-api.js (no external API needed)
-- Admin: register face in settings, login with Face ID instead of PIN on /vastgoed
-- Tenants: face registered by admin, login with Face ID on /huurders
-- Optional: users can always choose PIN/code or Face ID
-- Backend endpoints: register, verify, delete face descriptors for admin and tenants
-- FaceCapture.jsx reusable component with webcam feed and visual guides
-- Models served from /public/models (tiny_face_detector, face_landmark_68, face_recognition)
-- Face ID Registration UI in Admin Dashboard:
-  - Settings tab: FaceIdSettings component with admin + tenant face registration
-  - Huurders tab: Face ID column with status badges (Actief/—)
-  - TenantModal: Face ID section with register/delete when editing existing tenant
-- Face ID backend endpoints:
-  - POST /api/kiosk/public/{company_id}/face/register-admin
-  - POST /api/kiosk/public/{company_id}/face/verify-admin
-  - GET /api/kiosk/public/{company_id}/face/admin-status
-  - POST /api/kiosk/public/{company_id}/tenant/{tenant_id}/face/register
-  - POST /api/kiosk/public/{company_id}/face/verify-tenant
-  - DELETE /api/kiosk/public/{company_id}/face/admin
-  - DELETE /api/kiosk/public/{company_id}/tenant/{tenant_id}/face
+### P0 (Blocking)
+- None currently
 
-### Huurders Face ID Only (Updated 27 Mar 2026)
-- `/huurders` route toont nu alleen Face ID login, geen huurderscode invoer meer
-- FaceCapture component heeft nieuwe `verify-continuous` mode: 
-  - Blijft altijd doordraaien, geen foutmeldingen, geen "Opnieuw" knop
-  - Bij niet-herkend gezicht: automatisch opnieuw scannen
-  - Bij camera-fout: automatisch opnieuw proberen na 3 seconden
+### P1 (Next Up)
+- Modernize "Kwitanties" (Receipts) tab
+- WhatsApp receipt integration (backend logic exists, needs frontend tie-in)
+- Refactoring: Split `Admin.js` (~3700 lines), `KioskAdminDashboard.jsx` (~3400 lines), `kiosk.py` (~3300 lines)
 
-### Huurders Kiosk Route (Completed 26 Mar 2026)
-- `/huurders/:companyId` - separate public route for tenants
-- No PIN, no welcome screen - starts directly at apartment selection
-- Only Mope and Pinpas payment methods (no cash)
-- Reuses existing kiosk components with `hideCash` prop
-- Each company gets their own unique huurders link
-
-### Kiosk Login Terminal (Completed 26 Mar 2026)
-- Redesigned /vastgoed login from split-screen website layout to centered kiosk terminal
-- Full-screen centered card with "Welkom" heading and login method buttons
-- PIN login opens as a modal popup overlay (not page replacement)
-- Live clock displayed in top-right corner for kiosk terminal feel
-- Removed "Schermtoetsenbord (touchscreen)" button entirely
-- Large touch-friendly buttons: PIN (primary), Wachtwoord, Face ID
-- All forms have "Terug" back button to return to main screen
-- Outfit font for modern kiosk typography
-
-### Huurders Modern Betalingsscherm (Updated 27 Mar 2026)
-- HuurdersReceipt.jsx: 3-fase flow voor `/huurders` route
-- Fase 1 (show): "Betaling voltooid" tekst bovenaan + kassabon eronder (verticaal gecentreerd)
-- Fase 2 (eject): Kassabon schuift naar beneden met papiergeluid + success geluid
-- Fase 3 (done): Eén grote gecentreerde kaart met succes icoon, details grid (bedrag/kwitantie/betaalwijze/openstaand), donkere totaal-balk, "Terug naar start" knop + countdown
-
-### Kassabon-stijl Kwitantie (Completed 27 Mar 2026)
-- ReceiptTicket redesigned als echte kassabon: monospace font, donkere sectie-balken, stippellijnen
-- Structuur: Header → KWITANTIE balk → Bonnr/Datum/Huurder → TOTALEN → BetaalWijze → Openstaand → Footer
-- Printer-animatie: kassabon schuift uit donkere printer-behuizing naar beneden
-- Automatisch USB bonprinter koppeling via lokale print server (localhost:5555)
-- Print server script: /app/print_server.py (ESC/POS compatibel: Epson, Star, Bixolon)
-
-### PIN Code Zelf Kiezen (Completed 27 Mar 2026)
-- Nieuwe bedrijven zien nu "Kies uw PIN code" in plaats van "Kiosk Niet Beschikbaar"
-- 2-staps flow: Kies PIN → Bevestig PIN → Automatisch opgeslagen → Kiosk start
-- Backend endpoint: POST /api/kiosk/public/{company_id}/set-pin
-- Werkt alleen als er nog geen PIN is ingesteld (beveiliging)
-
-### Uitloggen naar Lock Screen (Completed 26 Mar 2026)
-- Uitloggen navigeert nu terug naar PIN lock screen (niet naar loginpagina)
-- Werkt op zowel Welkomstscherm als Admin Dashboard
-
-### Bank/Kas Tab Verbeteringen (Completed 28 Mar 2026)
-- "Inkomsten Registreren" knop toegevoegd naast "Uitgave Registreren"
-- Categorie veld gewijzigd van dropdown naar vrij tekstveld
-- Backend: handmatige inkomsten worden nu correct meegeteld bij totalen en weergegeven in de tabel
-- Zowel inkomsten als uitgaven verschijnen in het Boekingen Overzicht
-
-### Vastgoed Kiosk Beheer in SuperAdmin (29 Mar 2026)
-- "Vastgoed Kiosk" tab toegevoegd aan /app/admin SuperAdmin dashboard
-- Overzicht van alle kiosk bedrijven met stats (huurders, panden, omzet)
-- Abonnement beheer per bedrijf: status (actief/geblokkeerd/verlopen), maandprijs, notities
-- Nieuwe kiosk bedrijven aanmaken vanuit SuperAdmin
-- Geblokkeerde bedrijven tonen "Abonnement Verlopen" melding op /vastgoed en /huurders
-- Backend subscription check op publieke endpoints (company, apartments)
-
-### Modules Verwijderd uit /app ERP (28 Mar 2026)
-- Vastgoed Beheer module verwijderd uit /app sidebar, routes en dashboard
-- HRM Module verwijderd uit /app sidebar, routes en dashboard
-- Auto Dealer module verwijderd uit /app sidebar, routes en dashboard (incl. klant-portaal)
-- Suribet module verwijderd uit /app sidebar, routes en dashboard (incl. publieke portalen)
-- Beauty Spa module verwijderd uit /app sidebar, routes en dashboard (incl. booking)
-- Alleen Boekhouding en Schuldbeheer modules blijven in /app
-- Standalone kiosk routes /vastgoed en /huurders blijven intact
-
-### Subdomain Routing Vereenvoudigd (28 Mar 2026)
-- vastgoed.facturatie.sr subdomain-routing verwijderd
-- /vastgoed en /huurders werken nu alleen via normale paden
-- app.facturatie.sr logica intact gelaten
-
-## Pending/Upcoming Tasks
-### P0
-- Integrate real Mope API key (waiting for Hakrinbank credentials from user)
-- Integrate real Uni5Pay API key (waiting for credentials from user)
-
-### P1
-- Modernize "Kwitanties" (Receipts) tab with unified table style
-- WhatsApp kwitantie versturen na betaling
-
-### P2
-- Monthly financial report (automated)
+### P2 (Future)
+- Monthly financial report automation
 - CSV/PDF export of payment reports
 - Password reset functionality
 - Multi-building support per company
 
-### Refactoring
-- Split KioskAdminDashboard.jsx (~3400 lines) into smaller components
-- Split kiosk.py (~3300 lines) into feature-specific route files
-
 ## 3rd Party Integrations
-- SumUp Online Checkout API (per-company keys)
-- Mope/Hakrinbank Payment API (per-company keys, currently MOCKED)
-- Shelly Smart Relays (local HTTP)
-- WhatsApp Business API
+- SumUp Online Checkout API (needs user API key)
+- Mope Payment API (MOCKED - needs real credentials)
+- Uni5Pay (MOCKED - needs real credentials)
+- WhatsApp Business API (needs user API key)
 
 ## Credentials
-- Superadmin: admin@facturatie.sr / Bharat7755
-- Test company: shyam@kewalbansing.net / Bharat7755
+- SuperAdmin: admin@facturatie.sr / Bharat7755
+- Kiosk Company: shyam@kewalbansing.net / Bharat7755
 - Kiosk PIN: 5678
-- Company ID: ca1240d5-1c1c-41b4-9d88-0798fa7cb8c1
