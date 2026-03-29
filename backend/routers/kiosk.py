@@ -2237,6 +2237,40 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
     stamp_address = comp.get("stamp_address") or company_address if comp else company_address
     stamp_phone_val = comp.get("stamp_phone") or company_phone if comp else company_phone
     
+    # Company billing/power settings for lease
+    billing_day = comp.get("billing_day", 1) if comp else 1
+    billing_next_month = comp.get("billing_next_month", True) if comp else True
+    power_cutoff_days = comp.get("power_cutoff_days", 0) if comp else 0
+    fine_amount = comp.get("fine_amount", 0) if comp else 0
+    stamp_whatsapp = comp.get("stamp_whatsapp") or "" if comp else ""
+    
+    # Build betalingswijze text from settings
+    if billing_next_month:
+        betalingswijze = f"Per maand, bij vooruitbetaling v&oacute;&oacute;r de {billing_day}e van de volgende kalendermaand"
+    else:
+        betalingswijze = f"Per maand, bij vooruitbetaling v&oacute;&oacute;r de {billing_day}e van elke kalendermaand"
+    
+    # Build boete text
+    if fine_amount > 0:
+        boete_text = f' en is Huurder een boete verschuldigd van <span class="field">SRD {fine_amount:,.2f}</span> per maand'
+    else:
+        boete_text = ' en is Huurder een boete verschuldigd conform de geldende bedrijfsvoorwaarden van Verhuurder'
+    
+    # Build stroombreker article
+    if power_cutoff_days > 0:
+        dagen_text = f"{power_cutoff_days} dag{'en' if power_cutoff_days != 1 else ''}"
+        stroombreker_html = f"""
+<div class="artikel">
+  <h2>Artikel 4b &mdash; Stroomonderbreking bij Wanbetaling</h2>
+  <p>Indien Huurder niet binnen <span class="field">{dagen_text}</span> na de vervaldatum aan de betalingsverplichting heeft voldaan, is Verhuurder gerechtigd de stroomtoevoer naar het gehuurde automatisch te onderbreken tot het volledige openstaande bedrag is voldaan. Huurder erkent dit recht van Verhuurder en kan hieraan geen aanspraken op schadevergoeding ontlenen.</p>
+</div>"""
+    else:
+        stroombreker_html = ""
+    
+    # Build stamp phone/whatsapp lines
+    stamp_phone_line = f'<p style="color:#1a1a1a;font-size:8pt;margin:0;">Tel: {stamp_phone_val}</p>' if stamp_phone_val else ''
+    stamp_wa_line = f'<p style="color:#1a1a1a;font-size:8pt;margin:0;">WhatsApp: {stamp_whatsapp}</p>' if stamp_whatsapp else ''
+    
     tenant_name = lease.get("tenant_name", "")
     apartment_number = lease.get("apartment_number", "")
     start_date = lease.get("start_date", "")
@@ -2411,7 +2445,7 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
     text-align: center;
   }}
   .sig-space {{
-    height: 70px;
+    height: 90px;
     border-bottom: 1px solid #333;
     margin-bottom: 5px;
     position: relative;
@@ -2579,10 +2613,12 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
   <h2>Artikel 4 &mdash; Huurprijs en Betaling</h2>
   <table class="data-table">
     <tr><td>Maandelijkse huur</td><td><span class="field">SRD {monthly_rent:,.2f}</span> (Surinaamse Dollar)</td></tr>
-    <tr><td>Betalingswijze</td><td>Per maand, bij vooruitbetaling v&oacute;&oacute;r de eerste van elke kalendermaand</td></tr>
+    <tr><td>Betalingswijze</td><td>{betalingswijze}</td></tr>
   </table>
-  <p>Bij niet tijdige betaling is Huurder van rechtswege in verzuim en is Huurder een boete verschuldigd conform de geldende bedrijfsvoorwaarden van Verhuurder.</p>
+  <p>Bij niet tijdige betaling is Huurder van rechtswege in verzuim{boete_text}.</p>
 </div>
+
+{stroombreker_html}
 
 <!-- ARTIKEL 5: BORG -->
 <div class="artikel">
@@ -2635,9 +2671,9 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
   <div class="sig-row">
     <div class="sig-block">
       <div class="sig-space">
-        <div style="position: absolute; top: 5px; left: 10px; transform: rotate(-5deg); opacity: 0.6;">
-          <div class="stamp-rect" style="padding: 6px 10px; gap: 6px; border-width: 2px;">
-            <svg width="24" height="22" viewBox="0 0 52 48" fill="none">
+        <div style="position: absolute; top: -15px; left: 0; right: 0; transform: rotate(-4deg); opacity: 0.75;">
+          <div class="stamp-rect" style="padding: 10px 16px; gap: 10px; border-width: 3px; display: inline-flex; align-items: center;">
+            <svg width="40" height="36" viewBox="0 0 52 48" fill="none">
               <polygon points="12,18 28,6 44,18" fill="#991b1b"/>
               <rect x="14" y="18" width="28" height="20" fill="#991b1b"/>
               <rect x="18" y="22" width="6" height="6" fill="white"/>
@@ -2646,10 +2682,14 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
               <rect x="4" y="28" width="24" height="16" fill="#7f1d1d"/>
               <rect x="8" y="31" width="5" height="5" fill="white"/>
               <rect x="16" y="31" width="5" height="5" fill="white"/>
+              <rect x="8" y="38" width="5" height="6" fill="white"/>
+              <rect x="16" y="38" width="5" height="6" fill="white"/>
             </svg>
-            <div style="line-height:1.2;">
-              <p style="color:#991b1b;font-weight:bold;font-size:6pt;margin:0;">{stamp_name}</p>
-              <p style="color:#1a1a1a;font-size:5.5pt;margin:0;">{stamp_address}</p>
+            <div style="line-height:1.3; text-align:left;">
+              <p style="color:#991b1b;font-weight:bold;font-size:10pt;margin:0;">{stamp_name}</p>
+              <p style="color:#1a1a1a;font-size:8pt;margin:0;">{stamp_address}</p>
+              {stamp_phone_line}
+              {stamp_wa_line}
             </div>
           </div>
         </div>
