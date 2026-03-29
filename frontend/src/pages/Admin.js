@@ -1,4 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
+import { useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   getAdminDashboard, 
@@ -131,8 +132,27 @@ import {
 // Server IP from environment variable for DNS instructions
 const SERVER_IP = process.env.REACT_APP_SERVER_IP || '72.62.174.80';
 
+// Map URL slugs to internal tab values
+const ADMIN_TAB_MAP = {
+  'klanten': 'customers',
+  'betalingen': 'payments',
+  'modules': 'addons',
+  'verzoeken': 'module-requests',
+  'werkruimtes': 'workspaces',
+  'domein-provisioning': 'domain-provisioning',
+  'domeinen': 'domains',
+  'betaalmethodes': 'betaalmethodes',
+  'email': 'email',
+  'website': 'website',
+  'systeem': 'update',
+  'live-chat': 'live-chat',
+  'vastgoed-kiosk': 'vastgoed-kiosk',
+};
+
 export default function Admin() {
   const { user, token } = useAuth();
+  const { adminTab } = useParams();
+  const activeTab = ADMIN_TAB_MAP[adminTab] || 'customers';
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [customers, setCustomers] = useState([]);
@@ -930,84 +950,9 @@ server {
         </div>
       )}
 
-      {/* Modern Tabs Navigation - Responsive */}
-      <Tabs defaultValue="customers" className="space-y-4 sm:space-y-6">
-        <div className="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl border border-slate-200 dark:border-slate-800 p-1 sm:p-1.5 overflow-x-auto scrollbar-hide">
-          <TabsList className="inline-flex gap-0.5 sm:gap-1 bg-transparent min-w-max">
-            <TabsTrigger value="customers" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
-              <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-              <span className="hidden xs:inline">Klanten</span>
-              <span className="xs:hidden">Klant</span>
-            </TabsTrigger>
-            <TabsTrigger value="payments" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
-              <CreditCard className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-              <span className="hidden sm:inline">Betalingen</span>
-              <span className="sm:hidden">Betal</span>
-            </TabsTrigger>
-            <TabsTrigger value="addons" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
-              <Puzzle className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-              <span className="hidden sm:inline">Add-ons</span>
-              <span className="sm:hidden">Add</span>
-              {addonRequests.length > 0 && (
-                <Badge className="ml-1 sm:ml-1.5 bg-orange-500 text-white text-[10px] sm:text-xs px-1 sm:px-1.5">{addonRequests.length}</Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="module-requests" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
-              <Bell className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-              <span className="hidden sm:inline">Verzoeken</span>
-              <span className="sm:hidden">Verz</span>
-              {paymentRequests.filter(r => r.status === 'pending').length > 0 && (
-                <Badge className="ml-1 sm:ml-1.5 bg-white text-orange-600 text-[10px] sm:text-xs px-1 sm:px-1.5">
-                  {paymentRequests.filter(r => r.status === 'pending').length}
-                </Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="workspaces" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
-              <Layers className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-              <span className="hidden sm:inline">Workspaces</span>
-              <span className="sm:hidden">Work</span>
-            </TabsTrigger>
-            <TabsTrigger value="domain-provisioning" className="data-[state=active]:bg-blue-500 data-[state=active]:text-white rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
-              <Server className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-              <span className="hidden sm:inline">Domains</span>
-              <span className="sm:hidden">Dom</span>
-            </TabsTrigger>
-            <TabsTrigger value="domains" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
-              <Globe className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-              <span className="hidden sm:inline">Domeinen</span>
-              <span className="sm:hidden">Dom</span>
-            </TabsTrigger>
-            <TabsTrigger value="betaalmethodes" className="data-[state=active]:bg-slate-900 data-[state=active]:text-white dark:data-[state=active]:bg-white dark:data-[state=active]:text-slate-900 rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
-              <CreditCard className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-              <span className="hidden sm:inline">Betalen</span>
-              <span className="sm:hidden">Pay</span>
-            </TabsTrigger>
-            <TabsTrigger value="email" className="data-[state=active]:bg-purple-500 data-[state=active]:text-white rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
-              <Mail className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-              Email
-            </TabsTrigger>
-            <TabsTrigger value="website" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
-              <Globe className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-              <span className="hidden sm:inline">Website</span>
-              <span className="sm:hidden">Web</span>
-            </TabsTrigger>
-            <TabsTrigger value="update" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-white rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
-              <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-              <span className="hidden sm:inline">Update</span>
-              <span className="sm:hidden">Upd</span>
-            </TabsTrigger>
-            <TabsTrigger value="live-chat" className="data-[state=active]:bg-teal-500 data-[state=active]:text-white rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
-              <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-              <span className="hidden sm:inline">Live Chat</span>
-              <span className="sm:hidden">Chat</span>
-            </TabsTrigger>
-            <TabsTrigger value="vastgoed-kiosk" data-testid="tab-vastgoed-kiosk" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
-              <Building2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
-              <span className="hidden sm:inline">Vastgoed Kiosk</span>
-              <span className="sm:hidden">Kiosk</span>
-            </TabsTrigger>
-          </TabsList>
-        </div>
+      {/* Modern Tabs Navigation - Controlled by URL */}
+      <Tabs value={activeTab} className="space-y-4 sm:space-y-6">
+        {/* TabsList hidden - navigation is now in the sidebar */}
 
         {/* Customers Tab */}
         <TabsContent value="workspaces">

@@ -192,7 +192,7 @@ const SubscriptionRoute = ({ children, requiredAddon }) => {
   
   // Superadmin should not access customer pages - redirect to admin
   if (isSuperAdmin()) {
-    return <Navigate to="/app/admin" replace />;
+    return <Navigate to="/app/admin/klanten" replace />;
   }
   
   // Free modules are always accessible
@@ -246,7 +246,7 @@ const PublicRoute = ({ children }) => {
   
   if (user) {
     // Superadmin goes to admin page, customers go to dashboard
-    return <Navigate to={isSuperAdmin() ? "/app/admin" : "/app/dashboard"} replace />;
+    return <Navigate to={isSuperAdmin() ? "/app/admin/klanten" : "/app/dashboard"} replace />;
   }
   
   return children;
@@ -262,7 +262,7 @@ const SmartRedirect = () => {
     const determineRoute = async () => {
       // Superadmin always goes to admin
       if (isSuperAdmin()) {
-        setTargetRoute("/app/admin");
+        setTargetRoute("/app/admin/klanten");
         setLoading(false);
         return;
       }
@@ -369,7 +369,7 @@ const CustomerOnlyRoute = ({ children }) => {
   
   // Superadmin should not access customer pages
   if (isSuperAdmin()) {
-    return <Navigate to="/app/admin" replace />;
+    return <Navigate to="/app/admin/klanten" replace />;
   }
   
   return children;
@@ -615,6 +615,9 @@ function MainAppRoutes() {
             <CustomerOnlyRoute><WorkspaceSettings /></CustomerOnlyRoute>
           } />
           <Route path="admin" element={
+            <AdminRoute><Navigate to="/app/admin/klanten" replace /></AdminRoute>
+          } />
+          <Route path="admin/:adminTab" element={
             <AdminRoute><Admin /></AdminRoute>
           } />
           <Route path="admin/workspaces" element={

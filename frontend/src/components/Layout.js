@@ -68,7 +68,10 @@ import {
   History,
   Store,
   TrendingDown,
-  FolderArchive
+  FolderArchive,
+  Server,
+  Puzzle,
+  MessageSquare
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -119,6 +122,23 @@ const schuldbeheerNavItems = [
   { to: '/app/schuldbeheer/planning', icon: Calendar, label: 'Planning', addon: 'schuldbeheer' },
   { to: '/app/schuldbeheer/rapportages', icon: BarChart3, label: 'Rapportages', addon: 'schuldbeheer' },
   { to: '/app/schuldbeheer/documenten', icon: FolderArchive, label: 'Documenten', addon: 'schuldbeheer' },
+];
+
+// SuperAdmin navigation items for sidebar
+const adminNavItems = [
+  { to: '/app/admin/klanten', icon: Users, label: 'Klanten' },
+  { to: '/app/admin/betalingen', icon: CreditCard, label: 'Betalingen' },
+  { to: '/app/admin/modules', icon: Puzzle, label: 'Modules' },
+  { to: '/app/admin/verzoeken', icon: Bell, label: 'Verzoeken' },
+  { to: '/app/admin/werkruimtes', icon: Layers, label: 'Werkruimtes' },
+  { to: '/app/admin/domein-provisioning', icon: Server, label: 'Domein Provisioning' },
+  { to: '/app/admin/domeinen', icon: Globe, label: 'Domeinen' },
+  { to: '/app/admin/betaalmethodes', icon: Banknote, label: 'Betaalmethodes' },
+  { to: '/app/admin/email', icon: Mail, label: 'E-mail' },
+  { to: '/app/admin/website', icon: Globe, label: 'Website' },
+  { to: '/app/admin/systeem', icon: RefreshCw, label: 'Systeem Update' },
+  { to: '/app/admin/live-chat', icon: MessageSquare, label: 'Live Chat' },
+  { to: '/app/admin/vastgoed-kiosk', icon: Building2, label: 'Vastgoed Kiosk' },
 ];
 
 export default function Layout() {
@@ -193,6 +213,22 @@ export default function Layout() {
       setSuperadminInitialized(true);
     }
   }, [user, superadminInitialized]);
+
+  // Admin section expanded state
+  const [adminSectionOpen, setAdminSectionOpen] = useState(() => {
+    // Auto-expand if we're on an admin route
+    if (typeof window !== 'undefined') {
+      return window.location.pathname.startsWith('/app/admin');
+    }
+    return false;
+  });
+
+  // Keep admin section open when navigating admin routes
+  useEffect(() => {
+    if (location.pathname.startsWith('/app/admin')) {
+      setAdminSectionOpen(true);
+    }
+  }, [location.pathname]);
 
   const toggleSidebarCollapse = () => {
     setSidebarCollapsed(!sidebarCollapsed);
@@ -454,19 +490,54 @@ export default function Layout() {
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto overflow-x-hidden">
-          {/* Admin link - only for superadmin */}
+          {/* Admin navigation - only for superadmin */}
           {isSuperAdmin() && (
-            <NavLink
-              to="/app/admin"
-              onClick={() => setSidebarOpen(false)}
-              className={({ isActive }) => `nav-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center' : ''}`}
-              data-testid="nav-admin"
-              title="Beheerder"
-            >
-              <Crown className="w-5 h-5 flex-shrink-0" />
-              {!isCollapsed && <span>Beheerder</span>}
-              {!isCollapsed && <Badge className="ml-auto text-[10px] bg-amber-100 text-amber-700 border-amber-200">Admin</Badge>}
-            </NavLink>
+            <div className="mb-2">
+              {/* Admin section header */}
+              <button
+                onClick={() => !isCollapsed && setAdminSectionOpen(!adminSectionOpen)}
+                className={`nav-item w-full group relative ${location.pathname.startsWith('/app/admin') ? 'active' : ''} ${isCollapsed ? 'justify-center' : 'justify-between'}`}
+                data-testid="nav-admin"
+                title="Beheerder"
+              >
+                <div className={`flex items-center gap-3 ${isCollapsed ? 'justify-center' : ''}`}>
+                  <Crown className="w-5 h-5 flex-shrink-0" />
+                  {!isCollapsed && <span>Beheerder</span>}
+                </div>
+                {!isCollapsed && (
+                  <div className="flex items-center gap-1.5">
+                    <Badge className="text-[10px] bg-amber-100 text-amber-700 border-amber-200">Admin</Badge>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${adminSectionOpen ? 'rotate-180' : ''}`} />
+                  </div>
+                )}
+                {isCollapsed && (
+                  <div className="fixed ml-16 px-3 py-2 bg-slate-900 text-white text-sm rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none" style={{ zIndex: 9999 }}>
+                    Beheerder
+                    <div className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-2 bg-slate-900 rotate-45"></div>
+                  </div>
+                )}
+              </button>
+
+              {/* Admin sub-items */}
+              {!isCollapsed && (
+                <div className={`overflow-hidden transition-all duration-200 ${adminSectionOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                  <div className="pl-4 mt-1 space-y-0.5">
+                    {adminNavItems.map((item) => (
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => setSidebarOpen(false)}
+                        className={({ isActive }) => `nav-item text-sm py-2 ${isActive ? 'active' : ''}`}
+                        data-testid={`nav-admin-${item.label.toLowerCase().replace(/ /g, '-')}`}
+                      >
+                        <item.icon className="w-4 h-4 flex-shrink-0" />
+                        <span>{item.label}</span>
+                      </NavLink>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           )}
 
           {/* Customer navigation - only for non-superadmin users with active add-ons */}
