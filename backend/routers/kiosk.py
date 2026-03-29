@@ -1925,6 +1925,126 @@ async def delete_payment(payment_id: str, company: dict = Depends(get_current_co
         raise HTTPException(status_code=404, detail="Betaling niet gevonden")
     return {"message": "Betaling verwijderd"}
 
+
+@router.post("/admin/payments/register")
+async def register_manual_payment(data: PaymentCreate, company: dict = Depends(get_current_company)):
+    """Register a manual/cash payment from admin dashboard"""
+    company_id = company["company_id"]
+    tenant = await db.kiosk_tenants.find_one({"company_id": company_id, "tenant_id": data.tenant_id})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+
+    payment_id = generate_uuid()
+    now = datetime.now(timezone.utc)
+    count = await db.kiosk_payments.count_documents({"company_id": company_id})
+    kwitantie_nummer = f"KW{now.year}-{str(count + 1).zfill(5)}"
+
+    # Covered months calculation for rent
+    covered_months = []
+    if data.payment_type in ["rent", "partial_rent", "monthly_rent"]:
+        monthly_rent = tenant.get("monthly_rent", 0)
+        outstanding = tenant.get("outstanding_rent", 0)
+        billed_through = tenant.get("rent_billed_through", "")
+        if billed_through and monthly_rent > 0 and outstanding > 0:
+            bt_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+            months_owed = int(outstanding / monthly_rent) if monthly_rent > 0 else 0
+            remainder = outstanding - (months_owed * monthly_rent)
+            if remainder > 0:
+                months_owed += 1
+            month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+            all_overdue = []
+            for i in range(months_owed):
+                m_date = bt_date - relativedelta(months=i)
+                all_overdue.append({"label": f"{month_names_nl[m_date.month - 1]} {m_date.year}", "key": m_date.strftime("%Y-%m")})
+            all_overdue.reverse()
+            pay_amount = data.amount
+            for m in all_overdue:
+                if pay_amount >= monthly_rent:
+                    covered_months.append(m["label"])
+                    pay_amount -= monthly_rent
+                elif pay_amount > 0:
+                    covered_months.append(m["label"] + " (gedeeltelijk)")
+                    pay_amount = 0
+
+    payment = {
+        "payment_id": payment_id,
+        "company_id": company_id,
+        "tenant_id": data.tenant_id,
+        "tenant_name": tenant["name"],
+        "tenant_code": tenant.get("tenant_code", ""),
+        "apartment_number": tenant.get("apartment_number", ""),
+        "amount": data.amount,
+        "payment_type": data.payment_type,
+        "payment_method": data.payment_method or "cash",
+        "description": data.description or "Handmatige betaling",
+        "rent_month": data.rent_month,
+        "covered_months": covered_months,
+        "kwitantie_nummer": kwitantie_nummer,
+        "created_at": now
+    }
+    await db.kiosk_payments.insert_one(payment)
+
+    # Update tenant balances
+    update_fields = {}
+    if data.payment_type in ["rent", "partial_rent"]:
+        update_fields["outstanding_rent"] = max(0, tenant.get("outstanding_rent", 0) - data.amount)
+    elif data.payment_type == "service_costs":
+        update_fields["service_costs"] = max(0, tenant.get("service_costs", 0) - data.amount)
+    elif data.payment_type == "fines":
+        update_fields["fines"] = max(0, tenant.get("fines", 0) - data.amount)
+    elif data.payment_type == "deposit":
+        update_fields["deposit_paid"] = tenant.get("deposit_paid", 0) + data.amount
+    if update_fields:
+        update_fields["updated_at"] = now
+        await db.kiosk_tenants.update_one({"tenant_id": data.tenant_id}, {"$set": update_fields})
+
+    # Refresh balances
+    updated_tenant = await db.kiosk_tenants.find_one({"tenant_id": data.tenant_id})
+    remaining_rent = updated_tenant.get("outstanding_rent", 0) if updated_tenant else 0
+    remaining_service = updated_tenant.get("service_costs", 0) if updated_tenant else 0
+    remaining_fines = updated_tenant.get("fines", 0) if updated_tenant else 0
+
+    # Auto WhatsApp
+    total_remaining = remaining_rent + remaining_service + remaining_fines
+    comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
+    comp_name = (comp.get("stamp_company_name") or comp.get("name", "")) if comp else ""
+    type_labels = {"rent": "Huurbetaling", "partial_rent": "Gedeeltelijke betaling", "service_costs": "Servicekosten", "fines": "Boetes", "deposit": "Borg"}
+    type_label = type_labels.get(data.payment_type, data.payment_type)
+    covered_str = ", ".join(covered_months) if covered_months else ""
+
+    if total_remaining <= 0:
+        wa_msg = (f"Beste {tenant['name']},\n\n"
+                  f"Uw betaling van SRD {data.amount:,.2f} ({type_label}) is ontvangen.\n"
+                  f"Kwitantie: {kwitantie_nummer}\n"
+                  f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
+                  f"Uw saldo is nu VOLLEDIG VOLDAAN.\n\nBedankt voor uw betaling!\n{comp_name}")
+    else:
+        wa_msg = (f"Beste {tenant['name']},\n\n"
+                  f"Uw betaling van SRD {data.amount:,.2f} ({type_label}) is ontvangen.\n"
+                  f"Kwitantie: {kwitantie_nummer}\n"
+                  f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
+                  f"Resterend saldo: SRD {total_remaining:,.2f}\n\nMet vriendelijke groet,\n{comp_name}")
+
+    if tenant.get("phone") or tenant.get("telefoon"):
+        tenant_phone = tenant.get("phone") or tenant.get("telefoon", "")
+        await _send_wa_auto(company_id, tenant_phone, wa_msg, data.tenant_id, tenant["name"], "payment_confirmation")
+
+    return {
+        "payment_id": payment_id,
+        "kwitantie_nummer": kwitantie_nummer,
+        "amount": data.amount,
+        "payment_type": data.payment_type,
+        "payment_method": data.payment_method,
+        "tenant_name": tenant["name"],
+        "apartment_number": tenant.get("apartment_number", ""),
+        "created_at": now.isoformat(),
+        "remaining_rent": remaining_rent,
+        "remaining_service": remaining_service,
+        "remaining_fines": remaining_fines,
+        "whatsapp_sent": bool(tenant.get("phone") or tenant.get("telefoon"))
+    }
+
+
 # ============== APPLY FINES ==============
 
 @router.post("/admin/apply-fines")
