@@ -37,8 +37,6 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
 
   useEffect(() => {
     let cancelled = false;
-    let retryCount = 0;
-    const maxRetries = 5;
     const init = async () => {
       try {
         await loadModels();
@@ -57,7 +55,6 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
           videoRef.current.srcObject = stream;
           await videoRef.current.play();
         }
-        retryCount = 0;
         setStatus('ready');
         setMessage(mode === 'register' ? 'Kijk recht in de camera' : 'Gezicht herkennen...');
         if (mode === 'verify' || mode === 'verify-continuous') {
@@ -65,13 +62,8 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
         }
       } catch (err) {
         if (!cancelled) {
-          retryCount++;
-          if (retryCount < maxRetries) {
-            setMessage(`Camera herstarten... (${retryCount}/${maxRetries})`);
-            setTimeout(() => { if (!cancelled) init(); }, 2000);
-          } else if (mode === 'verify-continuous') {
-            retryCount = 0;
-            setTimeout(() => { if (!cancelled) init(); }, 3000);
+          if (mode === 'verify-continuous') {
+            setTimeout(() => { if (!cancelled) init(); }, 1000);
           } else {
             setStatus('error');
             setMessage(err.name === 'NotAllowedError' ? 'Camera toegang geweigerd' : 'Camera kon niet worden gestart');
