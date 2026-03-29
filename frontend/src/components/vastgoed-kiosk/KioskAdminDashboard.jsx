@@ -681,7 +681,7 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-1">
                           <button onClick={() => onAddRent(tenant)} data-testid={`add-rent-${tenant.tenant_id}`} className="text-slate-400 hover:text-orange-500 p-1" title="Maandhuur toevoegen">
-                            <DollarSign className="w-4 h-4" />
+                            <span className="inline-flex items-center justify-center w-4 h-4 font-bold text-[10px] leading-none">SRD</span>
                           </button>
                           {total > 0 && (
                             <button 
