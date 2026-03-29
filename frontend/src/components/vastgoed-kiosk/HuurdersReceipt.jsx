@@ -99,7 +99,7 @@ function playPaperFeedSound(durationMs = 3500) {
 }
 
 export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) {
-  const [countdown, setCountdown] = useState(15);
+  const [countdown, setCountdown] = useState(5);
   const [stampData, setStampData] = useState(null);
   const [phase, setPhase] = useState('show'); // show -> ejecting -> done
   const timerRef = useRef(null);
@@ -333,7 +333,7 @@ export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) 
                   <circle cx="30" cy="30" r="26" fill="none" stroke="#f1f5f9" strokeWidth="3" />
                   <circle cx="30" cy="30" r="26" fill="none" stroke="#f97316" strokeWidth="3"
                     strokeLinecap="round" strokeDasharray={`${2 * Math.PI * 26}`}
-                    strokeDashoffset={`${2 * Math.PI * 26 * (1 - countdown / 15)}`}
+                    strokeDashoffset={`${2 * Math.PI * 26 * (1 - countdown / 5)}`}
                     transform="rotate(-90 30 30)" style={{ transition: 'stroke-dashoffset 0.9s ease' }} />
                 </svg>
                 <div style={{
