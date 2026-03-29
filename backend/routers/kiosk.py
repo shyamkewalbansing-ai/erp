@@ -626,19 +626,9 @@ async def get_mope_payment_status(company_id: str, payment_id: str):
         mock_payment = await db.mope_mock_payments.find_one({"payment_id": payment_id}, {"_id": 0})
         if not mock_payment:
             raise HTTPException(status_code=404, detail="Betaalverzoek niet gevonden")
-        # Auto-transition: after 8 seconds from creation -> scanned, after 12 seconds -> paid
-        created = mock_payment.get("created_at", datetime.now(timezone.utc))
-        if created.tzinfo is None:
-            created = created.replace(tzinfo=timezone.utc)
-        elapsed = (datetime.now(timezone.utc) - created).total_seconds()
-        if elapsed > 12:
-            status = "paid"
-        elif elapsed > 8:
-            status = "scanned"
-        else:
-            status = "open"
+        # Mock stays "open" — never auto-approves. Real payment requires real API key.
         return {
-            "status": status,
+            "status": mock_payment.get("status", "open"),
             "amount": mock_payment.get("amount_cents"),
             "payment_id": payment_id
         }
@@ -731,15 +721,9 @@ async def get_uni5pay_payment_status(company_id: str, payment_id: str):
     created = mock_payment.get("created_at", datetime.now(timezone.utc))
     if created.tzinfo is None:
         created = created.replace(tzinfo=timezone.utc)
-    elapsed = (datetime.now(timezone.utc) - created).total_seconds()
-    if elapsed > 12:
-        status = "paid"
-    elif elapsed > 8:
-        status = "scanned"
-    else:
-        status = "open"
+    # Mock stays "open" — never auto-approves. Real payment requires real API key.
     return {
-        "status": status,
+        "status": mock_payment.get("status", "open"),
         "amount": mock_payment.get("amount_cents"),
         "payment_id": payment_id
     }

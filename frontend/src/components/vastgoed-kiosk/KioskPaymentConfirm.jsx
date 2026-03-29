@@ -184,10 +184,16 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
     let attempts = 0;
     mopePollRef.current = setInterval(async () => {
       attempts++;
-      if (attempts > 180) { clearInterval(mopePollRef.current); setError('Betaling timeout.'); setMopeStatus('error'); return; }
+      if (attempts > 180) { clearInterval(mopePollRef.current); setError('Betaling timeout. Probeer opnieuw.'); setMopeStatus('error'); return; }
       try {
         const res = await axios.get(`${API}/public/${companyId}/mope/status/${payId}`);
-        if (res.data.status === 'paid') { clearInterval(mopePollRef.current); handleMopeSuccess(); }
+        const st = res.data.status;
+        if (st === 'paid') { clearInterval(mopePollRef.current); handleMopeSuccess(); }
+        else if (['failed', 'cancelled', 'expired', 'error'].includes(st)) {
+          clearInterval(mopePollRef.current);
+          setError('Mope betaling is mislukt of geannuleerd.');
+          setMopeStatus('error');
+        }
       } catch {}
     }, 2000);
   };
@@ -227,10 +233,16 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
     let attempts = 0;
     uni5PollRef.current = setInterval(async () => {
       attempts++;
-      if (attempts > 180) { clearInterval(uni5PollRef.current); setError('Betaling timeout.'); setUni5Status('error'); return; }
+      if (attempts > 180) { clearInterval(uni5PollRef.current); setError('Betaling timeout. Probeer opnieuw.'); setUni5Status('error'); return; }
       try {
         const res = await axios.get(`${API}/public/${companyId}/uni5pay/status/${payId}`);
-        if (res.data.status === 'paid') { clearInterval(uni5PollRef.current); handleUni5Success(); }
+        const st = res.data.status;
+        if (st === 'paid') { clearInterval(uni5PollRef.current); handleUni5Success(); }
+        else if (['failed', 'cancelled', 'expired', 'error'].includes(st)) {
+          clearInterval(uni5PollRef.current);
+          setError('Uni5Pay betaling is mislukt of geannuleerd.');
+          setUni5Status('error');
+        }
       } catch {}
     }, 2000);
   };
