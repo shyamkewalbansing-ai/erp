@@ -173,6 +173,8 @@ class CompanyUpdate(BaseModel):
     # Uni5Pay Payment Integration
     uni5pay_merchant_id: Optional[str] = None
     uni5pay_enabled: Optional[bool] = None
+    # Start screen after login
+    start_screen: Optional[str] = None  # 'kiosk' or 'dashboard'
 
 class KioskPinVerify(BaseModel):
     pin: str  # 4-digit PIN
@@ -763,7 +765,8 @@ async def get_company_public(company_id: str):
         "name": company["name"],
         "company_id": company["company_id"],
         "has_pin": bool(company.get("kiosk_pin")),
-        "subscription_blocked": False
+        "subscription_blocked": False,
+        "start_screen": company.get("start_screen", "kiosk")
     }
 
 @router.post("/public/{company_id}/verify-pin")

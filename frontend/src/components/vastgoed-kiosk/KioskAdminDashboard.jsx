@@ -1107,6 +1107,8 @@ function SettingsTab({ company, token, onRefresh }) {
   // Uni5Pay Payment Integration
   const [uni5MerchantId, setUni5MerchantId] = useState(company?.uni5pay_merchant_id || '');
   const [uni5Enabled, setUni5Enabled] = useState(company?.uni5pay_enabled || false);
+  // Start screen setting
+  const [startScreen, setStartScreen] = useState(company?.start_screen || 'kiosk');
 
   const handleSaveStamp = async () => {
     setSaving(true);
@@ -1448,6 +1450,59 @@ function SettingsTab({ company, token, onRefresh }) {
           <Save className="w-4 h-4" />
           {saving ? 'Opslaan...' : 'PIN Opslaan'}
         </button>
+      </div>
+
+      {/* Startscherm na inloggen */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+            <Settings className="w-5 h-5 text-orange-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900">Startscherm na inloggen</h3>
+            <p className="text-sm text-slate-500">Kies waar u terecht komt na het inloggen op de kiosk</p>
+          </div>
+        </div>
+        <div className="flex gap-4">
+          <button
+            type="button"
+            onClick={async () => {
+              setStartScreen('kiosk');
+              try {
+                await axios.put(`${API}/auth/settings`, { start_screen: 'kiosk' }, { headers: { Authorization: `Bearer ${token}` } });
+                onRefresh();
+              } catch {}
+            }}
+            className={`flex-1 p-4 rounded-xl border-2 transition ${startScreen === 'kiosk' ? 'border-orange-500 bg-orange-50' : 'border-slate-200 hover:border-slate-300'}`}
+          >
+            <div className="text-2xl mb-2">
+              <svg className={`w-8 h-8 mx-auto ${startScreen === 'kiosk' ? 'text-orange-500' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+              </svg>
+            </div>
+            <p className={`font-bold text-center ${startScreen === 'kiosk' ? 'text-orange-700' : 'text-slate-700'}`}>Kiosk</p>
+            <p className="text-xs text-slate-400 text-center mt-1">Huurders kiezen hun appartement</p>
+          </button>
+          <button
+            type="button"
+            onClick={async () => {
+              setStartScreen('dashboard');
+              try {
+                await axios.put(`${API}/auth/settings`, { start_screen: 'dashboard' }, { headers: { Authorization: `Bearer ${token}` } });
+                onRefresh();
+              } catch {}
+            }}
+            className={`flex-1 p-4 rounded-xl border-2 transition ${startScreen === 'dashboard' ? 'border-orange-500 bg-orange-50' : 'border-slate-200 hover:border-slate-300'}`}
+          >
+            <div className="text-2xl mb-2">
+              <svg className={`w-8 h-8 mx-auto ${startScreen === 'dashboard' ? 'text-orange-500' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7" />
+              </svg>
+            </div>
+            <p className={`font-bold text-center ${startScreen === 'dashboard' ? 'text-orange-700' : 'text-slate-700'}`}>Dashboard</p>
+            <p className="text-xs text-slate-400 text-center mt-1">Direct naar het beheerder dashboard</p>
+          </button>
+        </div>
       </div>
 
       {/* Bedrijfsstempel */}

@@ -54,6 +54,7 @@ export default function KioskLayout() {
   const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
   const [requiresPin, setRequiresPin] = useState(false);
   const [pinVerified, setPinVerified] = useState(false);
+  const [startScreen, setStartScreen] = useState('kiosk');
 
   const modeClasses = [
     kioskMode.isTouch ? 'kiosk-touch' : '',
@@ -65,6 +66,8 @@ export default function KioskLayout() {
     if (companyId) {
       axios.get(`${API}/public/${companyId}/company`).then(res => {
         setCompanyName(res.data.name);
+        const screen = res.data.start_screen || 'kiosk';
+        setStartScreen(screen);
         
         // Check subscription
         if (res.data.subscription_blocked) {
@@ -79,14 +82,12 @@ export default function KioskLayout() {
         const alreadyVerified = sessionStorage.getItem(`kiosk_pin_verified_${companyId}`) === 'true';
         
         if (alreadyVerified) {
-          // User already authenticated - skip all PIN checks
           setPinVerified(true);
-          setStep('welcome');
+          setStep(screen === 'dashboard' ? 'admin' : 'select');
           return;
         }
         
         if (!hasPin) {
-          // No PIN set and not authenticated - block access
           setStep('no-pin');
           return;
         }
@@ -95,7 +96,7 @@ export default function KioskLayout() {
         setStep('pin');
       }).catch(() => {
         setCompanyNotFound(true);
-        setStep('welcome');
+        setStep('select');
       });
     }
   }, [companyId]);
@@ -114,7 +115,7 @@ export default function KioskLayout() {
     setTenant(null);
     setPaymentData(null);
     setPaymentResult(null);
-    setStep('welcome');
+    setStep('select');
   }, []);
 
   if (subscriptionBlocked) {
@@ -187,7 +188,7 @@ export default function KioskLayout() {
           <KioskPinEntry
             companyId={companyId}
             companyName={companyName}
-            onSuccess={() => { setPinVerified(true); goTo('welcome'); }}
+            onSuccess={() => { setPinVerified(true); goTo(startScreen === 'dashboard' ? 'admin' : 'select'); }}
             onBack={() => navigate('/vastgoed')}
           />
         );
@@ -213,7 +214,7 @@ export default function KioskLayout() {
           <KioskAdminDashboard 
             companyId={companyId}
             pinAuthenticated={pinVerified}
-            onBack={() => goTo('welcome')}
+            onBack={() => goTo('select')}
             onLock={() => {
               localStorage.removeItem('kiosk_token');
               Object.keys(sessionStorage).forEach(key => {
@@ -227,7 +228,7 @@ export default function KioskLayout() {
       case 'select':
         return (
           <KioskApartmentSelect
-            onBack={() => goTo('welcome')}
+            onBack={() => goTo('select')}
             onSelect={(t) => { setTenant(t); goTo('overview'); }}
             companyId={companyId}
           />
@@ -312,9 +313,33 @@ export default function KioskLayout() {
                 <span className="kiosk-body font-bold text-slate-800">Appt. {tenant.apartment_number}</span>
               </div>
             )}
-            <span className={`kiosk-mode-badge ${kioskMode.isTouch ? 'touch' : 'desktop'}`} data-testid="kiosk-mode-badge" style={{ display: kioskMode.isTouch ? 'inline-flex' : 'none' }}>
-              <Hand style={{ width: '1.3vh', height: '1.3vh' }} /> Touch
-            </span>
+            {(step === 'select' || step === 'overview' || step === 'payment' || step === 'confirm') && (
+              <button
+                onClick={() => goTo('admin')}
+                className="bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg transition"
+                style={{ padding: 'clamp(6px, 1vh, 12px) clamp(12px, 1.5vw, 24px)', fontSize: 'clamp(11px, 1.4vh, 16px)' }}
+                data-testid="kiosk-admin-btn"
+              >
+                Beheerder
+              </button>
+            )}
+            {(step === 'select' || step === 'welcome') && (
+              <button
+                onClick={() => {
+                  localStorage.removeItem('kiosk_token');
+                  Object.keys(sessionStorage).forEach(key => {
+                    if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
+                  });
+                  setPinVerified(false);
+                  goTo('pin');
+                }}
+                className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition"
+                style={{ padding: 'clamp(6px, 1vh, 12px) clamp(12px, 1.5vw, 24px)', fontSize: 'clamp(11px, 1.4vh, 16px)' }}
+                data-testid="kiosk-lock-btn"
+              >
+                Uit
+              </button>
+            )}
           </div>
         </div>
       )}
