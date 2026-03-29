@@ -119,13 +119,9 @@ export default function HuurdersLayout() {
                 <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Welkom</h2>
                 <p className="text-xs sm:text-sm text-slate-400 mb-4 sm:mb-5 text-center">Kijk in de camera om in te loggen</p>
                 <FaceCapture key={faceKey} mode="verify-continuous" onCapture={async (descriptor) => {
-                  try {
-                    const res = await axios.post(`${API}/public/${companyId}/face/verify-tenant`, { descriptor });
-                    setTenant(res.data);
-                    setTimeout(() => goTo('overview'), 500);
-                  } catch {
-                    // Niet herkend — FaceCapture blijft doordraaien
-                  }
+                  const res = await axios.post(`${API}/public/${companyId}/face/verify-tenant`, { descriptor });
+                  setTenant(res.data);
+                  setTimeout(() => goTo('overview'), 500);
                 }} />
               </div>
             </div>

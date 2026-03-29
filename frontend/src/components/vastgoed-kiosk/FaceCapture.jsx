@@ -16,7 +16,6 @@ function playDetectionSound() {
   try {
     const ctx = getAudioCtx();
     const now = ctx.currentTime;
-    // Pleasant two-tone chime
     const osc1 = ctx.createOscillator();
     const osc2 = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -48,21 +47,28 @@ async function loadModels() {
   modelsReady = true;
 }
 
-const DETECT_OPTIONS = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.3 });
+const DETECT_OPTIONS = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.35 });
+// Minimum time between detection attempts (ms) — prevents CPU overload
+const DETECT_INTERVAL = 400;
+// Cooldown after a successful match before scanning again (ms)
+const MATCH_COOLDOWN = 3000;
+// Shorter cooldown when face detected but not recognized
+const FAIL_COOLDOWN = 1200;
 
 export default function FaceCapture({ onCapture, onCancel, mode = 'register', buttonLabel }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
-  const detectingRef = useRef(false);
+  const activeRef = useRef(false);
   const cancelledRef = useRef(false);
-  const rafRef = useRef(null);
+  const timerRef = useRef(null);
+  const processingRef = useRef(false);
   const [status, setStatus] = useState('loading');
   const [message, setMessage] = useState('');
   const [scanPulse, setScanPulse] = useState(false);
 
   const stopCamera = useCallback(() => {
-    detectingRef.current = false;
-    if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+    activeRef.current = false;
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
@@ -91,63 +97,87 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
   }, []);
 
   const detectFace = useCallback(() => {
-    if (detectingRef.current) return;
-    detectingRef.current = true;
+    if (activeRef.current) return;
+    activeRef.current = true;
     setStatus('detecting');
     let modelRetries = 0;
-    let busy = false;
 
-    const tick = () => {
-      if (!detectingRef.current) return;
-      if (busy || !videoRef.current || !streamRef.current) {
-        rafRef.current = requestAnimationFrame(tick);
-        return;
-      }
-      busy = true;
-
-      (async () => {
-        try {
-          if (!faceapi.nets.tinyFaceDetector.params) {
-            if (modelRetries++ < 3) await loadModels();
-            else throw new Error('Models unavailable');
-          }
-          const detection = await faceapi.detectSingleFace(videoRef.current, DETECT_OPTIONS)
-            .withFaceLandmarks()
-            .withFaceDescriptor();
-
-          if (detection && detectingRef.current) {
-            setScanPulse(true);
-            playDetectionSound();
-            const descriptor = Array.from(detection.descriptor);
-
-            if (mode === 'verify-continuous') {
-              onCapture(descriptor);
-              setTimeout(() => { setScanPulse(false); }, 500);
-              // Pause briefly then resume
-              await new Promise(r => setTimeout(r, 600));
-            } else {
-              detectingRef.current = false;
-              setStatus('success');
-              setMessage(mode === 'register' ? 'Gezicht geregistreerd!' : 'Gezicht herkend!');
-              stopCamera();
-              onCapture(descriptor);
-              return;
-            }
-          }
-        } catch (err) {
-          if (err.message?.includes('load model') && modelRetries < 3) {
-            modelRetries++;
-            try { await loadModels(); } catch {}
-          }
-        }
-        busy = false;
-        if (detectingRef.current) {
-          rafRef.current = requestAnimationFrame(tick);
-        }
-      })();
+    const scheduleNext = (delay) => {
+      if (!activeRef.current) return;
+      timerRef.current = setTimeout(tick, delay);
     };
 
-    rafRef.current = requestAnimationFrame(tick);
+    const tick = async () => {
+      if (!activeRef.current || !videoRef.current || !streamRef.current) return;
+      // Skip if a previous onCapture callback is still being processed
+      if (processingRef.current) {
+        scheduleNext(DETECT_INTERVAL);
+        return;
+      }
+
+      try {
+        if (!faceapi.nets.tinyFaceDetector.params) {
+          if (modelRetries++ < 3) await loadModels();
+          else throw new Error('Models unavailable');
+        }
+
+        const detection = await faceapi.detectSingleFace(videoRef.current, DETECT_OPTIONS)
+          .withFaceLandmarks()
+          .withFaceDescriptor();
+
+        if (detection && activeRef.current) {
+          const descriptor = Array.from(detection.descriptor);
+
+          if (mode === 'verify-continuous') {
+            // Lock processing — prevent duplicate fires while API call is in-flight
+            processingRef.current = true;
+            setScanPulse(true);
+            playDetectionSound();
+
+            let matched = false;
+            try {
+              await onCapture(descriptor);
+              matched = true;
+            } catch {
+              // Not recognized — will use shorter cooldown
+            }
+
+            processingRef.current = false;
+            setScanPulse(false);
+
+            // Longer cooldown on success (component likely unmounting anyway),
+            // shorter cooldown on failure so user doesn't wait too long
+            if (activeRef.current) {
+              scheduleNext(matched ? MATCH_COOLDOWN : FAIL_COOLDOWN);
+            }
+            return;
+          } else {
+            // register / verify (single-shot)
+            activeRef.current = false;
+            setScanPulse(true);
+            playDetectionSound();
+            setStatus('success');
+            setMessage(mode === 'register' ? 'Gezicht geregistreerd!' : 'Gezicht herkend!');
+            stopCamera();
+            onCapture(descriptor);
+            return;
+          }
+        }
+      } catch (err) {
+        if (err.message?.includes('load model') && modelRetries < 3) {
+          modelRetries++;
+          try { await loadModels(); } catch {}
+        }
+      }
+
+      // No face found — retry quickly
+      if (activeRef.current) {
+        scheduleNext(DETECT_INTERVAL);
+      }
+    };
+
+    // Start first detection
+    tick();
   }, [mode, onCapture, stopCamera]);
 
   useEffect(() => {
@@ -162,11 +192,9 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
 
     const init = async () => {
       try {
-        // Camera first — user sees themselves immediately
         await startCamera();
         if (cancelledRef.current) { stopCamera(); return; }
         setStatus('ready');
-        // Models in background
         await loadModels();
         if (cancelledRef.current) return;
         if (mode === 'verify' || mode === 'verify-continuous') {
@@ -219,7 +247,7 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
 
   return (
     <div className="flex flex-col items-center w-full" data-testid="face-capture">
-      {/* Video feed — responsive container */}
+      {/* Video feed */}
       <div className="relative bg-slate-900 overflow-hidden w-full max-w-[380px]"
         style={{
           aspectRatio: '4/3',
@@ -232,7 +260,7 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
           style={{ transform: 'scaleX(-1)' }} />
 
         {/* Scanning overlay with corner brackets */}
-        {isScanning && (
+        {isScanning && !scanPulse && (
           <div className="absolute inset-0 pointer-events-none" style={{ willChange: 'opacity' }}>
             <div className="absolute top-[10%] left-[12%] w-5 h-5 sm:w-6 sm:h-6 border-t-2 border-l-2 border-green-400 rounded-tl-md" />
             <div className="absolute top-[10%] right-[12%] w-5 h-5 sm:w-6 sm:h-6 border-t-2 border-r-2 border-green-400 rounded-tr-md" />
@@ -243,7 +271,7 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
         )}
 
         {/* Detection flash */}
-        <div className={`absolute inset-0 bg-green-400/25 transition-opacity duration-200 ${scanPulse ? 'opacity-100' : 'opacity-0'}`}
+        <div className={`absolute inset-0 bg-green-400/25 transition-opacity duration-300 ${scanPulse ? 'opacity-100' : 'opacity-0'}`}
           style={{ willChange: 'opacity' }} />
 
         {status === 'loading' && (
@@ -267,7 +295,7 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
       <p className={`text-sm sm:text-base font-semibold text-center mb-2 sm:mb-3 transition-colors duration-200 ${
         status === 'success' ? 'text-green-600' : status === 'error' ? 'text-red-500' : isScanning ? 'text-green-600' : 'text-slate-500'
       }`}>
-        {isScanning ? 'Scannen...' : status === 'loading' ? '' : message}
+        {isScanning ? (scanPulse ? 'Herkend! Even geduld...' : 'Scannen...') : status === 'loading' ? '' : message}
       </p>
 
       {/* Buttons */}
