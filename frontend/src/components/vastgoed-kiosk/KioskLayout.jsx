@@ -26,6 +26,8 @@ const slideVariants = {
 function useKioskMode() {
   const [mode, setMode] = useState({ isTouch: false, screenSize: 'normal' });
 
+  useEffect(() => { document.title = 'Vastgoed Kiosk'; }, []);
+
   useEffect(() => {
     const detect = () => {
       const isTouch = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;

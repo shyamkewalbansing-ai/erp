@@ -15,17 +15,38 @@
         <meta name="msapplication-TileColor" content="#0caf60" />
         <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
         
-        <!-- PWA Manifest -->
-        <link rel="manifest" href="/manifest.json" />
+        <!-- PWA Manifest - dynamisch per route -->
+        <link rel="manifest" href="/manifest.json" id="pwa-manifest" />
         
         <!-- Favicon and Icons -->
-        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-96x96.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-72x72.png" />
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
-        <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.png" />
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" id="pwa-favicon" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-96x96.png" id="pwa-icon-32" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-72x72.png" id="pwa-icon-16" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" id="pwa-apple-icon" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" id="pwa-apple-152" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" id="pwa-apple-180" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.png" id="pwa-apple-167" />
+        
+        <script>
+            (function() {
+                var p = window.location.pathname;
+                if (p.indexOf('/vastgoed') === 0 || p.indexOf('/huurders') === 0) {
+                    var isVastgoed = p.indexOf('/vastgoed') === 0;
+                    var mf = isVastgoed ? '/manifest-vastgoed.json' : '/manifest-huurders.json';
+                    document.getElementById('pwa-manifest').href = mf;
+                    document.getElementById('pwa-favicon').href = '/kiosk-icons/kiosk-favicon.ico';
+                    document.getElementById('pwa-icon-32').href = '/kiosk-icons/kiosk-72.png';
+                    document.getElementById('pwa-icon-16').href = '/kiosk-icons/kiosk-72.png';
+                    document.getElementById('pwa-apple-icon').href = '/kiosk-icons/kiosk-192.png';
+                    document.getElementById('pwa-apple-152').href = '/kiosk-icons/kiosk-144.png';
+                    document.getElementById('pwa-apple-180').href = '/kiosk-icons/kiosk-192.png';
+                    document.getElementById('pwa-apple-167').href = '/kiosk-icons/kiosk-192.png';
+                    document.querySelector('meta[name=theme-color]').content = '#f97316';
+                    document.querySelector('meta[name=apple-mobile-web-app-title]').content = isVastgoed ? 'Kiosk' : 'Huurders';
+                    document.title = isVastgoed ? 'Vastgoed Kiosk' : 'Huurders Portaal';
+                }
+            })();
+        </script>
         
         <!-- Preconnect to critical domains for faster loading -->
         <link rel="preconnect" href="https://fonts.googleapis.com" />

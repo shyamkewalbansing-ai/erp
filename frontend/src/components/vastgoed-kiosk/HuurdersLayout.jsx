@@ -30,6 +30,8 @@ export default function HuurdersLayout() {
   const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
   const [faceKey, setFaceKey] = useState(0);
 
+  useEffect(() => { document.title = 'Huurders Portaal'; }, []);
+
   useEffect(() => {
     if (companyId) {
       axios.get(`${API}/public/${companyId}/company`).then(res => {

@@ -9,6 +9,7 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 // Live clock component for kiosk feel
 function KioskClock() {
   const [time, setTime] = useState(new Date());
+  useEffect(() => { document.title = 'Vastgoed Kiosk'; }, []);
   useEffect(() => {
     const interval = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(interval);
