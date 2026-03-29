@@ -106,8 +106,8 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId, code
               return (
                 <button key={apt.apartment_id} onClick={() => handleApartmentClick(apt)} disabled={!hasTenant}
                   data-testid={`apt-${apt.number}`}
-                  className={`group bg-white flex flex-col items-center justify-center text-center transition-all duration-200 overflow-hidden ${
-                    hasTenant ? 'cursor-pointer hover:-translate-y-1' : 'opacity-35 cursor-not-allowed'
+                  className={`group bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center text-center transition-all duration-200 overflow-hidden ${
+                    hasTenant ? 'cursor-pointer hover:-translate-y-1 hover:bg-white/90' : 'opacity-35 cursor-not-allowed'
                   }`}
                   style={{
                     padding: 'clamp(10px, 1.8vh, 24px) clamp(6px, 0.8vw, 16px)',
