@@ -56,9 +56,9 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
           await videoRef.current.play();
         }
         setStatus('ready');
-        setMessage(mode === 'register' ? 'Kijk recht in de camera' : 'Gezicht herkennen...');
+        setMessage(mode === 'register' ? 'Kijk recht in de camera' : 'Positioneer uw gezicht...');
         if (mode === 'verify' || mode === 'verify-continuous') {
-          if (!cancelled) detectFace();
+          if (!cancelled) setTimeout(() => { if (!cancelled) detectFace(); }, 2500);
         }
       } catch (err) {
         if (!cancelled) {
