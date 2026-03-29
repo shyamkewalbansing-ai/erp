@@ -40,22 +40,22 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
 
   if (variant === 'huurder') {
     return (
-      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
-        <div className="flex items-center justify-between" style={{ height: '7vh', padding: '0 0.5vw' }}>
+      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 3vw 0' }}>
+        <div className="flex items-center justify-between flex-wrap gap-2" style={{ minHeight: '7vh', padding: '1vh 0.5vw' }}>
           <button onClick={onBack} className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }} data-testid="back-btn">
             <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
             <span className="kiosk-body">Terug</span>
           </button>
           <div className="flex items-center gap-2 text-white">
             <User style={{ width: '2.2vh', height: '2.2vh' }} />
-            <span className="kiosk-subtitle">{tenant.name}</span>
-            <span className="kiosk-body opacity-70">Appt. {tenant.apartment_number}</span>
+            <span className="kiosk-subtitle truncate max-w-[40vw]">{tenant.name}</span>
+            <span className="kiosk-body opacity-70 whitespace-nowrap">Appt. {tenant.apartment_number}</span>
           </div>
-          <div style={{ width: '6vw' }} />
+          <div className="hidden sm:block" style={{ width: '6vw' }} />
         </div>
 
         <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
-          <div className="bg-white flex flex-col" style={{ width: 'clamp(500px, 60vw, 860px)', borderRadius: 'clamp(16px, 2vh, 28px)', boxShadow: '0 8px 40px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+          <div className="bg-white flex flex-col" style={{ width: 'clamp(300px, 90vw, 860px)', borderRadius: 'clamp(16px, 2vh, 28px)', boxShadow: '0 8px 40px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
             {/* Tenant banner */}
             <div className="bg-slate-900 text-white flex items-center justify-between" style={{ padding: 'clamp(14px, 2.5vh, 32px) clamp(16px, 2vw, 36px)' }}>
               <div className="flex items-center" style={{ gap: 'clamp(8px, 1vw, 18px)' }}>
@@ -74,7 +74,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
             </div>
 
             {/* Financial tiles */}
-            <div className="grid grid-cols-2" style={{ gap: 'clamp(6px, 0.8vw, 14px)', padding: 'clamp(12px, 2vh, 28px) clamp(14px, 2vw, 32px)' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 'clamp(6px, 0.8vw, 14px)', padding: 'clamp(12px, 2vh, 28px) clamp(14px, 2vw, 32px)' }}>
               {items.map((item, i) => {
                 const Icon = item.icon;
                 const isHighlight = item.highlight && item.value > 0;
@@ -169,24 +169,24 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
   }
 
   return (
-    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
+    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 3vw 0' }}>
       {/* Header - small colored zone */}
-      <div className="flex items-center justify-between" style={{ height: '7vh', padding: '0 0.5vw' }}>
+      <div className="flex items-center justify-between flex-wrap gap-2" style={{ minHeight: '7vh', padding: '1vh 0.5vw' }}>
         <button onClick={onBack} className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }} data-testid="back-btn">
           <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
           <span className="kiosk-body">Terug</span>
         </button>
         <div className="flex items-center gap-2 text-white">
           <User style={{ width: '2.2vh', height: '2.2vh' }} />
-          <span className="kiosk-subtitle">{tenant.name}</span>
-          <span className="kiosk-body opacity-70">Appt. {tenant.apartment_number}</span>
+          <span className="kiosk-subtitle truncate max-w-[30vw]">{tenant.name}</span>
+          <span className="kiosk-body opacity-70 whitespace-nowrap">Appt. {tenant.apartment_number}</span>
         </div>
       </div>
 
       {/* Content - white panels fill screen */}
-      <div className="flex-1 flex gap-[1vw] min-h-0" style={{ paddingBottom: '1.5vh' }}>
+      <div className="flex-1 flex flex-col md:flex-row gap-[2vw] md:gap-[1vw] min-h-0 overflow-auto md:overflow-hidden" style={{ paddingBottom: '1.5vh' }}>
         {/* Left panel - Financial overview */}
-        <div className="kiosk-card flex-[3] flex flex-col min-w-0">
+        <div className="kiosk-card flex-none md:flex-[3] flex flex-col min-w-0">
           {/* Panel header */}
           <div style={{ padding: 'clamp(8px, 1.5vh, 20px) clamp(12px, 1.5vw, 24px)', borderBottom: '1px solid #f1f5f9' }}>
             <span className="kiosk-subtitle text-slate-800">Financieel overzicht</span>
@@ -217,7 +217,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
         </div>
 
         {/* Right panel - Action card */}
-        <div className="kiosk-card flex-[2] flex flex-col items-center justify-center min-w-0 text-center" style={{ padding: 'clamp(12px, 2vh, 32px) clamp(8px, 1vw, 20px)' }}>
+        <div className="kiosk-card flex-none md:flex-[2] flex flex-col items-center justify-center min-w-0 text-center" style={{ padding: 'clamp(12px, 2vh, 32px) clamp(8px, 1vw, 20px)' }}>
           {hasDebt ? (
             <>
               <div className="rounded-full bg-orange-50 flex items-center justify-center" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>

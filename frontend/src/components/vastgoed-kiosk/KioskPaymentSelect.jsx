@@ -61,9 +61,9 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
   };
 
   return (
-    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
+    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 3vw 0' }}>
       {/* Header */}
-      <div className="flex items-center justify-between" style={{ height: '7vh', padding: '0 0.5vw' }}>
+      <div className="flex items-center justify-between flex-wrap gap-2" style={{ minHeight: '7vh', padding: '1vh 0.5vw' }}>
         <button onClick={onBack} className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }} data-testid="payselect-back-btn">
           <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
           <span className="kiosk-body">Terug</span>
@@ -76,9 +76,9 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex gap-[1vw] min-h-0" style={{ paddingBottom: '1.5vh' }}>
+      <div className="flex-1 flex flex-col md:flex-row gap-[2vw] md:gap-[1vw] min-h-0 overflow-auto md:overflow-hidden" style={{ paddingBottom: '1.5vh' }}>
         {/* Left - Payment type options */}
-        <div className="kiosk-card flex-[3] flex flex-col min-w-0" style={{ padding: 'clamp(8px, 1.2vh, 16px) clamp(10px, 1.2vw, 20px)' }}>
+        <div className="kiosk-card flex-none md:flex-[3] flex flex-col min-w-0" style={{ padding: 'clamp(8px, 1.2vh, 16px) clamp(10px, 1.2vw, 20px)' }}>
           {/* Select All */}
           {PAYMENT_TYPES.filter(t => !isTypeDisabled(t.id)).length > 1 && (
             <button onClick={allSelected ? () => setSelectedTypes(new Set()) : selectAll} data-testid="pay-select-all"
@@ -150,7 +150,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
         </div>
 
         {/* Right - Keypad always visible */}
-        <div className="kiosk-card flex-[2] flex flex-col min-w-0" style={{ padding: 'clamp(12px, 2vh, 28px) clamp(10px, 1.5vw, 24px)' }}>
+        <div className="kiosk-card flex-none md:flex-[2] flex flex-col min-w-0" style={{ padding: 'clamp(12px, 2vh, 28px) clamp(10px, 1.5vw, 24px)' }}>
           <h4 className="kiosk-subtitle font-bold text-slate-900" style={{ marginBottom: '0.3vh' }}>Bedrag invoeren</h4>
           <p className="kiosk-small text-slate-400" style={{ marginBottom: '1.5vh' }}>Totaal openstaand: {formatSRD(totalDebt)}</p>
           <div className={`border-2 rounded-lg transition ${hasCustom ? 'bg-orange-50 border-orange-300' : 'bg-slate-50 border-slate-200'}`} style={{ padding: 'clamp(8px, 1.5vh, 20px)', marginBottom: '2vh' }}>

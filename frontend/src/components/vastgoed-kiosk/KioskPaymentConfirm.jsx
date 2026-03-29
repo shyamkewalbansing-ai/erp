@@ -251,24 +251,25 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   // ====== CHOOSE METHOD SCREEN ======
   if (!payMethod) {
     return (
-      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
-        <div className="flex items-center justify-between" style={{ height: '7vh', padding: '0 0.5vw' }}>
+      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 3vw 0' }}>
+        <div className="flex items-center justify-between flex-wrap gap-2" style={{ minHeight: '7vh', padding: '1vh 0.5vw' }}>
           <button onClick={onBack} className="flex items-center gap-2 font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }} data-testid="back-btn-confirm">
             <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} className="text-white" />
             <span className="kiosk-body text-white">Terug</span>
           </button>
           <div className="text-white text-center">
             <span className="kiosk-subtitle">Hoe wilt u betalen?</span>
-            <span className="kiosk-body opacity-70 ml-3">{formatSRD(paymentData.amount)}</span>
+            <span className="kiosk-body opacity-70 ml-3 hidden sm:inline">{formatSRD(paymentData.amount)}</span>
           </div>
-          <div style={{ width: '6vw' }} />
+          <div className="hidden sm:block" style={{ width: '6vw' }} />
         </div>
-        <div className="flex-1 flex items-center justify-center gap-[1.5vw] min-h-0" style={{ paddingBottom: '1.5vh' }}>
+        <div className="flex-1 flex items-center justify-center min-h-0 overflow-auto" style={{ paddingBottom: '1.5vh' }}>
+          <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-[3vw] sm:gap-[1.5vw] w-full" style={{ padding: '2vh 0' }}>
           {/* Cash */}
           {!hideCash && (
             <button onClick={() => setPayMethod('cash')} data-testid="pay-method-cash"
-              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1"
-              style={{ width: 'clamp(240px, 28vw, 440px)', height: 'clamp(240px, 52vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
+              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 w-[80vw] sm:w-auto"
+              style={{ minWidth: 'min(240px, 80vw)', maxWidth: '440px', height: 'clamp(180px, 40vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = '#22c55e'}
               onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
               <div className="rounded-full bg-green-50 group-hover:bg-green-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
@@ -281,8 +282,8 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           {/* Mope */}
           {!mopeLoading && mopeEnabled && (
             <button onClick={() => { setPayMethod('mope'); handleMopePayment(); }} data-testid="pay-method-mope"
-              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 relative"
-              style={{ width: 'clamp(240px, 28vw, 440px)', height: 'clamp(240px, 52vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
+              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 relative w-[80vw] sm:w-auto"
+              style={{ minWidth: 'min(240px, 80vw)', maxWidth: '440px', height: 'clamp(180px, 40vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = '#10b981'}
               onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
               <div className="rounded-full bg-emerald-50 group-hover:bg-emerald-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
@@ -297,8 +298,8 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           {/* Uni5Pay */}
           {!uni5Loading && uni5Enabled && (
             <button onClick={() => { setPayMethod('uni5pay'); handleUni5Payment(); }} data-testid="pay-method-uni5pay"
-              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 relative"
-              style={{ width: 'clamp(240px, 28vw, 440px)', height: 'clamp(240px, 52vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
+              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 relative w-[80vw] sm:w-auto"
+              style={{ minWidth: 'min(240px, 80vw)', maxWidth: '440px', height: 'clamp(180px, 40vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = '#dc2626'}
               onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
               <div className="rounded-full bg-red-50 group-hover:bg-red-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
@@ -312,8 +313,8 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           {/* Card/SumUp */}
           {!sumupLoading && sumupEnabled && (
             <button onClick={() => { setPayMethod('card'); handleCardPayment(); }} data-testid="pay-method-card"
-              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 relative"
-              style={{ width: 'clamp(240px, 28vw, 440px)', height: 'clamp(240px, 52vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
+              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 relative w-[80vw] sm:w-auto"
+              style={{ minWidth: 'min(240px, 80vw)', maxWidth: '440px', height: 'clamp(180px, 40vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
               onMouseEnter={e => e.currentTarget.style.borderColor = '#3b82f6'}
               onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
               <div className="rounded-full bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
@@ -332,6 +333,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
               </div>
             </button>
           )}
+          </div>
         </div>
       </div>
     );
@@ -340,16 +342,16 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   // ====== CASH CONFIRMATION ======
   if (payMethod === 'cash') {
     return (
-      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
-        <div className="flex items-center" style={{ height: '7vh', padding: '0 0.5vw' }}>
+      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 3vw 0' }}>
+        <div className="flex items-center" style={{ minHeight: '7vh', padding: '1vh 0.5vw' }}>
           <button onClick={() => setPayMethod(null)} disabled={processing}
             className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg disabled:opacity-50" style={{ padding: '0.8vh 1.2vw' }}>
             <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
             <span className="kiosk-body">Terug</span>
           </button>
         </div>
-        <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
-          <div className="kiosk-card flex flex-col items-center text-center" style={{ width: 'clamp(300px, 35vw, 520px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
+        <div className="flex-1 flex items-center justify-center min-h-0 overflow-auto" style={{ paddingBottom: '1.5vh' }}>
+          <div className="kiosk-card flex flex-col items-center text-center w-full max-w-[520px]" style={{ padding: 'clamp(16px, 3vh, 40px) clamp(16px, 4vw, 40px)' }}>
             <div className="bg-orange-500 rounded-lg w-full text-center" style={{ padding: 'clamp(12px, 2vh, 28px)', marginBottom: '2vh' }}>
               <p className="kiosk-small text-orange-100" style={{ marginBottom: '0.5vh' }}>Te betalen bedrag</p>
               <p className="kiosk-amount-lg text-white whitespace-nowrap" data-testid="confirm-amount">{formatSRD(paymentData.amount)}</p>
@@ -386,16 +388,16 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   // ====== MOPE QR CODE ======
   if (payMethod === 'mope') {
     return (
-      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
-        <div className="flex items-center" style={{ height: '7vh', padding: '0 0.5vw' }}>
+      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 3vw 0' }}>
+        <div className="flex items-center" style={{ minHeight: '7vh', padding: '1vh 0.5vw' }}>
           <button onClick={() => { setPayMethod(null); setMopeStatus('idle'); setError(''); if (mopePollRef.current) clearInterval(mopePollRef.current); }}
             className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }}>
             <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
             <span className="kiosk-body">Terug</span>
           </button>
         </div>
-        <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
-          <div className="kiosk-card flex flex-col items-center text-center" style={{ width: 'clamp(300px, 35vw, 520px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
+        <div className="flex-1 flex items-center justify-center min-h-0 overflow-auto" style={{ paddingBottom: '1.5vh' }}>
+          <div className="kiosk-card flex flex-col items-center text-center w-full max-w-[520px]" style={{ padding: 'clamp(16px, 3vh, 40px) clamp(16px, 4vw, 40px)' }}>
             {mopeStatus === 'creating' && (
               <div className="text-center" style={{ padding: '4vh 0' }}>
                 <Loader2 className="text-emerald-500 animate-spin mx-auto" style={{ width: '5vh', height: '5vh', marginBottom: '2vh' }} />
@@ -449,16 +451,16 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   // ====== UNI5PAY QR CODE ======
   if (payMethod === 'uni5pay') {
     return (
-      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
-        <div className="flex items-center" style={{ height: '7vh', padding: '0 0.5vw' }}>
+      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 3vw 0' }}>
+        <div className="flex items-center" style={{ minHeight: '7vh', padding: '1vh 0.5vw' }}>
           <button onClick={() => { setPayMethod(null); setUni5Status('idle'); setError(''); if (uni5PollRef.current) clearInterval(uni5PollRef.current); }}
             className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }}>
             <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
             <span className="kiosk-body">Terug</span>
           </button>
         </div>
-        <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
-          <div className="kiosk-card flex flex-col items-center text-center" style={{ width: 'clamp(300px, 35vw, 520px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
+        <div className="flex-1 flex items-center justify-center min-h-0 overflow-auto" style={{ paddingBottom: '1.5vh' }}>
+          <div className="kiosk-card flex flex-col items-center text-center w-full max-w-[520px]" style={{ padding: 'clamp(16px, 3vh, 40px) clamp(16px, 4vw, 40px)' }}>
             {uni5Status === 'creating' && (
               <div className="text-center" style={{ padding: '4vh 0' }}>
                 <Loader2 className="text-red-500 animate-spin mx-auto" style={{ width: '5vh', height: '5vh', marginBottom: '2vh' }} />
@@ -511,16 +513,16 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
 
   // ====== CARD PAYMENT (SUMUP) ======
   return (
-    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
-      <div className="flex items-center" style={{ height: '7vh', padding: '0 0.5vw' }}>
+    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 3vw 0' }}>
+      <div className="flex items-center" style={{ minHeight: '7vh', padding: '1vh 0.5vw' }}>
         <button onClick={() => { setPayMethod(null); setCardStatus('idle'); setError(''); widgetMounted.current = false; if (pollRef.current) clearInterval(pollRef.current); }}
           className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }}>
           <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
           <span className="kiosk-body">Terug</span>
         </button>
       </div>
-      <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
-        <div className="kiosk-card flex flex-col items-center text-center" style={{ width: 'clamp(300px, 35vw, 520px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2vw, 40px)' }}>
+      <div className="flex-1 flex items-center justify-center min-h-0 overflow-auto" style={{ paddingBottom: '1.5vh' }}>
+        <div className="kiosk-card flex flex-col items-center text-center w-full max-w-[520px]" style={{ padding: 'clamp(16px, 3vh, 40px) clamp(16px, 4vw, 40px)' }}>
           {cardStatus === 'creating' && (
             <div className="text-center" style={{ padding: '4vh 0' }}>
               <Loader2 className="text-orange-500 animate-spin mx-auto" style={{ width: '5vh', height: '5vh', marginBottom: '2vh' }} />

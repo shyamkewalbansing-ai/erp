@@ -42,23 +42,23 @@ export default function PaymentConfirm({ tenant, paymentData, onBack, onSuccess,
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[700px] flex flex-col">
+    <div className="bg-white rounded-3xl shadow-2xl overflow-hidden min-h-0 md:min-h-[700px] flex flex-col h-full">
       {/* Top bar */}
-      <div className="bg-[#1e293b] text-white p-6 flex items-center justify-between">
+      <div className="bg-[#1e293b] text-white p-4 sm:p-6 flex items-center justify-between">
         <button onClick={onBack} disabled={processing} className="flex items-center gap-2 text-[#94a3b8] hover:text-white transition disabled:opacity-50">
           <ArrowLeft className="w-5 h-5" />
-          Terug
+          <span className="hidden sm:inline">Terug</span>
         </button>
-        <h2 className="text-2xl font-bold">Bevestig betaling</h2>
-        <div className="w-24"></div>
+        <h2 className="text-lg sm:text-2xl font-bold">Bevestig betaling</h2>
+        <div className="w-12 sm:w-24"></div>
       </div>
 
       {/* Content - full kiosk split */}
-      <div className="flex-1 p-6 flex gap-6">
+      <div className="flex-1 p-4 sm:p-6 flex flex-col md:flex-row gap-4 sm:gap-6 overflow-auto">
         {/* Left - Amount display */}
-        <div className="w-1/2 flex flex-col items-center justify-center bg-[#f8fafc] rounded-2xl p-8">
+        <div className="w-full md:w-1/2 flex flex-col items-center justify-center bg-[#f8fafc] rounded-2xl p-4 sm:p-8">
           <p className="text-[#64748b] mb-2">Te betalen bedrag</p>
-          <p className="text-6xl font-bold text-[#0f172a] mb-4" data-testid="confirm-amount">{formatSRD(paymentData.amount)}</p>
+          <p className="text-4xl sm:text-6xl font-bold text-[#0f172a] mb-4" data-testid="confirm-amount">{formatSRD(paymentData.amount)}</p>
           <div className="flex items-center gap-2 text-[#64748b]">
             <Banknote className="w-5 h-5" />
             <span>{TYPE_LABELS[paymentData.payment_type]}</span>
@@ -67,7 +67,7 @@ export default function PaymentConfirm({ tenant, paymentData, onBack, onSuccess,
         </div>
 
         {/* Right - Details + Confirm */}
-        <div className="w-1/2 flex flex-col">
+        <div className="w-full md:w-1/2 flex flex-col">
           {/* Tenant mini card */}
           <div className="bg-[#f8fafc] rounded-xl p-4 flex items-center gap-4 mb-6 border border-[#e2e8f0]">
             <div className="w-12 h-12 rounded-full bg-[#1e293b] text-white flex items-center justify-center">
