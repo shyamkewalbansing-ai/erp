@@ -279,6 +279,36 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
               <p className="kiosk-small text-slate-400">Betaal met contant geld</p>
             </button>
           )}
+          {/* Mope */}
+          {!mopeLoading && mopeEnabled && (
+            <button onClick={() => { setPayMethod('mope'); handleMopePayment(); }} data-testid="pay-method-mope"
+              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 relative w-[80vw] sm:w-auto"
+              style={{ minWidth: 'min(240px, 80vw)', maxWidth: '440px', height: 'clamp(180px, 40vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = '#10b981'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
+              <div className="rounded-full bg-emerald-50 group-hover:bg-emerald-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
+                <QrCode style={{ width: '4vh', height: '4vh' }} className="text-emerald-600" />
+              </div>
+              <p className="kiosk-subtitle text-slate-900 font-bold" style={{ marginBottom: '0.5vh' }}>Mope</p>
+              <p className="kiosk-small text-slate-400">Scan QR-code met Mope app</p>
+              <p className="kiosk-small text-emerald-600 font-semibold" style={{ marginTop: '1vh' }}>{formatSRD(paymentData.amount)}</p>
+            </button>
+          )}
+          {/* Uni5Pay */}
+          {!uni5Loading && uni5Enabled && (
+            <button onClick={() => { setPayMethod('uni5pay'); handleUni5Payment(); }} data-testid="pay-method-uni5pay"
+              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 relative w-[80vw] sm:w-auto"
+              style={{ minWidth: 'min(240px, 80vw)', maxWidth: '440px', height: 'clamp(180px, 40vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = '#dc2626'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
+              <div className="rounded-full bg-red-50 group-hover:bg-red-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
+                <Smartphone style={{ width: '4vh', height: '4vh' }} className="text-red-600" />
+              </div>
+              <p className="kiosk-subtitle text-slate-900 font-bold" style={{ marginBottom: '0.5vh' }}>Uni5Pay</p>
+              <p className="kiosk-small text-slate-400">Scan QR-code met Uni5Pay app</p>
+              <p className="kiosk-small text-red-600 font-semibold" style={{ marginTop: '1vh' }}>{formatSRD(paymentData.amount)}</p>
+            </button>
+          )}
           {/* Card/SumUp */}
           {!sumupLoading && sumupEnabled && (
             <button onClick={() => { setPayMethod('card'); handleCardPayment(); }} data-testid="pay-method-card"
@@ -296,10 +326,6 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
                   {formatSRD(paymentData.amount)} = {sumupCurrency} {(paymentData.amount / sumupExchangeRate).toFixed(2)}
                 </p>
               )}
-              <div className="flex items-center justify-center" style={{ gap: 'clamp(8px, 1vw, 16px)', marginTop: '1.5vh' }}>
-                <img src="/hakrinbank-logo.png" alt="Hakrinbank" style={{ height: 'clamp(20px, 3.5vh, 40px)', width: 'auto', objectFit: 'contain' }} />
-                <img src="/dsb-logo.png" alt="DSB Bank" style={{ height: 'clamp(20px, 3.5vh, 40px)', width: 'auto', objectFit: 'contain' }} />
-              </div>
             </button>
           )}
           </div>
