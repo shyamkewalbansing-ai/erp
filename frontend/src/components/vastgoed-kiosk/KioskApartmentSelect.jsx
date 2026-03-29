@@ -126,7 +126,7 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId, code
                     <>
                       <div className="flex items-center gap-1 text-slate-400" style={{ marginBottom: '0.8vh' }}>
                         <User style={{ width: '1.4vh', height: '1.4vh' }} />
-                        <span className="kiosk-small truncate" style={{ maxWidth: '10vw' }}>{tenant.name}</span>
+                        <span className="kiosk-small truncate text-slate-700 font-medium" style={{ maxWidth: '10vw' }}>{tenant.name}</span>
                       </div>
                       <span className="kiosk-small font-bold text-green-600 bg-green-50 rounded-full" style={{ padding: '0.3vh 1vw' }}>Bezet</span>
                     </>
