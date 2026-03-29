@@ -99,7 +99,7 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId, code
       {/* Content */}
       <div className="flex-1 min-h-0 overflow-auto" style={{ paddingBottom: '1.5vh' }}>
         {mode === 'grid' ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 h-full" style={{ gap: 'clamp(8px, 1vw, 16px)', padding: '0 0.5vw' }}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5" style={{ gap: 'clamp(8px, 1vw, 16px)', padding: '0 0.5vw' }}>
             {apartments.map((apt) => {
               const tenant = tenants.find(t => t.apartment_id === apt.apartment_id && t.status === 'active');
               const hasTenant = !!tenant;
