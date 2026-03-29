@@ -1,6 +1,7 @@
 aiofiles==25.1.0
 aiohappyeyeballs==2.6.1
 aiohttp==3.13.3
+aiohttp-retry==2.9.1
 aiosignal==1.4.0
 aiosmtplib==5.1.0
 annotated-doc==0.0.4
@@ -24,6 +25,7 @@ distro==1.9.0
 dnspython==2.8.0
 ecdsa==0.19.1
 email-validator==2.3.0
+emergentintegrations==0.1.0
 et_xmlfile==2.0.0
 fastapi==0.110.1
 fastuuid==0.14.0
@@ -127,6 +129,7 @@ tinycss2==1.5.1
 tinyhtml5==2.0.0
 tokenizers==0.22.2
 tqdm==4.67.1
+twilio==9.10.4
 typer==0.21.1
 typer-slim==0.21.1
 typing-inspection==0.4.2

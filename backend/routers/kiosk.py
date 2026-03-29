@@ -94,6 +94,65 @@ async def _send_wa_auto(company_id: str, phone: str, message: str, tenant_id: st
         pass  # Auto messages should never break the main flow
 
 
+async def _send_twilio_auto(company_id: str, phone: str, message: str, tenant_id: str = "", tenant_name: str = "", msg_type: str = "auto"):
+    """Internal helper: send Twilio SMS if enabled for this company"""
+    try:
+        comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
+        if not comp or not comp.get("twilio_enabled") or not comp.get("twilio_account_sid") or not comp.get("twilio_auth_token") or not comp.get("twilio_phone_number"):
+            return  # Twilio not configured, skip silently
+
+        phone_clean = phone.replace(" ", "").replace("-", "")
+        if not phone_clean.startswith("+"):
+            if phone_clean.startswith("597"):
+                phone_clean = "+" + phone_clean
+            else:
+                phone_clean = "+597" + phone_clean
+
+        # Append bank info if available
+        bank_name = comp.get("bank_name")
+        bank_account = comp.get("bank_account_number")
+        bank_holder = comp.get("bank_account_name")
+        if bank_name and bank_account:
+            message += f"\n\n--- Bankgegevens ---\nBank: {bank_name}\nRekening: {bank_account}"
+            if bank_holder:
+                message += f"\nT.n.v.: {bank_holder}"
+
+        from twilio.rest import Client as TwilioClient
+        twilio_client = TwilioClient(comp["twilio_account_sid"], comp["twilio_auth_token"])
+        
+        send_status = "pending"
+        try:
+            twilio_client.messages.create(
+                body=message,
+                from_=comp["twilio_phone_number"],
+                to=phone_clean
+            )
+            send_status = "sent"
+        except Exception:
+            send_status = "failed"
+
+        await db.kiosk_wa_messages.insert_one({
+            "message_id": generate_uuid(),
+            "company_id": company_id,
+            "tenant_id": tenant_id,
+            "tenant_name": tenant_name,
+            "phone": phone_clean,
+            "message_type": msg_type,
+            "channel": "twilio_sms",
+            "message": message,
+            "status": send_status,
+            "created_at": datetime.now(timezone.utc)
+        })
+    except Exception:
+        pass  # Auto messages should never break the main flow
+
+
+async def _send_message_auto(company_id: str, phone: str, message: str, tenant_id: str = "", tenant_name: str = "", msg_type: str = "auto"):
+    """Send message via all enabled channels (WhatsApp + Twilio)"""
+    await _send_wa_auto(company_id, phone, message, tenant_id, tenant_name, msg_type)
+    await _send_twilio_auto(company_id, phone, message, tenant_id, tenant_name, msg_type)
+
+
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
@@ -175,6 +234,11 @@ class CompanyUpdate(BaseModel):
     uni5pay_enabled: Optional[bool] = None
     # Start screen after login
     start_screen: Optional[str] = None  # 'kiosk' or 'dashboard'
+    # Twilio SMS Integration
+    twilio_account_sid: Optional[str] = None
+    twilio_auth_token: Optional[str] = None
+    twilio_phone_number: Optional[str] = None
+    twilio_enabled: Optional[bool] = None
 
 class KioskPinVerify(BaseModel):
     pin: str  # 4-digit PIN
@@ -1070,7 +1134,7 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
     
     if tenant.get("phone") or tenant.get("telefoon"):
         tenant_phone = tenant.get("phone") or tenant.get("telefoon", "")
-        await _send_wa_auto(company_id, tenant_phone, wa_msg, data.tenant_id, tenant["name"], "payment_confirmation")
+        await _send_message_auto(company_id, tenant_phone, wa_msg, data.tenant_id, tenant["name"], "payment_confirmation")
     
     return {
         "payment_id": payment_id,
@@ -1310,7 +1374,7 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                                    f"Totaal openstaand: SRD {updates['outstanding_rent']:,.2f}\n\n"
                                    f"Gelieve voor de vervaldatum te betalen.\n\n"
                                    f"Met vriendelijke groet,\n{company_name_for_wa}")
-                    await _send_wa_auto(company_id, t_phone, wa_rent_msg, t["tenant_id"], t["name"], "new_invoice")
+                    await _send_message_auto(company_id, t_phone, wa_rent_msg, t["tenant_id"], t["name"], "new_invoice")
                 
                 # Fine applied
                 if "fines" in updates and updates["fines"] > t.get("fines", 0):
@@ -1322,7 +1386,7 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                                    f"Totaal openstaand: SRD {(updates.get('outstanding_rent', outstanding) + updates.get('service_costs', t.get('service_costs', 0)) + updates['fines']):,.2f}\n\n"
                                    f"Gelieve zo spoedig mogelijk te betalen.\n\n"
                                    f"Met vriendelijke groet,\n{company_name_for_wa}")
-                    await _send_wa_auto(company_id, t_phone, wa_fine_msg, t["tenant_id"], t["name"], "fine_applied")
+                    await _send_message_auto(company_id, t_phone, wa_fine_msg, t["tenant_id"], t["name"], "fine_applied")
         
         # === AUTO POWER CUTOFF: Turn off Shelly when overdue past cutoff days ===
         power_cutoff_days = comp.get("power_cutoff_days", 0) if comp else 0
@@ -2029,7 +2093,7 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
 
     if tenant.get("phone") or tenant.get("telefoon"):
         tenant_phone = tenant.get("phone") or tenant.get("telefoon", "")
-        await _send_wa_auto(company_id, tenant_phone, wa_msg, data.tenant_id, tenant["name"], "payment_confirmation")
+        await _send_message_auto(company_id, tenant_phone, wa_msg, data.tenant_id, tenant["name"], "payment_confirmation")
 
     return {
         "payment_id": payment_id,
@@ -3089,8 +3153,8 @@ async def send_whatsapp_message(data: WhatsAppMessage, company: dict = Depends(g
     """Send WhatsApp message to tenant via Business API"""
     comp = await db.kiosk_companies.find_one({"company_id": company["company_id"]}, {"_id": 0})
     
-    if not comp.get("wa_enabled") or not comp.get("wa_api_token") or not comp.get("wa_phone_id"):
-        raise HTTPException(status_code=400, detail="WhatsApp Business API is niet geconfigureerd. Ga naar Instellingen.")
+    if not comp.get("wa_enabled") and not comp.get("twilio_enabled"):
+        raise HTTPException(status_code=400, detail="Geen berichtenkanaal geconfigureerd. Schakel WhatsApp of Twilio in bij Instellingen.")
     
     tenant = await db.kiosk_tenants.find_one({"tenant_id": data.tenant_id, "company_id": company["company_id"]}, {"_id": 0})
     if not tenant:
@@ -3146,48 +3210,88 @@ async def send_whatsapp_message(data: WhatsAppMessage, company: dict = Depends(g
             message += f"\nT.n.v.: {bank_holder}"
     
     # Send via WhatsApp Business Cloud API
-    wa_url = comp.get("wa_api_url", "https://graph.facebook.com/v21.0")
-    wa_token = comp["wa_api_token"]
-    wa_phone_id = comp["wa_phone_id"]
+    wa_sent = False
+    twilio_sent = False
+    results = []
     
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.post(
-                f"{wa_url}/{wa_phone_id}/messages",
-                headers={
-                    "Authorization": f"Bearer {wa_token}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "messaging_product": "whatsapp",
-                    "to": phone_clean,
-                    "type": "text",
-                    "text": {"body": message}
-                }
-            )
-            result = resp.json()
+    if comp.get("wa_enabled") and comp.get("wa_api_token") and comp.get("wa_phone_id"):
+        wa_url = comp.get("wa_api_url", "https://graph.facebook.com/v21.0")
+        wa_token = comp["wa_api_token"]
+        wa_phone_id = comp["wa_phone_id"]
         
-        # Log the message
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                resp = await client.post(
+                    f"{wa_url}/{wa_phone_id}/messages",
+                    headers={
+                        "Authorization": f"Bearer {wa_token}",
+                        "Content-Type": "application/json"
+                    },
+                    json={
+                        "messaging_product": "whatsapp",
+                        "to": phone_clean,
+                        "type": "text",
+                        "text": {"body": message}
+                    }
+                )
+                result = resp.json()
+            
+            wa_sent = resp.status_code == 200
+            await db.kiosk_wa_messages.insert_one({
+                "message_id": generate_uuid(),
+                "company_id": company["company_id"],
+                "tenant_id": data.tenant_id,
+                "tenant_name": tenant_name,
+                "phone": phone_clean,
+                "message_type": data.message_type,
+                "channel": "whatsapp",
+                "message": message,
+                "status": "sent" if wa_sent else "failed",
+                "api_response": str(result),
+                "created_at": datetime.now(timezone.utc)
+            })
+            results.append(f"WhatsApp: {'verstuurd' if wa_sent else 'mislukt'}")
+        except Exception as e:
+            results.append(f"WhatsApp: fout - {str(e)}")
+    
+    # Also send via Twilio SMS if enabled
+    if comp.get("twilio_enabled") and comp.get("twilio_account_sid") and comp.get("twilio_auth_token") and comp.get("twilio_phone_number"):
+        phone_twilio = phone.replace(" ", "").replace("-", "")
+        if not phone_twilio.startswith("+"):
+            phone_twilio = "+597" + phone_twilio if not phone_twilio.startswith("597") else "+" + phone_twilio
+        
+        try:
+            from twilio.rest import Client as TwilioClient
+            tw_client = TwilioClient(comp["twilio_account_sid"], comp["twilio_auth_token"])
+            tw_client.messages.create(
+                body=message,
+                from_=comp["twilio_phone_number"],
+                to=phone_twilio
+            )
+            twilio_sent = True
+        except Exception as e:
+            results.append(f"SMS: fout - {str(e)}")
+        
         await db.kiosk_wa_messages.insert_one({
             "message_id": generate_uuid(),
             "company_id": company["company_id"],
             "tenant_id": data.tenant_id,
             "tenant_name": tenant_name,
-            "phone": phone_clean,
+            "phone": phone_twilio,
             "message_type": data.message_type,
+            "channel": "twilio_sms",
             "message": message,
-            "status": "sent" if resp.status_code == 200 else "failed",
-            "api_response": str(result),
+            "status": "sent" if twilio_sent else "failed",
             "created_at": datetime.now(timezone.utc)
         })
-        
-        if resp.status_code == 200:
-            return {"status": "sent", "message": f"Bericht verstuurd naar {tenant_name}"}
-        else:
-            return {"status": "failed", "message": f"Verzending mislukt: {result.get('error', {}).get('message', 'Onbekende fout')}"}
+        results.append(f"SMS: {'verstuurd' if twilio_sent else 'mislukt'}")
     
-    except Exception as e:
-        return {"status": "error", "message": f"Fout bij verzending: {str(e)}"}
+    if wa_sent or twilio_sent:
+        return {"status": "sent", "message": f"Bericht verstuurd naar {tenant_name} ({', '.join(results)})"}
+    elif not comp.get("wa_enabled") and not comp.get("twilio_enabled"):
+        raise HTTPException(status_code=400, detail="Geen berichtenkanaal geconfigureerd. Schakel WhatsApp of Twilio in bij Instellingen.")
+    else:
+        return {"status": "failed", "message": f"Verzending mislukt: {', '.join(results)}"}
 
 @router.post("/admin/whatsapp/send-bulk")
 async def send_bulk_whatsapp(message_type: str = "overdue", company: dict = Depends(get_current_company)):
@@ -3246,6 +3350,85 @@ async def test_whatsapp_connection(company: dict = Depends(get_current_company))
                 return {"status": "error", "message": f"API fout: {resp.status_code}"}
     except Exception as e:
         return {"status": "error", "message": f"Verbinding mislukt: {str(e)}"}
+
+
+@router.post("/admin/twilio/test")
+async def test_twilio_connection(company: dict = Depends(get_current_company)):
+    """Test Twilio SMS connection"""
+    comp = await db.kiosk_companies.find_one({"company_id": company["company_id"]}, {"_id": 0})
+
+    sid = comp.get("twilio_account_sid")
+    token = comp.get("twilio_auth_token")
+    phone = comp.get("twilio_phone_number")
+
+    if not sid or not token or not phone:
+        return {"status": "not_configured", "message": "Account SID, Auth Token en telefoonnummer zijn vereist"}
+
+    try:
+        from twilio.rest import Client as TwilioClient
+        client = TwilioClient(sid, token)
+        # Fetch account to verify credentials
+        account = client.api.accounts(sid).fetch()
+        if account.status == "active":
+            return {"status": "connected", "message": f"Verbinding succesvol! Account: {account.friendly_name}"}
+        else:
+            return {"status": "error", "message": f"Account status: {account.status}"}
+    except Exception as e:
+        return {"status": "error", "message": f"Verbinding mislukt: {str(e)}"}
+
+
+@router.post("/admin/twilio/send")
+async def send_twilio_sms(request: dict, company: dict = Depends(get_current_company)):
+    """Send a Twilio SMS to a specific tenant"""
+    company_id = company["company_id"]
+    comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
+    if not comp or not comp.get("twilio_enabled") or not comp.get("twilio_account_sid"):
+        raise HTTPException(status_code=400, detail="Twilio SMS is niet geconfigureerd")
+
+    tenant_id = request.get("tenant_id")
+    message = request.get("message", "")
+    if not tenant_id or not message:
+        raise HTTPException(status_code=400, detail="tenant_id en message zijn vereist")
+
+    tenant = await db.kiosk_tenants.find_one({"tenant_id": tenant_id, "company_id": company_id}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+
+    phone = tenant.get("phone", "")
+    if not phone:
+        raise HTTPException(status_code=400, detail="Huurder heeft geen telefoonnummer")
+
+    phone_clean = phone.replace(" ", "").replace("-", "")
+    if not phone_clean.startswith("+"):
+        phone_clean = "+597" + phone_clean if not phone_clean.startswith("597") else "+" + phone_clean
+
+    try:
+        from twilio.rest import Client as TwilioClient
+        client = TwilioClient(comp["twilio_account_sid"], comp["twilio_auth_token"])
+        client.messages.create(
+            body=message,
+            from_=comp["twilio_phone_number"],
+            to=phone_clean
+        )
+        send_status = "sent"
+    except Exception as e:
+        send_status = "failed"
+        raise HTTPException(status_code=500, detail=f"SMS versturen mislukt: {str(e)}")
+    finally:
+        await db.kiosk_wa_messages.insert_one({
+            "message_id": generate_uuid(),
+            "company_id": company_id,
+            "tenant_id": tenant_id,
+            "tenant_name": tenant.get("name", ""),
+            "phone": phone_clean,
+            "message_type": "reminder",
+            "channel": "twilio_sms",
+            "message": message,
+            "status": send_status,
+            "created_at": datetime.now(timezone.utc)
+        })
+
+    return {"message": "SMS verstuurd", "status": "sent"}
 
 
 # ============== SUPERADMIN ==============
