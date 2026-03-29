@@ -749,10 +749,21 @@ async def get_company_public(company_id: str):
     if not company:
         raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
     
+    sub_status = company.get("subscription_status", "active")
+    if sub_status in ("blocked", "expired"):
+        return {
+            "name": company["name"],
+            "company_id": company["company_id"],
+            "has_pin": bool(company.get("kiosk_pin")),
+            "subscription_blocked": True,
+            "subscription_message": "Uw abonnement is verlopen. Neem contact op met de beheerder."
+        }
+    
     return {
         "name": company["name"],
         "company_id": company["company_id"],
-        "has_pin": bool(company.get("kiosk_pin"))  # Indicate if PIN is required
+        "has_pin": bool(company.get("kiosk_pin")),
+        "subscription_blocked": False
     }
 
 @router.post("/public/{company_id}/verify-pin")
@@ -816,6 +827,10 @@ async def get_apartments_public(company_id: str):
     company = await db.kiosk_companies.find_one({"company_id": company_id})
     if not company:
         raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    
+    sub_status = company.get("subscription_status", "active")
+    if sub_status in ("blocked", "expired"):
+        raise HTTPException(status_code=403, detail="Abonnement verlopen")
     
     apartments = await db.kiosk_apartments.find({"company_id": company_id}).to_list(1000)
     return [{
@@ -3172,7 +3187,9 @@ async def superadmin_companies(admin=Depends(get_superadmin)):
             "email": c.get("email", ""),
             "telefoon": c.get("telefoon", ""),
             "status": c.get("status", "active"),
-            "subscription": c.get("subscription", "free"),
+            "subscription_status": c.get("subscription_status", "active"),
+            "monthly_price": c.get("monthly_price", 0),
+            "subscription_notes": c.get("subscription_notes", ""),
             "tenant_count": tenant_count,
             "apartment_count": apt_count,
             "payment_count": payment_count,
@@ -3193,19 +3210,68 @@ async def superadmin_toggle_company(company_id: str, admin=Depends(get_superadmi
     )
     return {"status": new_status, "message": f"Bedrijf {'geactiveerd' if new_status == 'active' else 'gedeactiveerd'}"}
 
+class SuperAdminSubscriptionUpdate(BaseModel):
+    subscription_status: str  # active, blocked, expired
+    monthly_price: float = 0
+    notes: str = ""
+
+class SuperAdminCreateCompany(BaseModel):
+    name: str
+    email: str
+    password: str
+    telefoon: str = ""
+    adres: str = ""
+    subscription_status: str = "active"
+    monthly_price: float = 0
+
 @router.put("/superadmin/companies/{company_id}/subscription")
-async def superadmin_update_subscription(company_id: str, admin=Depends(get_superadmin)):
+async def superadmin_update_subscription(company_id: str, data: SuperAdminSubscriptionUpdate, admin=Depends(get_superadmin)):
     comp = await db.kiosk_companies.find_one({"company_id": company_id})
     if not comp:
         raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
-    current = comp.get("subscription", "free")
-    new_sub = "free" if current == "pro" else "pro"
     await db.kiosk_companies.update_one(
         {"company_id": company_id},
-        {"$set": {"subscription": new_sub, "updated_at": datetime.now(timezone.utc)}}
+        {"$set": {
+            "subscription_status": data.subscription_status,
+            "monthly_price": data.monthly_price,
+            "subscription_notes": data.notes,
+            "updated_at": datetime.now(timezone.utc)
+        }}
     )
-    label = "PRO (SRD 3.500/mnd)" if new_sub == "pro" else "Gratis"
-    return {"subscription": new_sub, "message": f"Abonnement bijgewerkt naar {label}"}
+    return {"message": "Abonnement bijgewerkt", "subscription_status": data.subscription_status}
+
+@router.post("/superadmin/companies")
+async def superadmin_create_company(data: SuperAdminCreateCompany, admin=Depends(get_superadmin)):
+    existing = await db.kiosk_companies.find_one({"email": data.email.lower()})
+    if existing:
+        raise HTTPException(status_code=400, detail="E-mailadres is al geregistreerd")
+    company_id = slugify_company_name(data.name)
+    existing_id = await db.kiosk_companies.find_one({"company_id": company_id})
+    if existing_id:
+        raise HTTPException(status_code=400, detail=f"Bedrijfsnaam '{data.name}' is al in gebruik")
+    now = datetime.now(timezone.utc)
+    company = {
+        "company_id": company_id,
+        "name": data.name,
+        "email": data.email.lower(),
+        "password_hash": hash_password(data.password),
+        "telefoon": data.telefoon,
+        "adres": data.adres,
+        "billing_day": 1,
+        "fine_amount": 0,
+        "power_cutoff_days": 0,
+        "stamp_company_name": data.name,
+        "stamp_address": data.adres or "",
+        "stamp_phone": data.telefoon or "",
+        "stamp_whatsapp": "",
+        "status": "active",
+        "subscription_status": data.subscription_status,
+        "monthly_price": data.monthly_price,
+        "created_at": now,
+        "updated_at": now
+    }
+    await db.kiosk_companies.insert_one(company)
+    return {"company_id": company_id, "name": data.name, "message": "Bedrijf aangemaakt"}
 
 @router.get("/superadmin/payments")
 async def superadmin_payments(admin=Depends(get_superadmin)):

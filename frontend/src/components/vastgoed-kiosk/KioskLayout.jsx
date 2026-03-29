@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Lock, Building2, Hand, Monitor, Smartphone } from 'lucide-react';
+import { Lock, Building2, Hand, Monitor, Smartphone, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
 import KioskWelcome from './KioskWelcome';
 import KioskPinEntry from './KioskPinEntry';
@@ -51,6 +51,7 @@ export default function KioskLayout() {
   const [paymentResult, setPaymentResult] = useState(null);
   const [companyName, setCompanyName] = useState('');
   const [companyNotFound, setCompanyNotFound] = useState(false);
+  const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
   const [requiresPin, setRequiresPin] = useState(false);
   const [pinVerified, setPinVerified] = useState(false);
 
@@ -64,6 +65,13 @@ export default function KioskLayout() {
     if (companyId) {
       axios.get(`${API}/public/${companyId}/company`).then(res => {
         setCompanyName(res.data.name);
+        
+        // Check subscription
+        if (res.data.subscription_blocked) {
+          setSubscriptionBlocked(true);
+          return;
+        }
+        
         const hasPin = res.data.has_pin;
         setRequiresPin(hasPin);
         
@@ -108,6 +116,27 @@ export default function KioskLayout() {
     setPaymentResult(null);
     setStep('welcome');
   }, []);
+
+  if (subscriptionBlocked) {
+    return (
+      <div className="min-h-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm mx-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-5">
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+          </div>
+          <h1 className="text-xl font-bold text-slate-900 mb-2" data-testid="subscription-blocked-title">Abonnement Verlopen</h1>
+          <p className="text-sm text-slate-500 mb-2">{companyName}</p>
+          <p className="text-sm text-slate-400 mb-6">Uw abonnement is verlopen. Neem contact op met de beheerder.</p>
+          <button 
+            onClick={() => navigate('/vastgoed')}
+            className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl transition shadow-lg shadow-orange-500/25"
+          >
+            Terug naar Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (companyNotFound) {
     return (

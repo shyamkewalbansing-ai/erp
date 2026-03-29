@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Building2, Hand, ScanFace } from 'lucide-react';
+import { Building2, Hand, ScanFace, AlertTriangle } from 'lucide-react';
 import axios from 'axios';
 import KioskTenantOverview from './KioskTenantOverview';
 import KioskPaymentSelect from './KioskPaymentSelect';
@@ -44,6 +44,7 @@ export default function HuurdersLayout() {
   const [paymentResult, setPaymentResult] = useState(null);
   const [companyName, setCompanyName] = useState('');
   const [companyNotFound, setCompanyNotFound] = useState(false);
+  const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
   const [faceKey, setFaceKey] = useState(0); // force remount FaceCapture on failed verify
 
   const modeClasses = [
@@ -56,6 +57,11 @@ export default function HuurdersLayout() {
     if (companyId) {
       axios.get(`${API}/public/${companyId}/company`).then(res => {
         setCompanyName(res.data.name);
+        if (res.data.subscription_blocked) {
+          setSubscriptionBlocked(true);
+          setStep('blocked');
+          return;
+        }
         setStep('select');
       }).catch(() => {
         setCompanyNotFound(true);
@@ -78,6 +84,21 @@ export default function HuurdersLayout() {
     setFaceKey(k => k + 1);
     setStep('select');
   }, []);
+
+  if (subscriptionBlocked) {
+    return (
+      <div className="min-h-full bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm mx-6 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-5">
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+          </div>
+          <h1 className="text-xl font-bold text-slate-900 mb-2" data-testid="subscription-blocked-title">Abonnement Verlopen</h1>
+          <p className="text-sm text-slate-500 mb-2">{companyName}</p>
+          <p className="text-sm text-slate-400 mb-6">Uw abonnement is verlopen. Neem contact op met de beheerder.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (companyNotFound) {
     return (

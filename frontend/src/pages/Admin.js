@@ -55,6 +55,7 @@ import { Badge } from '../components/ui/badge';
 // Lazy load WebsiteEditor for better performance
 const WebsiteEditor = lazy(() => import('../components/WebsiteEditor'));
 const LiveChatStaffManager = lazy(() => import('./LiveChatStaffManager'));
+const VastgoedKioskManager = lazy(() => import('../components/VastgoedKioskManager'));
 import DomainManagementPage from './DomainManagementPage';
 import EmailSettingsAdmin from '../components/EmailSettingsAdmin';
 import { Input } from '../components/ui/input';
@@ -131,7 +132,7 @@ import {
 const SERVER_IP = process.env.REACT_APP_SERVER_IP || '72.62.174.80';
 
 export default function Admin() {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState(null);
   const [customers, setCustomers] = useState([]);
@@ -999,6 +1000,11 @@ server {
               <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
               <span className="hidden sm:inline">Live Chat</span>
               <span className="sm:hidden">Chat</span>
+            </TabsTrigger>
+            <TabsTrigger value="vastgoed-kiosk" data-testid="tab-vastgoed-kiosk" className="data-[state=active]:bg-amber-600 data-[state=active]:text-white rounded-lg px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium transition-all whitespace-nowrap">
+              <Building2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-1.5" />
+              <span className="hidden sm:inline">Vastgoed Kiosk</span>
+              <span className="sm:hidden">Kiosk</span>
             </TabsTrigger>
           </TabsList>
         </div>
@@ -2354,6 +2360,17 @@ server {
             </div>
           }>
             <LiveChatStaffManager />
+          </Suspense>
+        </TabsContent>
+
+        {/* Vastgoed Kiosk Management Tab */}
+        <TabsContent value="vastgoed-kiosk">
+          <Suspense fallback={
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+            </div>
+          }>
+            <VastgoedKioskManager token={token} />
           </Suspense>
         </TabsContent>
       </Tabs>

@@ -150,6 +150,14 @@ Full-stack ERP system for real estate/apartment rent payments with a tenant-faci
 - Backend: handmatige inkomsten worden nu correct meegeteld bij totalen en weergegeven in de tabel
 - Zowel inkomsten als uitgaven verschijnen in het Boekingen Overzicht
 
+### Vastgoed Kiosk Beheer in SuperAdmin (29 Mar 2026)
+- "Vastgoed Kiosk" tab toegevoegd aan /app/admin SuperAdmin dashboard
+- Overzicht van alle kiosk bedrijven met stats (huurders, panden, omzet)
+- Abonnement beheer per bedrijf: status (actief/geblokkeerd/verlopen), maandprijs, notities
+- Nieuwe kiosk bedrijven aanmaken vanuit SuperAdmin
+- Geblokkeerde bedrijven tonen "Abonnement Verlopen" melding op /vastgoed en /huurders
+- Backend subscription check op publieke endpoints (company, apartments)
+
 ### Modules Verwijderd uit /app ERP (28 Mar 2026)
 - Vastgoed Beheer module verwijderd uit /app sidebar, routes en dashboard
 - HRM Module verwijderd uit /app sidebar, routes en dashboard
