@@ -1508,11 +1508,18 @@ async def update_tenant(tenant_id: str, data: TenantUpdate, company: dict = Depe
     update_data = {k: v for k, v in data.dict().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc)
     
-    # If apartment changed, update apartment number
+    # If apartment changed, update apartment number and statuses
     if "apartment_id" in update_data:
         apt = await db.kiosk_apartments.find_one({"apartment_id": update_data["apartment_id"]})
         if apt:
             update_data["apartment_number"] = apt["number"]
+    
+    # If tenant is being deactivated, free up the apartment
+    if update_data.get("status") == "inactive" and tenant.get("apartment_id"):
+        await db.kiosk_apartments.update_one(
+            {"apartment_id": tenant["apartment_id"]},
+            {"$set": {"status": "available", "updated_at": datetime.now(timezone.utc)}}
+        )
     
     await db.kiosk_tenants.update_one(
         {"tenant_id": tenant_id},

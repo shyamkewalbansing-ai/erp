@@ -865,7 +865,7 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete
                   <td className="p-4">{formatSRD(apt.monthly_rent)}</td>
                   <td className="p-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      apt.status === 'occupied' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'
+                      apt.status === 'occupied' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'
                     }`}>
                       {apt.status === 'occupied' ? 'Bezet' : 'Beschikbaar'}
                     </span>
