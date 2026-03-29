@@ -2,19 +2,24 @@ import { useRef, useState, useEffect, useCallback } from 'react';
 import * as faceapi from 'face-api.js';
 import { Camera, Loader2, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 
-const MODEL_URL = '/models';
+const MODEL_URL = window.location.origin + '/models';
 
 async function loadModels() {
-  // Check actual face-api model state instead of a boolean flag
-  const allLoaded = faceapi.nets.tinyFaceDetector.params &&
-                    faceapi.nets.faceLandmark68Net.params &&
-                    faceapi.nets.faceRecognitionNet.params;
-  if (allLoaded) return;
-  await Promise.all([
-    faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
-    faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
-    faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
-  ]);
+  // Load each model sequentially with individual verification
+  await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+  if (!faceapi.nets.tinyFaceDetector.params) {
+    throw new Error('tinyFaceDetector failed to initialize params');
+  }
+
+  await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+  if (!faceapi.nets.faceLandmark68Net.params) {
+    throw new Error('faceLandmark68Net failed to initialize params');
+  }
+
+  await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+  if (!faceapi.nets.faceRecognitionNet.params) {
+    throw new Error('faceRecognitionNet failed to initialize params');
+  }
 }
 
 export default function FaceCapture({ onCapture, onCancel, mode = 'register', buttonLabel }) {
@@ -83,6 +88,7 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
     setStatus('detecting');
     setMessage('Gezicht detecteren...');
     let attempts = 0;
+    let modelReloadAttempts = 0;
     const tryDetect = async () => {
       if (!videoRef.current || !streamRef.current) return;
       if (attempts > 30) {
@@ -96,22 +102,50 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
         return;
       }
       attempts++;
-      const detection = await faceapi.detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.35 }))
-        .withFaceLandmarks()
-        .withFaceDescriptor();
-      if (detection) {
-        const descriptor = Array.from(detection.descriptor);
-        if (mode === 'verify-continuous') {
-          onCapture(descriptor);
-          setTimeout(tryDetect, 1000);
-        } else {
-          setStatus('success');
-          setMessage(mode === 'register' ? 'Gezicht geregistreerd!' : 'Gezicht herkend!');
-          stopCamera();
-          onCapture(descriptor);
+      try {
+        // Verify model is ready before inference
+        if (!faceapi.nets.tinyFaceDetector.params) {
+          if (modelReloadAttempts < 3) {
+            modelReloadAttempts++;
+            setMessage(`Modellen herladen... (${modelReloadAttempts}/3)`);
+            await loadModels();
+          } else {
+            throw new Error('Models could not be loaded after 3 attempts');
+          }
         }
-      } else {
-        setTimeout(tryDetect, 150);
+        const detection = await faceapi.detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.35 }))
+          .withFaceLandmarks()
+          .withFaceDescriptor();
+        if (detection) {
+          const descriptor = Array.from(detection.descriptor);
+          if (mode === 'verify-continuous') {
+            onCapture(descriptor);
+            setTimeout(tryDetect, 1000);
+          } else {
+            setStatus('success');
+            setMessage(mode === 'register' ? 'Gezicht geregistreerd!' : 'Gezicht herkend!');
+            stopCamera();
+            onCapture(descriptor);
+          }
+        } else {
+          setTimeout(tryDetect, 150);
+        }
+      } catch (err) {
+        // Catch the TinyYolov2 "load model before inference" error
+        if (err.message && err.message.includes('load model') && modelReloadAttempts < 3) {
+          modelReloadAttempts++;
+          setMessage(`Model fout - herladen... (${modelReloadAttempts}/3)`);
+          try {
+            await loadModels();
+            setTimeout(tryDetect, 500);
+          } catch {
+            setStatus('error');
+            setMessage('Gezichtsmodellen konden niet worden geladen');
+          }
+        } else {
+          setStatus('error');
+          setMessage('Gezichtsdetectie fout: ' + err.message);
+        }
       }
     };
     tryDetect();

@@ -3,7 +3,7 @@
  * BELANGRIJK: Cache index.html tijdens install en serveer bij navigatie
  */
 
-const CACHE_NAME = 'boekhouding-v2';
+const CACHE_NAME = 'boekhouding-v3';
 
 // Bestanden die ALTIJD gecached moeten worden
 const PRECACHE_FILES = [
@@ -63,12 +63,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Handle static files
-  if (url.pathname.startsWith('/static/') || 
+  // Handle static files (exclude face-api model files from caching)
+  if ((url.pathname.startsWith('/static/') || 
       url.pathname.endsWith('.js') || 
       url.pathname.endsWith('.css') ||
       url.pathname.endsWith('.png') ||
-      url.pathname.endsWith('.ico')) {
+      url.pathname.endsWith('.ico')) &&
+      !url.pathname.startsWith('/models/')) {
     event.respondWith(handleStatic(event.request));
     return;
   }
@@ -285,4 +286,4 @@ async function cacheIndexNow() {
   }
 }
 
-console.log('[SW] Service Worker loaded - Boekhouding Offline v2');
+console.log('[SW] Service Worker loaded - Boekhouding Offline v3');
