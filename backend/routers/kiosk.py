@@ -453,7 +453,12 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "mope_api_key": company.get("mope_api_key", ""),
         "mope_enabled": company.get("mope_enabled", False),
         "uni5pay_merchant_id": company.get("uni5pay_merchant_id", ""),
-        "uni5pay_enabled": company.get("uni5pay_enabled", False)
+        "uni5pay_enabled": company.get("uni5pay_enabled", False),
+        "twilio_account_sid": company.get("twilio_account_sid", ""),
+        "twilio_auth_token": company.get("twilio_auth_token", ""),
+        "twilio_phone_number": company.get("twilio_phone_number", ""),
+        "twilio_enabled": company.get("twilio_enabled", False),
+        "start_screen": company.get("start_screen", "kiosk")
     }
 
 @router.put("/auth/settings")
