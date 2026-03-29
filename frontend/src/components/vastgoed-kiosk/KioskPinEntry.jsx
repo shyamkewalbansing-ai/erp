@@ -58,16 +58,11 @@ export default function KioskPinEntry({ companyId, companyName, onSuccess, onBac
   };
 
   const handleFaceCapture = async (descriptor) => {
-    setLoading(true); setError('');
-    try {
-      const res = await axios.post(`${API}/public/${companyId}/face/verify-admin`, { descriptor });
-      sessionStorage.setItem(`kiosk_pin_verified_${companyId}`, 'true');
-      if (res.data.token) localStorage.setItem('kiosk_token', res.data.token);
-      setTimeout(() => onSuccess(), 800);
-    } catch {
-      setError('Gezicht niet herkend. Probeer opnieuw.');
-      setMode('pin');
-    } finally { setLoading(false); }
+    // Must throw on failure so FaceCapture keeps scanning
+    const res = await axios.post(`${API}/public/${companyId}/face/verify-admin`, { descriptor });
+    sessionStorage.setItem(`kiosk_pin_verified_${companyId}`, 'true');
+    if (res.data.token) localStorage.setItem('kiosk_token', res.data.token);
+    setTimeout(() => onSuccess(), 800);
   };
 
   return (
