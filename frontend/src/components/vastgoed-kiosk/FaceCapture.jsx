@@ -4,16 +4,26 @@ import { Camera, Loader2, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 
 const MODEL_URL = window.location.origin + '/models';
 
-// Success beep via Web Audio API
+// Success beep via Web Audio API - pre-create context on user interaction
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  return audioCtx;
+}
+
 function playDetectionSound() {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = getAudioCtx();
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.type = 'sine';
-    // Two-tone chime: short high note
     osc.frequency.setValueAtTime(880, ctx.currentTime);
     osc.frequency.setValueAtTime(1100, ctx.currentTime + 0.08);
     gain.gain.setValueAtTime(0.3, ctx.currentTime);
@@ -127,20 +137,28 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
     tick();
   }, [mode, onCapture, stopCamera]);
 
-  // Init
+  // Init: start camera immediately, load models in parallel
   useEffect(() => {
     cancelledRef.current = false;
+    // Unlock audio context on first user interaction (needed for autoplay policy)
+    const unlockAudio = () => { getAudioCtx(); document.removeEventListener('click', unlockAudio); document.removeEventListener('touchstart', unlockAudio); };
+    document.addEventListener('click', unlockAudio);
+    document.addEventListener('touchstart', unlockAudio);
+
     const init = async () => {
       try {
-        await loadModels();
-        if (cancelledRef.current) return;
+        // Start camera immediately — don't wait for models
         setMessage('Camera starten...');
         await startCamera();
         if (cancelledRef.current) { stopCamera(); return; }
         setStatus('ready');
+
+        // Load models in background while camera is already visible
+        await loadModels();
+        if (cancelledRef.current) return;
+
         if (mode === 'verify' || mode === 'verify-continuous') {
-          // Start detecting after short stabilization delay
-          setTimeout(() => { if (!cancelledRef.current) detectFace(); }, 800);
+          detectFace();
         } else {
           setMessage('Kijk recht in de camera');
         }
@@ -156,7 +174,7 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
       }
     };
     init();
-    return () => { cancelledRef.current = true; stopCamera(); };
+    return () => { cancelledRef.current = true; stopCamera(); document.removeEventListener('click', unlockAudio); document.removeEventListener('touchstart', unlockAudio); };
   }, [mode, stopCamera, startCamera, detectFace]);
 
   const handleCapture = () => detectFace();
