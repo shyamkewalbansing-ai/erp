@@ -3,16 +3,18 @@ import * as faceapi from 'face-api.js';
 import { Camera, Loader2, CheckCircle, XCircle, RefreshCw } from 'lucide-react';
 
 const MODEL_URL = '/models';
-let modelsLoaded = false;
 
 async function loadModels() {
-  if (modelsLoaded) return;
+  // Check actual face-api model state instead of a boolean flag
+  const allLoaded = faceapi.nets.tinyFaceDetector.params &&
+                    faceapi.nets.faceLandmark68Net.params &&
+                    faceapi.nets.faceRecognitionNet.params;
+  if (allLoaded) return;
   await Promise.all([
     faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
     faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
     faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
   ]);
-  modelsLoaded = true;
 }
 
 export default function FaceCapture({ onCapture, onCancel, mode = 'register', buttonLabel }) {
