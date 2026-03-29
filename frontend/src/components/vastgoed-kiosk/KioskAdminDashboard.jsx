@@ -914,8 +914,32 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
     bank_description: company.bank_description || '',
   } : null;
 
-  const handlePrint = () => {
-    window.print();
+  const PRINT_SERVER_URL = 'http://localhost:5555';
+  const handlePrint = async () => {
+    if (!selectedPayment) return;
+    const printData = {
+      company_name: stampData?.stamp_company_name || 'Vastgoed Beheer',
+      address: stampData?.stamp_address || '',
+      phone: stampData?.stamp_phone || '',
+      receipt_number: selectedPayment.kwitantie_nummer || '',
+      date: new Date(selectedPayment.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      time: new Date(selectedPayment.created_at).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
+      tenant_name: selectedPayment.tenant_name || '',
+      apartment: `${selectedPayment.apartment_number || ''} / ${selectedPayment.tenant_code || ''}`,
+      payment_type: { rent: 'Huurbetaling', monthly_rent: 'Huurbetaling', partial_rent: 'Gedeelt. huurbetaling', service_costs: 'Servicekosten', fines: 'Boetes', deposit: 'Borgsom' }[selectedPayment.payment_type] || selectedPayment.payment_type,
+      amount: Number(selectedPayment.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 }),
+      total: Number(selectedPayment.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 }),
+      payment_method: { cash: 'Contant', card: 'Pinpas', mope: 'Mope', bank: 'Bank', pin: 'PIN' }[selectedPayment.payment_method] || selectedPayment.payment_method || 'Contant',
+      remaining_total: Number((selectedPayment.remaining_rent || 0) + (selectedPayment.remaining_service || 0) + (selectedPayment.remaining_fines || 0)).toLocaleString('nl-NL', { minimumFractionDigits: 2 })
+    };
+    try {
+      const hc = await fetch(`${PRINT_SERVER_URL}/health`, { method: 'GET', mode: 'cors' }).catch(() => null);
+      if (hc?.ok) {
+        await fetch(`${PRINT_SERVER_URL}/print`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(printData) });
+      } else {
+        window.print();
+      }
+    } catch { window.print(); }
   };
 
   return (
@@ -3463,8 +3487,27 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
           description: description || 'Handmatige betaling'
         }, { headers });
         setPaymentResult(res.data);
-        // Open receipt for printing
-        window.open(`${API}/admin/payments/${res.data.payment_id}/receipt?token=${token}`, '_blank');
+        // Auto-print via bonprinter
+        const PRINT_URL = 'http://localhost:5555';
+        const printData = {
+          company_name: 'Vastgoed Beheer',
+          receipt_number: res.data.kwitantie_nummer || '',
+          date: new Date().toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+          time: new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
+          tenant_name: res.data.tenant_name || tenant?.name || '',
+          apartment: `${res.data.apartment_number || tenant?.apartment_number || ''}`,
+          payment_type: { rent: 'Huurbetaling', partial_rent: 'Gedeelt. huurbetaling', service_costs: 'Servicekosten', fines: 'Boetes', deposit: 'Borgsom' }[res.data.payment_type] || res.data.payment_type,
+          amount: Number(res.data.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 }),
+          total: Number(res.data.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 }),
+          payment_method: { cash: 'Contant', card: 'Pinpas', mope: 'Mope', bank: 'Bank', pin: 'PIN' }[res.data.payment_method] || 'Contant',
+          remaining_total: Number((res.data.remaining_rent || 0) + (res.data.remaining_service || 0) + (res.data.remaining_fines || 0)).toLocaleString('nl-NL', { minimumFractionDigits: 2 })
+        };
+        try {
+          const hc = await fetch(`${PRINT_URL}/health`, { method: 'GET', mode: 'cors' }).catch(() => null);
+          if (hc?.ok) {
+            await fetch(`${PRINT_URL}/print`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(printData) });
+          }
+        } catch {}
       }
     } catch (err) {
       alert(err.response?.data?.detail || 'Actie mislukt');
@@ -3478,16 +3521,16 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
         <div className="bg-white rounded-2xl w-full max-w-md mx-4 p-4 sm:p-6 text-center">
-          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-green-600" />
+          <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-8 h-8 text-orange-600" />
           </div>
-          <h3 className="text-xl font-bold text-green-700 mb-2">Betaling Geregistreerd!</h3>
+          <h3 className="text-xl font-bold text-orange-700 mb-2">Betaling Geregistreerd!</h3>
           <p className="text-slate-600 mb-1">Kwitantie: <span className="font-bold">{paymentResult.kwitantie_nummer}</span></p>
           <p className="text-slate-600 mb-1">Bedrag: <span className="font-bold">SRD {paymentResult.amount?.toLocaleString('nl-NL', {minimumFractionDigits: 2})}</span></p>
           <p className="text-slate-600 mb-4">{tenant.name} - Appt. {tenant.apartment_number}</p>
           {paymentResult.whatsapp_sent && (
-            <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2 mb-4">
-              <p className="text-sm text-green-700 font-medium">WhatsApp bon automatisch verstuurd</p>
+            <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 mb-4">
+              <p className="text-sm text-orange-700 font-medium">WhatsApp bon automatisch verstuurd</p>
             </div>
           )}
           <div className="bg-slate-50 rounded-lg px-3 py-2 mb-4">
@@ -3497,9 +3540,29 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
             <p className="text-sm text-slate-700">Boetes: SRD {(paymentResult.remaining_fines || 0).toLocaleString('nl-NL', {minimumFractionDigits: 2})}</p>
           </div>
           <div className="flex gap-3">
-            <button onClick={() => window.open(`${API}/admin/payments/${paymentResult.payment_id}/receipt?token=${token}`, '_blank')}
+            <button onClick={async () => {
+                const PRINT_URL = 'http://localhost:5555';
+                const printData = {
+                  company_name: 'Vastgoed Beheer',
+                  receipt_number: paymentResult.kwitantie_nummer || '',
+                  date: new Date(paymentResult.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+                  time: new Date(paymentResult.created_at).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
+                  tenant_name: paymentResult.tenant_name || tenant?.name || '',
+                  apartment: `${paymentResult.apartment_number || tenant?.apartment_number || ''}`,
+                  payment_type: { rent: 'Huurbetaling', partial_rent: 'Gedeelt. huurbetaling', service_costs: 'Servicekosten', fines: 'Boetes', deposit: 'Borgsom' }[paymentResult.payment_type] || paymentResult.payment_type,
+                  amount: Number(paymentResult.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 }),
+                  total: Number(paymentResult.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 }),
+                  payment_method: { cash: 'Contant', card: 'Pinpas', mope: 'Mope', bank: 'Bank', pin: 'PIN' }[paymentResult.payment_method] || 'Contant',
+                  remaining_total: Number((paymentResult.remaining_rent || 0) + (paymentResult.remaining_service || 0) + (paymentResult.remaining_fines || 0)).toLocaleString('nl-NL', { minimumFractionDigits: 2 })
+                };
+                try {
+                  const hc = await fetch(`${PRINT_URL}/health`, { method: 'GET', mode: 'cors' }).catch(() => null);
+                  if (hc?.ok) { await fetch(`${PRINT_URL}/print`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(printData) }); }
+                  else { alert('Bonprinter niet bereikbaar'); }
+                } catch { alert('Bonprinter niet bereikbaar'); }
+              }}
               className="flex-1 py-3 border rounded-xl text-sm font-medium hover:bg-slate-50">
-              Kwitantie Opnieuw Printen
+              Opnieuw Printen
             </button>
             <button onClick={() => { setPaymentResult(null); onSave(); }}
               className="flex-1 py-3 bg-orange-500 text-white rounded-xl text-sm font-medium">
@@ -3533,7 +3596,7 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
                   onClick={() => setType(t.id)}
                   className={`py-2 rounded-lg text-sm font-medium transition ${
                     type === t.id
-                      ? t.id === 'payment' ? 'bg-green-600 text-white' : 'bg-orange-500 text-white'
+                      ? t.id === 'payment' ? 'bg-orange-600 text-white' : 'bg-orange-500 text-white'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -3565,12 +3628,12 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
             </div>
           ) : type === 'payment' ? (
             <div className="space-y-3">
-              <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-                <p className="text-sm font-bold text-green-800 mb-2">Openstaande schuld</p>
+              <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                <p className="text-sm font-bold text-orange-800 mb-2">Openstaande schuld</p>
                 {tenant.outstanding_rent > 0 && <p className="text-sm text-slate-700">Huur: SRD {(tenant.outstanding_rent).toLocaleString('nl-NL', {minimumFractionDigits: 2})}</p>}
                 {tenant.service_costs > 0 && <p className="text-sm text-slate-700">Servicekosten: SRD {(tenant.service_costs).toLocaleString('nl-NL', {minimumFractionDigits: 2})}</p>}
                 {tenant.fines > 0 && <p className="text-sm text-slate-700">Boetes: SRD {(tenant.fines).toLocaleString('nl-NL', {minimumFractionDigits: 2})}</p>}
-                <p className="text-sm font-bold text-slate-900 mt-1 border-t border-green-200 pt-1">
+                <p className="text-sm font-bold text-slate-900 mt-1 border-t border-orange-200 pt-1">
                   Totaal: SRD {totalDebt.toLocaleString('nl-NL', {minimumFractionDigits: 2})}
                 </p>
               </div>
@@ -3579,7 +3642,7 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
                 <div className="flex gap-2">
                   {[{id:'cash',label:'Contant'},{id:'bank',label:'Bank'},{id:'pin',label:'PIN'}].map(m => (
                     <button key={m.id} type="button" onClick={() => setPaymentMethod(m.id)}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${paymentMethod === m.id ? 'bg-green-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${paymentMethod === m.id ? 'bg-orange-500 text-white' : 'bg-slate-100 text-slate-600'}`}>
                       {m.label}
                     </button>
                   ))}
@@ -3610,7 +3673,7 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
               Annuleren
             </button>
             <button type="submit" disabled={loading}
-              className={`flex-1 py-3 text-white rounded-xl disabled:opacity-50 ${type === 'payment' ? 'bg-green-600' : 'bg-orange-500'}`}>
+              className={`flex-1 py-3 text-white rounded-xl disabled:opacity-50 ${type === 'payment' ? 'bg-orange-600' : 'bg-orange-500'}`}>
               {loading ? 'Bezig...' : type === 'rent' ? `Huur ${nextMonthLabel} toevoegen` : type === 'payment' ? 'Betaling Registreren' : 'Toevoegen'}
             </button>
           </div>
