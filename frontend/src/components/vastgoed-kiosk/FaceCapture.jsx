@@ -30,18 +30,27 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
 
   useEffect(() => {
     let cancelled = false;
+    let retryCount = 0;
+    const maxRetries = 5;
     const init = async () => {
       try {
         await loadModels();
         if (cancelled) return;
         setMessage('Camera starten...');
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 480, height: 360, facingMode: 'user' } });
+        // Try flexible constraints first, fallback to basic video
+        let stream;
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 480 }, height: { ideal: 360 }, facingMode: 'user' } });
+        } catch {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        }
         if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
           await videoRef.current.play();
         }
+        retryCount = 0;
         setStatus('ready');
         setMessage(mode === 'register' ? 'Kijk recht in de camera' : 'Gezicht herkennen...');
         if (mode === 'verify' || mode === 'verify-continuous') {
@@ -49,8 +58,12 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
         }
       } catch (err) {
         if (!cancelled) {
-          if (mode === 'verify-continuous') {
-            // Auto-retry camera in continuous mode after a delay
+          retryCount++;
+          if (retryCount < maxRetries) {
+            setMessage(`Camera herstarten... (${retryCount}/${maxRetries})`);
+            setTimeout(() => { if (!cancelled) init(); }, 2000);
+          } else if (mode === 'verify-continuous') {
+            retryCount = 0;
             setTimeout(() => { if (!cancelled) init(); }, 3000);
           } else {
             setStatus('error');
@@ -111,7 +124,12 @@ export default function FaceCapture({ onCapture, onCancel, mode = 'register', bu
     setMessage('Camera herstarten...');
     stopCamera();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 480, height: 360, facingMode: 'user' } });
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 480 }, height: { ideal: 360 }, facingMode: 'user' } });
+      } catch {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
