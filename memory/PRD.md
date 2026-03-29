@@ -64,6 +64,16 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 - **Surinaamse tijd**: Live klok (America/Paramaribo) op admin dashboard
 - **KioskApartmentSelect**: h-full verwijderd van grid — alle appartementen scrollbaar
 
+### Sprint 4 (29 maart 2026)
+- **Mobiele responsiveness fix voor alle Kiosk betaalschermen** (P0):
+  - `KioskTenantOverview.jsx`: flex-col op mobiel, md:flex-row op desktop
+  - `KioskPaymentSelect.jsx`: Betalingstypen + keypad stapelen verticaal op mobiel
+  - `KioskPaymentConfirm.jsx`: Betaalmethode kaarten responsive grid/flex-wrap
+  - `PaymentConfirm.jsx`: w-full md:w-1/2 layout
+  - Alle headers responsive met flex-wrap en truncate
+  - Huurder variant card breedte verlaagd van 500px min naar 300px
+  - Getest met testing agent: 100% pass rate op mobiel (375px) én desktop (1920px)
+
 ## Inloggegevens
 - SuperAdmin ERP: admin@facturatie.sr / Bharat7755
 - Kiosk Company: shyam@kewalbansing.net / Bharat7755
