@@ -1,32 +1,36 @@
 <analysis>**original_problem_statement**: 
-The user is building a full-stack ERP system for real estate/apartment rent payments and migrating a standalone React/Python KIOSK application into it. The UI must be an exact 1:1 replica of an Albert Heijn self-checkout kiosk. PRODUCT REQUIREMENTS: Manage the Kiosk subscriptions via the ERP SuperAdmin dashboard, ensure continuous Face ID scanning using face-api.js, and facilitate mock/real local payment methods.
+The user is building a full-stack ERP system for real estate/apartment rent payments with a KIOSK terminal (Albert Heijn self-checkout replica). PRODUCT REQUIREMENTS: Manage the Kiosk subscriptions via the ERP SuperAdmin dashboard, ensure continuous Face ID scanning using face-api.js, support manual payment registrations with auto-printing to a local USB printer, and facilitate mock/real local payment methods.
 
 **User's preferred language**: Dutch (You MUST automatically detect the user's primary language from their messages inside the <trajectory> tag and INSTRUCT next agent to respond in the user's preferred language only. The language here is **DUTCH**. ALWAYS RESPOND IN DUTCH.)
 
 **what currently exists?** 
-A functional ERP with standard modules. The SuperAdmin dashboard navigation has been successfully migrated to the main application sidebar () with dedicated sub-routes. The Kiosk terminal uses Face ID for login, but on the production environment, it is currently suffering from initialization issues (camera constraints and a model loading race condition) which are actively being patched.
+A functional ERP with standard modules. The Kiosk application is integrated and uses Face ID for login (optimized with  model files to bypass Nginx SPA routing issues). The Admin dashboard allows managing apartments and tenants. Manual payments can be registered, which automatically trigger WhatsApp receipts and send print commands to a local USB receipt printer ().
 
 **Last working item**: 
-    - Last item agent was working: Fixing the  error and camera initialization failures in the  component for the production server.
-    - Status: USER VERIFICATION PENDING
-    - Agent Testing Done: N (The issue is specific to the user's production server and Service Worker environment).
-    - Which testing method agent to use? NA (Waiting for the user to deploy the latest commit to their server and test via the kiosk terminal).
+    - Last item agent was working: Fixing mobile responsiveness for Kiosk screens (, , etc.). User uploaded screenshots showing the 2-column layout overlaps and breaks on mobile devices.
+    - Status: IN PROGRESS
+    - Agent Testing Done: N
+    - Which testing method agent to use? Frontend testing via screenshot tool (Mobile viewport).
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:  
-  Issue 1: Face ID fails to initialize on production (P0)
-     - Attempted fixes: Agent realized  promises weren't being correctly awaited before setting , leading to a race condition. Also, strict camera constraints were causing the camera to fail to start. Agent updated  to properly await the  promises, added flexible  video constraints, and implemented a 5-attempt retry loop for camera starting.
-     - Next debug checklist: Check . Instruct the user to save to GitHub, pull on their production server, rebuild the frontend (yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command.), and test the  route. If it still fails, ask the user for the latest Console (F12) error logs.
-     - Why fix this issue and what will be achieved with the fix? Face ID is the primary login method for the Kiosk. Fixing it restores core functionality on production.
-     - Status: USER VERIFICATION PENDING
-     - Is recurring issue? Y (Due to production-specific caching/service workers and hardware).
-     - Should Test frontend/backend/both after fix? Frontend (User Verification).
-     - Blocked on other issue: None.
+  Issue 1: Mobile responsiveness broken on Kiosk screens (P0)
+     - Attempted fixes: Agent analyzed user screenshots and identified that components like  and  force a two-column layout that overflows on narrow screens. No code was written yet.
+     - Next debug checklist: Modify , , , and . Change fixed widths and  setups to  to stack elements gracefully on mobile screens. Ensure the bottom navigation bar doesn't overlap content.
+     - Why fix this issue and what will be achieved with the fix? Allows tenants and businesses to use the Kiosk application seamlessly on mobile phones.
+     - Status: IN PROGRESS
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Frontend (Screenshot tool mobile viewport)
+     - Blocked on other issue: None
 
   Issue 2: Real payment gateways are currently mocked (P1)
+     - Attempted fixes: None, waiting for user.
      - Next debug checklist: Await user credentials for Mope and Uni5Pay to switch from Mock mode to Production mode.
+     - Why fix this issue and what will be achieved with the fix? Required for processing real transactions.
      - Status: BLOCKED
+     - Is recurring issue? N
+     - Should Test frontend/backend/both after fix? Both
+     - Blocked on other issue: User action pending.
 
 **In progress Task List**: 
   None
@@ -34,89 +38,90 @@ info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this comm
 **Upcoming and Future Tasks**
     Upcoming Tasks:
     - P1: Modernize Kwitanties (Receipts) tab - Rebuild using the unified table style in the Admin Dashboard.
-    - P1: WhatsApp message receipt feature (Send a WhatsApp receipt to tenants automatically after payment. Backend has WhatsApp logic but needs tying to the receipt flow).
-    - Refactoring (P1):  (>3400 lines),  (>3700 lines), and  (>3300 lines) MUST be split into smaller modules.
+    - Refactoring (P1):  (>3600 lines) and  (>3500 lines) MUST be split into smaller modules.
 
     Future Tasks:
     - P2: Maandelijks financieel rapport (Automated monthly financial report).
     - P2: CSV/PDF export van betalingsrapporten.
-    - P2: Wachtwoord vergeten functionaliteit (Backend/Email).
+    - P2: Wachtwoord vergeten functionaliteit.
     - P2: Multi-building support per bedrijf.
 
 **Completed work in this session**
-- SuperAdmin tabs migrated from  horizontal tabs to the main sidebar in  under a Beheerder section (DONE)
-- Routing updated in  to handle  (DONE)
-- Removed  from  to fix production backend deployment crashes (DONE)
--  updated to fix camera constraint crashes and  face-api.js async loading race condition (DONE)
+- Fixed Face ID  crash on production by renaming shard files to  and updating manifests (Nginx was serving  instead of binary data) (DONE)
+- Refactored  to use  for smoother detection, removed the welcome delay, and added a Web Audio API chime upon face detection (DONE)
+- Fixed vertical scrolling issues in  and  (DONE)
+- Added auto-fill logic for  and  when selecting an apartment for a tenant (DONE)
+- Made  fully responsive for mobile (DONE)
+- Added Suriname Time (UTC-3) to the Admin Dashboard (DONE)
+- Added manual payment registration flow () with automatic WhatsApp receipt dispatch (DONE)
+- Rerouted receipt printing (Betaling Registreren and Kwitanties tab) to automatically send print jobs to a local USB printer at  instead of triggering the browser print dialog (DONE)
+- Removed Kiosk 'Welcome' screen; users now go straight to apartment selection after PIN login (DONE)
+- Added  setting in Backend/Frontend so companies can choose whether to boot into the 'Kiosk' or 'Dashboard' after login (DONE)
 
 **Earlier issues found/mentioned but not fixed**
    None.
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: Production Deployment caching issues.
-  - Recurrence count: 2
-  - Status: RESOLVED (User instructed to use  before yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. to clear old cache).
-  Note: The user has a Service Worker () running on their live site that caches . 
+  - Issue recurrence in previous fork: Production Deployment caching issues / Nginx SPA routing.
+  - Recurrence count: 3
+  - Status: RESOLVED (Fixed by bumping Service Worker cache version and giving model files explicit  extensions).
+  Note: Keep in mind the user pulls code manually on their server (). 
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Continuous Face ID:** Uses local  models for kiosk login.
-- **SuperAdmin Sidebar:** Uses standard React Router parameters and conditional rendering in the sidebar based on .
-- **Production Server Workflow:** The user pulls from GitHub manually. Do NOT add internal packages to .
+- **Continuous Face ID:** Uses local  models. *Crucial:* Shard files end in  so the user's Nginx server doesn't fallback to serving  for extensionless files.
+- **Local Receipt Printer:** The user has a physical thermal printer connected via USB, running a local server on . Print jobs are sent there silently via . 
+- **Web Audio API:** Used in  to play a chime upon face detection without needing external MP3 files. Must be unlocked via user interaction.
 
 **key DB schema**
-- : Standard ERP users. SuperAdmin has .
-- : ,  (active/blocked), .
+- : Added  (string: 'kiosk' | 'dashboard').
+- : , , .
+- : , .
 
 **changes in tech stack**
 - None.
 
 **All files of reference**
--  (Currently modified for face-api bug)
+-  (Needs mobile layout fix)
+-  (Needs mobile layout fix)
+-  (Heavily updated)
 - 
 - 
-- 
--  (Cleaned up internal packages)
 
 **Areas that need refactoring**: 
-, , and  are massively monolithic.
+ (3600+ lines) and  (3500+ lines) are massively monolithic and need breaking down.
 
 **key api endpoints**
-- 
-- 
+-  (Manual payment with WhatsApp trigger)
+-  (Now cascades rent updates to assigned tenants)
+-  (Updated to handle )
 
 **Critical Info for New Agent**
 - **Language:** Reply strictly in **Dutch**.
-- **Deployment workflow:** The user runs  -> yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command. -> Error: restart requires a process name
-restart <name>		Restart a process
-restart <gname>:*	Restart all processes in a group
-restart <name> <name>	Restart multiple processes or groups
-restart all		Restart all processes
-Note: restart does not reread config files. For that, see reread and update. on their live server. NEVER add  or similar emergent-internal packages to their .
-- **Current Blocker:** The Face-API () threw a load model before inference error on production. The agent *just* patched this in . Your immediate first action should be to ask the user to save to GitHub, deploy the changes, and check if the Face ID camera now works.
+- **Deployment workflow:** The user runs , deletes the  folder, rebuilds, and restarts  via supervisorctl on their live server. ALWAYS prompt the user to Save to Github so they can pull your changes.
+- **Receipt Printing:** Do NOT use  for kiosk receipts. The user relies on a local server () to print to a USB receipt printer. This is correctly configured in  and ; maintain this pattern.
+- **Current Blocker:** The user uploaded 3 screenshots indicating the Kiosk layout is broken on mobile phones (components overlap and overflow). Your very first task is to refactor  and related kiosk payment screens to ensure they stack responsively ( on mobile,  on larger screens).
 
 **documents and test reports created in this job**
 - 
 
 **Last 10 User Messages and any pending HUMAN messages** 
-1. Agent: Implemented sidebar migration. Asked user to test.
-2. User: Tried pulling on server, backend crashed.
-3. Agent: Found  in requirements.txt. Removed it.
-4. User: Successfully deployed, but frontend still shows old UI.
-5. Agent: Debugged Nginx and caching, asked user to clear  folder and rebuild.
-6. User: Rebuild successful, sidebar is now correct. But Face ID on  is broken (stuck on Modellen laden).
-7. Agent: Verified models exist on server. Asked for browser console logs.
-8. User: Shared logs indicating a Service Worker might be caching things. Camera fails to start.
-9. Agent: Wrote a retry mechanism for camera in .
-10. User: Provided console log showing:  error.
-*(Agent just fixed the race condition causing this error. User verification pending).*
+1. User: Complained  scroll wasn't working (couldn't see bottom of Admin dashboard).
+2. Agent: Changed  to  to prevent bottom bar overlap.
+3. User: Requested assigned apartments not to show in New Tenant dropdown, and asked for Suriname time on dashboard.
+4. Agent: Filtered dropdown and added UTC-3 time block.
+5. User: Complained about an ESLint hooks error, and requested that changing an apartment's rent updates the tenant's rent automatically.
+6. Agent: Fixed hooks order and updated the  backend route to cascade changes to tenants.
+7. User: Requested manual payment registrations to auto-print to the local USB printer (like the Kiosk does) instead of the browser print dialog. Wanted colors changed from green to orange.
+8. Agent: Rerouted  and the success flow to send payloads to , and updated CSS colors.
+9. User: Requested to skip the Welcome screen after login and add a setting to choose between starting on the Kiosk vs the Dashboard.
+10. Agent: Implemented  setting, added bottom bar buttons, and removed the welcome flow.
+11. User (Pending): Uploaded 3 screenshots showing the Kiosk interface ( and  sub-screens) is entirely broken and overlapping on mobile phone screens.
 
 **Project Health Check:**
-- Broken: Face ID on production terminal (Fix implemented, awaiting user verification)
+- Broken: Mobile layout for Kiosk sub-screens (, etc.)
 - Mocked: Mope Payment Gateway, Uni5Pay Payment Gateway.
 
 **3rd Party Integrations**
@@ -126,7 +131,7 @@ Note: restart does not reread config files. For that, see reread and update. on 
 - WhatsApp Business API - Requires User API Key
 
 **Testing status**
-  - Testing agent used after significant changes: YES
+  - Testing agent used after significant changes: NO (Iterative frontend adjustments)
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: None
   - Known regressions: None
@@ -137,5 +142,4 @@ Note: restart does not reread config files. For that, see reread and update. on 
 - **Kiosk PIN:** 
 
 **What agent forgot to execute**
-The agent modified  to fix the  issue but finished the session right after the tool call without sending a message to the user. **Your first action** must be to explain the fix in Dutch and instruct the user to Save to Github, pull the code on their server, run yarn run v1.22.22
-info Visit https://yarnpkg.com/en/docs/cli/run for documentation about this command., and restart the frontend to verify the Face ID fix.</analysis>
+The agent analyzed the mobile viewport screenshots showing the broken 2-column layout in  and other payment screens, but the session ended before the agent could implement the CSS/Tailwind flex-col fixes. Start by addressing this mobile layout issue.</analysis>
