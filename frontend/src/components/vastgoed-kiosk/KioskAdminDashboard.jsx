@@ -454,11 +454,11 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
         </div>
         {/* Desktop: table */}
         <div className="hidden lg:block overflow-x-auto">
-          <table className="w-full min-w-[600px]">
+          <table className="w-full min-w-[800px]">
             <thead className="bg-slate-50">
               <tr>
                 {stats.map((stat, i) => (
-                  <th key={i} className="p-4 text-sm font-medium text-slate-500 text-left">{stat.label}</th>
+                  <th key={i} className="p-4 text-sm font-medium text-slate-500 text-left whitespace-nowrap">{stat.label}</th>
                 ))}
               </tr>
             </thead>
@@ -470,7 +470,7 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
                       <div className="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
                         <stat.icon className="w-4 h-4 text-orange-500" />
                       </div>
-                      <p className="text-lg font-bold text-slate-900">{stat.value}</p>
+                      <p className="text-lg font-bold text-slate-900 whitespace-nowrap">{stat.value}</p>
                     </div>
                   </td>
                 ))}
@@ -606,17 +606,17 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px]">
+            <table className="w-full min-w-[900px]">
               <thead className="bg-slate-50">
                 <tr>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Appartement</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Huurmaand</th>
-                  <th className="text-right p-4 text-sm font-medium text-slate-500">Huur</th>
-                  <th className="text-right p-4 text-sm font-medium text-slate-500">Service</th>
-                  <th className="text-right p-4 text-sm font-medium text-slate-500">Boetes</th>
-                  <th className="text-right p-4 text-sm font-medium text-slate-500">Internet</th>
-                  <th className="text-right p-4 text-sm font-medium text-slate-500">Totaal</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500 whitespace-nowrap">Huur</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500 whitespace-nowrap">Service</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500 whitespace-nowrap">Boetes</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500 whitespace-nowrap">Internet</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500 whitespace-nowrap">Totaal</th>
                   <th className="text-center p-4 text-sm font-medium text-slate-500">Face ID</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Status</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
@@ -669,20 +669,20 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                           </div>
                         )}
                       </td>
-                      <td className={`p-4 text-right font-bold ${rent > 0 ? 'text-red-600' : 'text-slate-800'}`}>
+                      <td className={`p-4 text-right font-bold whitespace-nowrap ${rent > 0 ? 'text-red-600' : 'text-slate-800'}`}>
                         {formatSRD(rent)}
                       </td>
-                      <td className={`p-4 text-right font-bold ${service > 0 ? 'text-orange-600' : 'text-slate-800'}`}>
+                      <td className={`p-4 text-right font-bold whitespace-nowrap ${service > 0 ? 'text-orange-600' : 'text-slate-800'}`}>
                         {formatSRD(service)}
                       </td>
-                      <td className={`p-4 text-right font-bold ${fines > 0 ? 'text-red-600' : 'text-slate-800'}`}>
+                      <td className={`p-4 text-right font-bold whitespace-nowrap ${fines > 0 ? 'text-red-600' : 'text-slate-800'}`}>
                         {formatSRD(fines)}
                       </td>
-                      <td className={`p-4 text-right font-bold ${internet > 0 ? 'text-cyan-600' : 'text-slate-800'}`}>
+                      <td className={`p-4 text-right font-bold whitespace-nowrap ${internet > 0 ? 'text-cyan-600' : 'text-slate-800'}`}>
                         {internet > 0 ? formatSRD(internet) : '-'}
                         {tenant.internet_plan_name && <p className="text-[10px] text-slate-400 mt-0.5">{tenant.internet_plan_name}</p>}
                       </td>
-                      <td className={`p-4 text-right font-black ${total > 0 ? 'text-orange-600' : 'text-slate-800'}`}>
+                      <td className={`p-4 text-right font-black whitespace-nowrap ${total > 0 ? 'text-orange-600' : 'text-slate-800'}`}>
                         {formatSRD(total)}
                       </td>
                       <td className="p-4 text-center">
