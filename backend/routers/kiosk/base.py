@@ -19,6 +19,32 @@ import asyncio
 router = APIRouter(prefix="/kiosk", tags=["Kiosk System"])
 security = HTTPBearer(auto_error=False)
 
+# Explicit __all__ so `from .base import *` includes underscore-prefixed helpers
+__all__ = [
+    # Re-export stdlib/third-party for sub-modules
+    "APIRouter", "HTTPException", "Depends", "Response",
+    "HTTPBearer", "HTTPAuthorizationCredentials",
+    "BaseModel", "EmailStr", "List", "Optional",
+    "datetime", "timezone", "timedelta", "relativedelta",
+    "jwt", "bcrypt", "os", "uuid", "re", "httpx", "asyncio",
+    # Core objects
+    "router", "security", "db", "set_database",
+    "JWT_SECRET", "JWT_ALGORITHM", "JWT_EXPIRATION_HOURS",
+    # Helpers
+    "generate_uuid", "slugify_company_name",
+    "_send_wa_auto", "_send_twilio_auto", "_send_message_auto", "_send_email_auto",
+    "hash_password", "verify_password", "create_token", "decode_token",
+    "get_current_company",
+    # Models
+    "CompanyRegister", "CompanyLogin", "CompanyUpdate",
+    "KioskPinVerify", "ApartmentCreate", "ApartmentUpdate",
+    "TenantCreate", "TenantUpdate", "PaymentCreate",
+    "CashEntryCreate", "EmployeeCreate", "EmployeeUpdate",
+    "LeaseCreate", "LeaseUpdate",
+    "LoanCreate", "LoanUpdate", "LoanPaymentCreate",
+    "InternetPlanCreate", "InternetPlanUpdate",
+]
+
 # JWT settings
 JWT_SECRET = os.environ.get("JWT_SECRET", "kiosk-secret-key-2024")
 JWT_ALGORITHM = "HS256"
@@ -226,11 +252,11 @@ async def _send_email_auto(company_id: str, to_email: str, subject: str, message
         import asyncio
         loop = asyncio.get_event_loop()
         def send():
-            with smtplib.SMTP(smtp_host, smtp_port) as server:
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as server:
                 server.starttls()
                 server.login(smtp_email, smtp_password)
                 server.send_message(msg)
-        await loop.run_in_executor(None, send)
+        await asyncio.wait_for(loop.run_in_executor(None, send), timeout=15)
         
         # Log email
         await db.kiosk_messages.insert_one({
