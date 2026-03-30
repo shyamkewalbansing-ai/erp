@@ -2581,7 +2581,7 @@ function EmployeesTab({ token, formatSRD }) {
             </div>
             <p className="text-sm text-slate-500">Totaal Uitbetaald</p>
           </div>
-          <p className="text-2xl font-bold text-green-600">{formatSRD(activeEmps.reduce((s, e) => s + (e.total_paid || 0), 0))}</p>
+          <p className="text-2xl font-bold text-slate-900">{formatSRD(activeEmps.reduce((s, e) => s + (e.total_paid || 0), 0))}</p>
         </div>
       </div>
 
@@ -2660,7 +2660,7 @@ function EmployeesTab({ token, formatSRD }) {
                     </td>
                     <td className="p-4 text-slate-600">{emp.functie || '-'}</td>
                     <td className="p-4 text-right font-bold text-slate-900">{formatSRD(emp.maandloon)}</td>
-                    <td className="p-4 text-right font-bold text-green-600">{formatSRD(emp.total_paid || 0)}</td>
+                    <td className="p-4 text-right font-bold text-slate-900">{formatSRD(emp.total_paid || 0)}</td>
                     <td className="p-4 text-slate-600">{emp.telefoon || '-'}</td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-1">
