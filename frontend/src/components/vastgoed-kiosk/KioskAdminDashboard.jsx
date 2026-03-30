@@ -2939,12 +2939,291 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
           </div>
         </div>
       )}
+
+      {/* ============== METERSTANDEN SECTIE ============== */}
+      <MeterReadingsSection apartments={apartments} tenants={tenants} token={token} />
     </div>
   );
 }
 
+function MeterReadingsSection({ apartments, tenants, token }) {
+  const [readings, setReadings] = useState([]);
+  const [ebsTariff, setEbsTariff] = useState(2.28);
+  const [swmTariff, setSwmTariff] = useState(35.26);
+  const [loading, setLoading] = useState(true);
+  const [showAddModal, setShowAddModal] = useState(null); // { apartment_id, type: 'ebs'|'swm' }
+  const [newStand, setNewStand] = useState('');
+  const [readingDate, setReadingDate] = useState(new Date().toISOString().slice(0, 10));
+  const [saving, setSaving] = useState(false);
+  const [charging, setCharging] = useState(null);
+  const [showTariffEdit, setShowTariffEdit] = useState(false);
+  const [editEbs, setEditEbs] = useState('');
+  const [editSwm, setEditSwm] = useState('');
 
-// ============== LENINGEN TAB ==============
+  const formatSRD = (v) => `SRD ${(v || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const loadReadings = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API}/admin/meter-readings`, { headers: { Authorization: `Bearer ${token}` } });
+      setReadings(res.data.readings || []);
+      setEbsTariff(res.data.ebs_tariff || 2.28);
+      setSwmTariff(res.data.swm_tariff || 35.26);
+    } catch (err) { console.error(err); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadReadings(); }, []);
+
+  const handleAddReading = async () => {
+    if (!newStand || parseFloat(newStand) < 0) return alert('Voer een geldige stand in');
+    setSaving(true);
+    try {
+      await axios.post(`${API}/admin/meter-readings`, {
+        apartment_id: showAddModal.apartment_id,
+        meter_type: showAddModal.type,
+        new_stand: parseFloat(newStand),
+        reading_date: readingDate,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      setShowAddModal(null);
+      setNewStand('');
+      loadReadings();
+    } catch (err) { alert(err.response?.data?.detail || 'Fout bij opslaan'); }
+    setSaving(false);
+  };
+
+  const handleCharge = async (aptId, aptNr) => {
+    if (!confirm(`Nutskosten doorberekenen aan huurder van app. ${aptNr}?`)) return;
+    setCharging(aptId);
+    try {
+      const res = await axios.post(`${API}/admin/meter-readings/charge/${aptId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      const d = res.data;
+      alert(`Doorberekend: SRD ${d.total_charged.toFixed(2)} toegevoegd aan servicekosten.\n(EBS: SRD ${d.ebs_cost.toFixed(2)} + SWM: SRD ${d.swm_cost.toFixed(2)})`);
+      loadReadings();
+    } catch (err) { alert(err.response?.data?.detail || 'Fout bij doorberekenen'); }
+    setCharging(null);
+  };
+
+  const handleSaveTariffs = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/admin/meter-settings?ebs_tariff_kwh=${parseFloat(editEbs)}&swm_tariff_m3=${parseFloat(editSwm)}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      setShowTariffEdit(false);
+      loadReadings();
+    } catch (err) { alert('Fout bij opslaan tarieven'); }
+    setSaving(false);
+  };
+
+  if (loading) return <div className="flex items-center justify-center py-10"><Loader2 className="w-6 h-6 animate-spin text-orange-500" /></div>;
+
+  return (
+    <div className="mt-8" data-testid="meter-readings-section">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-slate-900">Meterstanden (EBS / SWM)</h2>
+        <button
+          onClick={() => { setEditEbs(ebsTariff.toString()); setEditSwm(swmTariff.toString()); setShowTariffEdit(true); }}
+          data-testid="meter-edit-tariffs"
+          className="flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 rounded-lg text-xs font-medium transition"
+        >
+          <Settings className="w-3.5 h-3.5" /> Tarieven
+        </button>
+      </div>
+
+      {/* Current tariffs */}
+      <div className="flex gap-4 mb-4">
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2 text-sm">
+          <span className="text-yellow-700 font-semibold">EBS:</span> <span className="text-slate-700">SRD {ebsTariff.toFixed(2)} / kWh</span>
+        </div>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 text-sm">
+          <span className="text-blue-700 font-semibold">SWM:</span> <span className="text-slate-700">SRD {swmTariff.toFixed(2)} / m³</span>
+        </div>
+      </div>
+
+      {/* Readings table */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        {readings.length === 0 ? (
+          <div className="text-center py-12 text-slate-400">
+            <Zap className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+            <p className="font-medium">Geen meterstanden gevonden</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50">
+                  <th className="text-left py-3 px-3 font-semibold text-slate-600">App.</th>
+                  <th className="text-left py-3 px-3 font-semibold text-slate-600">Huurder</th>
+                  <th className="text-center py-3 px-1 font-semibold text-yellow-700 text-xs" colSpan="4">EBS (Stroom)</th>
+                  <th className="text-center py-3 px-1 font-semibold text-blue-700 text-xs" colSpan="4">SWM (Water)</th>
+                  <th className="text-right py-3 px-3 font-semibold text-slate-600">Totaal</th>
+                  <th className="text-center py-3 px-3 font-semibold text-slate-600">Actie</th>
+                </tr>
+                <tr className="border-b border-slate-100 bg-slate-50/50 text-xs text-slate-500">
+                  <th></th><th></th>
+                  <th className="py-1 px-1 text-center">Oud</th>
+                  <th className="py-1 px-1 text-center">Nieuw</th>
+                  <th className="py-1 px-1 text-center">kWh</th>
+                  <th className="py-1 px-1 text-right">Kosten</th>
+                  <th className="py-1 px-1 text-center">Oud</th>
+                  <th className="py-1 px-1 text-center">Nieuw</th>
+                  <th className="py-1 px-1 text-center">m³</th>
+                  <th className="py-1 px-1 text-right">Kosten</th>
+                  <th></th><th></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {readings.map(r => (
+                  <tr key={r.apartment_id} className="hover:bg-slate-50 transition">
+                    <td className="py-2.5 px-3 font-medium text-slate-900">{r.apartment_number}</td>
+                    <td className="py-2.5 px-3 text-slate-600 text-xs">{r.tenant_name || '-'}</td>
+                    {/* EBS */}
+                    <td className="py-2.5 px-1 text-center text-xs text-slate-400">{r.ebs_old != null ? r.ebs_old.toLocaleString() : '-'}</td>
+                    <td className="py-2.5 px-1 text-center">
+                      <button
+                        onClick={() => { setShowAddModal({ apartment_id: r.apartment_id, type: 'ebs', apt_nr: r.apartment_number }); setNewStand(''); }}
+                        data-testid={`meter-ebs-add-${r.apartment_id}`}
+                        className="text-xs font-medium text-yellow-700 hover:underline"
+                      >
+                        {r.ebs_new != null ? r.ebs_new.toLocaleString() : '+ invoer'}
+                      </button>
+                    </td>
+                    <td className="py-2.5 px-1 text-center text-xs font-medium">{r.ebs_usage > 0 ? r.ebs_usage.toLocaleString() : '-'}</td>
+                    <td className="py-2.5 px-1 text-right text-xs font-medium text-yellow-700">{r.ebs_cost > 0 ? formatSRD(r.ebs_cost) : '-'}</td>
+                    {/* SWM */}
+                    <td className="py-2.5 px-1 text-center text-xs text-slate-400">{r.swm_old != null ? r.swm_old.toLocaleString() : '-'}</td>
+                    <td className="py-2.5 px-1 text-center">
+                      <button
+                        onClick={() => { setShowAddModal({ apartment_id: r.apartment_id, type: 'swm', apt_nr: r.apartment_number }); setNewStand(''); }}
+                        data-testid={`meter-swm-add-${r.apartment_id}`}
+                        className="text-xs font-medium text-blue-700 hover:underline"
+                      >
+                        {r.swm_new != null ? r.swm_new.toLocaleString() : '+ invoer'}
+                      </button>
+                    </td>
+                    <td className="py-2.5 px-1 text-center text-xs font-medium">{r.swm_usage > 0 ? r.swm_usage.toFixed(1) : '-'}</td>
+                    <td className="py-2.5 px-1 text-right text-xs font-medium text-blue-700">{r.swm_cost > 0 ? formatSRD(r.swm_cost) : '-'}</td>
+                    {/* Total */}
+                    <td className="py-2.5 px-3 text-right font-bold text-slate-900">{r.total_cost > 0 ? formatSRD(r.total_cost) : '-'}</td>
+                    <td className="py-2.5 px-3 text-center">
+                      {r.total_cost > 0 && r.tenant_id && (
+                        <button
+                          onClick={() => handleCharge(r.apartment_id, r.apartment_number)}
+                          disabled={charging === r.apartment_id}
+                          data-testid={`meter-charge-${r.apartment_id}`}
+                          className="px-2 py-1 text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-lg font-medium transition disabled:opacity-50"
+                        >
+                          {charging === r.apartment_id ? '...' : 'Doorberekenen'}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Add Reading Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowAddModal(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-slate-200">
+              <h3 className="font-bold text-slate-900" data-testid="meter-add-title">
+                {showAddModal.type === 'ebs' ? 'EBS (Stroom)' : 'SWM (Water)'} — App. {showAddModal.apt_nr}
+              </h3>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Nieuwe stand {showAddModal.type === 'ebs' ? '(kWh)' : '(m³)'}</label>
+                <input
+                  type="number"
+                  value={newStand}
+                  onChange={e => setNewStand(e.target.value)}
+                  data-testid="meter-new-stand"
+                  placeholder="0"
+                  min="0"
+                  step="0.01"
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Opnamedatum</label>
+                <input
+                  type="date"
+                  value={readingDate}
+                  onChange={e => setReadingDate(e.target.value)}
+                  data-testid="meter-reading-date"
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm"
+                />
+              </div>
+            </div>
+            <div className="p-5 border-t border-slate-200 flex justify-end gap-3">
+              <button onClick={() => setShowAddModal(null)} className="px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Annuleren</button>
+              <button
+                onClick={handleAddReading}
+                disabled={saving || !newStand}
+                data-testid="meter-save-reading"
+                className="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Opslaan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tariff Edit Modal */}
+      {showTariffEdit && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowTariffEdit(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-slate-200">
+              <h3 className="font-bold text-slate-900" data-testid="tariff-edit-title">Tarieven Aanpassen</h3>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-yellow-700 mb-1">EBS tarief (SRD per kWh)</label>
+                <input
+                  type="number"
+                  value={editEbs}
+                  onChange={e => setEditEbs(e.target.value)}
+                  data-testid="tariff-ebs-input"
+                  step="0.01"
+                  min="0"
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-blue-700 mb-1">SWM tarief (SRD per m³)</label>
+                <input
+                  type="number"
+                  value={editSwm}
+                  onChange={e => setEditSwm(e.target.value)}
+                  data-testid="tariff-swm-input"
+                  step="0.01"
+                  min="0"
+                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm"
+                />
+              </div>
+            </div>
+            <div className="p-5 border-t border-slate-200 flex justify-end gap-3">
+              <button onClick={() => setShowTariffEdit(false)} className="px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Annuleren</button>
+              <button
+                onClick={handleSaveTariffs}
+                disabled={saving}
+                data-testid="tariff-save-btn"
+                className="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Opslaan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LoansTab({ token, tenants, formatSRD, onShowDetail }) {
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);

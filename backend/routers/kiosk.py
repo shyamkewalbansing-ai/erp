@@ -350,6 +350,12 @@ class LoanPaymentCreate(BaseModel):
     description: Optional[str] = None
     payment_method: str = "cash"
 
+class MeterReadingCreate(BaseModel):
+    apartment_id: str
+    meter_type: str  # "ebs" or "swm"
+    new_stand: float
+    reading_date: Optional[str] = None  # YYYY-MM-DD
+
 
 # ============== AUTH ENDPOINTS ==============
 
@@ -3483,6 +3489,214 @@ async def refresh_all_shelly(company: dict = Depends(get_current_company)):
                 results.append({"device_id": dev["device_id"], "status": dev.get("last_status", "unknown"), "online": False})
     
     return results
+
+
+
+# ============== METERSTANDEN (EBS/SWM) ==============
+
+@router.get("/admin/meter-settings")
+async def get_meter_settings(company: dict = Depends(get_current_company)):
+    """Get EBS/SWM tariff settings"""
+    return {
+        "ebs_tariff_kwh": company.get("ebs_tariff_kwh", 2.28),
+        "swm_tariff_m3": company.get("swm_tariff_m3", 35.26),
+    }
+
+@router.put("/admin/meter-settings")
+async def update_meter_settings(
+    ebs_tariff_kwh: float = None,
+    swm_tariff_m3: float = None,
+    company: dict = Depends(get_current_company)
+):
+    """Update EBS/SWM tariff settings"""
+    updates = {}
+    if ebs_tariff_kwh is not None:
+        updates["ebs_tariff_kwh"] = ebs_tariff_kwh
+    if swm_tariff_m3 is not None:
+        updates["swm_tariff_m3"] = swm_tariff_m3
+    if updates:
+        updates["updated_at"] = datetime.now(timezone.utc)
+        await db.kiosk_companies.update_one({"company_id": company["company_id"]}, {"$set": updates})
+    return {"message": "Tarieven bijgewerkt"}
+
+@router.get("/admin/meter-readings")
+async def list_meter_readings(company: dict = Depends(get_current_company)):
+    """List latest meter readings per apartment"""
+    company_id = company["company_id"]
+    ebs_tariff = company.get("ebs_tariff_kwh", 2.28)
+    swm_tariff = company.get("swm_tariff_m3", 35.26)
+    
+    apartments = await db.kiosk_apartments.find(
+        {"company_id": company_id}, {"_id": 0}
+    ).to_list(500)
+    
+    result = []
+    for apt in apartments:
+        apt_id = apt["apartment_id"]
+        
+        # Get last 2 EBS readings
+        ebs_readings = await db.kiosk_meter_readings.find(
+            {"apartment_id": apt_id, "meter_type": "ebs"},
+            {"_id": 0}
+        ).sort("reading_date", -1).to_list(2)
+        
+        # Get last 2 SWM readings
+        swm_readings = await db.kiosk_meter_readings.find(
+            {"apartment_id": apt_id, "meter_type": "swm"},
+            {"_id": 0}
+        ).sort("reading_date", -1).to_list(2)
+        
+        ebs_new = ebs_readings[0] if ebs_readings else None
+        ebs_old = ebs_readings[1] if len(ebs_readings) > 1 else None
+        swm_new = swm_readings[0] if swm_readings else None
+        swm_old = swm_readings[1] if len(swm_readings) > 1 else None
+        
+        ebs_usage = (ebs_new["stand"] - ebs_old["stand"]) if ebs_new and ebs_old else 0
+        swm_usage = (swm_new["stand"] - swm_old["stand"]) if swm_new and swm_old else 0
+        ebs_cost = ebs_usage * ebs_tariff
+        swm_cost = swm_usage * swm_tariff
+        
+        # Get tenant for this apartment
+        tenant = await db.kiosk_tenants.find_one(
+            {"apartment_id": apt_id, "company_id": company_id, "status": "active"},
+            {"_id": 0, "tenant_id": 1, "name": 1}
+        )
+        
+        result.append({
+            "apartment_id": apt_id,
+            "apartment_number": apt.get("number", ""),
+            "tenant_name": tenant["name"] if tenant else "",
+            "tenant_id": tenant["tenant_id"] if tenant else "",
+            "ebs_old": ebs_old["stand"] if ebs_old else None,
+            "ebs_new": ebs_new["stand"] if ebs_new else None,
+            "ebs_date": ebs_new["reading_date"] if ebs_new else None,
+            "ebs_usage": round(ebs_usage, 2),
+            "ebs_cost": round(ebs_cost, 2),
+            "swm_old": swm_old["stand"] if swm_old else None,
+            "swm_new": swm_new["stand"] if swm_new else None,
+            "swm_date": swm_new["reading_date"] if swm_new else None,
+            "swm_usage": round(swm_usage, 2),
+            "swm_cost": round(swm_cost, 2),
+            "total_cost": round(ebs_cost + swm_cost, 2),
+        })
+    
+    return {"readings": result, "ebs_tariff": ebs_tariff, "swm_tariff": swm_tariff}
+
+@router.post("/admin/meter-readings")
+async def create_meter_reading(data: MeterReadingCreate, company: dict = Depends(get_current_company)):
+    """Register a new meter reading for an apartment"""
+    company_id = company["company_id"]
+    
+    apt = await db.kiosk_apartments.find_one({"apartment_id": data.apartment_id, "company_id": company_id})
+    if not apt:
+        raise HTTPException(status_code=404, detail="Appartement niet gevonden")
+    
+    if data.meter_type not in ("ebs", "swm"):
+        raise HTTPException(status_code=400, detail="Ongeldig metertype (ebs of swm)")
+    
+    now = datetime.now(timezone.utc)
+    reading_date = data.reading_date or now.strftime("%Y-%m-%d")
+    
+    # Get previous reading
+    prev = await db.kiosk_meter_readings.find_one(
+        {"apartment_id": data.apartment_id, "meter_type": data.meter_type},
+        {"_id": 0}
+    )
+    if prev and data.new_stand < prev.get("stand", 0):
+        raise HTTPException(status_code=400, detail="Nieuwe stand kan niet lager zijn dan de vorige stand")
+    
+    reading_id = generate_uuid()
+    reading = {
+        "reading_id": reading_id,
+        "company_id": company_id,
+        "apartment_id": data.apartment_id,
+        "apartment_number": apt.get("number", ""),
+        "meter_type": data.meter_type,
+        "stand": data.new_stand,
+        "reading_date": reading_date,
+        "created_at": now,
+    }
+    await db.kiosk_meter_readings.insert_one(reading)
+    reading.pop("_id", None)
+    
+    # Calculate usage & cost
+    tariff = company.get("ebs_tariff_kwh", 2.28) if data.meter_type == "ebs" else company.get("swm_tariff_m3", 35.26)
+    usage = (data.new_stand - prev["stand"]) if prev else 0
+    cost = round(usage * tariff, 2)
+    
+    return {
+        **reading,
+        "old_stand": prev["stand"] if prev else None,
+        "usage": round(usage, 2),
+        "cost": cost,
+    }
+
+@router.post("/admin/meter-readings/charge/{apartment_id}")
+async def charge_meter_costs(apartment_id: str, company: dict = Depends(get_current_company)):
+    """Add current meter costs to tenant's service_costs"""
+    company_id = company["company_id"]
+    
+    tenant = await db.kiosk_tenants.find_one(
+        {"apartment_id": apartment_id, "company_id": company_id, "status": "active"}
+    )
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Geen actieve huurder voor dit appartement")
+    
+    ebs_tariff = company.get("ebs_tariff_kwh", 2.28)
+    swm_tariff = company.get("swm_tariff_m3", 35.26)
+    
+    # Get last 2 readings for each type
+    ebs_readings = await db.kiosk_meter_readings.find(
+        {"apartment_id": apartment_id, "meter_type": "ebs"}, {"_id": 0}
+    ).sort("reading_date", -1).to_list(2)
+    swm_readings = await db.kiosk_meter_readings.find(
+        {"apartment_id": apartment_id, "meter_type": "swm"}, {"_id": 0}
+    ).sort("reading_date", -1).to_list(2)
+    
+    ebs_usage = (ebs_readings[0]["stand"] - ebs_readings[1]["stand"]) if len(ebs_readings) >= 2 else 0
+    swm_usage = (swm_readings[0]["stand"] - swm_readings[1]["stand"]) if len(swm_readings) >= 2 else 0
+    ebs_cost = round(ebs_usage * ebs_tariff, 2)
+    swm_cost = round(swm_usage * swm_tariff, 2)
+    total_cost = round(ebs_cost + swm_cost, 2)
+    
+    if total_cost <= 0:
+        raise HTTPException(status_code=400, detail="Geen kosten om door te berekenen")
+    
+    current_service = tenant.get("service_costs", 0)
+    await db.kiosk_tenants.update_one(
+        {"tenant_id": tenant["tenant_id"]},
+        {"$set": {
+            "service_costs": round(current_service + total_cost, 2),
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    # WhatsApp notification
+    try:
+        t_phone = tenant.get("phone") or tenant.get("telefoon", "")
+        if t_phone:
+            comp_name = company.get("stamp_company_name") or company.get("name", "")
+            apt_nr = tenant.get("apartment_number", apartment_id)
+            msg_parts = [f"Beste {tenant['name']},\n\nUw nutskosten voor appartement {apt_nr}:\n"]
+            if ebs_cost > 0:
+                msg_parts.append(f"EBS (stroom): {ebs_usage:.0f} kWh x SRD {ebs_tariff:.2f} = SRD {ebs_cost:,.2f}")
+            if swm_cost > 0:
+                msg_parts.append(f"SWM (water): {swm_usage:.1f} m³ x SRD {swm_tariff:.2f} = SRD {swm_cost:,.2f}")
+            msg_parts.append(f"\nTotaal: SRD {total_cost:,.2f}")
+            msg_parts.append(f"Dit bedrag is toegevoegd aan uw servicekosten.\n\nMet vriendelijke groet,\n{comp_name}")
+            await _send_message_auto(
+                company_id, t_phone, "\n".join(msg_parts),
+                tenant["tenant_id"], tenant["name"], "meter_charge"
+            )
+    except Exception:
+        pass
+    
+    return {
+        "ebs_usage": ebs_usage, "ebs_cost": ebs_cost,
+        "swm_usage": swm_usage, "swm_cost": swm_cost,
+        "total_charged": total_cost,
+        "new_service_costs": round(current_service + total_cost, 2),
+    }
 
 
 
