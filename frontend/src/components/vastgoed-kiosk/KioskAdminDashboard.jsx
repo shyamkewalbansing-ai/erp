@@ -525,6 +525,7 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
 // ============== TENANTS TAB ==============
 function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAddTenant, onEditTenant, onAddRent, onRefresh, token }) {
   const [tenantSearch, setTenantSearch] = useState('');
+  const [tenantsSubTab, setTenantsSubTab] = useState('huurders');
   const activeTenants = tenants.filter(t => {
     if (t.status !== 'active') return false;
     if (!tenantSearch) return true;
@@ -534,8 +535,6 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
       t.tenant_code?.toLowerCase().includes(q);
   });
   const [deleting, setDeleting] = useState(null);
-  const [showLeaseModal, setShowLeaseModal] = useState(false);
-  const [editingLease, setEditingLease] = useState(null);
 
   const handleDelete = async (tenant) => {
     if (!window.confirm(`Weet u zeker dat u "${tenant.name}" wilt verwijderen?`)) return;
@@ -564,12 +563,30 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
     }
   };
 
-  const openLeaseDoc = (leaseId) => {
-    window.open(`${API}/admin/leases/${leaseId}/document?token=${token}`, '_blank');
-  };
-
   return (
     <div className="space-y-6">
+      {/* Sub-tab selector */}
+      <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
+        <button
+          onClick={() => setTenantsSubTab('huurders')}
+          data-testid="tenants-subtab-huurders"
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${tenantsSubTab === 'huurders' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <Users className="w-4 h-4" /> Huurders
+        </button>
+        <button
+          onClick={() => setTenantsSubTab('contracten')}
+          data-testid="tenants-subtab-contracten"
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${tenantsSubTab === 'contracten' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <FileText className="w-4 h-4" /> Huurovereenkomsten
+        </button>
+      </div>
+
+      {tenantsSubTab === 'contracten' ? (
+        <LeasesTab leases={leases} tenants={tenants} apartments={apartments} formatSRD={formatSRD} onRefresh={onRefresh} token={token} />
+      ) : (
+      <>
       {/* Huurders tabel */}
       <div className="bg-white rounded-xl border border-slate-200">
         <div className="p-4 border-b border-slate-200 flex items-center gap-4">
@@ -737,8 +754,34 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
           </div>
         )}
       </div>
+      </>
+      )}
+    </div>
+  );
+}
+function LeasesTab({ leases, tenants, apartments, formatSRD, onRefresh, token }) {
+  const [showLeaseModal, setShowLeaseModal] = useState(false);
+  const [editingLease, setEditingLease] = useState(null);
+  const activeTenants = tenants.filter(t => t.status === 'active');
 
-      {/* Huurovereenkomsten tabel */}
+  const openLeaseDoc = async (leaseId) => {
+    try {
+      const res = await axios.get(`${API}/admin/leases/${leaseId}/document`, { headers: { Authorization: `Bearer ${token}` }, responseType: 'blob' });
+      const url = URL.createObjectURL(new Blob([res.data], { type: 'text/html' }));
+      window.open(url, '_blank');
+    } catch (err) { alert('Fout bij openen document'); }
+  };
+
+  const handleDeleteLease = async (leaseId) => {
+    if (!window.confirm('Huurovereenkomst verwijderen?')) return;
+    try {
+      await axios.delete(`${API}/admin/leases/${leaseId}`, { headers: { Authorization: `Bearer ${token}` } });
+      onRefresh();
+    } catch (err) { alert('Verwijderen mislukt'); }
+  };
+
+  return (
+    <div className="space-y-6">
       <div className="bg-white rounded-xl border border-slate-200">
         <div className="p-4 border-b border-slate-200 flex justify-between items-center">
           <h2 className="font-semibold text-slate-900">Huurovereenkomsten ({(leases || []).length})</h2>
@@ -812,7 +855,6 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
         )}
       </div>
 
-      {/* Lease Modal */}
       {showLeaseModal && (
         <LeaseModal
           lease={editingLease}
