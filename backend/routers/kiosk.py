@@ -3610,7 +3610,7 @@ async def assign_internet_plan(tenant_id: str = None, plan_id: str = None, compa
         # Remove internet
         await db.kiosk_tenants.update_one(
             {"tenant_id": tenant_id},
-            {"$set": {"internet_plan_id": None, "internet_cost": 0, "internet_plan_name": "", "updated_at": datetime.now(timezone.utc)}}
+            {"$set": {"internet_plan_id": None, "internet_cost": 0, "internet_outstanding": 0, "internet_plan_name": "", "updated_at": datetime.now(timezone.utc)}}
         )
         return {"message": "Internet verwijderd"}
     
