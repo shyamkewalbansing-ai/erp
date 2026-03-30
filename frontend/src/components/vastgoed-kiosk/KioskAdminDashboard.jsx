@@ -3357,7 +3357,7 @@ function LoanDetailModal({ loan, formatSRD, onClose, onPay }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-[999] p-4 pt-8 overflow-y-auto" onClick={onClose}>
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl" onClick={e => e.stopPropagation()}>
         <div className="p-5 border-b border-slate-200 flex items-center justify-between">
           <div>
