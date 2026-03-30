@@ -6,7 +6,7 @@ REM ==========================================
 
 REM === CONFIGURATIE ===
 REM Pas deze URL aan naar uw eigen domein
-SET KIOSK_URL=https://responsive-rent-pay.preview.emergentagent.com/vastgoed
+SET KIOSK_URL=https://erp-kiosk-dev.preview.emergentagent.com/vastgoed
 
 REM === CHROME PAD ===
 REM Standaard Chrome locatie (pas aan indien nodig)

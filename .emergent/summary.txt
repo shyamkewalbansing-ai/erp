@@ -1,44 +1,44 @@
 <analysis>**original_problem_statement**: 
-The user is building a full-stack ERP system for real estate/apartment rent payments with a KIOSK terminal (Albert Heijn self-checkout replica). PRODUCT REQUIREMENTS: Manage the Kiosk subscriptions via the ERP SuperAdmin dashboard, ensure continuous Face ID scanning using face-api.js, support manual payment registrations with auto-printing to a local USB printer, and facilitate mock/real local payment methods.
+The user is building a full-stack ERP system for real estate/apartment rent payments with a KIOSK terminal (Albert Heijn self-checkout replica). PRODUCT REQUIREMENTS: Manage Kiosk subscriptions via the ERP SuperAdmin dashboard, ensure continuous Face ID scanning using face-api.js, support manual payment registrations with auto-printing to a local USB printer, facilitate mock/real local payment methods (SumUp, Mope, Uni5Pay), and provide automated WhatsApp/Twilio notifications to tenants.
 
 **User's preferred language**: Dutch (You MUST automatically detect the user's primary language from their messages inside the <trajectory> tag and INSTRUCT next agent to respond in the user's preferred language only. The language here is **DUTCH**. ALWAYS RESPOND IN DUTCH.)
 
 **what currently exists?** 
-A functional ERP with standard modules. The Kiosk application is integrated and uses Face ID for login (optimized with  model files to bypass Nginx SPA routing issues). The Admin dashboard allows managing apartments and tenants. Manual payments can be registered, which automatically trigger WhatsApp receipts and send print commands to a local USB receipt printer ().
+A functional full-stack ERP. The Kiosk application is integrated, responsive, and uses Face ID for login. The Admin dashboard allows managing apartments and tenants. Payments can be processed via Cash, SumUp (Real), and Mope/Uni5Pay (Mocked). Lease agreements are auto-generated dynamically. The platform functions as an installable PWA. Dual messaging channels (WhatsApp Cloud API and Twilio WhatsApp) are integrated for automated tenant communication.
 
 **Last working item**: 
-    - Last item agent was working: Fixing mobile responsiveness for Kiosk screens (, , etc.). User uploaded screenshots showing the 2-column layout overlaps and breaks on mobile devices.
-    - Status: IN PROGRESS
+    - Last item agent was working: Implementing automated Twilio/WhatsApp notifications for 8 specific new system events requested by the user.
+    - Status: IN PROGRESS (Agent just started ing backend files to locate the endpoints for these events but wrote no code).
     - Agent Testing Done: N
-    - Which testing method agent to use? Frontend testing via screenshot tool (Mobile viewport).
+    - Which testing method agent to use? backend testing agent
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:  
-  Issue 1: Mobile responsiveness broken on Kiosk screens (P0)
-     - Attempted fixes: Agent analyzed user screenshots and identified that components like  and  force a two-column layout that overflows on narrow screens. No code was written yet.
-     - Next debug checklist: Modify , , , and . Change fixed widths and  setups to  to stack elements gracefully on mobile screens. Ensure the bottom navigation bar doesn't overlap content.
-     - Why fix this issue and what will be achieved with the fix? Allows tenants and businesses to use the Kiosk application seamlessly on mobile phones.
+  Issue 1: Implement 8 Automated Twilio/WhatsApp Notification Triggers (P0)
+     - Attempted fixes: Agent mapped out endpoints like  and employee salary routes but hasn't injected the  helper yet.
+     - Next debug checklist: Inject the unified  helper into the backend () for the following 8 events:
+        1. Circuit breaker (Stroombreker) turned OFF.
+        2. Circuit breaker turned ON.
+        3. Employee salary paid out.
+        4. Payment receipt generated (send to tenant).
+        5. Apartment rent price updated (notify assigned tenants).
+        6. New Lease agreement created (send document/notification).
+        7. Rent is due (cron/check based on ).
+        8. Fine/penalty applied to tenant.
+        9. Lease agreement nearing expiration (cron/check).
+     - Why fix this issue and what will be achieved with the fix? This fulfills the user's latest extensive request for system-wide automated messaging.
      - Status: IN PROGRESS
      - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Frontend (Screenshot tool mobile viewport)
+     - Should Test frontend/backend/both after fix? Backend
      - Blocked on other issue: None
 
-  Issue 2: Real payment gateways are currently mocked (P1)
-     - Attempted fixes: None, waiting for user.
-     - Next debug checklist: Await user credentials for Mope and Uni5Pay to switch from Mock mode to Production mode.
-     - Why fix this issue and what will be achieved with the fix? Required for processing real transactions.
-     - Status: BLOCKED
-     - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Both
-     - Blocked on other issue: User action pending.
-
 **In progress Task List**: 
-  None
+  None separate from Issue 1.
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
     - P1: Modernize Kwitanties (Receipts) tab - Rebuild using the unified table style in the Admin Dashboard.
-    - Refactoring (P1):  (>3600 lines) and  (>3500 lines) MUST be split into smaller modules.
+    - Refactoring (P1):  (>3800 lines) and  (>3700 lines) MUST be split into smaller modules. They are becoming unmanageable.
 
     Future Tasks:
     - P2: Maandelijks financieel rapport (Automated monthly financial report).
@@ -47,91 +47,83 @@ A functional ERP with standard modules. The Kiosk application is integrated and 
     - P2: Multi-building support per bedrijf.
 
 **Completed work in this session**
-- Fixed Face ID  crash on production by renaming shard files to  and updating manifests (Nginx was serving  instead of binary data) (DONE)
-- Refactored  to use  for smoother detection, removed the welcome delay, and added a Web Audio API chime upon face detection (DONE)
-- Fixed vertical scrolling issues in  and  (DONE)
-- Added auto-fill logic for  and  when selecting an apartment for a tenant (DONE)
-- Made  fully responsive for mobile (DONE)
-- Added Suriname Time (UTC-3) to the Admin Dashboard (DONE)
-- Added manual payment registration flow () with automatic WhatsApp receipt dispatch (DONE)
-- Rerouted receipt printing (Betaling Registreren and Kwitanties tab) to automatically send print jobs to a local USB printer at  instead of triggering the browser print dialog (DONE)
-- Removed Kiosk 'Welcome' screen; users now go straight to apartment selection after PIN login (DONE)
-- Added  setting in Backend/Frontend so companies can choose whether to boot into the 'Kiosk' or 'Dashboard' after login (DONE)
+- Mobile layout fix () for Kiosk payment screens (, , etc.) (DONE)
+- Apartment status bug fix: Changed  to  when removing tenants to correctly free up apartments (green/red UI) (DONE)
+- Face ID rewrite: Replaced 60fps  with  and added processing locks to stop multi-scanning/immediate retries (DONE)
+- Lease Document Generator: Removed top company stamp, enlarged bottom stamp, and made payment terms/fines dynamic based on company settings (DONE)
+- UI Tweaks: Added apartment card transparency (), equalized top/bottom bar height (), added WhatsApp SVG icon (DONE)
+- PWA Implementation: Created  and , generated UI icons, and enabled PWA installation (DONE)
+- Kiosk Receipt UI updated to mirror the detailed Huurders Receipt UI exactly, and countdown reduced to 5s (DONE)
+- Payment Flow: Removed Mope/bank logos from selection screen, removed 12s mock auto-approval, added frontend polling checks for failure, fixed SumUp success logic (DONE)
+- Twilio WhatsApp Integration: Added Twilio API as a messaging channel alternative/addition to standard WhatsApp Cloud API. Added Dashboard UI for credentials (DONE)
 
 **Earlier issues found/mentioned but not fixed**
    None.
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: Production Deployment caching issues / Nginx SPA routing.
-  - Recurrence count: 3
-  - Status: RESOLVED (Fixed by bumping Service Worker cache version and giving model files explicit  extensions).
-  Note: Keep in mind the user pulls code manually on their server (). 
+  - Issue recurrence in previous fork: Face ID multi-scanning and CPU overload.
+  - Recurrence count: 1
+  - Status: RESOLVED (Completely rewrote ).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Continuous Face ID:** Uses local  models. *Crucial:* Shard files end in  so the user's Nginx server doesn't fallback to serving  for extensionless files.
-- **Local Receipt Printer:** The user has a physical thermal printer connected via USB, running a local server on . Print jobs are sent there silently via . 
-- **Web Audio API:** Used in  to play a chime upon face detection without needing external MP3 files. Must be unlocked via user interaction.
+- **Unified Messaging Helper**:  in  routes messages to WhatsApp Cloud API, Twilio WhatsApp ( prefix), or both based on settings.
+- **Local Receipt Printer**:  target for silent background printing.
+- **Face ID**: Relies on  with  models.
+- **PWA**: App serves dynamic manifests based on whether the user is on  or .
 
 **key DB schema**
-- : Added  (string: 'kiosk' | 'dashboard').
-- : , , .
-- : , .
+- : Added , , , .
+- :  field indicates whether it was sent via  or .
 
 **changes in tech stack**
-- None.
+- Added  python package via pip.
 
 **All files of reference**
--  (Needs mobile layout fix)
--  (Needs mobile layout fix)
--  (Heavily updated)
-- 
+-  (Focus here for the new notification hooks)
 - 
 
 **Areas that need refactoring**: 
- (3600+ lines) and  (3500+ lines) are massively monolithic and need breaking down.
+ and . Both are severely monolithic and risk hitting context limits during heavy edits.
 
 **key api endpoints**
--  (Manual payment with WhatsApp trigger)
--  (Now cascades rent updates to assigned tenants)
--  (Updated to handle )
+-  (Handles Twilio/WA settings)
+-  (Tests unified messaging)
 
 **Critical Info for New Agent**
 - **Language:** Reply strictly in **Dutch**.
-- **Deployment workflow:** The user runs , deletes the  folder, rebuilds, and restarts  via supervisorctl on their live server. ALWAYS prompt the user to Save to Github so they can pull your changes.
-- **Receipt Printing:** Do NOT use  for kiosk receipts. The user relies on a local server () to print to a USB receipt printer. This is correctly configured in  and ; maintain this pattern.
-- **Current Blocker:** The user uploaded 3 screenshots indicating the Kiosk layout is broken on mobile phones (components overlap and overflow). Your very first task is to refactor  and related kiosk payment screens to ensure they stack responsively ( on mobile,  on larger screens).
+- The very next step is executing the massive list of **Twilio/WhatsApp triggers** the user requested at the very end of the session. You will need to locate the 8 specific actions in  (e.g., , payment registration, lease creation) and inject the  function with appropriate Dutch message text.
+- Note: For scheduled events (like Rent is due, or Lease expiring), you may need to implement or utilize an existing daily cron job/scheduler in the FastAPI backend.
 
 **documents and test reports created in this job**
 - 
+- 
 
 **Last 10 User Messages and any pending HUMAN messages** 
-1. User: Complained  scroll wasn't working (couldn't see bottom of Admin dashboard).
-2. Agent: Changed  to  to prevent bottom bar overlap.
-3. User: Requested assigned apartments not to show in New Tenant dropdown, and asked for Suriname time on dashboard.
-4. Agent: Filtered dropdown and added UTC-3 time block.
-5. User: Complained about an ESLint hooks error, and requested that changing an apartment's rent updates the tenant's rent automatically.
-6. Agent: Fixed hooks order and updated the  backend route to cascade changes to tenants.
-7. User: Requested manual payment registrations to auto-print to the local USB printer (like the Kiosk does) instead of the browser print dialog. Wanted colors changed from green to orange.
-8. Agent: Rerouted  and the success flow to send payloads to , and updated CSS colors.
-9. User: Requested to skip the Welcome screen after login and add a setting to choose between starting on the Kiosk vs the Dashboard.
-10. Agent: Implemented  setting, added bottom bar buttons, and removed the welcome flow.
-11. User (Pending): Uploaded 3 screenshots showing the Kiosk interface ( and  sub-screens) is entirely broken and overlapping on mobile phone screens.
+1. User: Asked to make Kiosk Receipt identical to Huurders Receipt. (Done)
+2. User: Asked to reduce success countdown from 15s to 5s. (Done)
+3. User: Asked to remove Mope and bank logos from payment selection. (Done)
+4. User: Complained that mocked Mope/Uni5Pay and real Pinpas auto-approved even on failures/no balance. (Done - added proper polling validation).
+5. User: Requested Twilio integration alongside WhatsApp in the Dashboard. (Done)
+6. User: Clarified they want to use Twilio specifically for WhatsApp (not SMS). (Done - prepended  to numbers).
+7. User: Encountered Channel not found error during testing.
+8. Agent: Provided instructions on how to set up the Twilio WhatsApp Sender Sandbox.
+9. User (Pending): Provided a massive list of 8 new system events that should automatically trigger a Twilio/WhatsApp message to tenants/employees (Circuit breakers, Salary, Receipts, Rent changes, Lease creation, Rent due, Fines, Expiring leases).
 
 **Project Health Check:**
-- Broken: Mobile layout for Kiosk sub-screens (, etc.)
+- Broken: None.
 - Mocked: Mope Payment Gateway, Uni5Pay Payment Gateway.
 
 **3rd Party Integrations**
-- SumUp Online Checkout API - Requires user API Key
-- Mope Payment API - Requires user API Key (Mocked)
-- Uni5Pay - Requires user API Key (Mocked)
-- WhatsApp Business API - Requires User API Key
+- SumUp Online Checkout API - Requires User API Key
+- Twilio WhatsApp API - Requires User API Key (Account SID / Auth Token)
+- WhatsApp Business Cloud API - Requires User API Key
+- Mope / Uni5Pay - Mocked
 
 **Testing status**
-  - Testing agent used after significant changes: NO (Iterative frontend adjustments)
+  - Testing agent used after significant changes: YES (Frontend testing for Kiosk layout)
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: None
   - Known regressions: None
@@ -142,4 +134,4 @@ A functional ERP with standard modules. The Kiosk application is integrated and 
 - **Kiosk PIN:** 
 
 **What agent forgot to execute**
-The agent analyzed the mobile viewport screenshots showing the broken 2-column layout in  and other payment screens, but the session ended before the agent could implement the CSS/Tailwind flex-col fixes. Start by addressing this mobile layout issue.</analysis>
+The agent received a list of 8 new backend system events to hook into the automated messaging system, mapped some endpoints via bash, but the context ended before any code was written. This is the immediate P0 task.</analysis>
