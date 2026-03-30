@@ -150,9 +150,9 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     { id: 'kas', label: 'Bank/Kas', icon: Landmark },
     { id: 'loans', label: 'Leningen', icon: Wallet },
     { id: 'employees', label: 'Werknemers', icon: Briefcase },
-    { id: 'settings', label: 'Instellingen', icon: Settings },
     { id: 'power', label: 'Stroombrekers', icon: Zap },
     { id: 'messages', label: 'Notificaties', icon: Bell },
+    { id: 'settings', label: 'Instellingen', icon: Settings },
   ];
 
   return (
