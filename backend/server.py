@@ -69,7 +69,7 @@ from routers.suribet import router as suribet_router
 from routers.boekhouding import router as boekhouding_router
 from routers.schuldbeheer import router as schuldbeheer_router
 from routers.gratis_factuur import router as gratis_factuur_router, set_database as set_gratis_factuur_db
-from routers.kiosk import router as kiosk_router, set_database as set_kiosk_db
+from routers.kiosk import router as kiosk_router, set_database as set_kiosk_db, _kiosk_daily_scheduler
 from routers.live_chat import router as live_chat_router, set_database as set_live_chat_db, set_jwt_config as set_live_chat_jwt
 from services.unified_email_service import get_email_service, EMAIL_TEMPLATES
 from services.scheduled_tasks import get_scheduled_tasks
@@ -583,6 +583,9 @@ async def start_demo_cleanup():
     # Start cleanup scheduler
     asyncio.create_task(demo_cleanup_scheduler())
     logger.info("Demo cleanup scheduler started - runs every hour")
+    # Start kiosk daily notification scheduler
+    asyncio.create_task(_kiosk_daily_scheduler())
+    logger.info("Kiosk daily notification scheduler started")
 
 # ==================== GLOBAL EXCEPTION HANDLER ====================
 
