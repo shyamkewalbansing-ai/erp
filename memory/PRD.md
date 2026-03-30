@@ -74,6 +74,21 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
   - Huurder variant card breedte verlaagd van 500px min naar 300px
   - Getest met testing agent: 100% pass rate op mobiel (375px) én desktop (1920px)
 
+### Sprint 5 (30 maart 2026) — Geautomatiseerde Notificaties
+- **9 WhatsApp/Twilio Notificatie Triggers geïmplementeerd:**
+  1. Stroombreker UIT → bericht naar huurder (`shelly_off`)
+  2. Stroombreker AAN → bericht naar huurder (`shelly_on`)
+  3. Salaris uitbetaald → bericht naar werknemer (`salary_paid`)
+  4. Betalingsbewijs → bericht naar huurder (`payment_confirmation`) — al bestaand
+  5. Huurprijs gewijzigd → melding naar actieve huurders (`rent_updated`)
+  6. Nieuw huurcontract → bericht naar huurder (`lease_created`)
+  7. Huur verschuldigd → dagelijkse herinnering via scheduler (`rent_reminder` / `rent_due_today`)
+  8. Boete opgelegd → bericht per huurder (`fine_applied`)
+  9. Huurcontract bijna verlopen → wekelijkse waarschuwing via scheduler (`lease_expiring`)
+- **Dagelijkse Kiosk Scheduler:** Achtergrondtaak die om 08:00 Suriname-tijd draait voor huur-herinneringen (3 dagen voor + op vervaldatum) en contract-verloop waarschuwingen (30 dagen van tevoren, max 1x per week)
+- **Handmatig trigger endpoint:** `POST /api/kiosk/admin/daily-notifications` voor directe controle
+- **100% backend test pass rate** (iteration_84)
+
 ## Inloggegevens
 - SuperAdmin ERP: admin@facturatie.sr / Bharat7755
 - Kiosk Company: shyam@kewalbansing.net / Bharat7755
@@ -90,10 +105,12 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 - Uni5Pay — wacht op API key
 
 ## Backlog (prioriteit)
+### P0
+- ~~9 Geautomatiseerde WhatsApp/Twilio Notificaties~~ ✅ (30 maart 2026)
+
 ### P1
 - Kwitanties tab moderniseren (unified table style)
-- WhatsApp bonnetje automatisch sturen na betaling
-- Refactoring: Admin.js (~3700 regels), KioskAdminDashboard.jsx (~3400 regels), kiosk.py (~3300 regels)
+- Refactoring: kiosk.py (~4100 regels), KioskAdminDashboard.jsx (~3800 regels)
 
 ### P2
 - Maandelijks financieel rapport (automatisch)
