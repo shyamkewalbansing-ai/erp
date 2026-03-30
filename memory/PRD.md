@@ -143,11 +143,13 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 
 ### Sprint 9 (30 maart 2026) — Internet Integratie Overal
 - **Dashboard overzicht:** "Open Internet" stat toegevoegd met Wifi icon en `total_internet` backend API
-- **Huurders tab:** Internet kolom toont openstaande internetkosten per huurder
+- **Huurders tab:** Internet kolom toont openstaande internetkosten per huurder met plannaam
 - **Kiosk Financieel overzicht (KioskTenantOverview):** Internet in items lijst met Wifi icon + opgenomen in totaal
 - **Betaalflow (KioskPaymentSelect):** Internet als selecteerbaar betaaltype (verlaagt `internet_outstanding`)
 - **Kwitantiebonnen (ReceiptTicket + HuurdersReceipt):** Internet in "Openstaand na betaling" sectie + TYPE_LABELS
-- **Backend Payment API's:** `remaining_internet` toegevoegd aan beide payment endpoints + `internet` als betaaltype
+- **Backend:** Alle tenant endpoints (admin + publiek) retourneren nu internet-velden
+- **Backend:** `remaining_internet` in payment responses, `internet` als betaaltype
+- **Backend:** Bij toewijzen internet plan wordt `internet_outstanding` direct verhoogd met eerste maand
 - **WhatsApp berichten:** Internet meegenomen in totaal resterend saldo
 - **100% test pass rate** (iteration_87: 13/13 backend, alle frontend tests)
 

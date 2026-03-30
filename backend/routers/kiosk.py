@@ -983,7 +983,10 @@ async def get_tenants_public(company_id: str):
             "deposit_paid": t.get("deposit_paid", 0),
             "rent_billed_through": billed_through,
             "overdue_months": overdue_months,
-            "status": t["status"]
+            "status": t["status"],
+            "internet_cost": t.get("internet_cost", 0),
+            "internet_outstanding": t.get("internet_outstanding", 0),
+            "internet_plan_name": t.get("internet_plan_name", ""),
         })
     
     return result
@@ -1030,7 +1033,10 @@ async def lookup_tenant_by_code(company_id: str, code: str):
         "fines": tenant.get("fines", 0),
         "deposit_required": tenant.get("deposit_required", 0),
         "deposit_paid": tenant.get("deposit_paid", 0),
-        "status": tenant["status"]
+        "status": tenant["status"],
+        "internet_cost": tenant.get("internet_cost", 0),
+        "internet_outstanding": tenant.get("internet_outstanding", 0),
+        "internet_plan_name": tenant.get("internet_plan_name", ""),
     }
 
 
@@ -1545,7 +1551,11 @@ async def list_tenants(company: dict = Depends(get_current_company)):
             "overdue_months": overdue_months,
             "status": t.get("status", "active"),
             "created_at": t.get("created_at"),
-            "face_id_enabled": bool(t.get("face_id_enabled") and t.get("face_descriptor"))
+            "face_id_enabled": bool(t.get("face_id_enabled") and t.get("face_descriptor")),
+            "internet_cost": t.get("internet_cost", 0),
+            "internet_outstanding": updates.get("internet_outstanding", t.get("internet_outstanding", 0)),
+            "internet_plan_id": t.get("internet_plan_id"),
+            "internet_plan_name": t.get("internet_plan_name", ""),
         })
     
     return result
@@ -3621,6 +3631,7 @@ async def assign_internet_plan(tenant_id: str = None, plan_id: str = None, compa
             "internet_plan_id": plan_id,
             "internet_plan_name": f"{plan['name']} ({plan['speed']})",
             "internet_cost": plan["price"],
+            "internet_outstanding": tenant.get("internet_outstanding", 0) + plan["price"],
             "updated_at": datetime.now(timezone.utc),
         }}
     )
@@ -4432,7 +4443,8 @@ async def verify_tenant_face(company_id: str, req: FaceVerifyRequest):
     tenants = await db.kiosk_tenants.find(
         {"company_id": company_id, "face_id_enabled": True, "face_descriptor": {"$exists": True}, "status": "active"},
         {"_id": 0, "tenant_id": 1, "name": 1, "apartment_number": 1, "tenant_code": 1, "face_descriptor": 1,
-         "outstanding_rent": 1, "service_costs": 1, "fines": 1, "monthly_rent": 1, "apartment_id": 1}
+         "outstanding_rent": 1, "service_costs": 1, "fines": 1, "monthly_rent": 1, "apartment_id": 1,
+         "internet_cost": 1, "internet_outstanding": 1, "internet_plan_name": 1}
     ).to_list(500)
     best_match = None
     best_distance = 999
