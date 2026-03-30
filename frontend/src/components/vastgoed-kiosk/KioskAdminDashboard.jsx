@@ -153,7 +153,6 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     { id: 'settings', label: 'Instellingen', icon: Settings },
     { id: 'power', label: 'Stroombrekers', icon: Zap },
     { id: 'messages', label: 'Notificaties', icon: Bell },
-    { id: 'subscription', label: 'Abonnement', icon: Crown },
   ];
 
   return (
@@ -314,10 +313,6 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
           <MessagesTab token={token} />
         )}
 
-        {/* Subscription Tab */}
-        {activeTab === 'subscription' && (
-          <SubscriptionTab company={company} />
-        )}
       </div>
 
       {/* Modals */}
@@ -2020,6 +2015,9 @@ function SettingsTab({ company, token, onRefresh }) {
 
       {/* Face ID Section */}
       <FaceIdSettings company={company} token={token} onRefresh={onRefresh} />
+
+      {/* Abonnement Section */}
+      <SubscriptionTab company={company} />
     </div>
   );
 }
