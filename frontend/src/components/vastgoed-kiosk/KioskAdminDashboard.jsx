@@ -673,7 +673,7 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                       <td className={`p-4 text-right font-bold whitespace-nowrap ${fines > 0 ? 'text-red-600' : 'text-slate-800'}`}>
                         {formatSRD(fines)}
                       </td>
-                      <td className={`p-4 text-right font-bold whitespace-nowrap ${internet > 0 ? 'text-cyan-600' : 'text-slate-800'}`}>
+                      <td className={`p-4 text-right font-bold whitespace-nowrap ${internet > 0 ? 'text-slate-900' : 'text-slate-800'}`}>
                         {internet > 0 ? formatSRD(internet) : '-'}
                         {tenant.internet_plan_name && <p className="text-[10px] text-slate-400 mt-0.5">{tenant.internet_plan_name}</p>}
                       </td>
