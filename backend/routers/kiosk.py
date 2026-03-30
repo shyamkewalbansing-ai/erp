@@ -1259,8 +1259,26 @@ async def list_apartments(company: dict = Depends(get_current_company)):
         "description": apt.get("description", ""),
         "monthly_rent": apt.get("monthly_rent", 0),
         "status": apt.get("status", "available"),
+        "sort_order": apt.get("sort_order", 999),
         "created_at": apt.get("created_at")
     } for apt in apartments]
+
+
+class ApartmentReorder(BaseModel):
+    order: list  # [{"apartment_id": "...", "sort_order": 0}, ...]
+
+
+@router.put("/admin/apartments/reorder")
+async def reorder_apartments(data: ApartmentReorder, company: dict = Depends(get_current_company)):
+    """Reorder apartments via drag-and-drop"""
+    company_id = company["company_id"]
+    for item in data.order:
+        await db.kiosk_apartments.update_one(
+            {"apartment_id": item["apartment_id"], "company_id": company_id},
+            {"$set": {"sort_order": item["sort_order"]}}
+        )
+    return {"message": "Volgorde bijgewerkt"}
+
 
 @router.post("/admin/apartments")
 async def create_apartment(data: ApartmentCreate, company: dict = Depends(get_current_company)):

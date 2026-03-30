@@ -5,7 +5,7 @@ import {
   ArrowLeft, DollarSign, Loader2, Settings, ExternalLink,
   Copy, Check, Receipt, Zap, Crown, Search, Calendar,
   AlertTriangle, User, Banknote, FileText, Save, Eye, LogIn, MessageSquare,
-  Phone, Mail, Landmark, UserCog, TrendingUp, TrendingDown, Briefcase, ScanFace, Camera, XCircle, CheckCircle, Bell, Wallet, Wifi, Power, RefreshCw
+  Phone, Mail, Landmark, UserCog, TrendingUp, TrendingDown, Briefcase, ScanFace, Camera, XCircle, CheckCircle, Bell, Wallet, Wifi, Power, RefreshCw, GripVertical
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'sonner';
@@ -260,6 +260,8 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
                 loadData();
               } catch { alert('Verwijderen mislukt'); }
             }}
+            token={token}
+            onRefresh={loadData}
           />
         )}
 
@@ -932,9 +934,13 @@ function LeasesTab({ leases, tenants, apartments, formatSRD, onRefresh, token })
 }
 
 // ============== APARTMENTS TAB ==============
-function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete }) {
+function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete, token, onRefresh }) {
   const [aptSearch, setAptSearch] = useState('');
-  const filteredApartments = apartments.filter(apt => {
+  const [dragIndex, setDragIndex] = useState(null);
+  const [overIndex, setOverIndex] = useState(null);
+
+  const sortedApartments = [...apartments].sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
+  const filteredApartments = sortedApartments.filter(apt => {
     if (!aptSearch) return true;
     const q = aptSearch.toLowerCase();
     const tenant = tenants.find(t => t.apartment_id === apt.apartment_id && t.status === 'active');
@@ -942,6 +948,22 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete
       apt.description?.toLowerCase().includes(q) ||
       tenant?.name?.toLowerCase().includes(q);
   });
+
+  const handleDragStart = (idx) => { setDragIndex(idx); };
+  const handleDragOver = (e, idx) => { e.preventDefault(); setOverIndex(idx); };
+  const handleDragEnd = () => { setDragIndex(null); setOverIndex(null); };
+  const handleDrop = async (dropIdx) => {
+    if (dragIndex === null || dragIndex === dropIdx) { setDragIndex(null); setOverIndex(null); return; }
+    const reordered = [...filteredApartments];
+    const [moved] = reordered.splice(dragIndex, 1);
+    reordered.splice(dropIdx, 0, moved);
+    const order = reordered.map((a, i) => ({ apartment_id: a.apartment_id, sort_order: i }));
+    setDragIndex(null); setOverIndex(null);
+    try {
+      await axios.put(`${API}/admin/apartments/reorder`, { order }, { headers: { Authorization: `Bearer ${token}` } });
+      onRefresh();
+    } catch (err) { console.error(err); }
+  };
 
   return (
     <div className="bg-white rounded-xl border border-slate-200">
@@ -970,6 +992,7 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete
         <table className="w-full min-w-[600px]">
           <thead className="bg-slate-50">
             <tr>
+              <th className="w-10 p-4"></th>
               <th className="text-left p-4 text-sm font-medium text-slate-500">Nummer</th>
               <th className="text-left p-4 text-sm font-medium text-slate-500">Omschrijving</th>
               <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
@@ -979,10 +1002,25 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete
             </tr>
           </thead>
           <tbody>
-            {filteredApartments.map(apt => {
+            {filteredApartments.map((apt, idx) => {
               const tenant = tenants.find(t => t.apartment_id === apt.apartment_id && t.status === 'active');
               return (
-                <tr key={apt.apartment_id} className="border-t border-slate-100">
+                <tr
+                  key={apt.apartment_id}
+                  draggable
+                  onDragStart={() => handleDragStart(idx)}
+                  onDragOver={(e) => handleDragOver(e, idx)}
+                  onDragEnd={handleDragEnd}
+                  onDrop={() => handleDrop(idx)}
+                  className={`border-t border-slate-100 transition-all ${
+                    dragIndex === idx ? 'opacity-40 bg-orange-50' :
+                    overIndex === idx ? 'border-t-2 border-t-orange-400' : ''
+                  }`}
+                  style={{ cursor: 'grab' }}
+                >
+                  <td className="p-2 text-center text-slate-300 hover:text-slate-500">
+                    <GripVertical className="w-4 h-4 mx-auto" />
+                  </td>
                   <td className="p-4 font-bold text-slate-900">{apt.number}</td>
                   <td className="p-4 text-slate-500">{apt.description || '-'}</td>
                   <td className="p-4">{tenant?.name || <span className="text-slate-400">-</span>}</td>
