@@ -110,6 +110,18 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 - **Backend test pass rate:** 76% → 100% na overpayment fix (iteration_85)
 - **Frontend test pass rate:** 100% (iteration_85)
 
+### Sprint 7 (30 maart 2026) — Meterstanden Module (EBS/SWM)
+- **Meterstanden sectie** in Stroombrekers tab:
+  - Per appartement: oude stand, nieuwe stand, verbruik (kWh/m³), kosten
+  - EBS (stroom) tarief: SRD 2,28/kWh (residentieel Suriname 2025)
+  - SWM (water) tarief: SRD 35,26/m³ (residentieel Suriname 2025-2026)
+  - Maandelijks handmatig invoeren, vorige stand wordt automatisch oude stand
+  - "Doorberekenen" knop: voegt nutskosten toe aan huurder servicekosten
+  - Tarieven aanpasbaar via Tarieven modal
+  - WhatsApp notificatie bij doorberekenen (`meter_charge`)
+- **Backend test pass rate:** 82% (17 tests, 3 test script issues) — alle endpoints werken correct
+- **Frontend test pass rate:** 100% (iteration_86)
+
 ## Inloggegevens
 - SuperAdmin ERP: admin@facturatie.sr / Bharat7755
 - Kiosk Company: shyam@kewalbansing.net / Bharat7755
