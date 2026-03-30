@@ -353,8 +353,9 @@ class LoanPaymentCreate(BaseModel):
 class MeterReadingCreate(BaseModel):
     apartment_id: str
     meter_type: str  # "ebs" or "swm"
+    old_stand: float
     new_stand: float
-    reading_date: Optional[str] = None  # YYYY-MM-DD
+    reading_month: Optional[str] = None  # YYYY-MM
 
 
 # ============== AUTH ENDPOINTS ==============
@@ -3521,7 +3522,7 @@ async def update_meter_settings(
 
 @router.get("/admin/meter-readings")
 async def list_meter_readings(company: dict = Depends(get_current_company)):
-    """List latest meter readings per apartment"""
+    """List latest meter readings per apartment (old+new stand per reading)"""
     company_id = company["company_id"]
     ebs_tariff = company.get("ebs_tariff_kwh", 2.28)
     swm_tariff = company.get("swm_tariff_m3", 35.26)
@@ -3534,27 +3535,21 @@ async def list_meter_readings(company: dict = Depends(get_current_company)):
     for apt in apartments:
         apt_id = apt["apartment_id"]
         
-        # Get last 2 EBS readings
-        ebs_readings = await db.kiosk_meter_readings.find(
-            {"apartment_id": apt_id, "meter_type": "ebs"},
-            {"_id": 0}
-        ).sort("reading_date", -1).to_list(2)
+        # Get latest EBS reading
+        ebs = await db.kiosk_meter_readings.find_one(
+            {"apartment_id": apt_id, "meter_type": "ebs", "company_id": company_id},
+            {"_id": 0}, sort=[("reading_month", -1)]
+        )
+        # Get latest SWM reading
+        swm = await db.kiosk_meter_readings.find_one(
+            {"apartment_id": apt_id, "meter_type": "swm", "company_id": company_id},
+            {"_id": 0}, sort=[("reading_month", -1)]
+        )
         
-        # Get last 2 SWM readings
-        swm_readings = await db.kiosk_meter_readings.find(
-            {"apartment_id": apt_id, "meter_type": "swm"},
-            {"_id": 0}
-        ).sort("reading_date", -1).to_list(2)
-        
-        ebs_new = ebs_readings[0] if ebs_readings else None
-        ebs_old = ebs_readings[1] if len(ebs_readings) > 1 else None
-        swm_new = swm_readings[0] if swm_readings else None
-        swm_old = swm_readings[1] if len(swm_readings) > 1 else None
-        
-        ebs_usage = (ebs_new["stand"] - ebs_old["stand"]) if ebs_new and ebs_old else 0
-        swm_usage = (swm_new["stand"] - swm_old["stand"]) if swm_new and swm_old else 0
-        ebs_cost = ebs_usage * ebs_tariff
-        swm_cost = swm_usage * swm_tariff
+        ebs_usage = (ebs["new_stand"] - ebs["old_stand"]) if ebs else 0
+        swm_usage = (swm["new_stand"] - swm["old_stand"]) if swm else 0
+        ebs_cost = round(ebs_usage * ebs_tariff, 2)
+        swm_cost = round(swm_usage * swm_tariff, 2)
         
         # Get tenant for this apartment
         tenant = await db.kiosk_tenants.find_one(
@@ -3567,16 +3562,16 @@ async def list_meter_readings(company: dict = Depends(get_current_company)):
             "apartment_number": apt.get("number", ""),
             "tenant_name": tenant["name"] if tenant else "",
             "tenant_id": tenant["tenant_id"] if tenant else "",
-            "ebs_old": ebs_old["stand"] if ebs_old else None,
-            "ebs_new": ebs_new["stand"] if ebs_new else None,
-            "ebs_date": ebs_new["reading_date"] if ebs_new else None,
+            "ebs_old": ebs["old_stand"] if ebs else None,
+            "ebs_new": ebs["new_stand"] if ebs else None,
+            "ebs_month": ebs["reading_month"] if ebs else None,
             "ebs_usage": round(ebs_usage, 2),
-            "ebs_cost": round(ebs_cost, 2),
-            "swm_old": swm_old["stand"] if swm_old else None,
-            "swm_new": swm_new["stand"] if swm_new else None,
-            "swm_date": swm_new["reading_date"] if swm_new else None,
+            "ebs_cost": ebs_cost,
+            "swm_old": swm["old_stand"] if swm else None,
+            "swm_new": swm["new_stand"] if swm else None,
+            "swm_month": swm["reading_month"] if swm else None,
             "swm_usage": round(swm_usage, 2),
-            "swm_cost": round(swm_cost, 2),
+            "swm_cost": swm_cost,
             "total_cost": round(ebs_cost + swm_cost, 2),
         })
     
@@ -3584,7 +3579,7 @@ async def list_meter_readings(company: dict = Depends(get_current_company)):
 
 @router.post("/admin/meter-readings")
 async def create_meter_reading(data: MeterReadingCreate, company: dict = Depends(get_current_company)):
-    """Register a new meter reading for an apartment"""
+    """Register a meter reading with old and new stand"""
     company_id = company["company_id"]
     
     apt = await db.kiosk_apartments.find_one({"apartment_id": data.apartment_id, "company_id": company_id})
@@ -3594,16 +3589,15 @@ async def create_meter_reading(data: MeterReadingCreate, company: dict = Depends
     if data.meter_type not in ("ebs", "swm"):
         raise HTTPException(status_code=400, detail="Ongeldig metertype (ebs of swm)")
     
-    now = datetime.now(timezone.utc)
-    reading_date = data.reading_date or now.strftime("%Y-%m-%d")
+    if data.new_stand <= data.old_stand:
+        raise HTTPException(status_code=400, detail="Nieuwe stand moet hoger zijn dan oude stand")
     
-    # Get previous reading
-    prev = await db.kiosk_meter_readings.find_one(
-        {"apartment_id": data.apartment_id, "meter_type": data.meter_type},
-        {"_id": 0}
-    )
-    if prev and data.new_stand < prev.get("stand", 0):
-        raise HTTPException(status_code=400, detail="Nieuwe stand kan niet lager zijn dan de vorige stand")
+    now = datetime.now(timezone.utc)
+    reading_month = data.reading_month or now.strftime("%Y-%m")
+    
+    tariff = company.get("ebs_tariff_kwh", 2.28) if data.meter_type == "ebs" else company.get("swm_tariff_m3", 35.26)
+    usage = round(data.new_stand - data.old_stand, 2)
+    cost = round(usage * tariff, 2)
     
     reading_id = generate_uuid()
     reading = {
@@ -3612,22 +3606,26 @@ async def create_meter_reading(data: MeterReadingCreate, company: dict = Depends
         "apartment_id": data.apartment_id,
         "apartment_number": apt.get("number", ""),
         "meter_type": data.meter_type,
-        "stand": data.new_stand,
-        "reading_date": reading_date,
+        "old_stand": data.old_stand,
+        "new_stand": data.new_stand,
+        "usage": usage,
+        "cost": cost,
+        "reading_month": reading_month,
         "created_at": now,
     }
-    await db.kiosk_meter_readings.insert_one(reading)
-    reading.pop("_id", None)
     
-    # Calculate usage & cost
-    tariff = company.get("ebs_tariff_kwh", 2.28) if data.meter_type == "ebs" else company.get("swm_tariff_m3", 35.26)
-    usage = (data.new_stand - prev["stand"]) if prev else 0
-    cost = round(usage * tariff, 2)
+    # Upsert: replace existing reading for same apartment+type+month
+    await db.kiosk_meter_readings.update_one(
+        {"apartment_id": data.apartment_id, "meter_type": data.meter_type, "reading_month": reading_month, "company_id": company_id},
+        {"$set": reading},
+        upsert=True
+    )
     
     return {
-        **reading,
-        "old_stand": prev["stand"] if prev else None,
-        "usage": round(usage, 2),
+        "reading_id": reading_id,
+        "old_stand": data.old_stand,
+        "new_stand": data.new_stand,
+        "usage": usage,
         "cost": cost,
     }
 
@@ -3645,16 +3643,18 @@ async def charge_meter_costs(apartment_id: str, company: dict = Depends(get_curr
     ebs_tariff = company.get("ebs_tariff_kwh", 2.28)
     swm_tariff = company.get("swm_tariff_m3", 35.26)
     
-    # Get last 2 readings for each type
-    ebs_readings = await db.kiosk_meter_readings.find(
-        {"apartment_id": apartment_id, "meter_type": "ebs"}, {"_id": 0}
-    ).sort("reading_date", -1).to_list(2)
-    swm_readings = await db.kiosk_meter_readings.find(
-        {"apartment_id": apartment_id, "meter_type": "swm"}, {"_id": 0}
-    ).sort("reading_date", -1).to_list(2)
+    # Get latest readings
+    ebs = await db.kiosk_meter_readings.find_one(
+        {"apartment_id": apartment_id, "meter_type": "ebs", "company_id": company_id},
+        {"_id": 0}, sort=[("reading_month", -1)]
+    )
+    swm = await db.kiosk_meter_readings.find_one(
+        {"apartment_id": apartment_id, "meter_type": "swm", "company_id": company_id},
+        {"_id": 0}, sort=[("reading_month", -1)]
+    )
     
-    ebs_usage = (ebs_readings[0]["stand"] - ebs_readings[1]["stand"]) if len(ebs_readings) >= 2 else 0
-    swm_usage = (swm_readings[0]["stand"] - swm_readings[1]["stand"]) if len(swm_readings) >= 2 else 0
+    ebs_usage = (ebs["new_stand"] - ebs["old_stand"]) if ebs else 0
+    swm_usage = (swm["new_stand"] - swm["old_stand"]) if swm else 0
     ebs_cost = round(ebs_usage * ebs_tariff, 2)
     swm_cost = round(swm_usage * swm_tariff, 2)
     total_cost = round(ebs_cost + swm_cost, 2)

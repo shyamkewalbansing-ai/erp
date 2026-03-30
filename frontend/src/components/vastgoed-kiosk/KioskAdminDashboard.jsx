@@ -2974,9 +2974,10 @@ function MeterReadingsSection({ apartments, tenants, token }) {
   const [ebsTariff, setEbsTariff] = useState(2.28);
   const [swmTariff, setSwmTariff] = useState(35.26);
   const [loading, setLoading] = useState(true);
-  const [showAddModal, setShowAddModal] = useState(null); // { apartment_id, type: 'ebs'|'swm' }
+  const [showAddModal, setShowAddModal] = useState(null); // { apartment_id, type, apt_nr }
+  const [oldStand, setOldStand] = useState('');
   const [newStand, setNewStand] = useState('');
-  const [readingDate, setReadingDate] = useState(new Date().toISOString().slice(0, 10));
+  const [readingMonth, setReadingMonth] = useState(new Date().toISOString().slice(0, 7));
   const [saving, setSaving] = useState(false);
   const [charging, setCharging] = useState(null);
   const [showTariffEdit, setShowTariffEdit] = useState(false);
@@ -2998,21 +2999,38 @@ function MeterReadingsSection({ apartments, tenants, token }) {
 
   useEffect(() => { loadReadings(); }, []);
 
+  const openAddModal = (aptId, aptNr, type, currentOld, currentNew) => {
+    setShowAddModal({ apartment_id: aptId, type, apt_nr: aptNr });
+    setOldStand(currentOld != null ? currentOld.toString() : '');
+    setNewStand(currentNew != null ? currentNew.toString() : '');
+    setReadingMonth(new Date().toISOString().slice(0, 7));
+  };
+
   const handleAddReading = async () => {
-    if (!newStand || parseFloat(newStand) < 0) return alert('Voer een geldige stand in');
+    if (!oldStand || !newStand) return alert('Vul zowel oude als nieuwe stand in');
+    if (parseFloat(newStand) <= parseFloat(oldStand)) return alert('Nieuwe stand moet hoger zijn dan oude stand');
     setSaving(true);
     try {
       await axios.post(`${API}/admin/meter-readings`, {
         apartment_id: showAddModal.apartment_id,
         meter_type: showAddModal.type,
+        old_stand: parseFloat(oldStand),
         new_stand: parseFloat(newStand),
-        reading_date: readingDate,
+        reading_month: readingMonth,
       }, { headers: { Authorization: `Bearer ${token}` } });
       setShowAddModal(null);
-      setNewStand('');
       loadReadings();
     } catch (err) { alert(err.response?.data?.detail || 'Fout bij opslaan'); }
     setSaving(false);
+  };
+
+  const previewUsage = () => {
+    if (!oldStand || !newStand || parseFloat(newStand) <= parseFloat(oldStand)) return null;
+    const usage = parseFloat(newStand) - parseFloat(oldStand);
+    const tariff = showAddModal?.type === 'ebs' ? ebsTariff : swmTariff;
+    const cost = usage * tariff;
+    const unit = showAddModal?.type === 'ebs' ? 'kWh' : 'm³';
+    return { usage, cost, unit, tariff };
   };
 
   const handleCharge = async (aptId, aptNr) => {
@@ -3101,43 +3119,45 @@ function MeterReadingsSection({ apartments, tenants, token }) {
                     <td className="py-2.5 px-3 text-slate-600 text-xs">{r.tenant_name || '-'}</td>
                     {/* EBS */}
                     <td className="py-2.5 px-1 text-center text-xs text-slate-400">{r.ebs_old != null ? r.ebs_old.toLocaleString() : '-'}</td>
-                    <td className="py-2.5 px-1 text-center">
-                      <button
-                        onClick={() => { setShowAddModal({ apartment_id: r.apartment_id, type: 'ebs', apt_nr: r.apartment_number }); setNewStand(''); }}
-                        data-testid={`meter-ebs-add-${r.apartment_id}`}
-                        className="text-xs font-medium text-yellow-700 hover:underline"
-                      >
-                        {r.ebs_new != null ? r.ebs_new.toLocaleString() : '+ invoer'}
-                      </button>
-                    </td>
+                    <td className="py-2.5 px-1 text-center text-xs font-medium">{r.ebs_new != null ? r.ebs_new.toLocaleString() : '-'}</td>
                     <td className="py-2.5 px-1 text-center text-xs font-medium">{r.ebs_usage > 0 ? r.ebs_usage.toLocaleString() : '-'}</td>
                     <td className="py-2.5 px-1 text-right text-xs font-medium text-yellow-700">{r.ebs_cost > 0 ? formatSRD(r.ebs_cost) : '-'}</td>
                     {/* SWM */}
                     <td className="py-2.5 px-1 text-center text-xs text-slate-400">{r.swm_old != null ? r.swm_old.toLocaleString() : '-'}</td>
-                    <td className="py-2.5 px-1 text-center">
-                      <button
-                        onClick={() => { setShowAddModal({ apartment_id: r.apartment_id, type: 'swm', apt_nr: r.apartment_number }); setNewStand(''); }}
-                        data-testid={`meter-swm-add-${r.apartment_id}`}
-                        className="text-xs font-medium text-blue-700 hover:underline"
-                      >
-                        {r.swm_new != null ? r.swm_new.toLocaleString() : '+ invoer'}
-                      </button>
-                    </td>
+                    <td className="py-2.5 px-1 text-center text-xs font-medium">{r.swm_new != null ? r.swm_new.toLocaleString() : '-'}</td>
                     <td className="py-2.5 px-1 text-center text-xs font-medium">{r.swm_usage > 0 ? r.swm_usage.toFixed(1) : '-'}</td>
                     <td className="py-2.5 px-1 text-right text-xs font-medium text-blue-700">{r.swm_cost > 0 ? formatSRD(r.swm_cost) : '-'}</td>
                     {/* Total */}
                     <td className="py-2.5 px-3 text-right font-bold text-slate-900">{r.total_cost > 0 ? formatSRD(r.total_cost) : '-'}</td>
                     <td className="py-2.5 px-3 text-center">
-                      {r.total_cost > 0 && r.tenant_id && (
+                      <div className="flex items-center justify-center gap-1">
                         <button
-                          onClick={() => handleCharge(r.apartment_id, r.apartment_number)}
-                          disabled={charging === r.apartment_id}
-                          data-testid={`meter-charge-${r.apartment_id}`}
-                          className="px-2 py-1 text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-lg font-medium transition disabled:opacity-50"
+                          onClick={() => openAddModal(r.apartment_id, r.apartment_number, 'ebs', r.ebs_old, r.ebs_new)}
+                          data-testid={`meter-ebs-add-${r.apartment_id}`}
+                          className="px-2 py-1 text-xs bg-yellow-50 text-yellow-700 hover:bg-yellow-100 rounded font-medium transition"
+                          title="EBS invoeren"
                         >
-                          {charging === r.apartment_id ? '...' : 'Doorberekenen'}
+                          EBS
                         </button>
-                      )}
+                        <button
+                          onClick={() => openAddModal(r.apartment_id, r.apartment_number, 'swm', r.swm_old, r.swm_new)}
+                          data-testid={`meter-swm-add-${r.apartment_id}`}
+                          className="px-2 py-1 text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 rounded font-medium transition"
+                          title="SWM invoeren"
+                        >
+                          SWM
+                        </button>
+                        {r.total_cost > 0 && r.tenant_id && (
+                          <button
+                            onClick={() => handleCharge(r.apartment_id, r.apartment_number)}
+                            disabled={charging === r.apartment_id}
+                            data-testid={`meter-charge-${r.apartment_id}`}
+                            className="px-2 py-1 text-xs bg-orange-100 text-orange-700 hover:bg-orange-200 rounded-lg font-medium transition disabled:opacity-50"
+                          >
+                            {charging === r.apartment_id ? '...' : '$'}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -3158,34 +3178,69 @@ function MeterReadingsSection({ apartments, tenants, token }) {
             </div>
             <div className="p-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Nieuwe stand {showAddModal.type === 'ebs' ? '(kWh)' : '(m³)'}</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Maand</label>
                 <input
-                  type="number"
-                  value={newStand}
-                  onChange={e => setNewStand(e.target.value)}
-                  data-testid="meter-new-stand"
-                  placeholder="0"
-                  min="0"
-                  step="0.01"
+                  type="month"
+                  value={readingMonth}
+                  onChange={e => setReadingMonth(e.target.value)}
+                  data-testid="meter-reading-month"
                   className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Opnamedatum</label>
-                <input
-                  type="date"
-                  value={readingDate}
-                  onChange={e => setReadingDate(e.target.value)}
-                  data-testid="meter-reading-date"
-                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Oude stand</label>
+                  <input
+                    type="number"
+                    value={oldStand}
+                    onChange={e => setOldStand(e.target.value)}
+                    data-testid="meter-old-stand"
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Nieuwe stand</label>
+                  <input
+                    type="number"
+                    value={newStand}
+                    onChange={e => setNewStand(e.target.value)}
+                    data-testid="meter-new-stand"
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                    className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm"
+                  />
+                </div>
               </div>
+              {(() => {
+                const p = previewUsage();
+                if (!p) return null;
+                return (
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Verbruik:</span>
+                      <span className="font-bold">{p.usage.toLocaleString('nl-NL')} {p.unit}</span>
+                    </div>
+                    <div className="flex justify-between mt-1">
+                      <span className="text-slate-600">Tarief:</span>
+                      <span>SRD {p.tariff.toFixed(2)} / {p.unit}</span>
+                    </div>
+                    <div className="flex justify-between mt-1 pt-1 border-t border-slate-200">
+                      <span className="text-slate-700 font-semibold">Kosten:</span>
+                      <span className="font-bold text-orange-600">{formatSRD(p.cost)}</span>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
             <div className="p-5 border-t border-slate-200 flex justify-end gap-3">
               <button onClick={() => setShowAddModal(null)} className="px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Annuleren</button>
               <button
                 onClick={handleAddReading}
-                disabled={saving || !newStand}
+                disabled={saving || !oldStand || !newStand}
                 data-testid="meter-save-reading"
                 className="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50"
               >
