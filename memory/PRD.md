@@ -153,11 +153,18 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 - **WhatsApp berichten:** Internet meegenomen in totaal resterend saldo
 - **100% test pass rate** (iteration_87: 13/13 backend, alle frontend tests)
 
-### Sprint 10 (30 maart 2026) — Meterstanden Verwijderd
+### Sprint 10 (30 maart 2026) — Meterstanden Verwijderd + Tenda Router Integratie
 - Hele Meterstanden (EBS/SWM) functionaliteit verwijderd op verzoek gebruiker
 - Frontend: MeterReadingsSection component, sub-tab toggle, ~409 regels verwijderd
 - Backend: 5 meter endpoints + MeterReadingCreate model verwijderd, ~205 regels
 - Stroombrekers tab toont nu alleen het Shelly paneel (schoon, geen sub-tabs)
+- **Internet tab:** Verwijder-knop toegevoegd bij huurder internetaansluitingen
+- **Tenda AC1200 Router Integratie:**
+  - CRUD routers per huurder (koppelen aan tenant, IP + admin wachtwoord)
+  - Internet aan/uit zetten per router (via Tenda goform API)
+  - Status checken + verbonden apparaten bekijken
+  - Backend endpoints: `/admin/tenda/routers`, `/admin/tenda/routers/{id}/control`, `/admin/tenda/routers/{id}/status`
+  - Frontend: Router kaarten met aan/uit toggle, status check, apparaten modal
 ### P0
 - ~~9 Geautomatiseerde WhatsApp/Twilio Notificaties~~ ✅ (30 maart 2026)
 - ~~Internetaansluiting tab crash fix~~ ✅ (30 maart 2026)

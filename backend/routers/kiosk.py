@@ -3648,6 +3648,188 @@ async def assign_internet_plan(tenant_id: str = None, plan_id: str = None, compa
 
 
 
+# ============== TENDA ROUTER MANAGEMENT ==============
+
+class TendaRouterCreate(BaseModel):
+    tenant_id: str
+    router_ip: str
+    admin_password: str
+    router_name: Optional[str] = ""
+
+class TendaRouterUpdate(BaseModel):
+    router_ip: Optional[str] = None
+    admin_password: Optional[str] = None
+    router_name: Optional[str] = None
+
+import hashlib
+
+async def _tenda_login(router_ip: str, admin_password: str):
+    """Login to Tenda router and return session cookies"""
+    import httpx
+    md5_pass = hashlib.md5(admin_password.encode()).hexdigest()
+    async with httpx.AsyncClient(timeout=8) as client:
+        resp = await client.post(
+            f"http://{router_ip}/login/Auth",
+            data=f"username=admin&password={md5_pass}",
+            headers={"Content-Type": "application/x-www-form-urlencoded"}
+        )
+        return resp.cookies
+
+async def _tenda_get_devices(router_ip: str, cookies):
+    """Get connected devices from Tenda router"""
+    import httpx
+    import time
+    async with httpx.AsyncClient(timeout=8, cookies=cookies) as client:
+        resp = await client.get(f"http://{router_ip}/goform/GetIpMacBind?{int(time.time())}")
+        data = resp.json()
+        return data.get("bindList", [])
+
+async def _tenda_set_internet(router_ip: str, cookies, enable: bool):
+    """Enable or disable internet on Tenda router (via WiFi schedule)"""
+    import httpx
+    async with httpx.AsyncClient(timeout=8, cookies=cookies) as client:
+        if enable:
+            resp = await client.post(
+                f"http://{router_ip}/goform/setWiFi",
+                data="wifiEn=1",
+                headers={"Content-Type": "application/x-www-form-urlencoded"}
+            )
+        else:
+            resp = await client.post(
+                f"http://{router_ip}/goform/setWiFi",
+                data="wifiEn=0",
+                headers={"Content-Type": "application/x-www-form-urlencoded"}
+            )
+        return resp.status_code == 200
+
+@router.get("/admin/tenda/routers")
+async def list_tenda_routers(company: dict = Depends(get_current_company)):
+    """List all Tenda routers for this company"""
+    company_id = company["company_id"]
+    routers = await db.kiosk_tenda_routers.find(
+        {"company_id": company_id}, {"_id": 0}
+    ).to_list(100)
+    return routers
+
+@router.post("/admin/tenda/routers")
+async def add_tenda_router(data: TendaRouterCreate, company: dict = Depends(get_current_company)):
+    """Add a Tenda router for a tenant"""
+    company_id = company["company_id"]
+    tenant = await db.kiosk_tenants.find_one({"tenant_id": data.tenant_id, "company_id": company_id})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    
+    existing = await db.kiosk_tenda_routers.find_one({"tenant_id": data.tenant_id, "company_id": company_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Deze huurder heeft al een router gekoppeld")
+    
+    router_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    router_doc = {
+        "router_id": router_id,
+        "company_id": company_id,
+        "tenant_id": data.tenant_id,
+        "tenant_name": tenant["name"],
+        "apartment_number": tenant.get("apartment_number", ""),
+        "router_ip": data.router_ip,
+        "admin_password": data.admin_password,
+        "router_name": data.router_name or f"Router {tenant.get('apartment_number', '')}",
+        "status": "unknown",
+        "internet_enabled": True,
+        "last_check": None,
+        "connected_devices": [],
+        "created_at": now,
+        "updated_at": now,
+    }
+    await db.kiosk_tenda_routers.insert_one(router_doc)
+    del router_doc["_id"]
+    return router_doc
+
+@router.put("/admin/tenda/routers/{router_id}")
+async def update_tenda_router(router_id: str, data: TendaRouterUpdate, company: dict = Depends(get_current_company)):
+    """Update router settings"""
+    company_id = company["company_id"]
+    update = {"updated_at": datetime.now(timezone.utc)}
+    if data.router_ip is not None:
+        update["router_ip"] = data.router_ip
+    if data.admin_password is not None:
+        update["admin_password"] = data.admin_password
+    if data.router_name is not None:
+        update["router_name"] = data.router_name
+    
+    result = await db.kiosk_tenda_routers.update_one(
+        {"router_id": router_id, "company_id": company_id},
+        {"$set": update}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Router niet gevonden")
+    return {"message": "Router bijgewerkt"}
+
+@router.delete("/admin/tenda/routers/{router_id}")
+async def delete_tenda_router(router_id: str, company: dict = Depends(get_current_company)):
+    """Remove a Tenda router"""
+    result = await db.kiosk_tenda_routers.delete_one({"router_id": router_id, "company_id": company["company_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Router niet gevonden")
+    return {"message": "Router verwijderd"}
+
+@router.post("/admin/tenda/routers/{router_id}/status")
+async def check_tenda_status(router_id: str, company: dict = Depends(get_current_company)):
+    """Check router status and connected devices"""
+    router = await db.kiosk_tenda_routers.find_one(
+        {"router_id": router_id, "company_id": company["company_id"]}, {"_id": 0}
+    )
+    if not router:
+        raise HTTPException(status_code=404, detail="Router niet gevonden")
+    
+    try:
+        cookies = await _tenda_login(router["router_ip"], router["admin_password"])
+        devices = await _tenda_get_devices(router["router_ip"], cookies)
+        online_devices = [{"name": d.get("devname", "Onbekend"), "mac": d.get("macaddr", ""), "ip": d.get("ipaddr", "")} for d in devices if str(d.get("status")) == "1"]
+        
+        await db.kiosk_tenda_routers.update_one(
+            {"router_id": router_id},
+            {"$set": {
+                "status": "online",
+                "connected_devices": online_devices,
+                "last_check": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc),
+            }}
+        )
+        return {"status": "online", "connected_devices": online_devices, "device_count": len(online_devices)}
+    except Exception as e:
+        await db.kiosk_tenda_routers.update_one(
+            {"router_id": router_id},
+            {"$set": {"status": "offline", "last_check": datetime.now(timezone.utc), "updated_at": datetime.now(timezone.utc)}}
+        )
+        return {"status": "offline", "connected_devices": [], "device_count": 0, "error": str(e)}
+
+@router.post("/admin/tenda/routers/{router_id}/control")
+async def control_tenda_internet(router_id: str, action: str = "enable", company: dict = Depends(get_current_company)):
+    """Enable or disable internet on Tenda router"""
+    router = await db.kiosk_tenda_routers.find_one(
+        {"router_id": router_id, "company_id": company["company_id"]}, {"_id": 0}
+    )
+    if not router:
+        raise HTTPException(status_code=404, detail="Router niet gevonden")
+    
+    enable = action == "enable"
+    try:
+        cookies = await _tenda_login(router["router_ip"], router["admin_password"])
+        success = await _tenda_set_internet(router["router_ip"], cookies, enable)
+        
+        if success:
+            await db.kiosk_tenda_routers.update_one(
+                {"router_id": router_id},
+                {"$set": {"internet_enabled": enable, "updated_at": datetime.now(timezone.utc)}}
+            )
+            return {"success": True, "internet_enabled": enable, "message": f"Internet {'ingeschakeld' if enable else 'uitgeschakeld'}"}
+        else:
+            return {"success": False, "message": "Router commando mislukt"}
+    except Exception as e:
+        return {"success": False, "message": f"Verbinding mislukt: {str(e)}"}
+
+
 # ============== WHATSAPP BUSINESS API ==============
 
 class WhatsAppMessage(BaseModel):
