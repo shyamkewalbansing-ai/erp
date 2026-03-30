@@ -765,11 +765,7 @@ function LeasesTab({ leases, tenants, apartments, formatSRD, onRefresh, token })
   const activeTenants = tenants.filter(t => t.status === 'active');
 
   const openLeaseDoc = async (leaseId) => {
-    try {
-      const res = await axios.get(`${API}/admin/leases/${leaseId}/document`, { headers: { Authorization: `Bearer ${token}` }, responseType: 'blob' });
-      const url = URL.createObjectURL(new Blob([res.data], { type: 'text/html' }));
-      window.open(url, '_blank');
-    } catch (err) { alert('Fout bij openen document'); }
+    window.open(`${API}/admin/leases/${leaseId}/document?token=${token}`, '_blank');
   };
 
   const handleDeleteLease = async (leaseId) => {
