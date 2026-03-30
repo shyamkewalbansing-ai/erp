@@ -3147,7 +3147,7 @@ function InternetTab({ token, tenants, formatSRD, onRefresh }) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
             {plans.map(p => (
-              <div key={p.plan_id} className="border border-slate-200 rounded-xl p-4 hover:border-cyan-300 transition" data-testid={`plan-${p.plan_id}`}>
+              <div key={p.plan_id} className="border border-slate-200 rounded-xl p-4 hover:border-orange-300 transition" data-testid={`plan-${p.plan_id}`}>
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-bold text-slate-900">{p.name}</h4>
                   <div className="flex gap-1">
@@ -3162,7 +3162,7 @@ function InternetTab({ token, tenants, formatSRD, onRefresh }) {
                     </button>
                   </div>
                 </div>
-                <p className="text-sm text-cyan-600 font-medium">{p.speed}</p>
+                <p className="text-sm text-orange-600 font-medium">{p.speed}</p>
                 <p className="text-xl font-bold text-slate-900 mt-1">{formatSRD(p.price)}<span className="text-xs font-normal text-slate-400"> /maand</span></p>
               </div>
             ))}
@@ -3193,12 +3193,12 @@ function InternetTab({ token, tenants, formatSRD, onRefresh }) {
                   <td className="py-3 px-4 text-slate-500">{c.apartment_number}</td>
                   <td className="py-3 px-4">
                     {c.internet_plan_name ? (
-                      <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-100 text-cyan-700">{c.internet_plan_name}</span>
+                      <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">{c.internet_plan_name}</span>
                     ) : (
                       <span className="text-slate-400 text-xs">Geen plan</span>
                     )}
                   </td>
-                  <td className="py-3 px-4 text-right font-bold text-cyan-600">
+                  <td className="py-3 px-4 text-right font-bold text-orange-600">
                     {c.internet_cost > 0 ? formatSRD(c.internet_cost) : '-'}
                   </td>
                   <td className="py-3 px-4 text-center">
@@ -3238,7 +3238,7 @@ function InternetTab({ token, tenants, formatSRD, onRefresh }) {
           <button
             onClick={() => setShowRouterModal(true)}
             data-testid="tenda-add-router"
-            className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-medium transition"
+            className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition"
           >
             <Plus className="w-4 h-4" /> Router toevoegen
           </button>
@@ -3362,12 +3362,12 @@ function InternetTab({ token, tenants, formatSRD, onRefresh }) {
                   key={p.plan_id}
                   onClick={() => handleAssign(assignModal.tenant_id, p.plan_id)}
                   data-testid={`assign-plan-${p.plan_id}`}
-                  className={`w-full text-left p-3 rounded-xl border transition ${assignModal.internet_plan_id === p.plan_id ? 'border-cyan-400 bg-cyan-50' : 'border-slate-200 hover:border-slate-300'}`}
+                  className={`w-full text-left p-3 rounded-xl border transition ${assignModal.internet_plan_id === p.plan_id ? 'border-orange-400 bg-orange-50' : 'border-slate-200 hover:border-slate-300'}`}
                 >
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium text-slate-900">{p.name}</p>
-                      <p className="text-xs text-cyan-600">{p.speed}</p>
+                      <p className="text-xs text-orange-600">{p.speed}</p>
                     </div>
                     <span className="font-bold text-slate-900">{formatSRD(p.price)}</span>
                   </div>
@@ -3419,7 +3419,7 @@ function InternetTab({ token, tenants, formatSRD, onRefresh }) {
             <div className="p-5 border-t border-slate-200 flex justify-end gap-3">
               <button onClick={() => setShowRouterModal(false)} className="px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Annuleren</button>
               <button onClick={handleAddRouter} disabled={saving} data-testid="router-save"
-                className="px-5 py-2.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50">
+                className="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50">
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Toevoegen'}
               </button>
             </div>
