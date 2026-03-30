@@ -1695,6 +1695,9 @@ async def delete_tenant(tenant_id: str, company: dict = Depends(get_current_comp
         {"$set": {"status": "available", "updated_at": datetime.now(timezone.utc)}}
     )
     
+    # Delete linked leases
+    await db.kiosk_leases.delete_many({"tenant_id": tenant_id, "company_id": company["company_id"]})
+    
     return {"message": "Huurder gedeactiveerd"}
 
 # Payments
