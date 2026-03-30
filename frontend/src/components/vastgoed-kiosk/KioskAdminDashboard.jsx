@@ -5,7 +5,7 @@ import {
   ArrowLeft, DollarSign, Loader2, Settings, ExternalLink,
   Copy, Check, Receipt, Zap, Crown, Search, Calendar,
   AlertTriangle, User, Banknote, FileText, Save, Eye, LogIn, MessageSquare,
-  Phone, Mail, Landmark, UserCog, TrendingUp, TrendingDown, Briefcase, ScanFace, Camera, XCircle, CheckCircle, Bell, Wallet
+  Phone, Mail, Landmark, UserCog, TrendingUp, TrendingDown, Briefcase, ScanFace, Camera, XCircle, CheckCircle, Bell, Wallet, Wifi
 } from 'lucide-react';
 import axios from 'axios';
 import ReceiptTicket from './ReceiptTicket';
@@ -152,6 +152,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     { id: 'loans', label: 'Leningen', icon: Wallet },
     { id: 'employees', label: 'Werknemers', icon: Briefcase },
     { id: 'power', label: 'Stroombrekers', icon: Zap },
+    { id: 'internet', label: 'Internet', icon: Wifi },
     { id: 'messages', label: 'Notificaties', icon: Bell },
     { id: 'settings', label: 'Instellingen', icon: Settings },
   ];
@@ -307,6 +308,11 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
         {/* Power/Stroombrekers Tab */}
         {activeTab === 'power' && (
           <PowerTab apartments={apartments} tenants={tenants} token={token} onRefresh={loadData} />
+        )}
+
+        {/* Internet Tab */}
+        {activeTab === 'internet' && (
+          <InternetTab token={token} tenants={tenants} formatSRD={formatSRD} onRefresh={loadData} />
         )}
 
         {/* Berichten/WhatsApp Tab */}
@@ -608,6 +614,7 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Huur</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Service</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Boetes</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Internet</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Totaal</th>
                   <th className="text-center p-4 text-sm font-medium text-slate-500">Face ID</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Status</th>
@@ -619,7 +626,8 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                   const rent = tenant.outstanding_rent || 0;
                   const service = tenant.service_costs || 0;
                   const fines = tenant.fines || 0;
-                  const total = rent + service + fines;
+                  const internet = tenant.internet_outstanding || tenant.internet_cost || 0;
+                  const total = rent + service + fines + internet;
                   const hasArrears = rent > (tenant.monthly_rent || 0);
 
                   // Format billed month
@@ -668,6 +676,10 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                       </td>
                       <td className={`p-4 text-right font-bold ${fines > 0 ? 'text-red-600' : 'text-slate-800'}`}>
                         {formatSRD(fines)}
+                      </td>
+                      <td className={`p-4 text-right font-bold ${internet > 0 ? 'text-cyan-600' : 'text-slate-800'}`}>
+                        {internet > 0 ? formatSRD(internet) : '-'}
+                        {tenant.internet_plan_name && <p className="text-[10px] text-slate-400 mt-0.5">{tenant.internet_plan_name}</p>}
                       </td>
                       <td className={`p-4 text-right font-black ${total > 0 ? 'text-orange-600' : 'text-slate-800'}`}>
                         {formatSRD(total)}
@@ -3411,6 +3423,248 @@ function MeterReadingsSection({ apartments, tenants, token, onRefresh }) {
     </div>
   );
 }
+
+
+// ============== INTERNET TAB ==============
+function InternetTab({ token, tenants, formatSRD, onRefresh }) {
+  const [plans, setPlans] = useState([]);
+  const [connections, setConnections] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showPlanModal, setShowPlanModal] = useState(false);
+  const [editPlan, setEditPlan] = useState(null);
+  const [planName, setPlanName] = useState('');
+  const [planSpeed, setPlanSpeed] = useState('');
+  const [planPrice, setPlanPrice] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [assignModal, setAssignModal] = useState(null); // tenant object
+
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [plansRes, connRes] = await Promise.all([
+        axios.get(`${API}/admin/internet/plans`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/admin/internet/connections`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      setPlans(plansRes.data);
+      setConnections(connRes.data);
+    } catch (err) { console.error(err); }
+    setLoading(false);
+  };
+
+  useEffect(() => { loadData(); }, []);
+
+  const handleSavePlan = async () => {
+    if (!planName || !planSpeed || !planPrice) return alert('Vul alle velden in');
+    setSaving(true);
+    try {
+      if (editPlan) {
+        await axios.put(`${API}/admin/internet/plans/${editPlan.plan_id}`, {
+          name: planName, speed: planSpeed, price: parseFloat(planPrice),
+        }, { headers: { Authorization: `Bearer ${token}` } });
+      } else {
+        await axios.post(`${API}/admin/internet/plans`, {
+          name: planName, speed: planSpeed, price: parseFloat(planPrice),
+        }, { headers: { Authorization: `Bearer ${token}` } });
+      }
+      setShowPlanModal(false); setEditPlan(null);
+      setPlanName(''); setPlanSpeed(''); setPlanPrice('');
+      loadData();
+    } catch (err) { alert(err.response?.data?.detail || 'Fout bij opslaan'); }
+    setSaving(false);
+  };
+
+  const deletePlan = async (planId) => {
+    if (!confirm('Plan verwijderen? Gekoppelde huurders worden ontkoppeld.')) return;
+    try {
+      await axios.delete(`${API}/admin/internet/plans/${planId}`, { headers: { Authorization: `Bearer ${token}` } });
+      loadData();
+    } catch (err) { alert(err.response?.data?.detail || 'Fout'); }
+  };
+
+  const handleAssign = async (tenantId, planId) => {
+    setSaving(true);
+    try {
+      await axios.post(`${API}/admin/internet/assign?tenant_id=${tenantId}&plan_id=${planId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      setAssignModal(null);
+      loadData();
+      if (onRefresh) onRefresh();
+    } catch (err) { alert(err.response?.data?.detail || 'Fout'); }
+    setSaving(false);
+  };
+
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-orange-500" /></div>;
+
+  return (
+    <div className="space-y-6" data-testid="internet-tab">
+      {/* Plans Section */}
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+          <h3 className="font-bold text-slate-900">Internet Plannen</h3>
+          <button
+            onClick={() => { setEditPlan(null); setPlanName(''); setPlanSpeed(''); setPlanPrice(''); setShowPlanModal(true); }}
+            data-testid="internet-add-plan"
+            className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition"
+          >
+            <Plus className="w-4 h-4" /> Nieuw plan
+          </button>
+        </div>
+        {plans.length === 0 ? (
+          <div className="p-8 text-center text-slate-400">
+            <Wifi className="w-10 h-10 mx-auto mb-3 text-slate-300" />
+            <p className="font-medium">Geen plannen aangemaakt</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+            {plans.map(p => (
+              <div key={p.plan_id} className="border border-slate-200 rounded-xl p-4 hover:border-cyan-300 transition" data-testid={`plan-${p.plan_id}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-bold text-slate-900">{p.name}</h4>
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => { setEditPlan(p); setPlanName(p.name); setPlanSpeed(p.speed); setPlanPrice(p.price.toString()); setShowPlanModal(true); }}
+                      className="p-1 rounded hover:bg-slate-100 transition"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-slate-400" />
+                    </button>
+                    <button onClick={() => deletePlan(p.plan_id)} className="p-1 rounded hover:bg-red-50 transition">
+                      <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                    </button>
+                  </div>
+                </div>
+                <p className="text-sm text-cyan-600 font-medium">{p.speed}</p>
+                <p className="text-xl font-bold text-slate-900 mt-1">{formatSRD(p.price)}<span className="text-xs font-normal text-slate-400"> /maand</span></p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Connections Section */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+        <div className="p-4 border-b border-slate-100">
+          <h3 className="font-bold text-slate-900">Aansluitingen per Huurder</h3>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-slate-100 bg-slate-50">
+                <th className="text-left py-3 px-4 font-semibold text-slate-600">Huurder</th>
+                <th className="text-left py-3 px-4 font-semibold text-slate-600">App.</th>
+                <th className="text-left py-3 px-4 font-semibold text-slate-600">Internet Plan</th>
+                <th className="text-right py-3 px-4 font-semibold text-slate-600">Kosten/maand</th>
+                <th className="text-center py-3 px-4 font-semibold text-slate-600">Actie</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {connections.map(c => (
+                <tr key={c.tenant_id} className="hover:bg-slate-50 transition">
+                  <td className="py-3 px-4 font-medium text-slate-900">{c.name}</td>
+                  <td className="py-3 px-4 text-slate-500">{c.apartment_number}</td>
+                  <td className="py-3 px-4">
+                    {c.internet_plan_name ? (
+                      <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-cyan-100 text-cyan-700">{c.internet_plan_name}</span>
+                    ) : (
+                      <span className="text-slate-400 text-xs">Geen plan</span>
+                    )}
+                  </td>
+                  <td className="py-3 px-4 text-right font-bold text-cyan-600">
+                    {c.internet_cost > 0 ? formatSRD(c.internet_cost) : '-'}
+                  </td>
+                  <td className="py-3 px-4 text-center">
+                    <button
+                      onClick={() => setAssignModal(c)}
+                      data-testid={`internet-assign-${c.tenant_id}`}
+                      className="px-3 py-1.5 text-xs bg-slate-100 hover:bg-slate-200 rounded-lg font-medium transition"
+                    >
+                      {c.internet_plan_id ? 'Wijzigen' : 'Toewijzen'}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Plan Create/Edit Modal */}
+      {showPlanModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowPlanModal(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-slate-200">
+              <h3 className="font-bold text-slate-900" data-testid="plan-modal-title">{editPlan ? 'Plan Bewerken' : 'Nieuw Internet Plan'}</h3>
+            </div>
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Naam *</label>
+                <input type="text" value={planName} onChange={e => setPlanName(e.target.value)}
+                  data-testid="plan-name" placeholder="Bijv. Basis" className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Snelheid *</label>
+                <input type="text" value={planSpeed} onChange={e => setPlanSpeed(e.target.value)}
+                  data-testid="plan-speed" placeholder="Bijv. 25 Mbps" className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Prijs per maand (SRD) *</label>
+                <input type="number" value={planPrice} onChange={e => setPlanPrice(e.target.value)}
+                  data-testid="plan-price" placeholder="0.00" min="0" step="0.01" className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm" />
+              </div>
+            </div>
+            <div className="p-5 border-t border-slate-200 flex justify-end gap-3">
+              <button onClick={() => setShowPlanModal(false)} className="px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Annuleren</button>
+              <button onClick={handleSavePlan} disabled={saving} data-testid="plan-save"
+                className="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Opslaan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Plan Modal */}
+      {assignModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setAssignModal(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-slate-200">
+              <h3 className="font-bold text-slate-900" data-testid="assign-modal-title">Internet — {assignModal.name}</h3>
+              <p className="text-sm text-slate-500 mt-1">App. {assignModal.apartment_number}</p>
+            </div>
+            <div className="p-5 space-y-3">
+              <button
+                onClick={() => handleAssign(assignModal.tenant_id, 'none')}
+                data-testid="assign-none"
+                className={`w-full text-left p-3 rounded-xl border transition ${!assignModal.internet_plan_id ? 'border-orange-400 bg-orange-50' : 'border-slate-200 hover:border-slate-300'}`}
+              >
+                <p className="font-medium text-slate-700">Geen internet</p>
+                <p className="text-xs text-slate-400">Aansluiting verwijderen</p>
+              </button>
+              {plans.map(p => (
+                <button
+                  key={p.plan_id}
+                  onClick={() => handleAssign(assignModal.tenant_id, p.plan_id)}
+                  data-testid={`assign-plan-${p.plan_id}`}
+                  className={`w-full text-left p-3 rounded-xl border transition ${assignModal.internet_plan_id === p.plan_id ? 'border-cyan-400 bg-cyan-50' : 'border-slate-200 hover:border-slate-300'}`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-slate-900">{p.name}</p>
+                      <p className="text-xs text-cyan-600">{p.speed}</p>
+                    </div>
+                    <span className="font-bold text-slate-900">{formatSRD(p.price)}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="p-5 border-t border-slate-200">
+              <button onClick={() => setAssignModal(null)} className="w-full px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Sluiten</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 function LoansTab({ token, tenants, formatSRD, onShowDetail }) {
   const [loans, setLoans] = useState([]);

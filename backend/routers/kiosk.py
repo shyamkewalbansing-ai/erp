@@ -357,6 +357,16 @@ class MeterReadingCreate(BaseModel):
     new_stand: float
     reading_month: Optional[str] = None  # YYYY-MM
 
+class InternetPlanCreate(BaseModel):
+    name: str
+    speed: str  # e.g. "25 Mbps"
+    price: float
+
+class InternetPlanUpdate(BaseModel):
+    name: Optional[str] = None
+    speed: Optional[str] = None
+    price: Optional[float] = None
+
 
 # ============== AUTH ENDPOINTS ==============
 
@@ -1388,6 +1398,12 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                     billed_through = (billed_date + relativedelta(months=months_billed)).strftime("%Y-%m")
                     updates["outstanding_rent"] = outstanding
                     updates["rent_billed_through"] = billed_through
+                    
+                    # Add internet costs for billed months
+                    internet_cost = t.get("internet_cost", 0)
+                    if internet_cost > 0:
+                        current_internet = t.get("internet_outstanding", 0)
+                        updates["internet_outstanding"] = current_internet + (internet_cost * months_billed)
             
             # Catch-up fine: apply fine when no new billing happened but rent is overdue
             if outstanding > 0 and fine_amount > 0 and not updates.get("last_fine_month"):
@@ -3491,6 +3507,126 @@ async def refresh_all_shelly(company: dict = Depends(get_current_company)):
     
     return results
 
+
+
+
+# ============== INTERNET AANSLUITINGEN ==============
+
+@router.get("/admin/internet/plans")
+async def list_internet_plans(company: dict = Depends(get_current_company)):
+    """List all internet plans"""
+    plans = await db.kiosk_internet_plans.find(
+        {"company_id": company["company_id"]}, {"_id": 0}
+    ).sort("price", 1).to_list(100)
+    return plans
+
+@router.post("/admin/internet/plans")
+async def create_internet_plan(data: InternetPlanCreate, company: dict = Depends(get_current_company)):
+    """Create a new internet plan"""
+    plan_id = generate_uuid()
+    plan = {
+        "plan_id": plan_id,
+        "company_id": company["company_id"],
+        "name": data.name,
+        "speed": data.speed,
+        "price": data.price,
+        "created_at": datetime.now(timezone.utc),
+    }
+    await db.kiosk_internet_plans.insert_one(plan)
+    plan.pop("_id", None)
+    return plan
+
+@router.put("/admin/internet/plans/{plan_id}")
+async def update_internet_plan(plan_id: str, data: InternetPlanUpdate, company: dict = Depends(get_current_company)):
+    """Update an internet plan"""
+    updates = {k: v for k, v in data.dict().items() if v is not None}
+    if not updates:
+        return {"message": "Geen wijzigingen"}
+    updates["updated_at"] = datetime.now(timezone.utc)
+    result = await db.kiosk_internet_plans.update_one(
+        {"plan_id": plan_id, "company_id": company["company_id"]}, {"$set": updates}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Plan niet gevonden")
+    # Sync price to all tenants with this plan
+    if "price" in updates:
+        await db.kiosk_tenants.update_many(
+            {"internet_plan_id": plan_id, "company_id": company["company_id"]},
+            {"$set": {"internet_cost": updates["price"]}}
+        )
+    return {"message": "Plan bijgewerkt"}
+
+@router.delete("/admin/internet/plans/{plan_id}")
+async def delete_internet_plan(plan_id: str, company: dict = Depends(get_current_company)):
+    """Delete an internet plan and unassign from tenants"""
+    result = await db.kiosk_internet_plans.delete_one(
+        {"plan_id": plan_id, "company_id": company["company_id"]}
+    )
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Plan niet gevonden")
+    # Unassign from tenants
+    await db.kiosk_tenants.update_many(
+        {"internet_plan_id": plan_id, "company_id": company["company_id"]},
+        {"$set": {"internet_plan_id": None, "internet_cost": 0, "internet_plan_name": ""}}
+    )
+    return {"message": "Plan verwijderd"}
+
+@router.get("/admin/internet/connections")
+async def list_internet_connections(company: dict = Depends(get_current_company)):
+    """List all tenants with their internet plan"""
+    company_id = company["company_id"]
+    tenants = await db.kiosk_tenants.find(
+        {"company_id": company_id, "status": "active"},
+        {"_id": 0, "tenant_id": 1, "name": 1, "apartment_number": 1,
+         "internet_plan_id": 1, "internet_plan_name": 1, "internet_cost": 1}
+    ).to_list(1000)
+    return tenants
+
+@router.post("/admin/internet/assign")
+async def assign_internet_plan(tenant_id: str = None, plan_id: str = None, company: dict = Depends(get_current_company)):
+    """Assign or remove an internet plan for a tenant"""
+    company_id = company["company_id"]
+    tenant = await db.kiosk_tenants.find_one({"tenant_id": tenant_id, "company_id": company_id})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    
+    if not plan_id or plan_id == "none":
+        # Remove internet
+        await db.kiosk_tenants.update_one(
+            {"tenant_id": tenant_id},
+            {"$set": {"internet_plan_id": None, "internet_cost": 0, "internet_plan_name": "", "updated_at": datetime.now(timezone.utc)}}
+        )
+        return {"message": "Internet verwijderd"}
+    
+    plan = await db.kiosk_internet_plans.find_one({"plan_id": plan_id, "company_id": company_id})
+    if not plan:
+        raise HTTPException(status_code=404, detail="Plan niet gevonden")
+    
+    await db.kiosk_tenants.update_one(
+        {"tenant_id": tenant_id},
+        {"$set": {
+            "internet_plan_id": plan_id,
+            "internet_plan_name": f"{plan['name']} ({plan['speed']})",
+            "internet_cost": plan["price"],
+            "updated_at": datetime.now(timezone.utc),
+        }}
+    )
+    
+    # WhatsApp notification
+    try:
+        t_phone = tenant.get("phone") or tenant.get("telefoon", "")
+        if t_phone:
+            comp_name = company.get("stamp_company_name") or company.get("name", "")
+            wa_msg = (f"Beste {tenant['name']},\n\n"
+                      f"Uw internetaansluiting is gewijzigd.\n"
+                      f"Plan: {plan['name']} ({plan['speed']})\n"
+                      f"Kosten: SRD {plan['price']:,.2f} per maand\n\n"
+                      f"Met vriendelijke groet,\n{comp_name}")
+            await _send_message_auto(company_id, t_phone, wa_msg, tenant_id, tenant["name"], "internet_assigned")
+    except Exception:
+        pass
+    
+    return {"message": f"Internet plan toegewezen: {plan['name']}"}
 
 
 # ============== METERSTANDEN (EBS/SWM) ==============
