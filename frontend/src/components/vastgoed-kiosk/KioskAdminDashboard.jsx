@@ -32,6 +32,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   const [showAddRentModal, setShowAddRentModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [selectedTenant, setSelectedTenant] = useState(null);
+  const [loanDetailData, setLoanDetailData] = useState(null);
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');
@@ -295,7 +296,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
 
         {/* Leningen Tab */}
         {activeTab === 'loans' && (
-          <LoansTab token={token} tenants={tenants} formatSRD={formatSRD} />
+          <LoansTab token={token} tenants={tenants} formatSRD={formatSRD} onShowDetail={setLoanDetailData} />
         )}
 
         {/* Werknemers Tab */}
@@ -346,6 +347,16 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
       )}
 
       <VirtualKeyboard />
+
+      {/* Loan Detail Modal - buiten scrollable area */}
+      {loanDetailData && (
+        <LoanDetailModal
+          loan={loanDetailData}
+          formatSRD={formatSRD}
+          onClose={() => setLoanDetailData(null)}
+          onPay={() => {}}
+        />
+      )}
     </div>
   );
 }
@@ -2934,13 +2945,11 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
 
 
 // ============== LENINGEN TAB ==============
-function LoansTab({ token, tenants, formatSRD }) {
+function LoansTab({ token, tenants, formatSRD, onShowDetail }) {
   const [loans, setLoans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showPayModal, setShowPayModal] = useState(null); // loan object
-  const [showDetail, setShowDetail] = useState(null); // loan_id
-  const [detailData, setDetailData] = useState(null);
   const [filterStatus, setFilterStatus] = useState('all');
 
   const loadLoans = async () => {
@@ -2955,8 +2964,7 @@ function LoansTab({ token, tenants, formatSRD }) {
   const loadDetail = async (loanId) => {
     try {
       const res = await axios.get(`${API}/admin/loans/${loanId}`, { headers: { Authorization: `Bearer ${token}` } });
-      setDetailData(res.data);
-      setShowDetail(loanId);
+      onShowDetail(res.data);
     } catch (err) { console.error(err); }
   };
 
@@ -2965,7 +2973,7 @@ function LoansTab({ token, tenants, formatSRD }) {
     try {
       await axios.delete(`${API}/admin/loans/${loanId}`, { headers: { Authorization: `Bearer ${token}` } });
       loadLoans();
-      if (showDetail === loanId) { setShowDetail(null); setDetailData(null); }
+      onShowDetail(null);
     } catch (err) { alert(err.response?.data?.detail || 'Fout bij verwijderen'); }
   };
 
@@ -3108,17 +3116,7 @@ function LoansTab({ token, tenants, formatSRD }) {
           token={token}
           formatSRD={formatSRD}
           onClose={() => setShowPayModal(null)}
-          onSave={() => { setShowPayModal(null); loadLoans(); if (showDetail) loadDetail(showDetail); }}
-        />
-      )}
-
-      {/* Detail Modal */}
-      {showDetail && detailData && (
-        <LoanDetailModal
-          loan={detailData}
-          formatSRD={formatSRD}
-          onClose={() => { setShowDetail(null); setDetailData(null); }}
-          onPay={() => { setShowPayModal(detailData); }}
+          onSave={() => { setShowPayModal(null); loadLoans(); }}
         />
       )}
     </div>
@@ -3357,7 +3355,7 @@ function LoanDetailModal({ loan, formatSRD, onClose, onPay }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-[999] p-4 pt-8 overflow-y-auto" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto" onClick={onClose}>
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl" onClick={e => e.stopPropagation()}>
         <div className="p-5 border-b border-slate-200 flex items-center justify-between">
           <div>
