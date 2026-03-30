@@ -3034,10 +3034,18 @@ function MeterReadingsSection({ apartments, tenants, token, onRefresh }) {
   };
 
   const [chargeResult, setChargeResult] = useState(null);
+  const [chargeConfirm, setChargeConfirm] = useState(null); // { aptId, aptNr, reading }
 
   const handleCharge = async (aptId, aptNr) => {
-    if (!confirm(`Nutskosten doorberekenen aan huurder van app. ${aptNr}?`)) return;
+    // Find reading data for this apartment
+    const reading = readings.find(r => r.apartment_id === aptId);
+    setChargeConfirm({ aptId, aptNr, reading });
+  };
+
+  const confirmCharge = async () => {
+    const { aptId, aptNr } = chargeConfirm;
     setCharging(aptId);
+    setChargeConfirm(null);
     try {
       const res = await axios.post(`${API}/admin/meter-readings/charge/${aptId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
       setChargeResult({ ...res.data, apartment_number: aptNr });
@@ -3295,6 +3303,53 @@ function MeterReadingsSection({ apartments, tenants, token, onRefresh }) {
                 className="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Opslaan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Charge Confirm Modal */}
+      {chargeConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setChargeConfirm(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-slate-200">
+              <h3 className="font-bold text-slate-900" data-testid="charge-confirm-title">Nutskosten Doorberekenen</h3>
+              <p className="text-sm text-slate-500 mt-1">App. {chargeConfirm.aptNr}</p>
+            </div>
+            <div className="p-5 space-y-3">
+              <p className="text-sm text-slate-600">De volgende kosten worden toegevoegd aan de servicekosten van de huurder:</p>
+              {chargeConfirm.reading?.ebs_cost > 0 && (
+                <div className="flex justify-between items-center bg-yellow-50 rounded-lg p-3">
+                  <div>
+                    <p className="text-sm font-medium text-yellow-800">EBS (stroom)</p>
+                    <p className="text-xs text-yellow-600">{chargeConfirm.reading.ebs_usage} kWh ({chargeConfirm.reading.ebs_old} → {chargeConfirm.reading.ebs_new})</p>
+                  </div>
+                  <span className="font-bold text-yellow-800">{formatSRD(chargeConfirm.reading.ebs_cost)}</span>
+                </div>
+              )}
+              {chargeConfirm.reading?.swm_cost > 0 && (
+                <div className="flex justify-between items-center bg-blue-50 rounded-lg p-3">
+                  <div>
+                    <p className="text-sm font-medium text-blue-800">SWM (water)</p>
+                    <p className="text-xs text-blue-600">{chargeConfirm.reading.swm_usage} m³ ({chargeConfirm.reading.swm_old} → {chargeConfirm.reading.swm_new})</p>
+                  </div>
+                  <span className="font-bold text-blue-800">{formatSRD(chargeConfirm.reading.swm_cost)}</span>
+                </div>
+              )}
+              <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
+                <span className="text-sm font-bold text-slate-900">Totaal</span>
+                <span className="text-lg font-bold text-orange-600">{formatSRD(chargeConfirm.reading?.total_cost || 0)}</span>
+              </div>
+            </div>
+            <div className="p-5 border-t border-slate-200 flex justify-end gap-3">
+              <button onClick={() => setChargeConfirm(null)} className="px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Annuleren</button>
+              <button
+                onClick={confirmCharge}
+                data-testid="charge-confirm-btn"
+                className="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition"
+              >
+                Doorberekenen
               </button>
             </div>
           </div>
