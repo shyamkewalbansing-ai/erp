@@ -87,6 +87,13 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
   9. Huurcontract bijna verlopen → wekelijkse waarschuwing via scheduler (`lease_expiring`)
 - **Dagelijkse Kiosk Scheduler:** Achtergrondtaak die om 08:00 Suriname-tijd draait voor huur-herinneringen (3 dagen voor + op vervaldatum) en contract-verloop waarschuwingen (30 dagen van tevoren, max 1x per week)
 - **Handmatig trigger endpoint:** `POST /api/kiosk/admin/daily-notifications` voor directe controle
+- **Notificatie Logboek tab:** Nieuwe "Notificaties" tab in admin dashboard met:
+  - Statistieken (totaal/verzonden/mislukt)
+  - Zoek op huurder of telefoon
+  - Filter op berichttype (15+ types) en status
+  - Paginering (50 per pagina)
+  - "Herinneringen versturen" handmatige trigger knop
+  - Uitklapbaar berichtdetail
 - **100% backend test pass rate** (iteration_84)
 
 ## Inloggegevens

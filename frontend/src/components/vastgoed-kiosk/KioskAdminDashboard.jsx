@@ -5,7 +5,7 @@ import {
   ArrowLeft, DollarSign, Loader2, Settings, ExternalLink,
   Copy, Check, Receipt, Zap, Crown, Search, Calendar,
   AlertTriangle, User, Banknote, FileText, Save, Eye, LogIn, MessageSquare,
-  Phone, Mail, Landmark, UserCog, TrendingUp, TrendingDown, Briefcase, ScanFace, Camera, XCircle, CheckCircle
+  Phone, Mail, Landmark, UserCog, TrendingUp, TrendingDown, Briefcase, ScanFace, Camera, XCircle, CheckCircle, Bell
 } from 'lucide-react';
 import axios from 'axios';
 import ReceiptTicket from './ReceiptTicket';
@@ -151,7 +151,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     { id: 'employees', label: 'Werknemers', icon: Briefcase },
     { id: 'settings', label: 'Instellingen', icon: Settings },
     { id: 'power', label: 'Stroombrekers', icon: Zap },
-    { id: 'messages', label: 'Berichten', icon: MessageSquare },
+    { id: 'messages', label: 'Notificaties', icon: Bell },
     { id: 'subscription', label: 'Abonnement', icon: Crown },
   ];
 
@@ -2936,17 +2936,43 @@ function MessagesTab({ token }) {
   const [filterStatus, setFilterStatus] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(0);
+  const [triggerLoading, setTriggerLoading] = useState(false);
+  const PAGE_SIZE = 50;
 
-  const loadMessages = async () => {
+  const loadMessages = async (pageNum = 0) => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API}/admin/whatsapp/history`, { headers: { Authorization: `Bearer ${token}` } });
-      setMessages(res.data);
+      const params = new URLSearchParams({ limit: PAGE_SIZE, skip: pageNum * PAGE_SIZE });
+      if (filterType !== 'all') params.set('msg_type', filterType);
+      if (filterStatus !== 'all') params.set('status', filterStatus);
+      if (searchQuery) params.set('search', searchQuery);
+      const res = await axios.get(`${API}/admin/whatsapp/history?${params}`, { headers: { Authorization: `Bearer ${token}` } });
+      setMessages(res.data.messages || res.data);
+      setTotal(res.data.total || 0);
+      setPage(pageNum);
     } catch (err) { console.error(err); }
     setLoading(false);
   };
 
-  useEffect(() => { loadMessages(); }, []);
+  useEffect(() => { loadMessages(0); }, [filterType, filterStatus]);
+
+  const handleSearch = () => loadMessages(0);
+
+  const handleTriggerDaily = async () => {
+    if (!confirm('Wilt u nu handmatig huur-herinneringen en contract-waarschuwingen versturen naar alle huurders?')) return;
+    setTriggerLoading(true);
+    try {
+      const res = await axios.post(`${API}/admin/daily-notifications`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      const d = res.data;
+      alert(`Klaar! ${d.rent_reminders} huur-herinnering(en) en ${d.lease_warnings} contract-waarschuwing(en) verstuurd.`);
+      loadMessages(0);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Fout bij versturen notificaties');
+    }
+    setTriggerLoading(false);
+  };
 
   const typeLabels = {
     payment_confirmation: { label: 'Betaling', color: 'bg-green-100 text-green-700' },
@@ -2955,6 +2981,15 @@ function MessagesTab({ token }) {
     overdue: { label: 'Achterstand', color: 'bg-orange-100 text-orange-700' },
     auto: { label: 'Automatisch', color: 'bg-slate-100 text-slate-600' },
     manual: { label: 'Handmatig', color: 'bg-purple-100 text-purple-700' },
+    salary_paid: { label: 'Salaris', color: 'bg-indigo-100 text-indigo-700' },
+    rent_updated: { label: 'Huurwijziging', color: 'bg-amber-100 text-amber-700' },
+    lease_created: { label: 'Huurcontract', color: 'bg-cyan-100 text-cyan-700' },
+    lease_expiring: { label: 'Contract verloopt', color: 'bg-rose-100 text-rose-700' },
+    shelly_on: { label: 'Stroom AAN', color: 'bg-emerald-100 text-emerald-700' },
+    shelly_off: { label: 'Stroom UIT', color: 'bg-zinc-200 text-zinc-700' },
+    rent_reminder: { label: 'Herinnering', color: 'bg-yellow-100 text-yellow-700' },
+    rent_due_today: { label: 'Vervaldatum', color: 'bg-orange-100 text-orange-700' },
+    rent_reminder_manual: { label: 'Herinnering (handmatig)', color: 'bg-violet-100 text-violet-700' },
   };
 
   const statusLabels = {
@@ -2963,15 +2998,7 @@ function MessagesTab({ token }) {
     pending: { label: 'Wachtend', color: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-500' },
   };
 
-  const filtered = messages.filter(m => {
-    if (filterType !== 'all' && m.message_type !== filterType) return false;
-    if (filterStatus !== 'all' && m.status !== filterStatus) return false;
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      return (m.tenant_name || '').toLowerCase().includes(q) || (m.phone || '').includes(q);
-    }
-    return true;
-  });
+  const filtered = messages;
 
   const formatDate = (d) => {
     if (!d) return '-';
@@ -2980,7 +3007,7 @@ function MessagesTab({ token }) {
   };
 
   const stats = {
-    total: messages.length,
+    total: total,
     sent: messages.filter(m => m.status === 'sent').length,
     failed: messages.filter(m => m.status === 'failed').length,
   };
@@ -3035,6 +3062,7 @@ function MessagesTab({ token }) {
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
               placeholder="Zoek op huurder of telefoon..."
               data-testid="messages-search"
               className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-400"
@@ -3051,6 +3079,15 @@ function MessagesTab({ token }) {
             <option value="new_invoice">Factuur</option>
             <option value="fine_applied">Boete</option>
             <option value="overdue">Achterstand</option>
+            <option value="salary_paid">Salaris</option>
+            <option value="rent_updated">Huurwijziging</option>
+            <option value="lease_created">Huurcontract</option>
+            <option value="lease_expiring">Contract verloopt</option>
+            <option value="shelly_on">Stroom AAN</option>
+            <option value="shelly_off">Stroom UIT</option>
+            <option value="rent_reminder">Herinnering</option>
+            <option value="rent_due_today">Vervaldatum</option>
+            <option value="rent_reminder_manual">Herinnering (handmatig)</option>
             <option value="manual">Handmatig</option>
           </select>
           <select
@@ -3065,12 +3102,21 @@ function MessagesTab({ token }) {
             <option value="pending">Wachtend</option>
           </select>
           <button
-            onClick={loadMessages}
+            onClick={() => loadMessages(0)}
             data-testid="messages-refresh"
             className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-lg text-sm font-medium transition"
           >
             <Loader2 className="w-4 h-4" />
             Vernieuwen
+          </button>
+          <button
+            onClick={handleTriggerDaily}
+            disabled={triggerLoading}
+            data-testid="messages-trigger-daily"
+            className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50"
+          >
+            {triggerLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
+            Herinneringen versturen
           </button>
         </div>
       </div>
@@ -3136,6 +3182,33 @@ function MessagesTab({ token }) {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {total > PAGE_SIZE && (
+        <div className="flex items-center justify-between bg-white rounded-xl border border-slate-200 px-5 py-3">
+          <p className="text-sm text-slate-500">
+            {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, total)} van {total} berichten
+          </p>
+          <div className="flex gap-2">
+            <button
+              disabled={page === 0}
+              onClick={() => loadMessages(page - 1)}
+              data-testid="messages-prev-page"
+              className="px-3 py-1.5 text-sm rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 transition"
+            >
+              Vorige
+            </button>
+            <button
+              disabled={(page + 1) * PAGE_SIZE >= total}
+              onClick={() => loadMessages(page + 1)}
+              data-testid="messages-next-page"
+              className="px-3 py-1.5 text-sm rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-40 transition"
+            >
+              Volgende
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -3450,12 +3450,32 @@ async def send_bulk_whatsapp(message_type: str = "overdue", company: dict = Depe
     return {"sent": sent, "failed": failed, "message": f"{sent} berichten verstuurd, {failed} mislukt"}
 
 @router.get("/admin/whatsapp/history")
-async def get_whatsapp_history(company: dict = Depends(get_current_company)):
-    """Get WhatsApp message history"""
+async def get_whatsapp_history(
+    limit: int = 100,
+    skip: int = 0,
+    msg_type: Optional[str] = None,
+    status: Optional[str] = None,
+    search: Optional[str] = None,
+    company: dict = Depends(get_current_company)
+):
+    """Get WhatsApp/Twilio message history with filtering and pagination"""
+    query = {"company_id": company["company_id"]}
+    if msg_type and msg_type != "all":
+        query["message_type"] = msg_type
+    if status and status != "all":
+        query["status"] = status
+    if search:
+        query["$or"] = [
+            {"tenant_name": {"$regex": search, "$options": "i"}},
+            {"phone": {"$regex": search, "$options": "i"}}
+        ]
+    
+    total = await db.kiosk_wa_messages.count_documents(query)
     messages = await db.kiosk_wa_messages.find(
-        {"company_id": company["company_id"]}, {"_id": 0}
-    ).sort("created_at", -1).limit(50).to_list(50)
-    return messages
+        query, {"_id": 0}
+    ).sort("created_at", -1).skip(skip).limit(min(limit, 200)).to_list(min(limit, 200))
+    
+    return {"messages": messages, "total": total}
 
 @router.post("/admin/whatsapp/test")
 async def test_whatsapp_connection(company: dict = Depends(get_current_company)):
