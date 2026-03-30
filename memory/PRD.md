@@ -153,7 +153,11 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 - **WhatsApp berichten:** Internet meegenomen in totaal resterend saldo
 - **100% test pass rate** (iteration_87: 13/13 backend, alle frontend tests)
 
-## Backlog (prioriteit)
+### Sprint 10 (30 maart 2026) — Meterstanden Verwijderd
+- Hele Meterstanden (EBS/SWM) functionaliteit verwijderd op verzoek gebruiker
+- Frontend: MeterReadingsSection component, sub-tab toggle, ~409 regels verwijderd
+- Backend: 5 meter endpoints + MeterReadingCreate model verwijderd, ~205 regels
+- Stroombrekers tab toont nu alleen het Shelly paneel (schoon, geen sub-tabs)
 ### P0
 - ~~9 Geautomatiseerde WhatsApp/Twilio Notificaties~~ ✅ (30 maart 2026)
 - ~~Internetaansluiting tab crash fix~~ ✅ (30 maart 2026)
