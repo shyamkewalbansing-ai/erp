@@ -509,7 +509,7 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
                           : p.payment_type?.replace('_', ' ')}
                       </span>
                     </td>
-                    <td className="p-4 text-right font-bold text-green-600">{formatSRD(p.amount)}</td>
+                    <td className="p-4 text-right font-bold text-slate-900">{formatSRD(p.amount)}</td>
                     <td className="p-4 text-right text-sm text-slate-400 font-mono">{p.kwitantie_nummer}</td>
                   </tr>
                 ))}
