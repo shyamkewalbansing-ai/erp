@@ -2987,26 +2987,6 @@ function LoansTab({ token, tenants, formatSRD }) {
 
   return (
     <div className="space-y-6" data-testid="loans-tab">
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <p className="text-xs text-slate-500 mb-1">Actieve leningen</p>
-          <p className="text-2xl font-bold text-slate-900">{stats.activeCount}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <p className="text-xs text-slate-500 mb-1">Totaal uitgeleend</p>
-          <p className="text-2xl font-bold text-orange-600">{formatSRD(stats.totalLoaned)}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <p className="text-xs text-slate-500 mb-1">Totaal afgelost</p>
-          <p className="text-2xl font-bold text-green-600">{formatSRD(stats.totalPaid)}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-5">
-          <p className="text-xs text-slate-500 mb-1">Openstaand</p>
-          <p className="text-2xl font-bold text-red-600">{formatSRD(stats.totalRemaining)}</p>
-        </div>
-      </div>
-
       {/* Actions bar */}
       <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap items-center gap-3">
         <select
