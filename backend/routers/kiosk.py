@@ -154,9 +154,103 @@ async def _send_twilio_auto(company_id: str, phone: str, message: str, tenant_id
 
 
 async def _send_message_auto(company_id: str, phone: str, message: str, tenant_id: str = "", tenant_name: str = "", msg_type: str = "auto"):
-    """Send message via all enabled channels (WhatsApp + Twilio)"""
+    """Send message via all enabled channels (WhatsApp + Twilio + Email)"""
     await _send_wa_auto(company_id, phone, message, tenant_id, tenant_name, msg_type)
     await _send_twilio_auto(company_id, phone, message, tenant_id, tenant_name, msg_type)
+    # Also send via email if tenant has email
+    if tenant_id:
+        tenant = await db.kiosk_tenants.find_one({"tenant_id": tenant_id}, {"_id": 0, "email": 1})
+        if tenant and tenant.get("email"):
+            subject_map = {
+                "payment_confirmation": "Betalingsbevestiging",
+                "rent_reminder": "Huurherinnering",
+                "overdue_warning": "Achterstallige Huur",
+                "fine_applied": "Boete Toegepast",
+                "new_invoice": "Nieuwe Factuur",
+                "loan_created": "Lening Aangemaakt",
+                "loan_payment": "Leningbetaling",
+                "lease_created": "Huurovereenkomst",
+                "internet_assigned": "Internet Toegewezen",
+            }
+            subject = subject_map.get(msg_type, "Bericht van uw verhuurder")
+            await _send_email_auto(company_id, tenant["email"], subject, message, tenant_id, tenant_name, msg_type)
+
+
+async def _send_email_auto(company_id: str, to_email: str, subject: str, message: str, tenant_id: str = "", tenant_name: str = "", msg_type: str = "auto"):
+    """Send email via SMTP if configured"""
+    if not to_email:
+        return
+    try:
+        company = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
+        if not company or not company.get("smtp_enabled"):
+            return
+        smtp_host = company.get("smtp_host", "")
+        smtp_port = company.get("smtp_port", 587)
+        smtp_email = company.get("smtp_email", "")
+        smtp_password = company.get("smtp_password", "")
+        if not smtp_host or not smtp_email or not smtp_password:
+            return
+        
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+        msg = MIMEMultipart()
+        msg['From'] = smtp_email
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        
+        html_body = message.replace('\n', '<br>')
+        comp_name = company.get("stamp_company_name") or company.get("name", "")
+        html = f"""<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+            <div style="background:#f97316;color:white;padding:15px 20px;border-radius:8px 8px 0 0;">
+                <h2 style="margin:0;font-size:18px;">{comp_name}</h2>
+            </div>
+            <div style="background:#fff;border:1px solid #e2e8f0;border-top:none;padding:20px;border-radius:0 0 8px 8px;">
+                <p style="color:#334155;line-height:1.6;">{html_body}</p>
+            </div>
+            <p style="text-align:center;color:#94a3b8;font-size:12px;margin-top:15px;">Verzonden via {comp_name}</p>
+        </div>"""
+        msg.attach(MIMEText(html, 'html'))
+        
+        import asyncio
+        loop = asyncio.get_event_loop()
+        def send():
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                server.starttls()
+                server.login(smtp_email, smtp_password)
+                server.send_message(msg)
+        await loop.run_in_executor(None, send)
+        
+        # Log email
+        await db.kiosk_messages.insert_one({
+            "message_id": str(uuid.uuid4()),
+            "company_id": company_id,
+            "tenant_id": tenant_id,
+            "tenant_name": tenant_name,
+            "channel": "email",
+            "to": to_email,
+            "subject": subject,
+            "message": message,
+            "msg_type": msg_type,
+            "status": "sent",
+            "created_at": datetime.now(timezone.utc)
+        })
+    except Exception as e:
+        await db.kiosk_messages.insert_one({
+            "message_id": str(uuid.uuid4()),
+            "company_id": company_id,
+            "tenant_id": tenant_id,
+            "tenant_name": tenant_name,
+            "channel": "email",
+            "to": to_email,
+            "subject": subject,
+            "message": message,
+            "msg_type": msg_type,
+            "status": "failed",
+            "error": str(e),
+            "created_at": datetime.now(timezone.utc)
+        })
 
 
 def hash_password(password: str) -> str:
@@ -245,6 +339,12 @@ class CompanyUpdate(BaseModel):
     twilio_auth_token: Optional[str] = None
     twilio_phone_number: Optional[str] = None
     twilio_enabled: Optional[bool] = None
+    # Email SMTP Integration
+    smtp_host: Optional[str] = None
+    smtp_port: Optional[int] = None
+    smtp_email: Optional[str] = None
+    smtp_password: Optional[str] = None
+    smtp_enabled: Optional[bool] = None
 
 class KioskPinVerify(BaseModel):
     pin: str  # 4-digit PIN
@@ -3864,6 +3964,41 @@ async def control_tenda_internet(router_id: str, action: str = "enable", company
             return {"success": False, "message": "Router commando mislukt"}
     except Exception as e:
         return {"success": False, "message": f"Verbinding mislukt: {str(e)}"}
+
+
+# ============== EMAIL SMTP ==============
+
+@router.post("/admin/email/test")
+async def test_smtp_email(company: dict = Depends(get_current_company)):
+    """Send a test email to verify SMTP settings"""
+    smtp_email = company.get("smtp_email")
+    if not company.get("smtp_enabled") or not smtp_email:
+        raise HTTPException(status_code=400, detail="SMTP is niet geconfigureerd")
+    try:
+        await _send_email_auto(
+            company["company_id"], smtp_email,
+            "SMTP Test", f"Dit is een testbericht van {company.get('name', 'Kiosk')}.\n\nUw SMTP instellingen werken correct!",
+            "", "", "test"
+        )
+        return {"message": f"Testmail verzonden naar {smtp_email}"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"SMTP fout: {str(e)}")
+
+
+@router.post("/admin/email/send")
+async def send_manual_email(tenant_id: str, subject: str = "Bericht van uw verhuurder", message: str = "", company: dict = Depends(get_current_company)):
+    """Send a manual email to a tenant"""
+    tenant = await db.kiosk_tenants.find_one({"tenant_id": tenant_id, "company_id": company["company_id"]})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    email = tenant.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Huurder heeft geen email adres")
+    if not company.get("smtp_enabled"):
+        raise HTTPException(status_code=400, detail="SMTP is niet geconfigureerd")
+    
+    await _send_email_auto(company["company_id"], email, subject, message, tenant_id, tenant.get("name", ""), "manual")
+    return {"message": f"Email verzonden naar {email}"}
 
 
 # ============== WHATSAPP BUSINESS API ==============

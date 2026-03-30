@@ -19,7 +19,7 @@ import requests
 import os
 from datetime import datetime, timedelta
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://erp-internet-tab.preview.emergentagent.com').rstrip('/')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://erp-kiosk-rentals.preview.emergentagent.com').rstrip('/')
 
 # Test credentials
 KIOSK_EMAIL = "shyam@kewalbansing.net"
