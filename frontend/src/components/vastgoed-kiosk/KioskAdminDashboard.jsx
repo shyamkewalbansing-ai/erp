@@ -3198,7 +3198,7 @@ function InternetTab({ token, tenants, formatSRD, onRefresh }) {
                       <span className="text-slate-400 text-xs">Geen plan</span>
                     )}
                   </td>
-                  <td className="py-3 px-4 text-right font-bold text-orange-600">
+                  <td className="py-3 px-4 text-right font-bold text-slate-900">
                     {c.internet_cost > 0 ? formatSRD(c.internet_cost) : '-'}
                   </td>
                   <td className="py-3 px-4 text-center">
