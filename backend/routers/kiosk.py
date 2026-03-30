@@ -2302,6 +2302,11 @@ async def create_loan_payment(loan_id: str, data: LoanPaymentCreate, company: di
         {"loan_id": loan_id}, {"_id": 0, "amount": 1}
     ).to_list(1000)
     total_paid_before = sum(p.get("amount", 0) for p in existing_payments)
+    remaining_before = loan["amount"] - total_paid_before
+    
+    if data.amount > remaining_before:
+        raise HTTPException(status_code=400, detail=f"Bedrag kan niet hoger zijn dan het openstaande saldo (SRD {remaining_before:,.2f})")
+    
     total_paid_after = total_paid_before + data.amount
     remaining = max(0, loan["amount"] - total_paid_after)
     

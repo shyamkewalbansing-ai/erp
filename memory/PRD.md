@@ -96,6 +96,20 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
   - Uitklapbaar berichtdetail
 - **100% backend test pass rate** (iteration_84)
 
+### Sprint 6 (30 maart 2026) — Leningen Module
+- **Leningen (Loans) tab** in admin dashboard:
+  - Aanmaken: huurder selectie, leningbedrag, maandelijkse aflossing, startdatum, omschrijving
+  - Overzicht: totaal geleend, totaal afgelost, openstaand, voortgangsbalk per lening
+  - Aflossingen: flexibel bedrag OF vast maandbedrag, snelknoppen (maandelijks/volledig)
+  - Detail modal: volledige betaalgeschiedenis met datum, bedrag, methode, resterend
+  - Filter op status (actief/afgelost), verwijderen
+  - Auto-markering "afgelost" wanneer saldo = 0
+  - Meerdere leningen per huurder mogelijk
+- **Backend validatie:** Overpayment geblokkeerd (bedrag > openstaand saldo)
+- **WhatsApp notificaties:** Automatisch bij nieuwe lening (`loan_created`) en aflossing (`loan_payment`)
+- **Backend test pass rate:** 76% → 100% na overpayment fix (iteration_85)
+- **Frontend test pass rate:** 100% (iteration_85)
+
 ## Inloggegevens
 - SuperAdmin ERP: admin@facturatie.sr / Bharat7755
 - Kiosk Company: shyam@kewalbansing.net / Bharat7755
