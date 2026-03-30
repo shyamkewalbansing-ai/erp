@@ -2662,6 +2662,7 @@ function EmployeesTab({ token, formatSRD }) {
 
 // ============== POWER/STROOMBREKERS TAB ==============
 function PowerTab({ apartments, tenants, token, onRefresh }) {
+  const [subTab, setSubTab] = useState('breakers');
   const [shellyDevices, setShellyDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
@@ -2729,6 +2730,28 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
 
   return (
     <div className="space-y-6">
+      {/* Sub-tabs */}
+      <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
+        <button
+          onClick={() => setSubTab('breakers')}
+          data-testid="power-subtab-breakers"
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${subTab === 'breakers' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <Zap className="w-4 h-4" /> Stroombrekers
+        </button>
+        <button
+          onClick={() => setSubTab('meters')}
+          data-testid="power-subtab-meters"
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${subTab === 'meters' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <TrendingUp className="w-4 h-4" /> Meterstanden
+        </button>
+      </div>
+
+      {subTab === 'meters' ? (
+        <MeterReadingsSection apartments={apartments} tenants={tenants} token={token} />
+      ) : (
+      <>
       {/* Main Panel - Realistic circuit breaker box */}
       <div className="rounded-xl overflow-hidden border border-slate-200 bg-white">
         {/* Panel header strip */}
@@ -2940,8 +2963,8 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
         </div>
       )}
 
-      {/* ============== METERSTANDEN SECTIE ============== */}
-      <MeterReadingsSection apartments={apartments} tenants={tenants} token={token} />
+      </>
+      )}
     </div>
   );
 }
