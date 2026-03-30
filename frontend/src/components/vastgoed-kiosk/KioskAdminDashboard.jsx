@@ -3524,7 +3524,7 @@ function InternetTab({ token, tenants, formatSRD, onRefresh }) {
                       onClick={() => { setEditPlan(p); setPlanName(p.name); setPlanSpeed(p.speed); setPlanPrice(p.price.toString()); setShowPlanModal(true); }}
                       className="p-1 rounded hover:bg-slate-100 transition"
                     >
-                      <Edit3 className="w-3.5 h-3.5 text-slate-400" />
+                      <Pencil className="w-3.5 h-3.5 text-slate-400" />
                     </button>
                     <button onClick={() => deletePlan(p.plan_id)} className="p-1 rounded hover:bg-red-50 transition">
                       <Trash2 className="w-3.5 h-3.5 text-red-400" />

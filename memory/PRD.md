@@ -137,9 +137,14 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 - Mope Payment Gateway — wacht op API key
 - Uni5Pay — wacht op API key
 
+### Sprint 8 (30 maart 2026) — Internetaansluiting Fix
+- **P0 Fix:** `Edit3` icon vervangen door `Pencil` in InternetTab component → Frontend crash opgelost
+- Internet tab volledig functioneel: plannen CRUD, huurder toewijzing, kosten overzicht
+
 ## Backlog (prioriteit)
 ### P0
 - ~~9 Geautomatiseerde WhatsApp/Twilio Notificaties~~ ✅ (30 maart 2026)
+- ~~Internetaansluiting tab crash fix~~ ✅ (30 maart 2026)
 
 ### P1
 - Kwitanties tab moderniseren (unified table style)
