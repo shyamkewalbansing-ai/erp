@@ -3357,62 +3357,60 @@ function LoanDetailModal({ loan, formatSRD, onClose, onPay }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[100] p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl max-h-[85vh] flex flex-col border border-slate-300" onClick={e => e.stopPropagation()}>
-        <div className="p-6 border-b border-slate-200 flex items-center justify-between flex-shrink-0 bg-slate-50 rounded-t-2xl">
+    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto" onClick={onClose}>
+      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl" onClick={e => e.stopPropagation()}>
+        <div className="p-5 border-b border-slate-200 flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold text-slate-900" data-testid="loan-detail-title">Lening — {loan.tenant_name}</h2>
+            <h2 className="text-lg font-bold text-slate-900" data-testid="loan-detail-title">Lening — {loan.tenant_name}</h2>
             <p className="text-sm text-slate-500 mt-1">App. {loan.apartment_number} | Aangemaakt: {formatDate(loan.start_date)}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${loan.status === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+          <div className="flex items-center gap-2">
+            <span className={`px-3 py-1 rounded-full text-xs font-bold ${loan.status === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
               {loan.status === 'active' ? 'Actief' : 'Afgelost'}
             </span>
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-slate-200 transition">
+            <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 transition">
               <XCircle className="w-5 h-5 text-slate-400" />
             </button>
           </div>
         </div>
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-5">
           {/* Summary */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-slate-50 rounded-xl p-5 text-center border border-slate-200">
-              <p className="text-xs text-slate-500 mb-2">Leningbedrag</p>
-              <p className="text-xl font-bold text-slate-900">{formatSRD(loan.amount)}</p>
+          <div className="grid grid-cols-3 gap-3 mb-5">
+            <div className="bg-slate-50 rounded-lg p-3 text-center border border-slate-200">
+              <p className="text-xs text-slate-500 mb-1">Leningbedrag</p>
+              <p className="text-lg font-bold text-slate-900">{formatSRD(loan.amount)}</p>
             </div>
-            <div className="bg-green-50 rounded-xl p-5 text-center border border-green-200">
-              <p className="text-xs text-slate-500 mb-2">Afgelost</p>
-              <p className="text-xl font-bold text-green-600">{formatSRD(loan.total_paid)}</p>
+            <div className="bg-green-50 rounded-lg p-3 text-center border border-green-200">
+              <p className="text-xs text-slate-500 mb-1">Afgelost</p>
+              <p className="text-lg font-bold text-green-600">{formatSRD(loan.total_paid)}</p>
             </div>
-            <div className="bg-red-50 rounded-xl p-5 text-center border border-red-200">
-              <p className="text-xs text-slate-500 mb-2">Openstaand</p>
-              <p className="text-xl font-bold text-red-600">{formatSRD(loan.remaining)}</p>
+            <div className="bg-red-50 rounded-lg p-3 text-center border border-red-200">
+              <p className="text-xs text-slate-500 mb-1">Openstaand</p>
+              <p className="text-lg font-bold text-red-600">{formatSRD(loan.remaining)}</p>
             </div>
           </div>
 
           {/* Progress bar */}
-          <div className="mb-6">
-            <div className="flex justify-between text-sm text-slate-600 mb-1.5">
-              <span className="font-medium">Voortgang</span>
+          <div className="mb-5">
+            <div className="flex justify-between text-xs text-slate-500 mb-1">
+              <span>Voortgang</span>
               <span className="font-bold">{progress.toFixed(0)}%</span>
             </div>
-            <div className="w-full bg-slate-200 rounded-full h-4">
-              <div className="bg-green-500 h-4 rounded-full transition-all" style={{ width: `${progress}%` }} />
+            <div className="w-full bg-slate-100 rounded-full h-3">
+              <div className="bg-green-500 h-3 rounded-full transition-all" style={{ width: `${progress}%` }} />
             </div>
           </div>
 
           {loan.description && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-6 text-sm text-slate-700">
-              <span className="font-semibold">Omschrijving:</span> {loan.description}
+            <div className="bg-slate-50 rounded-lg p-3 mb-5 text-sm text-slate-600 border border-slate-200">
+              <span className="font-medium">Omschrijving:</span> {loan.description}
             </div>
           )}
 
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm font-bold text-slate-800">Maandelijkse aflossing: <span className="text-orange-600">{formatSRD(loan.monthly_payment)}</span></p>
-          </div>
+          <p className="text-sm font-semibold text-slate-700 mb-4">Maandelijkse aflossing: <span className="text-orange-600">{formatSRD(loan.monthly_payment)}</span></p>
 
           {/* Payment history */}
-          <h3 className="text-base font-bold text-slate-800 mb-3 mt-2">Betaalgeschiedenis ({loan.payments?.length || 0})</h3>
+          <h3 className="text-sm font-bold text-slate-700 mb-3">Betaalgeschiedenis ({loan.payments?.length || 0})</h3>
           {(!loan.payments || loan.payments.length === 0) ? (
             <p className="text-sm text-slate-400 py-4 text-center">Nog geen aflossingen geregistreerd</p>
           ) : (
@@ -3442,7 +3440,7 @@ function LoanDetailModal({ loan, formatSRD, onClose, onPay }) {
             </div>
           )}
         </div>
-        <div className="p-6 border-t border-slate-200 flex justify-end gap-3 flex-shrink-0">
+        <div className="p-5 border-t border-slate-200 flex justify-end gap-3">
           <button onClick={onClose} className="px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Sluiten</button>
           {loan.status === 'active' && (
             <button
