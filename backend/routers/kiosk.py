@@ -270,6 +270,10 @@ class TenantCreate(BaseModel):
     deposit_required: float = 0
     lease_start_date: Optional[str] = None  # YYYY-MM-DD
     lease_end_date: Optional[str] = None  # YYYY-MM-DD
+    id_card_number: Optional[str] = None
+    id_card_name: Optional[str] = None
+    id_card_dob: Optional[str] = None
+    id_card_raw: Optional[str] = None
 
 class TenantUpdate(BaseModel):
     name: Optional[str] = None
@@ -284,6 +288,10 @@ class TenantUpdate(BaseModel):
     deposit_required: Optional[float] = None
     deposit_paid: Optional[float] = None
     rent_billed_through: Optional[str] = None  # YYYY-MM
+    id_card_number: Optional[str] = None
+    id_card_name: Optional[str] = None
+    id_card_dob: Optional[str] = None
+    id_card_raw: Optional[str] = None
 
 class PaymentCreate(BaseModel):
     tenant_id: str
@@ -1549,6 +1557,9 @@ async def list_tenants(company: dict = Depends(get_current_company)):
             "internet_outstanding": updates.get("internet_outstanding", t.get("internet_outstanding", 0)),
             "internet_plan_id": t.get("internet_plan_id"),
             "internet_plan_name": t.get("internet_plan_name", ""),
+            "id_card_number": t.get("id_card_number"),
+            "id_card_name": t.get("id_card_name"),
+            "id_card_dob": t.get("id_card_dob"),
         })
     
     return result
@@ -1591,6 +1602,10 @@ async def create_tenant(data: TenantCreate, company: dict = Depends(get_current_
         "deposit_paid": 0,
         "rent_billed_through": now.strftime("%Y-%m"),  # Current month
         "status": "active",
+        "id_card_number": data.id_card_number,
+        "id_card_name": data.id_card_name,
+        "id_card_dob": data.id_card_dob,
+        "id_card_raw": data.id_card_raw,
         "created_at": now,
         "updated_at": now
     }

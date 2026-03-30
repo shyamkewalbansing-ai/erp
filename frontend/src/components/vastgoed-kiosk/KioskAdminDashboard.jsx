@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Building2, Users, CreditCard, Home, Plus, Pencil, Trash2, 
@@ -581,10 +581,19 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
         >
           <FileText className="w-4 h-4" /> Huurovereenkomsten
         </button>
+        <button
+          onClick={() => setTenantsSubTab('idkaart')}
+          data-testid="tenants-subtab-idkaart"
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${tenantsSubTab === 'idkaart' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <CreditCard className="w-4 h-4" /> ID Kaart
+        </button>
       </div>
 
       {tenantsSubTab === 'contracten' ? (
         <LeasesTab leases={leases} tenants={tenants} apartments={apartments} formatSRD={formatSRD} onRefresh={onRefresh} token={token} />
+      ) : tenantsSubTab === 'idkaart' ? (
+        <IdCardTab tenants={tenants} token={token} onRefresh={onRefresh} />
       ) : (
       <>
       {/* Huurders tabel */}
@@ -759,6 +768,63 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
     </div>
   );
 }
+// ============== ID KAART TAB ==============
+function IdCardTab({ tenants, token, onRefresh }) {
+  const activeTenants = tenants.filter(t => t.status === 'active');
+  const registered = activeTenants.filter(t => t.id_card_number);
+  const notRegistered = activeTenants.filter(t => !t.id_card_number);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-3 mb-2">
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+          <CheckCircle className="w-3.5 h-3.5" /> {registered.length} Geregistreerd
+        </span>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
+          <XCircle className="w-3.5 h-3.5" /> {notRegistered.length} Niet geregistreerd
+        </span>
+      </div>
+      <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+        <table className="w-full min-w-[700px]">
+          <thead className="bg-slate-50">
+            <tr>
+              <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
+              <th className="text-left p-4 text-sm font-medium text-slate-500">Appartement</th>
+              <th className="text-left p-4 text-sm font-medium text-slate-500">Kaartnummer</th>
+              <th className="text-left p-4 text-sm font-medium text-slate-500">Naam op kaart</th>
+              <th className="text-left p-4 text-sm font-medium text-slate-500">Geboortedatum</th>
+              <th className="text-center p-4 text-sm font-medium text-slate-500">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activeTenants.map(t => (
+              <tr key={t.tenant_id} className="border-t border-slate-100 hover:bg-slate-50" data-testid={`idcard-row-${t.tenant_id}`}>
+                <td className="p-4 font-bold text-slate-900">{t.name}</td>
+                <td className="p-4 text-slate-600">{t.apartment_number}</td>
+                <td className="p-4 font-mono text-sm text-slate-700">{t.id_card_number || '-'}</td>
+                <td className="p-4 text-slate-700">{t.id_card_name || '-'}</td>
+                <td className="p-4 text-slate-700">{t.id_card_dob || '-'}</td>
+                <td className="p-4 text-center">
+                  {t.id_card_number ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                      <CheckCircle className="w-3 h-3" /> Geregistreerd
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600">
+                      <XCircle className="w-3 h-3" /> Niet geregistreerd
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-xs text-slate-400">ID kaart registratie gaat via Huurder bewerken (Huurders tab) of bij het aanmaken van een nieuwe huurder.</p>
+    </div>
+  );
+}
+
 function LeasesTab({ leases, tenants, apartments, formatSRD, onRefresh, token }) {
   const [showLeaseModal, setShowLeaseModal] = useState(false);
   const [editingLease, setEditingLease] = useState(null);
@@ -4529,12 +4595,47 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
   const [fines, setFines] = useState(tenant?.fines || 0);
   const [leaseStart, setLeaseStart] = useState('');
   const [leaseEnd, setLeaseEnd] = useState('');
+  const [idCardNumber, setIdCardNumber] = useState(tenant?.id_card_number || '');
+  const [idCardName, setIdCardName] = useState(tenant?.id_card_name || '');
+  const [idCardDob, setIdCardDob] = useState(tenant?.id_card_dob || '');
+  const [idCardRaw, setIdCardRaw] = useState('');
+  const [cardReaderActive, setCardReaderActive] = useState(false);
+  const cardBufferRef = useRef('');
+  const cardTimerRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [showFaceCapture, setShowFaceCapture] = useState(false);
   const [faceRegistered, setFaceRegistered] = useState(!!tenant?.face_id_enabled);
   const [faceSaving, setFaceSaving] = useState(false);
 
   const availableApartments = apartments.filter(a => a.status !== 'occupied' || a.apartment_id === tenant?.apartment_id);
+
+  // USB Card Reader listener - captures rapid keyboard input
+  useEffect(() => {
+    if (!cardReaderActive) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter') {
+        const raw = cardBufferRef.current.trim();
+        if (raw.length > 5) {
+          setIdCardRaw(raw);
+          // Parse card data - try common delimiters
+          const parts = raw.split(/[;^|=\t]+/).filter(Boolean);
+          if (parts.length >= 1) setIdCardNumber(parts[0]);
+          if (parts.length >= 2) setIdCardName(parts[1]);
+          if (parts.length >= 3) setIdCardDob(parts[2]);
+        }
+        cardBufferRef.current = '';
+        setCardReaderActive(false);
+        return;
+      }
+      if (e.key.length === 1) {
+        cardBufferRef.current += e.key;
+        clearTimeout(cardTimerRef.current);
+        cardTimerRef.current = setTimeout(() => { cardBufferRef.current = ''; }, 500);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [cardReaderActive]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -4543,7 +4644,9 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
       const headers = { Authorization: `Bearer ${token}` };
       const data = { name, apartment_id: apartmentId, email: email || null, telefoon: telefoon || null,
         monthly_rent: parseFloat(monthlyRent), deposit_required: parseFloat(depositRequired),
-        tenant_code: tenantCode || null };
+        tenant_code: tenantCode || null,
+        id_card_number: idCardNumber || null, id_card_name: idCardName || null,
+        id_card_dob: idCardDob || null, id_card_raw: idCardRaw || null };
       if (tenant) {
         data.outstanding_rent = parseFloat(outstandingRent);
         data.service_costs = parseFloat(serviceCosts);
@@ -4691,6 +4794,56 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
               </div>
             </>
           )}
+          {/* ID Kaart Section */}
+          <div className="border-t border-slate-200 pt-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4 text-orange-600" />
+                <p className="text-sm font-semibold text-slate-700">ID Kaart</p>
+              </div>
+              {idCardNumber && (
+                <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
+                  <Check className="w-3 h-3" /> Geregistreerd
+                </span>
+              )}
+            </div>
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => { setCardReaderActive(!cardReaderActive); cardBufferRef.current = ''; }}
+                data-testid="card-reader-toggle"
+                className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed text-sm font-medium transition ${
+                  cardReaderActive
+                    ? 'border-orange-400 bg-orange-50 text-orange-700 animate-pulse'
+                    : 'border-slate-300 text-slate-500 hover:border-orange-300 hover:text-orange-600'
+                }`}
+              >
+                <CreditCard className="w-5 h-5" />
+                {cardReaderActive ? 'Wacht op kaart... (scan nu)' : 'ID Kaart Scannen'}
+              </button>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Kaartnummer / ID</label>
+                  <input type="text" value={idCardNumber} onChange={e => setIdCardNumber(e.target.value)}
+                    data-testid="id-card-number" placeholder="Wordt automatisch ingevuld"
+                    className="w-full px-3 py-2.5 border rounded-xl text-sm font-mono" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Naam op kaart</label>
+                  <input type="text" value={idCardName} onChange={e => setIdCardName(e.target.value)}
+                    data-testid="id-card-name" placeholder="Wordt automatisch ingevuld"
+                    className="w-full px-3 py-2.5 border rounded-xl text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Geboortedatum</label>
+                  <input type="text" value={idCardDob} onChange={e => setIdCardDob(e.target.value)}
+                    data-testid="id-card-dob" placeholder="Wordt automatisch ingevuld"
+                    className="w-full px-3 py-2.5 border rounded-xl text-sm" />
+                </div>
+              </div>
+              <p className="text-xs text-slate-400">Scan de ID kaart met de USB kaartlezer of vul handmatig in</p>
+            </div>
+          </div>
           {/* Face ID Section - only when editing existing tenant */}
           {tenant && companyId && (
             <div className="border-t border-slate-200 pt-4">

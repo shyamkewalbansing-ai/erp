@@ -173,6 +173,11 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 - Kwitanties tab moderniseren (unified table style)
 - Refactoring: kiosk.py (~4100 regels), KioskAdminDashboard.jsx (~3800 regels)
 
+### Sprint 11 (30 maart 2026) — ID Kaart Registratie + USB Kaartlezer
+- Nieuwe "ID Kaart" sub-tab binnen Huurders
+- USB kaartlezer integratie in Huurder modal
+- Backend: id_card velden in TenantCreate/Update
+
 ### P2
 - Maandelijks financieel rapport (automatisch)
 - CSV/PDF export betalingsrapporten
