@@ -1,0 +1,91 @@
+{
+  "summary": "Post-refactoring regression test completed. Backend: 23/23 tests passed (100%). Frontend: 10/10 tabs working. Fixed missing ScanFace icon import in SettingsTab.jsx. All kiosk admin functionality verified working after major code split (KioskAdminDashboard.jsx 5300->361 lines, kiosk.py 4900->12 modules).",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Kwitanties tab", "issues": ["React key warning: 'Encountered two children with the same key 2026-03' - minor, doesn't affect functionality"]}
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_kiosk_refactored.py",
+    "/app/test_reports/pytest/pytest_kiosk_refactored.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Fixed: Missing ScanFace, Camera, Trash2, TrendingUp, TrendingDown, Plus, X imports in SettingsTab.jsx - caused FaceIdSettings component to crash",
+    "Minor: React key warning in Kwitanties tab - duplicate key '2026-03' - should use unique payment_id as key"
+  ],
+  "updated_files": [
+    "/app/frontend/src/components/vastgoed-kiosk/admin/SettingsTab.jsx",
+    "/app/backend/tests/test_kiosk_refactored.py"
+  ],
+  "success_rate": {
+    "backend": "100% (23/23 passed)",
+    "frontend": "100% (10/10 tabs working)"
+  },
+  "test_credentials": {
+    "kiosk_email": "shyam@kewalbansing.net",
+    "kiosk_password": "Bharat7755",
+    "kiosk_pin": "5678",
+    "superadmin_email": "admin@facturatie.sr",
+    "superadmin_password": "Bharat7755"
+  },
+  "seed_data_creation": "None - used existing test data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Major refactoring verified successful. Frontend KioskAdminDashboard.jsx split into 14 admin modules in /admin/ folder. Backend kiosk.py split into 12 modules in /routers/kiosk/ package. All APIs and UI tabs working correctly. Fixed missing lucide-react icon imports in SettingsTab.jsx.",
+  "tests_executed": {
+    "backend": [
+      {"test": "test_01_login_with_email_password", "result": "PASS"},
+      {"test": "test_02_login_with_pin", "result": "PASS"},
+      {"test": "test_03_login_invalid_credentials", "result": "PASS"},
+      {"test": "test_04_get_me_authenticated", "result": "PASS"},
+      {"test": "test_05_get_dashboard", "result": "PASS"},
+      {"test": "test_06_list_tenants", "result": "PASS"},
+      {"test": "test_07_list_apartments", "result": "PASS"},
+      {"test": "test_08_list_payments", "result": "PASS"},
+      {"test": "test_09_list_leases", "result": "PASS"},
+      {"test": "test_10_list_loans", "result": "PASS"},
+      {"test": "test_11_list_employees", "result": "PASS"},
+      {"test": "test_12_list_kas_entries", "result": "PASS"},
+      {"test": "test_13_list_shelly_devices", "result": "PASS"},
+      {"test": "test_14_list_tenda_routers", "result": "PASS"},
+      {"test": "test_15_list_internet_plans", "result": "PASS"},
+      {"test": "test_16_list_whatsapp_history", "result": "PASS"},
+      {"test": "test_17_email_test_requires_recipient", "result": "PASS"},
+      {"test": "test_18_superadmin_login", "result": "PASS"},
+      {"test": "test_19_superadmin_stats", "result": "PASS"},
+      {"test": "test_20_superadmin_companies_list", "result": "PASS"},
+      {"test": "test_21_public_company_info", "result": "PASS"},
+      {"test": "test_22_public_tenants_list", "result": "PASS"},
+      {"test": "test_23_public_apartments_list", "result": "PASS"}
+    ],
+    "frontend": [
+      {"test": "Dashboard tab", "result": "PASS - Shows Overzicht with stats"},
+      {"test": "Huurders tab", "result": "PASS - Shows tenant list"},
+      {"test": "Appartementen tab", "result": "PASS - Shows apartments list"},
+      {"test": "Kwitanties tab", "result": "PASS - Shows payment receipts"},
+      {"test": "Bank/Kas tab", "result": "PASS - Shows cash register"},
+      {"test": "Leningen tab", "result": "PASS - Shows loans section"},
+      {"test": "Werknemers tab", "result": "PASS - Shows employees section"},
+      {"test": "Stroombrekers tab", "result": "PASS - Shows Shelly devices"},
+      {"test": "Internet tab", "result": "PASS - Shows internet plans/routers"},
+      {"test": "Instellingen tab", "result": "PASS - Shows settings sections (after fix)"}
+    ]
+  },
+  "bug_fixed": {
+    "issue": "ReferenceError: ScanFace is not defined in FaceIdSettings component",
+    "location": "/app/frontend/src/components/vastgoed-kiosk/admin/SettingsTab.jsx",
+    "root_cause": "Missing lucide-react icon imports (ScanFace, Camera, Trash2, TrendingUp, TrendingDown, Plus, X) after code was extracted from monolithic file",
+    "fix_applied": "Added missing imports to the lucide-react import statement at line 2-5"
+  },
+  "mocked_apis": {
+    "Mope Payment Gateway": "MOCKED - Uses mock_ prefix for API key",
+    "Uni5Pay Payment Gateway": "MOCKED - Always returns mock responses"
+  }
+}

@@ -1,0 +1,1028 @@
+from .base import *
+
+# ============== ADMIN ENDPOINTS (authenticated) ==============
+
+@router.get("/admin/dashboard")
+async def get_dashboard(company: dict = Depends(get_current_company)):
+    """Get dashboard statistics"""
+    company_id = company["company_id"]
+    
+    total_apartments = await db.kiosk_apartments.count_documents({"company_id": company_id})
+    total_tenants = await db.kiosk_tenants.count_documents({"company_id": company_id, "status": "active"})
+    
+    # Calculate totals
+    tenants = await db.kiosk_tenants.find({"company_id": company_id, "status": "active"}).to_list(1000)
+    total_outstanding = sum(t.get("outstanding_rent", 0) for t in tenants)
+    total_service_costs = sum(t.get("service_costs", 0) for t in tenants)
+    total_fines = sum(t.get("fines", 0) for t in tenants)
+    total_internet = sum(t.get("internet_outstanding", 0) for t in tenants)
+    
+    # Payments this month
+    now = datetime.now(timezone.utc)
+    start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    payments_this_month = await db.kiosk_payments.find({
+        "company_id": company_id,
+        "created_at": {"$gte": start_of_month}
+    }).to_list(1000)
+    total_received_month = sum(p.get("amount", 0) for p in payments_this_month)
+    
+    return {
+        "total_apartments": total_apartments,
+        "total_tenants": total_tenants,
+        "total_outstanding": total_outstanding,
+        "total_service_costs": total_service_costs,
+        "total_fines": total_fines,
+        "total_internet": total_internet,
+        "total_received_month": total_received_month,
+        "payments_count_month": len(payments_this_month)
+    }
+
+# Apartments CRUD
+@router.get("/admin/apartments")
+async def list_apartments(company: dict = Depends(get_current_company)):
+    """List all apartments"""
+    apartments = await db.kiosk_apartments.find({"company_id": company["company_id"]}).to_list(1000)
+    return [{
+        "apartment_id": apt["apartment_id"],
+        "number": apt["number"],
+        "description": apt.get("description", ""),
+        "monthly_rent": apt.get("monthly_rent", 0),
+        "status": apt.get("status", "available"),
+        "sort_order": apt.get("sort_order", 999),
+        "created_at": apt.get("created_at")
+    } for apt in apartments]
+
+
+class ApartmentReorder(BaseModel):
+    order: list  # [{"apartment_id": "...", "sort_order": 0}, ...]
+
+
+@router.put("/admin/apartments/reorder")
+async def reorder_apartments(data: ApartmentReorder, company: dict = Depends(get_current_company)):
+    """Reorder apartments via drag-and-drop"""
+    company_id = company["company_id"]
+    for item in data.order:
+        await db.kiosk_apartments.update_one(
+            {"apartment_id": item["apartment_id"], "company_id": company_id},
+            {"$set": {"sort_order": item["sort_order"]}}
+        )
+    return {"message": "Volgorde bijgewerkt"}
+
+
+@router.post("/admin/apartments")
+async def create_apartment(data: ApartmentCreate, company: dict = Depends(get_current_company)):
+    """Create a new apartment"""
+    apartment_id = generate_uuid()
+    now = datetime.now(timezone.utc)
+    
+    apartment = {
+        "apartment_id": apartment_id,
+        "company_id": company["company_id"],
+        "number": data.number.upper(),
+        "description": data.description,
+        "monthly_rent": data.monthly_rent,
+        "status": "available",
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.kiosk_apartments.insert_one(apartment)
+    return {"apartment_id": apartment_id, "message": "Appartement aangemaakt"}
+
+@router.put("/admin/apartments/{apartment_id}")
+async def update_apartment(apartment_id: str, data: ApartmentUpdate, company: dict = Depends(get_current_company)):
+    """Update an apartment"""
+    apt = await db.kiosk_apartments.find_one({
+        "apartment_id": apartment_id,
+        "company_id": company["company_id"]
+    })
+    if not apt:
+        raise HTTPException(status_code=404, detail="Appartement niet gevonden")
+    
+    update_data = {k: v for k, v in data.dict().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    await db.kiosk_apartments.update_one(
+        {"apartment_id": apartment_id},
+        {"$set": update_data}
+    )
+
+    # Sync monthly_rent to linked tenant if rent changed
+    if "monthly_rent" in update_data:
+        await db.kiosk_tenants.update_many(
+            {"apartment_id": apartment_id, "company_id": company["company_id"], "status": "active"},
+            {"$set": {"monthly_rent": update_data["monthly_rent"], "updated_at": datetime.now(timezone.utc)}}
+        )
+        
+        # === AUTO WHATSAPP: Huurprijs gewijzigd notificatie ===
+        try:
+            comp_name = company.get("stamp_company_name") or company.get("name", "")
+            apt_nr = apt.get("number", apartment_id)
+            new_rent = update_data["monthly_rent"]
+            affected_tenants = await db.kiosk_tenants.find(
+                {"apartment_id": apartment_id, "company_id": company["company_id"], "status": "active"}
+            ).to_list(100)
+            for at in affected_tenants:
+                t_phone = at.get("phone") or at.get("telefoon", "")
+                if t_phone:
+                    wa_rent_change_msg = (f"Beste {at['name']},\n\n"
+                                          f"De maandhuur voor appartement {apt_nr} is gewijzigd.\n"
+                                          f"Nieuwe huurprijs: SRD {new_rent:,.2f}\n\n"
+                                          f"Met vriendelijke groet,\n{comp_name}")
+                    await _send_message_auto(
+                        company["company_id"], t_phone, wa_rent_change_msg,
+                        at["tenant_id"], at["name"], "rent_updated"
+                    )
+        except Exception:
+            pass  # Notificatie mag hoofdflow niet breken
+
+    return {"message": "Appartement bijgewerkt"}
+
+@router.delete("/admin/apartments/{apartment_id}")
+async def delete_apartment(apartment_id: str, company: dict = Depends(get_current_company)):
+    """Delete an apartment"""
+    result = await db.kiosk_apartments.delete_one({
+        "apartment_id": apartment_id,
+        "company_id": company["company_id"]
+    })
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Appartement niet gevonden")
+    return {"message": "Appartement verwijderd"}
+
+# Tenants CRUD
+@router.get("/admin/tenants")
+async def list_tenants(company: dict = Depends(get_current_company)):
+    """List all tenants - auto-bills new months based on billing_day setting"""
+    company_id = company["company_id"]
+    tenants = await db.kiosk_tenants.find({"company_id": company_id}).to_list(1000)
+    
+    # Get company billing settings
+    comp = await db.kiosk_companies.find_one({"company_id": company_id})
+    billing_day = comp.get("billing_day", 1) if comp else 1
+    billing_next_month = comp.get("billing_next_month", True) if comp else True
+    fine_amount = comp.get("fine_amount", 0) if comp else 0
+    
+    now = datetime.now(timezone.utc)
+    current_month = now.strftime("%Y-%m")
+    
+    result = []
+    for t in tenants:
+        billed_through = t.get("rent_billed_through", "")
+        monthly_rent = t.get("monthly_rent", 0)
+        outstanding = t.get("outstanding_rent", 0)
+        current_fines = t.get("fines", 0)
+        updates = {}
+        
+        if t.get("status") == "active" and monthly_rent > 0:
+            if not billed_through:
+                billed_through = current_month
+                updates["rent_billed_through"] = current_month
+            else:
+                # Auto-billing engine
+                # How it works:
+                #   billed_through = last month whose rent was added to outstanding
+                #   check_month = next month to potentially bill (billed_through + 1)
+                #   The due date determines WHEN the next month's rent gets added:
+                #     billing_next_month=True  ("Volgende maand"): due_date = check_month's billing_day
+                #       -> Feb rent due March 24. After March 24: bill March.
+                #     billing_next_month=False ("Dezelfde maand"): due_date = prev_month's billing_day
+                #       -> Feb rent due Feb 24. After Feb 24: bill March.
+                billed_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+                
+                months_billed = 0
+                check_month = billed_date + relativedelta(months=1)
+                
+                while True:
+                    prev_month = check_month - relativedelta(months=1)
+                    if billing_next_month:
+                        due_date = check_month.replace(day=min(billing_day, 28))
+                    else:
+                        due_date = prev_month.replace(day=min(billing_day, 28))
+                    
+                    if now >= due_date.replace(tzinfo=timezone.utc):
+                        months_billed += 1
+                        check_month += relativedelta(months=1)
+                    else:
+                        break
+                
+                if months_billed > 0:
+                    # Apply fine for existing outstanding BEFORE adding new rent
+                    if outstanding > 0 and fine_amount > 0:
+                        last_fine_month = t.get("last_fine_month", "")
+                        fine_due_month = billed_through  # The period they failed to pay
+                        if last_fine_month != fine_due_month:
+                            current_fines += fine_amount
+                            updates["fines"] = current_fines
+                            updates["last_fine_month"] = fine_due_month
+                    
+                    outstanding += monthly_rent * months_billed
+                    billed_through = (billed_date + relativedelta(months=months_billed)).strftime("%Y-%m")
+                    updates["outstanding_rent"] = outstanding
+                    updates["rent_billed_through"] = billed_through
+                    
+                    # Add internet costs for billed months
+                    internet_cost = t.get("internet_cost", 0)
+                    if internet_cost > 0:
+                        current_internet = t.get("internet_outstanding", 0)
+                        updates["internet_outstanding"] = current_internet + (internet_cost * months_billed)
+            
+            # Catch-up fine: apply fine when no new billing happened but rent is overdue
+            if outstanding > 0 and fine_amount > 0 and not updates.get("last_fine_month"):
+                billed_dt = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+                if billing_next_month:
+                    current_due = (billed_dt + relativedelta(months=1)).replace(day=min(billing_day, 28))
+                else:
+                    current_due = billed_dt.replace(day=min(billing_day, 28))
+                
+                if now >= current_due.replace(tzinfo=timezone.utc):
+                    last_fine_month = t.get("last_fine_month", "")
+                    if last_fine_month != billed_through:
+                        current_fines += fine_amount
+                        updates["fines"] = current_fines
+                        updates["last_fine_month"] = billed_through
+        
+        if updates:
+            updates["updated_at"] = now
+            await db.kiosk_tenants.update_one(
+                {"tenant_id": t["tenant_id"]},
+                {"$set": updates}
+            )
+            
+            # === AUTO WHATSAPP: Billing notifications ===
+            if (t.get("phone") or t.get("telefoon")) and t.get("status") == "active":
+                company_name_for_wa = comp.get("stamp_company_name") or comp.get("name", "") if comp else ""
+                months_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+                t_phone = t.get("phone") or t.get("telefoon", "")
+                
+                # New rent month billed
+                if "outstanding_rent" in updates and updates["outstanding_rent"] > t.get("outstanding_rent", 0):
+                    new_bt = updates.get("rent_billed_through", billed_through)
+                    try:
+                        bt_d = datetime.strptime(new_bt + "-01", "%Y-%m-%d")
+                        month_label = f"{months_nl[bt_d.month - 1]} {bt_d.year}"
+                    except Exception:
+                        month_label = new_bt
+                    wa_rent_msg = (f"Beste {t['name']},\n\n"
+                                   f"De huur voor {month_label} is gefactureerd bij {company_name_for_wa}.\n"
+                                   f"Bedrag: SRD {monthly_rent:,.2f}\n"
+                                   f"Totaal openstaand: SRD {updates['outstanding_rent']:,.2f}\n\n"
+                                   f"Gelieve voor de vervaldatum te betalen.\n\n"
+                                   f"Met vriendelijke groet,\n{company_name_for_wa}")
+                    await _send_message_auto(company_id, t_phone, wa_rent_msg, t["tenant_id"], t["name"], "new_invoice")
+                
+                # Fine applied
+                if "fines" in updates and updates["fines"] > t.get("fines", 0):
+                    added_fine = updates["fines"] - t.get("fines", 0)
+                    wa_fine_msg = (f"Beste {t['name']},\n\n"
+                                   f"Er is een boete van SRD {added_fine:,.2f} toegepast op uw account bij {company_name_for_wa}.\n"
+                                   f"Reden: Achterstallige huur niet tijdig betaald.\n"
+                                   f"Totaal boetes: SRD {updates['fines']:,.2f}\n"
+                                   f"Totaal openstaand: SRD {(updates.get('outstanding_rent', outstanding) + updates.get('service_costs', t.get('service_costs', 0)) + updates['fines']):,.2f}\n\n"
+                                   f"Gelieve zo spoedig mogelijk te betalen.\n\n"
+                                   f"Met vriendelijke groet,\n{company_name_for_wa}")
+                    await _send_message_auto(company_id, t_phone, wa_fine_msg, t["tenant_id"], t["name"], "fine_applied")
+        
+        # === AUTO POWER CUTOFF: Turn off Shelly when overdue past cutoff days ===
+        power_cutoff_days = comp.get("power_cutoff_days", 0) if comp else 0
+        if power_cutoff_days > 0 and t.get("status") == "active":
+            total_debt = (updates.get("outstanding_rent", outstanding) + 
+                         t.get("service_costs", 0) + 
+                         (updates.get("fines", current_fines)))
+            if total_debt > 0 and billed_through:
+                try:
+                    bt_dt = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+                    if billing_next_month:
+                        due_dt = (bt_dt + relativedelta(months=1)).replace(day=min(billing_day, 28))
+                    else:
+                        due_dt = bt_dt.replace(day=min(billing_day, 28))
+                    cutoff_dt = due_dt + timedelta(days=power_cutoff_days)
+                    if now >= cutoff_dt.replace(tzinfo=timezone.utc):
+                        shelly = await db.kiosk_shelly_devices.find_one(
+                            {"company_id": company_id, "apartment_id": t.get("apartment_id")}, {"_id": 0}
+                        )
+                        if shelly and shelly.get("last_status") != "off":
+                            ip = shelly["device_ip"]
+                            ch = shelly.get("channel", 0)
+                            dtype = shelly.get("device_type", "gen1")
+                            try:
+                                async with httpx.AsyncClient(timeout=5.0) as client:
+                                    if dtype == "gen2":
+                                        await client.get(f"http://{ip}/rpc/switch.set?id={ch}&on=false")
+                                    else:
+                                        await client.get(f"http://{ip}/relay/{ch}?turn=off")
+                                await db.kiosk_shelly_devices.update_one(
+                                    {"device_id": shelly["device_id"]},
+                                    {"$set": {"last_status": "off", "last_check": now, "auto_cutoff": True}}
+                                )
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+        
+        # Calculate billing details for display
+        overdue_months = []
+        current_billing_month = ""
+        if billed_through and monthly_rent > 0:
+            bt_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+            current_billing_month = billed_through
+            # Calculate how many months of rent are in outstanding
+            if outstanding > 0:
+                months_owed = int(outstanding / monthly_rent) if monthly_rent > 0 else 0
+                remainder = outstanding - (months_owed * monthly_rent)
+                if remainder > 0:
+                    months_owed += 1
+                # List the overdue months (counting back from billed_through)
+                for i in range(months_owed):
+                    m_date = bt_date - relativedelta(months=i)
+                    month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+                    m_name = month_names_nl[m_date.month - 1]
+                    overdue_months.append(f"{m_name} {m_date.year}")
+                overdue_months.reverse()
+
+        result.append({
+            "tenant_id": t["tenant_id"],
+            "name": t["name"],
+            "apartment_id": t["apartment_id"],
+            "apartment_number": t.get("apartment_number", ""),
+            "tenant_code": t.get("tenant_code", ""),
+            "email": t.get("email"),
+            "telefoon": t.get("telefoon") or t.get("phone"),
+            "phone": t.get("phone") or t.get("telefoon"),
+            "monthly_rent": monthly_rent,
+            "outstanding_rent": outstanding,
+            "service_costs": t.get("service_costs", 0),
+            "fines": current_fines,
+            "deposit_required": t.get("deposit_required", 0),
+            "deposit_paid": t.get("deposit_paid", 0),
+            "rent_billed_through": billed_through,
+            "current_billing_month": current_billing_month,
+            "overdue_months": overdue_months,
+            "status": t.get("status", "active"),
+            "created_at": t.get("created_at"),
+            "face_id_enabled": bool(t.get("face_id_enabled") and t.get("face_descriptor")),
+            "internet_cost": t.get("internet_cost", 0),
+            "internet_outstanding": updates.get("internet_outstanding", t.get("internet_outstanding", 0)),
+            "internet_plan_id": t.get("internet_plan_id"),
+            "internet_plan_name": t.get("internet_plan_name", ""),
+            "id_card_number": t.get("id_card_number"),
+            "id_card_name": t.get("id_card_name"),
+            "id_card_dob": t.get("id_card_dob"),
+        })
+    
+    return result
+
+@router.post("/admin/tenants")
+async def create_tenant(data: TenantCreate, company: dict = Depends(get_current_company)):
+    """Create a new tenant"""
+    # Verify apartment exists
+    apt = await db.kiosk_apartments.find_one({
+        "apartment_id": data.apartment_id,
+        "company_id": company["company_id"]
+    })
+    if not apt:
+        raise HTTPException(status_code=404, detail="Appartement niet gevonden")
+    
+    tenant_id = generate_uuid()
+    now = datetime.now(timezone.utc)
+    
+    # Generate tenant code if not provided
+    tenant_code = data.tenant_code
+    if not tenant_code:
+        count = await db.kiosk_tenants.count_documents({"company_id": company["company_id"]})
+        tenant_code = f"H{str(count + 1).zfill(4)}"
+    
+    tenant = {
+        "tenant_id": tenant_id,
+        "company_id": company["company_id"],
+        "name": data.name,
+        "apartment_id": data.apartment_id,
+        "apartment_number": apt["number"],
+        "tenant_code": tenant_code.upper(),
+        "email": data.email,
+        "telefoon": data.telefoon,
+        "phone": data.telefoon,
+        "monthly_rent": data.monthly_rent,
+        "outstanding_rent": data.monthly_rent,  # Start with first month rent
+        "service_costs": 0,
+        "fines": 0,
+        "deposit_required": data.deposit_required,
+        "deposit_paid": 0,
+        "rent_billed_through": now.strftime("%Y-%m"),  # Current month
+        "status": "active",
+        "id_card_number": data.id_card_number,
+        "id_card_name": data.id_card_name,
+        "id_card_dob": data.id_card_dob,
+        "id_card_raw": data.id_card_raw,
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.kiosk_tenants.insert_one(tenant)
+    
+    # Update apartment status
+    await db.kiosk_apartments.update_one(
+        {"apartment_id": data.apartment_id},
+        {"$set": {"status": "occupied", "updated_at": now}}
+    )
+    
+    # Auto-create lease if dates provided
+    lease_id = None
+    if data.lease_start_date and data.lease_end_date:
+        lease_id = generate_uuid()
+        lease = {
+            "lease_id": lease_id,
+            "company_id": company["company_id"],
+            "tenant_id": tenant_id,
+            "tenant_name": data.name,
+            "apartment_id": data.apartment_id,
+            "apartment_number": apt["number"],
+            "start_date": data.lease_start_date,
+            "end_date": data.lease_end_date,
+            "monthly_rent": data.monthly_rent,
+            "voorwaarden": "",
+            "status": "active",
+            "created_at": now,
+            "updated_at": now,
+        }
+        await db.kiosk_leases.insert_one(lease)
+    
+    return {"tenant_id": tenant_id, "tenant_code": tenant_code, "lease_id": lease_id, "message": "Huurder aangemaakt"}
+
+@router.put("/admin/tenants/{tenant_id}")
+async def update_tenant(tenant_id: str, data: TenantUpdate, company: dict = Depends(get_current_company)):
+    """Update a tenant"""
+    tenant = await db.kiosk_tenants.find_one({
+        "tenant_id": tenant_id,
+        "company_id": company["company_id"]
+    })
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    
+    update_data = {k: v for k, v in data.dict().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    # If apartment changed, update apartment number and statuses
+    if "apartment_id" in update_data:
+        apt = await db.kiosk_apartments.find_one({"apartment_id": update_data["apartment_id"]})
+        if apt:
+            update_data["apartment_number"] = apt["number"]
+    
+    # If tenant is being deactivated, free up the apartment
+    if update_data.get("status") == "inactive" and tenant.get("apartment_id"):
+        await db.kiosk_apartments.update_one(
+            {"apartment_id": tenant["apartment_id"]},
+            {"$set": {"status": "available", "updated_at": datetime.now(timezone.utc)}}
+        )
+    
+    await db.kiosk_tenants.update_one(
+        {"tenant_id": tenant_id},
+        {"$set": update_data}
+    )
+    return {"message": "Huurder bijgewerkt"}
+
+@router.delete("/admin/tenants/{tenant_id}")
+async def delete_tenant(tenant_id: str, company: dict = Depends(get_current_company)):
+    """Delete/deactivate a tenant"""
+    tenant = await db.kiosk_tenants.find_one({
+        "tenant_id": tenant_id,
+        "company_id": company["company_id"]
+    })
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    
+    # Deactivate instead of delete
+    await db.kiosk_tenants.update_one(
+        {"tenant_id": tenant_id},
+        {"$set": {"status": "inactive", "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    # Update apartment status
+    await db.kiosk_apartments.update_one(
+        {"apartment_id": tenant["apartment_id"]},
+        {"$set": {"status": "available", "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    # Delete linked leases
+    await db.kiosk_leases.delete_many({"tenant_id": tenant_id, "company_id": company["company_id"]})
+    
+    return {"message": "Huurder gedeactiveerd"}
+
+# Payments
+@router.get("/admin/payments")
+async def list_payments(
+    company: dict = Depends(get_current_company),
+    month: Optional[int] = None,
+    year: Optional[int] = None
+):
+    """List all payments with optional month filter"""
+    query = {"company_id": company["company_id"]}
+    
+    if month and year:
+        start_date = datetime(year, month, 1, tzinfo=timezone.utc)
+        if month == 12:
+            end_date = datetime(year + 1, 1, 1, tzinfo=timezone.utc)
+        else:
+            end_date = datetime(year, month + 1, 1, tzinfo=timezone.utc)
+        query["created_at"] = {"$gte": start_date, "$lt": end_date}
+    
+    payments = await db.kiosk_payments.find(query).sort("created_at", -1).to_list(1000)
+    return [{
+        "payment_id": p["payment_id"],
+        "tenant_name": p.get("tenant_name"),
+        "tenant_code": p.get("tenant_code"),
+        "apartment_number": p.get("apartment_number"),
+        "amount": p["amount"],
+        "payment_type": p["payment_type"],
+        "payment_method": p.get("payment_method", "cash"),
+        "description": p.get("description"),
+        "rent_month": p.get("rent_month"),
+        "covered_months": p.get("covered_months", []),
+        "remaining_rent": p.get("remaining_rent"),
+        "remaining_service": p.get("remaining_service"),
+        "remaining_fines": p.get("remaining_fines"),
+        "remaining_internet": p.get("remaining_internet"),
+        "kwitantie_nummer": p.get("kwitantie_nummer"),
+        "created_at": p["created_at"]
+    } for p in payments]
+
+@router.get("/admin/payments/{payment_id}")
+async def get_payment(payment_id: str, company: dict = Depends(get_current_company)):
+    """Get single payment details"""
+    payment = await db.kiosk_payments.find_one({
+        "payment_id": payment_id,
+        "company_id": company["company_id"]
+    })
+    if not payment:
+        raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    
+    return {
+        "payment_id": payment["payment_id"],
+        "tenant_name": payment.get("tenant_name"),
+        "tenant_code": payment.get("tenant_code"),
+        "apartment_number": payment.get("apartment_number"),
+        "amount": payment["amount"],
+        "payment_type": payment["payment_type"],
+        "payment_method": payment.get("payment_method", "cash"),
+        "description": payment.get("description"),
+        "rent_month": payment.get("rent_month"),
+        "covered_months": payment.get("covered_months", []),
+        "remaining_rent": payment.get("remaining_rent"),
+        "remaining_service": payment.get("remaining_service"),
+        "remaining_fines": payment.get("remaining_fines"),
+        "remaining_internet": payment.get("remaining_internet"),
+        "kwitantie_nummer": payment.get("kwitantie_nummer"),
+        "created_at": payment["created_at"]
+    }
+
+
+@router.get("/admin/payments/{payment_id}/receipt")
+async def generate_receipt(payment_id: str, token: Optional[str] = None):
+    """Generate printable receipt/kwitantie HTML"""
+    if not token:
+        raise HTTPException(status_code=401, detail="Token vereist")
+    try:
+        payload = decode_token(token)
+        company_id = payload["company_id"]
+    except Exception:
+        raise HTTPException(status_code=401, detail="Ongeldig token")
+    
+    payment = await db.kiosk_payments.find_one({"payment_id": payment_id, "company_id": company_id})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    
+    comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
+    
+    # Use stamp settings from Instellingen, fallback to company name
+    stamp_name = comp.get("stamp_company_name") or comp.get("name", "Onbekend")
+    stamp_address = comp.get("stamp_address") or comp.get("adres") or "Paramaribo, Suriname"
+    stamp_phone = comp.get("stamp_phone") or comp.get("telefoon") or ""
+    stamp_whatsapp = comp.get("stamp_whatsapp") or ""
+    company_email = comp.get("email", "")
+    
+    # Stamp initials
+    initials = "".join([w[0] for w in stamp_name.split()[:3] if w]).upper()
+    
+    tenant_name = payment.get("tenant_name", "Onbekend")
+    tenant_code = payment.get("tenant_code", "")
+    apartment_number = payment.get("apartment_number", "")
+    amount = payment.get("amount", 0)
+    payment_type = payment.get("payment_type", "")
+    payment_method = payment.get("payment_method", "cash")
+    description = payment.get("description", "")
+    rent_month = payment.get("rent_month", "")
+    kwitantie_nummer = payment.get("kwitantie_nummer", "")
+    created_at = payment.get("created_at")
+    
+    # Format date
+    if created_at:
+        if isinstance(created_at, str):
+            created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+        months_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+        date_fmt = f"{created_at.day} {months_nl[created_at.month-1]} {created_at.year}"
+        time_fmt = created_at.strftime("%H:%M")
+    else:
+        date_fmt = "-"
+        time_fmt = ""
+    
+    # Payment type label
+    type_labels = {
+        "monthly_rent": "Maandhuur",
+        "service_costs": "Servicekosten",
+        "deposit": "Borg",
+        "fine": "Boete",
+        "other": "Overig"
+    }
+    type_label = type_labels.get(payment_type, payment_type.replace("_", " ").title())
+    
+    method_labels = {"cash": "Contant", "bank": "Bank", "pin": "PIN", "card": "Pinpas (SumUp)", "mope": "Mope", "uni5pay": "Uni5Pay"}
+    method_label = method_labels.get(payment_method, payment_method)
+    
+    # Format rent month
+    rent_month_label = ""
+    if rent_month:
+        try:
+            y, m = rent_month.split("-")
+            months_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+            rent_month_label = f"{months_nl[int(m)-1]} {y}"
+        except Exception:
+            rent_month_label = rent_month
+
+    html = f"""<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>Kwitantie {kwitantie_nummer}</title>
+<style>
+  @page {{ size: A5; margin: 15mm; }}
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{
+    font-family: 'Georgia', 'Times New Roman', serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: #1a1a1a;
+    max-width: 160mm;
+    margin: 0 auto;
+    padding: 25px 30px;
+    background: #fff;
+  }}
+  .header {{
+    border-bottom: 2px solid #2c3e50;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }}
+  .header-left {{ flex: 1; }}
+  .company-name {{
+    font-size: 16pt;
+    font-weight: bold;
+    color: #2c3e50;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }}
+  .company-info {{
+    font-size: 8pt;
+    color: #7f8c8d;
+    margin-top: 4px;
+    line-height: 1.4;
+  }}
+  .receipt-title {{
+    text-align: center;
+    margin-bottom: 20px;
+  }}
+  .receipt-title h1 {{
+    font-size: 18pt;
+    color: #2c3e50;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }}
+  .receipt-number {{
+    font-size: 10pt;
+    color: #e67e22;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    margin-top: 4px;
+  }}
+  .details-table {{
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }}
+  .details-table td {{
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    font-size: 10pt;
+  }}
+  .details-table td:first-child {{
+    color: #7f8c8d;
+    width: 35%;
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }}
+  .details-table td:last-child {{
+    font-weight: 600;
+    color: #1a1a1a;
+  }}
+  .amount-row {{
+    background: #f8f9fa;
+    border-top: 2px solid #2c3e50 !important;
+    border-bottom: 2px solid #2c3e50 !important;
+  }}
+  .amount-row td {{
+    padding: 12px;
+    font-size: 14pt !important;
+    font-weight: bold !important;
+  }}
+  .amount-row td:last-child {{
+    color: #27ae60;
+    text-align: right;
+    font-size: 16pt !important;
+  }}
+  .stamp-section {{
+    text-align: center;
+    margin: 25px 0 15px;
+  }}
+  .stamp-rect {{
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 2.5px solid #991b1b;
+    padding: 10px 16px;
+    transform: rotate(-5deg);
+    opacity: 0.8;
+    background: rgba(255,255,255,0.5);
+  }}
+  .stamp-house {{
+    flex-shrink: 0;
+  }}
+  .stamp-info p {{
+    margin: 0;
+    line-height: 1.4;
+  }}
+  .stamp-info .stamp-name {{
+    color: #991b1b;
+    font-weight: bold;
+    font-size: 9pt;
+  }}
+  .stamp-info .stamp-detail {{
+    color: #1a1a1a;
+    font-size: 8pt;
+    font-weight: 500;
+  }}
+  .footer {{
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #ddd;
+    font-size: 7.5pt;
+    color: #aaa;
+    text-align: center;
+    line-height: 1.4;
+  }}
+  .print-bar {{
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    background: #2c3e50;
+    padding: 10px 20px;
+    text-align: center;
+    z-index: 1000;
+  }}
+  .print-bar button {{
+    background: #e67e22;
+    color: white;
+    border: none;
+    padding: 8px 30px;
+    font-size: 13px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin: 0 5px;
+  }}
+  .print-bar button:hover {{ background: #d35400; }}
+  @media print {{
+    .print-bar {{ display: none; }}
+    body {{ padding: 0; margin: 0; }}
+  }}
+</style>
+</head>
+<body>
+<div class="print-bar">
+  <button onclick="window.print()">Afdrukken / Print</button>
+  <button onclick="window.close()">Sluiten</button>
+</div>
+
+<div style="margin-top: 50px;">
+
+<div class="header">
+  <div class="header-left">
+    <div class="company-name">{stamp_name}</div>
+    <div class="company-info">
+      {stamp_address}<br/>
+      {('Tel: ' + stamp_phone) if stamp_phone else ''}{(' | WhatsApp: ' + stamp_whatsapp) if stamp_whatsapp else ''}<br/>
+      {company_email}
+    </div>
+  </div>
+</div>
+
+<div class="receipt-title">
+  <h1>Kwitantie</h1>
+  <div class="receipt-number">{kwitantie_nummer}</div>
+</div>
+
+<table class="details-table">
+  <tr>
+    <td>Datum</td>
+    <td>{date_fmt}{(' om ' + time_fmt) if time_fmt else ''}</td>
+  </tr>
+  <tr>
+    <td>Huurder</td>
+    <td>{tenant_name} {('(' + tenant_code + ')') if tenant_code else ''}</td>
+  </tr>
+  <tr>
+    <td>Appartement</td>
+    <td>{apartment_number}</td>
+  </tr>
+  <tr>
+    <td>Type betaling</td>
+    <td>{type_label}</td>
+  </tr>
+  {f'<tr><td>Huurmaand</td><td>{rent_month_label}</td></tr>' if rent_month_label else ''}
+  <tr>
+    <td>Betalingswijze</td>
+    <td>{method_label}</td>
+  </tr>
+  {f'<tr><td>Omschrijving</td><td>{description}</td></tr>' if description else ''}
+  <tr class="amount-row">
+    <td>Ontvangen bedrag</td>
+    <td>SRD {amount:,.2f}</td>
+  </tr>
+</table>
+
+<div class="stamp-section">
+  <div class="stamp-rect">
+    <svg class="stamp-house" width="40" height="36" viewBox="0 0 52 48" fill="none">
+      <polygon points="12,18 28,6 44,18" fill="#991b1b"/>
+      <rect x="14" y="18" width="28" height="20" fill="#991b1b"/>
+      <rect x="18" y="22" width="6" height="6" fill="white"/>
+      <rect x="28" y="22" width="6" height="6" fill="white"/>
+      <polygon points="2,28 16,18 30,28" fill="#7f1d1d"/>
+      <rect x="4" y="28" width="24" height="16" fill="#7f1d1d"/>
+      <rect x="8" y="31" width="5" height="5" fill="white"/>
+      <rect x="16" y="31" width="5" height="5" fill="white"/>
+      <rect x="8" y="38" width="5" height="6" fill="white"/>
+      <rect x="16" y="38" width="5" height="6" fill="white"/>
+    </svg>
+    <div class="stamp-info">
+      <p class="stamp-name">{stamp_name}</p>
+      <p class="stamp-detail">{stamp_address}</p>
+      <p class="stamp-detail">Tel : {stamp_phone}</p>
+      {f'<p class="stamp-detail">Whatsapp : {stamp_whatsapp}</p>' if stamp_whatsapp else ''}
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  {stamp_name} &bull; {stamp_address}<br/>
+  Kwitantie {kwitantie_nummer} &bull; Betaling-ID: {payment_id}
+</div>
+
+</div>
+</body>
+</html>"""
+    
+    return Response(content=html, media_type="text/html")
+
+
+@router.delete("/admin/payments/{payment_id}")
+async def delete_payment(payment_id: str, company: dict = Depends(get_current_company)):
+    result = await db.kiosk_payments.delete_one({"payment_id": payment_id, "company_id": company["company_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    return {"message": "Betaling verwijderd"}
+
+
+@router.post("/admin/payments/register")
+async def register_manual_payment(data: PaymentCreate, company: dict = Depends(get_current_company)):
+    """Register a manual/cash payment from admin dashboard"""
+    company_id = company["company_id"]
+    tenant = await db.kiosk_tenants.find_one({"company_id": company_id, "tenant_id": data.tenant_id})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+
+    payment_id = generate_uuid()
+    now = datetime.now(timezone.utc)
+    count = await db.kiosk_payments.count_documents({"company_id": company_id})
+    kwitantie_nummer = f"KW{now.year}-{str(count + 1).zfill(5)}"
+
+    # Covered months calculation for rent
+    covered_months = []
+    if data.payment_type in ["rent", "partial_rent", "monthly_rent"]:
+        monthly_rent = tenant.get("monthly_rent", 0)
+        outstanding = tenant.get("outstanding_rent", 0)
+        billed_through = tenant.get("rent_billed_through", "")
+        if billed_through and monthly_rent > 0 and outstanding > 0:
+            bt_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+            months_owed = int(outstanding / monthly_rent) if monthly_rent > 0 else 0
+            remainder = outstanding - (months_owed * monthly_rent)
+            if remainder > 0:
+                months_owed += 1
+            month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+            all_overdue = []
+            for i in range(months_owed):
+                m_date = bt_date - relativedelta(months=i)
+                all_overdue.append({"label": f"{month_names_nl[m_date.month - 1]} {m_date.year}", "key": m_date.strftime("%Y-%m")})
+            all_overdue.reverse()
+            pay_amount = data.amount
+            for m in all_overdue:
+                if pay_amount >= monthly_rent:
+                    covered_months.append(m["label"])
+                    pay_amount -= monthly_rent
+                elif pay_amount > 0:
+                    covered_months.append(m["label"] + " (gedeeltelijk)")
+                    pay_amount = 0
+
+    payment = {
+        "payment_id": payment_id,
+        "company_id": company_id,
+        "tenant_id": data.tenant_id,
+        "tenant_name": tenant["name"],
+        "tenant_code": tenant.get("tenant_code", ""),
+        "apartment_number": tenant.get("apartment_number", ""),
+        "amount": data.amount,
+        "payment_type": data.payment_type,
+        "payment_method": data.payment_method or "cash",
+        "description": data.description or "Handmatige betaling",
+        "rent_month": data.rent_month,
+        "covered_months": covered_months,
+        "kwitantie_nummer": kwitantie_nummer,
+        "created_at": now
+    }
+    await db.kiosk_payments.insert_one(payment)
+
+    # Update tenant balances
+    update_fields = {}
+    if data.payment_type in ["rent", "partial_rent"]:
+        update_fields["outstanding_rent"] = max(0, tenant.get("outstanding_rent", 0) - data.amount)
+    elif data.payment_type == "service_costs":
+        update_fields["service_costs"] = max(0, tenant.get("service_costs", 0) - data.amount)
+    elif data.payment_type == "fines":
+        update_fields["fines"] = max(0, tenant.get("fines", 0) - data.amount)
+    elif data.payment_type == "internet":
+        update_fields["internet_outstanding"] = max(0, tenant.get("internet_outstanding", 0) - data.amount)
+    elif data.payment_type == "deposit":
+        update_fields["deposit_paid"] = tenant.get("deposit_paid", 0) + data.amount
+    if update_fields:
+        update_fields["updated_at"] = now
+        await db.kiosk_tenants.update_one({"tenant_id": data.tenant_id}, {"$set": update_fields})
+
+    # Refresh balances
+    updated_tenant = await db.kiosk_tenants.find_one({"tenant_id": data.tenant_id})
+    remaining_rent = updated_tenant.get("outstanding_rent", 0) if updated_tenant else 0
+    remaining_service = updated_tenant.get("service_costs", 0) if updated_tenant else 0
+    remaining_fines = updated_tenant.get("fines", 0) if updated_tenant else 0
+    remaining_internet = updated_tenant.get("internet_outstanding", 0) if updated_tenant else 0
+
+    # Auto WhatsApp
+    total_remaining = remaining_rent + remaining_service + remaining_fines + remaining_internet
+    comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
+    comp_name = (comp.get("stamp_company_name") or comp.get("name", "")) if comp else ""
+    type_labels = {"rent": "Huurbetaling", "partial_rent": "Gedeeltelijke betaling", "service_costs": "Servicekosten", "fines": "Boetes", "deposit": "Borg", "internet": "Internet"}
+    type_label = type_labels.get(data.payment_type, data.payment_type)
+    covered_str = ", ".join(covered_months) if covered_months else ""
+
+    if total_remaining <= 0:
+        wa_msg = (f"Beste {tenant['name']},\n\n"
+                  f"Uw betaling van SRD {data.amount:,.2f} ({type_label}) is ontvangen.\n"
+                  f"Kwitantie: {kwitantie_nummer}\n"
+                  f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
+                  f"Uw saldo is nu VOLLEDIG VOLDAAN.\n\nBedankt voor uw betaling!\n{comp_name}")
+    else:
+        wa_msg = (f"Beste {tenant['name']},\n\n"
+                  f"Uw betaling van SRD {data.amount:,.2f} ({type_label}) is ontvangen.\n"
+                  f"Kwitantie: {kwitantie_nummer}\n"
+                  f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
+                  f"Resterend saldo: SRD {total_remaining:,.2f}\n\nMet vriendelijke groet,\n{comp_name}")
+
+    if tenant.get("phone") or tenant.get("telefoon"):
+        tenant_phone = tenant.get("phone") or tenant.get("telefoon", "")
+        await _send_message_auto(company_id, tenant_phone, wa_msg, data.tenant_id, tenant["name"], "payment_confirmation")
+
+    return {
+        "payment_id": payment_id,
+        "kwitantie_nummer": kwitantie_nummer,
+        "amount": data.amount,
+        "payment_type": data.payment_type,
+        "payment_method": data.payment_method,
+        "tenant_name": tenant["name"],
+        "apartment_number": tenant.get("apartment_number", ""),
+        "created_at": now.isoformat(),
+        "remaining_rent": remaining_rent,
+        "remaining_service": remaining_service,
+        "remaining_fines": remaining_fines,
+        "remaining_internet": remaining_internet,
+        "whatsapp_sent": bool(tenant.get("phone") or tenant.get("telefoon"))
+    }
+
+
+
