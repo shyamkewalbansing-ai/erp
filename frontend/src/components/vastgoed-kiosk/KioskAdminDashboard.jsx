@@ -3033,13 +3033,14 @@ function MeterReadingsSection({ apartments, tenants, token, onRefresh }) {
     return { usage, cost, unit, tariff };
   };
 
+  const [chargeResult, setChargeResult] = useState(null);
+
   const handleCharge = async (aptId, aptNr) => {
     if (!confirm(`Nutskosten doorberekenen aan huurder van app. ${aptNr}?`)) return;
     setCharging(aptId);
     try {
       const res = await axios.post(`${API}/admin/meter-readings/charge/${aptId}`, {}, { headers: { Authorization: `Bearer ${token}` } });
-      const d = res.data;
-      alert(`Doorberekend: SRD ${d.total_charged.toFixed(2)} toegevoegd aan servicekosten.\n(EBS: SRD ${d.ebs_cost.toFixed(2)} + SWM: SRD ${d.swm_cost.toFixed(2)})`);
+      setChargeResult({ ...res.data, apartment_number: aptNr });
       loadReadings();
       if (onRefresh) onRefresh();
     } catch (err) { alert(err.response?.data?.detail || 'Fout bij doorberekenen'); }
@@ -3294,6 +3295,59 @@ function MeterReadingsSection({ apartments, tenants, token, onRefresh }) {
                 className="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50"
               >
                 {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Opslaan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Charge Result Modal */}
+      {chargeResult && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setChargeResult(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-slate-200 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900" data-testid="charge-result-title">Doorberekend</h3>
+                <p className="text-sm text-slate-500">App. {chargeResult.apartment_number}</p>
+              </div>
+            </div>
+            <div className="p-5 space-y-3">
+              {chargeResult.ebs_cost > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-600">EBS (stroom)</span>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-slate-900">{formatSRD(chargeResult.ebs_cost)}</p>
+                    <p className="text-xs text-slate-400">{chargeResult.ebs_usage?.toFixed(0)} kWh</p>
+                  </div>
+                </div>
+              )}
+              {chargeResult.swm_cost > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-slate-600">SWM (water)</span>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-slate-900">{formatSRD(chargeResult.swm_cost)}</p>
+                    <p className="text-xs text-slate-400">{chargeResult.swm_usage?.toFixed(1)} m³</p>
+                  </div>
+                </div>
+              )}
+              <div className="border-t border-slate-200 pt-3 flex justify-between items-center">
+                <span className="text-sm font-bold text-slate-900">Totaal toegevoegd</span>
+                <span className="text-lg font-bold text-orange-600">{formatSRD(chargeResult.total_charged)}</span>
+              </div>
+              <div className="bg-slate-50 rounded-lg p-3 text-sm text-slate-600">
+                Nieuwe servicekosten huurder: <span className="font-bold text-slate-900">{formatSRD(chargeResult.new_service_costs)}</span>
+              </div>
+            </div>
+            <div className="p-5 border-t border-slate-200">
+              <button
+                onClick={() => setChargeResult(null)}
+                data-testid="charge-result-close"
+                className="w-full px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition"
+              >
+                Sluiten
               </button>
             </div>
           </div>
