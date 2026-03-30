@@ -3195,7 +3195,7 @@ function SmtpSettings({ company, token, onRefresh }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await axios.put(`${API}/admin/company`, {
+      await axios.put(`${API}/auth/settings`, {
         smtp_host: smtpHost, smtp_port: parseInt(smtpPort), smtp_email: smtpEmail,
         smtp_password: smtpPassword, smtp_enabled: smtpEnabled,
       }, { headers: { Authorization: `Bearer ${token}` } });
