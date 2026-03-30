@@ -2572,7 +2572,7 @@ function EmployeesTab({ token, formatSRD }) {
             </div>
             <p className="text-sm text-slate-500">Totaal Maandloon</p>
           </div>
-          <p className="text-2xl font-bold text-purple-600">{formatSRD(totalLoon)}</p>
+          <p className="text-2xl font-bold text-slate-900">{formatSRD(totalLoon)}</p>
         </div>
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <div className="flex items-center gap-3 mb-2">
