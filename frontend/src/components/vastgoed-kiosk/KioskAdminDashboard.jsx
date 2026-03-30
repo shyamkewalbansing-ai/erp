@@ -2749,7 +2749,7 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
       </div>
 
       {subTab === 'meters' ? (
-        <MeterReadingsSection apartments={apartments} tenants={tenants} token={token} />
+        <MeterReadingsSection apartments={apartments} tenants={tenants} token={token} onRefresh={onRefresh} />
       ) : (
       <>
       {/* Main Panel - Realistic circuit breaker box */}
@@ -2969,7 +2969,7 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
   );
 }
 
-function MeterReadingsSection({ apartments, tenants, token }) {
+function MeterReadingsSection({ apartments, tenants, token, onRefresh }) {
   const [readings, setReadings] = useState([]);
   const [ebsTariff, setEbsTariff] = useState(2.28);
   const [swmTariff, setSwmTariff] = useState(35.26);
@@ -3041,6 +3041,7 @@ function MeterReadingsSection({ apartments, tenants, token }) {
       const d = res.data;
       alert(`Doorberekend: SRD ${d.total_charged.toFixed(2)} toegevoegd aan servicekosten.\n(EBS: SRD ${d.ebs_cost.toFixed(2)} + SWM: SRD ${d.swm_cost.toFixed(2)})`);
       loadReadings();
+      if (onRefresh) onRefresh();
     } catch (err) { alert(err.response?.data?.detail || 'Fout bij doorberekenen'); }
     setCharging(null);
   };
