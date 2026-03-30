@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Banknote, Droplets, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Banknote, Droplets, AlertCircle, CheckCircle, Wifi } from 'lucide-react';
 
 function formatSRD(amount) {
   return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -9,6 +9,7 @@ const PAYMENT_TYPES = [
   { id: 'rent', label: 'Huur', icon: Banknote, desc: 'Openstaand huurbedrag' },
   { id: 'service_costs', label: 'Servicekosten', icon: Droplets, desc: 'Water, stroom en overige' },
   { id: 'fines', label: 'Boetes', icon: AlertCircle, desc: 'Openstaande boetes' },
+  { id: 'internet', label: 'Internet', icon: Wifi, desc: 'Internetaansluiting' },
 ];
 
 export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
@@ -18,7 +19,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
   if (!tenant) return null;
 
   const getAmountForType = (type) => {
-    switch (type) { case 'rent': return tenant.outstanding_rent || 0; case 'service_costs': return tenant.service_costs || 0; case 'fines': return tenant.fines || 0; default: return 0; }
+    switch (type) { case 'rent': return tenant.outstanding_rent || 0; case 'service_costs': return tenant.service_costs || 0; case 'fines': return tenant.fines || 0; case 'internet': return tenant.internet_outstanding || 0; default: return 0; }
   };
   const isTypeDisabled = (type) => getAmountForType(type) <= 0;
   const toggleType = (typeId) => {
@@ -28,9 +29,9 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
     setCustomAmount('');
   };
   const selectedTotal = [...selectedTypes].reduce((sum, t) => sum + getAmountForType(t), 0);
-  const buildDescription = () => { const l = []; if (selectedTypes.has('rent')) l.push('Huur'); if (selectedTypes.has('service_costs')) l.push('Servicekosten'); if (selectedTypes.has('fines')) l.push('Boetes'); return l.join(' + '); };
+  const buildDescription = () => { const l = []; if (selectedTypes.has('rent')) l.push('Huur'); if (selectedTypes.has('service_costs')) l.push('Servicekosten'); if (selectedTypes.has('fines')) l.push('Boetes'); if (selectedTypes.has('internet')) l.push('Internet'); return l.join(' + '); };
   const getPaymentType = () => { if (selectedTypes.size === 1) return [...selectedTypes][0]; return 'rent'; };
-  const totalDebt = (tenant.outstanding_rent || 0) + (tenant.service_costs || 0) + (tenant.fines || 0);
+  const totalDebt = (tenant.outstanding_rent || 0) + (tenant.service_costs || 0) + (tenant.fines || 0) + (tenant.internet_outstanding || 0);
   const selectAll = () => { const all = new Set(); PAYMENT_TYPES.forEach(t => { if (!isTypeDisabled(t.id)) all.add(t.id); }); setSelectedTypes(all); setCustomAmount(''); };
   const allSelected = PAYMENT_TYPES.filter(t => !isTypeDisabled(t.id)).every(t => selectedTypes.has(t.id));
 

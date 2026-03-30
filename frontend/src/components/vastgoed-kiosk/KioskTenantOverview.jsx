@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, User, CreditCard, Wallet, FileText, CheckCircle, Home, Clock, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, User, CreditCard, Wallet, FileText, CheckCircle, Home, Clock, X, Wifi } from 'lucide-react';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
@@ -18,7 +18,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
 
   if (!tenant) return null;
 
-  const total = (tenant.outstanding_rent || 0) + (tenant.service_costs || 0) + (tenant.fines || 0);
+  const total = (tenant.outstanding_rent || 0) + (tenant.service_costs || 0) + (tenant.fines || 0) + (tenant.internet_outstanding || 0);
   const hasDebt = total > 0;
 
   const loadHistory = async () => {
@@ -36,6 +36,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
     { label: 'Openstaande huur', value: tenant.outstanding_rent || 0, icon: Wallet, highlight: true },
     { label: 'Servicekosten', value: tenant.service_costs || 0, icon: FileText },
     { label: 'Boetes', value: tenant.fines || 0, icon: FileText },
+    { label: 'Internet', value: tenant.internet_outstanding || 0, icon: Wifi },
   ];
 
   if (variant === 'huurder') {

@@ -406,6 +406,7 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
     { icon: DollarSign, label: 'Openstaande Huur', value: formatSRD(dashboard.total_outstanding) },
     { icon: FileText, label: 'Open Servicekosten', value: formatSRD(dashboard.total_service_costs) },
     { icon: AlertTriangle, label: 'Open Boetes', value: formatSRD(dashboard.total_fines) },
+    { icon: Wifi, label: 'Open Internet', value: formatSRD(dashboard.total_internet || 0) },
     { icon: CreditCard, label: 'Ontvangen (maand)', value: formatSRD(dashboard.total_received_month) },
   ];
 

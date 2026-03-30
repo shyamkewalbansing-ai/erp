@@ -6,7 +6,7 @@ import axios from 'axios';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 const PRINT_SERVER_URL = 'http://localhost:5555';
 
-const TYPE_LABELS = { rent: 'Huurbetaling', monthly_rent: 'Huurbetaling', partial_rent: 'Gedeelt. huurbetaling', service_costs: 'Servicekosten', fines: 'Boetes', deposit: 'Borgsom' };
+const TYPE_LABELS = { rent: 'Huurbetaling', monthly_rent: 'Huurbetaling', partial_rent: 'Gedeelt. huurbetaling', service_costs: 'Servicekosten', fines: 'Boetes', deposit: 'Borgsom', internet: 'Internet' };
 const METHOD_LABELS = { cash: 'Contant', card: 'Pinpas', mope: 'Mope', bank: 'Bank' };
 
 function formatSRD(v) {
@@ -139,7 +139,7 @@ export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) 
     try {
       const hc = await fetch(`${PRINT_SERVER_URL}/health`, { method: 'GET', mode: 'cors' }).catch(() => null);
       if (hc?.ok) {
-        const rem = (payment.remaining_rent || 0) + (payment.remaining_service || 0) + (payment.remaining_fines || 0);
+        const rem = (payment.remaining_rent || 0) + (payment.remaining_service || 0) + (payment.remaining_fines || 0) + (payment.remaining_internet || 0);
         await fetch(`${PRINT_SERVER_URL}/print`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -166,7 +166,8 @@ export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) 
   const remainingRent = payment.remaining_rent ?? 0;
   const remainingService = payment.remaining_service ?? 0;
   const remainingFines = payment.remaining_fines ?? 0;
-  const totalRemaining = remainingRent + remainingService + remainingFines;
+  const remainingInternet = payment.remaining_internet ?? 0;
+  const totalRemaining = remainingRent + remainingService + remainingFines + remainingInternet;
   const allPaid = totalRemaining <= 0;
 
   return (
@@ -286,6 +287,7 @@ export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) 
                     { label: 'Openstaande huur', value: formatSRD(remainingRent), green: remainingRent <= 0 },
                     { label: 'Servicekosten', value: formatSRD(remainingService), green: remainingService <= 0 },
                     { label: 'Boetes', value: formatSRD(remainingFines), green: remainingFines <= 0 },
+                    { label: 'Internet', value: formatSRD(remainingInternet), green: remainingInternet <= 0 },
                   ].map((row, i) => (
                     <div key={i} className="flex items-center justify-between" style={{
                       padding: 'clamp(8px, 1.2vh, 14px) clamp(14px, 1.8vw, 24px)',

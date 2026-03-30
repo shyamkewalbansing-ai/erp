@@ -10,6 +10,7 @@ const TYPE_LABELS = {
   fines: 'Boetes / Achterstand',
   fine: 'Boetes / Achterstand',
   deposit: 'Borgsom',
+  internet: 'Internet',
 };
 
 const METHOD_LABELS = {
@@ -45,7 +46,8 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
   const remainingRent = payment.remaining_rent ?? (tenant?.outstanding_rent || 0);
   const remainingService = payment.remaining_service ?? (tenant?.service_costs || 0);
   const remainingFines = payment.remaining_fines ?? (tenant?.fines || 0);
-  const totalRemaining = remainingRent + remainingService + remainingFines;
+  const remainingInternet = payment.remaining_internet ?? (tenant?.internet_outstanding || 0);
+  const totalRemaining = remainingRent + remainingService + remainingFines + remainingInternet;
 
   const font = "'Courier New', 'Courier', monospace";
   // Width: 80mm for print, scaled for preview
@@ -162,6 +164,7 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
             {remainingRent > 0 && row('  Huur', formatSRD(remainingRent).replace('SRD ', ''), false, '11px')}
             {remainingService > 0 && row('  Servicekosten', formatSRD(remainingService).replace('SRD ', ''), false, '11px')}
             {remainingFines > 0 && row('  Boetes', formatSRD(remainingFines).replace('SRD ', ''), false, '11px')}
+            {remainingInternet > 0 && row('  Internet', formatSRD(remainingInternet).replace('SRD ', ''), false, '11px')}
             {solidLine()}
             {row('OPENSTAAND', formatSRD(totalRemaining), true, '13px')}
           </>

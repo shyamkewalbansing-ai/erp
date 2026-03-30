@@ -1132,6 +1132,9 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
     elif data.payment_type == "fines":
         new_fines = max(0, tenant.get("fines", 0) - data.amount)
         update_fields["fines"] = new_fines
+    elif data.payment_type == "internet":
+        new_internet = max(0, tenant.get("internet_outstanding", 0) - data.amount)
+        update_fields["internet_outstanding"] = new_internet
     elif data.payment_type == "deposit":
         new_deposit = tenant.get("deposit_paid", 0) + data.amount
         update_fields["deposit_paid"] = new_deposit
@@ -1148,9 +1151,10 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
     remaining_rent = updated_tenant.get("outstanding_rent", 0) if updated_tenant else 0
     remaining_service = updated_tenant.get("service_costs", 0) if updated_tenant else 0
     remaining_fines = updated_tenant.get("fines", 0) if updated_tenant else 0
+    remaining_internet = updated_tenant.get("internet_outstanding", 0) if updated_tenant else 0
     
     # === AUTO WHATSAPP: Payment confirmation ===
-    total_remaining = remaining_rent + remaining_service + remaining_fines
+    total_remaining = remaining_rent + remaining_service + remaining_fines + remaining_internet
     comp_name = ""
     try:
         c = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
@@ -1158,7 +1162,7 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
     except Exception:
         pass
     
-    type_labels = {"rent": "Huurbetaling", "monthly_rent": "Huurbetaling", "partial_rent": "Gedeeltelijke betaling", "service_costs": "Servicekosten", "fines": "Boetes", "deposit": "Borg"}
+    type_labels = {"rent": "Huurbetaling", "monthly_rent": "Huurbetaling", "partial_rent": "Gedeeltelijke betaling", "service_costs": "Servicekosten", "fines": "Boetes", "deposit": "Borg", "internet": "Internet"}
     type_label = type_labels.get(data.payment_type, data.payment_type)
     covered_str = ", ".join(covered_months) if covered_months else ""
     
@@ -1196,7 +1200,8 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
         "created_at": now.isoformat(),
         "remaining_rent": remaining_rent,
         "remaining_service": remaining_service,
-        "remaining_fines": remaining_fines
+        "remaining_fines": remaining_fines,
+        "remaining_internet": remaining_internet
     }
 
 # ============== ADMIN ENDPOINTS (authenticated) ==============
@@ -1214,6 +1219,7 @@ async def get_dashboard(company: dict = Depends(get_current_company)):
     total_outstanding = sum(t.get("outstanding_rent", 0) for t in tenants)
     total_service_costs = sum(t.get("service_costs", 0) for t in tenants)
     total_fines = sum(t.get("fines", 0) for t in tenants)
+    total_internet = sum(t.get("internet_outstanding", 0) for t in tenants)
     
     # Payments this month
     now = datetime.now(timezone.utc)
@@ -1230,6 +1236,7 @@ async def get_dashboard(company: dict = Depends(get_current_company)):
         "total_outstanding": total_outstanding,
         "total_service_costs": total_service_costs,
         "total_fines": total_fines,
+        "total_internet": total_internet,
         "total_received_month": total_received_month,
         "payments_count_month": len(payments_this_month)
     }
@@ -1705,6 +1712,7 @@ async def list_payments(
         "remaining_rent": p.get("remaining_rent"),
         "remaining_service": p.get("remaining_service"),
         "remaining_fines": p.get("remaining_fines"),
+        "remaining_internet": p.get("remaining_internet"),
         "kwitantie_nummer": p.get("kwitantie_nummer"),
         "created_at": p["created_at"]
     } for p in payments]
@@ -1733,6 +1741,7 @@ async def get_payment(payment_id: str, company: dict = Depends(get_current_compa
         "remaining_rent": payment.get("remaining_rent"),
         "remaining_service": payment.get("remaining_service"),
         "remaining_fines": payment.get("remaining_fines"),
+        "remaining_internet": payment.get("remaining_internet"),
         "kwitantie_nummer": payment.get("kwitantie_nummer"),
         "created_at": payment["created_at"]
     }
@@ -2131,6 +2140,8 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
         update_fields["service_costs"] = max(0, tenant.get("service_costs", 0) - data.amount)
     elif data.payment_type == "fines":
         update_fields["fines"] = max(0, tenant.get("fines", 0) - data.amount)
+    elif data.payment_type == "internet":
+        update_fields["internet_outstanding"] = max(0, tenant.get("internet_outstanding", 0) - data.amount)
     elif data.payment_type == "deposit":
         update_fields["deposit_paid"] = tenant.get("deposit_paid", 0) + data.amount
     if update_fields:
@@ -2142,12 +2153,13 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
     remaining_rent = updated_tenant.get("outstanding_rent", 0) if updated_tenant else 0
     remaining_service = updated_tenant.get("service_costs", 0) if updated_tenant else 0
     remaining_fines = updated_tenant.get("fines", 0) if updated_tenant else 0
+    remaining_internet = updated_tenant.get("internet_outstanding", 0) if updated_tenant else 0
 
     # Auto WhatsApp
-    total_remaining = remaining_rent + remaining_service + remaining_fines
+    total_remaining = remaining_rent + remaining_service + remaining_fines + remaining_internet
     comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
     comp_name = (comp.get("stamp_company_name") or comp.get("name", "")) if comp else ""
-    type_labels = {"rent": "Huurbetaling", "partial_rent": "Gedeeltelijke betaling", "service_costs": "Servicekosten", "fines": "Boetes", "deposit": "Borg"}
+    type_labels = {"rent": "Huurbetaling", "partial_rent": "Gedeeltelijke betaling", "service_costs": "Servicekosten", "fines": "Boetes", "deposit": "Borg", "internet": "Internet"}
     type_label = type_labels.get(data.payment_type, data.payment_type)
     covered_str = ", ".join(covered_months) if covered_months else ""
 
@@ -2180,6 +2192,7 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
         "remaining_rent": remaining_rent,
         "remaining_service": remaining_service,
         "remaining_fines": remaining_fines,
+        "remaining_internet": remaining_internet,
         "whatsapp_sent": bool(tenant.get("phone") or tenant.get("telefoon"))
     }
 
