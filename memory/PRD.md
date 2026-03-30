@@ -168,15 +168,35 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 ### P0
 - ~~9 Geautomatiseerde WhatsApp/Twilio Notificaties~~ ✅ (30 maart 2026)
 - ~~Internetaansluiting tab crash fix~~ ✅ (30 maart 2026)
-
-### P1
-- Kwitanties tab moderniseren (unified table style)
-- Refactoring: kiosk.py (~4100 regels), KioskAdminDashboard.jsx (~3800 regels)
+- ~~Refactoring monolithische bestanden~~ ✅ (30 maart 2026)
 
 ### Sprint 11 (30 maart 2026) — ID Kaart Registratie + USB Kaartlezer
 - Nieuwe "ID Kaart" sub-tab binnen Huurders
 - USB kaartlezer integratie in Huurder modal
 - Backend: id_card velden in TenantCreate/Update
+
+### Sprint 12 (30 maart 2026) — SMTP Email Integratie
+- Email SMTP sectie in Instellingen tab (host, poort, email, wachtwoord, aan/uit toggle)
+- Dual-notificatie systeem: WhatsApp + Email gelijktijdig bij alle triggers
+- Handmatige "Mail" knop naast WhatsApp in Huurders tabel
+- Backend: `/admin/email/test` en `/admin/email/send` endpoints
+- `aiosmtplib` voor async email verzending
+
+### Sprint 13 (30 maart 2026) — Code Refactoring
+- **Frontend:** `KioskAdminDashboard.jsx` opgesplitst: 5317 → 361 regels (orchestrator)
+  - 14 module bestanden in `/admin/` directory
+  - Gedeelde utils (API, formatSRD, getInitials)
+  - Elke tab en modal als apart bestand
+- **Backend:** `kiosk.py` opgesplitst: 4905 → Python package met 12 modules
+  - `base.py` (480r): Router, DatabaseProxy, helpers, modellen
+  - `auth.py` (152r), `admin.py` (1028r), `admin_operations.py` (922r)
+  - `public.py` (375r), `payment_gateways.py` (320r), `messaging.py` (354r)
+  - `devices.py` (511r), `loans.py` (201r), `superadmin.py` (185r)
+  - `faceid.py` (171r), `scheduler.py` (236r)
+- **Test resultaat:** 100% backend (23/23), 100% frontend (10/10 tabs)
+
+### P1
+- Kwitanties tab moderniseren (unified table style)
 
 ### P2
 - Maandelijks financieel rapport (automatisch)
