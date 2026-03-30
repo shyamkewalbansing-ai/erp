@@ -154,7 +154,6 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     { id: 'employees', label: 'Werknemers', icon: Briefcase },
     { id: 'power', label: 'Stroombrekers', icon: Zap },
     { id: 'internet', label: 'Internet', icon: Wifi },
-    { id: 'messages', label: 'Notificaties', icon: Bell },
     { id: 'settings', label: 'Instellingen', icon: Settings },
   ];
 
@@ -288,7 +287,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
 
         {/* Settings Tab */}
         {activeTab === 'settings' && (
-          <SettingsTab company={company} token={token} onRefresh={loadData} />
+          <SettingsTab company={company} token={token} onRefresh={loadData} tenants={tenants} />
         )}
 
         {/* Bank/Kas Tab */}
@@ -314,11 +313,6 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
         {/* Internet Tab */}
         {activeTab === 'internet' && (
           <InternetTab token={token} tenants={tenants} formatSRD={formatSRD} onRefresh={loadData} />
-        )}
-
-        {/* Berichten/WhatsApp Tab */}
-        {activeTab === 'messages' && (
-          <MessagesTab token={token} />
         )}
 
       </div>
@@ -1096,7 +1090,8 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
 }
 
 // ============== SETTINGS TAB ==============
-function SettingsTab({ company, token, onRefresh }) {
+function SettingsTab({ company, token, onRefresh, tenants }) {
+  const [settingsSubTab, setSettingsSubTab] = useState('general');
   const [billingDay, setBillingDay] = useState(company?.billing_day || 1);
   const [billingNextMonth, setBillingNextMonth] = useState(company?.billing_next_month !== false);
   const [fineAmount, setFineAmount] = useState(company?.fine_amount || 0);
@@ -1326,6 +1321,28 @@ function SettingsTab({ company, token, onRefresh }) {
 
   return (
     <div className="space-y-6">
+      {/* Sub-tab selector */}
+      <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
+        <button
+          onClick={() => setSettingsSubTab('general')}
+          data-testid="settings-subtab-general"
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${settingsSubTab === 'general' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <Settings className="w-4 h-4" /> Instellingen
+        </button>
+        <button
+          onClick={() => setSettingsSubTab('notifications')}
+          data-testid="settings-subtab-notifications"
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${settingsSubTab === 'notifications' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <Bell className="w-4 h-4" /> Notificaties
+        </button>
+      </div>
+
+      {settingsSubTab === 'notifications' ? (
+        <MessagesTab token={token} />
+      ) : (
+      <>
       {/* Facturering & Boetes */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center gap-3 mb-6">
@@ -2043,6 +2060,8 @@ function SettingsTab({ company, token, onRefresh }) {
 
       {/* Abonnement Section */}
       <SubscriptionTab company={company} />
+      </>
+      )}
     </div>
   );
 }
