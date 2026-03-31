@@ -195,6 +195,15 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
   - `faceid.py` (171r), `scheduler.py` (236r)
 - **Test resultaat:** 100% backend (23/23), 100% frontend (10/10 tabs)
 
+### Sprint 14 (30 maart 2026) — UI Verbeteringen Batch
+- Verlopen huurovereenkomst melding verwijderd van Dashboard (alleen "binnen 30 dagen" waarschuwing)
+- Internet optie toegevoegd aan Bedrag Toevoegen / Betaling modal
+- Kwitanties tab: Openstaand saldo kolom toegevoegd
+- Kwitantie bekijken: Alleen bon weergave (geen toolbar)
+- Bank/Kas: Huurinkomsten en Kassaldo bedragen in zwart
+- WhatsApp/Email/Loon acties: Popup modals i.p.v. browser confirm/alert
+- Notificaties log: Verschonen knop met backend DELETE endpoint
+
 ### P1
 - Kwitanties tab moderniseren (unified table style)
 
