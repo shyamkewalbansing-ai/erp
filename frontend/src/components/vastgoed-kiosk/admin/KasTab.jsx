@@ -65,7 +65,7 @@ function KasTab({ token, tenants, formatSRD }) {
             </div>
             <p className="text-sm text-slate-500">Huurinkomsten</p>
           </div>
-          <p className="text-2xl font-bold text-green-600" data-testid="kas-income">{formatSRD(totals.total_income)}</p>
+          <p className="text-2xl font-bold text-slate-900" data-testid="kas-income">{formatSRD(totals.total_income)}</p>
         </div>
         <div className="bg-white rounded-xl border border-red-200 p-6">
           <div className="flex items-center gap-3 mb-2">
@@ -83,7 +83,7 @@ function KasTab({ token, tenants, formatSRD }) {
             </div>
             <p className="text-sm text-slate-500">Kassaldo</p>
           </div>
-          <p className={`text-2xl font-bold ${totals.balance >= 0 ? 'text-green-600' : 'text-red-600'}`} data-testid="kas-balance">
+          <p className="text-2xl font-bold text-slate-900" data-testid="kas-balance">
             {formatSRD(totals.balance)}
           </p>
         </div>

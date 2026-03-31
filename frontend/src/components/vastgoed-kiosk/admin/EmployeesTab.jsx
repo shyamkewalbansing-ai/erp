@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, Pencil, Trash2, DollarSign, Loader2, Banknote, Briefcase } from 'lucide-react';
+import { Users, Plus, Pencil, Trash2, DollarSign, Loader2, Banknote, Briefcase, CheckCircle, XCircle } from 'lucide-react';
 import { API, axios } from './utils';
 
 function EmployeesTab({ token, formatSRD }) {
@@ -14,6 +14,8 @@ function EmployeesTab({ token, formatSRD }) {
   const [email, setEmail] = useState('');
   const [saving, setSaving] = useState(false);
   const [paying, setPaying] = useState(null);
+  const [payModal, setPayModal] = useState(null); // { employee }
+  const [payResult, setPayResult] = useState(null);
 
   const loadEmployees = async () => {
     try {
@@ -66,13 +68,19 @@ function EmployeesTab({ token, formatSRD }) {
   };
 
   const handlePay = async (emp) => {
-    if (!window.confirm(`Loon uitbetalen aan ${emp.name}: SRD ${emp.maandloon?.toFixed(2)}?\nDit wordt afgeschreven van de kas.`)) return;
+    setPayModal({ employee: emp });
+  };
+
+  const executePay = async () => {
+    const emp = payModal.employee;
     setPaying(emp.employee_id);
     try {
       await axios.post(`${API}/admin/employees/${emp.employee_id}/pay`, {}, { headers: { Authorization: `Bearer ${token}` } });
       loadEmployees();
-      alert(`Loon uitbetaald: SRD ${emp.maandloon?.toFixed(2)}`);
-    } catch { alert('Uitbetaling mislukt'); }
+      setPayResult({ success: true, message: `Loon uitbetaald: SRD ${emp.maandloon?.toFixed(2)} aan ${emp.name}` });
+    } catch {
+      setPayResult({ success: false, message: 'Uitbetaling mislukt' });
+    }
     setPaying(null);
   };
 
@@ -217,6 +225,55 @@ function EmployeesTab({ token, formatSRD }) {
           </div>
         )}
       </div>
+
+      {/* Loon Uitbetalen Modal */}
+      {payModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => { if (!paying) { setPayModal(null); setPayResult(null); } }}>
+          <div className="bg-white rounded-2xl w-full max-w-md mx-4 p-6" onClick={e => e.stopPropagation()}>
+            {payResult ? (
+              <div className="text-center">
+                <div className={`w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center ${payResult.success ? 'bg-green-100' : 'bg-red-100'}`}>
+                  {payResult.success ? <CheckCircle className="w-7 h-7 text-green-600" /> : <XCircle className="w-7 h-7 text-red-600" />}
+                </div>
+                <h3 className={`text-lg font-bold mb-2 ${payResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                  {payResult.success ? 'Uitbetaald!' : 'Mislukt'}
+                </h3>
+                <p className="text-sm text-slate-600 mb-4">{payResult.message}</p>
+                <button onClick={() => { setPayModal(null); setPayResult(null); }} className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-medium">
+                  Sluiten
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
+                    <Banknote className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900">Loon Uitbetalen</h3>
+                    <p className="text-sm text-slate-500">Dit wordt afgeschreven van de kas</p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-50 rounded-xl p-4 mb-4">
+                  <p className="text-sm text-slate-600"><span className="font-bold">Werknemer:</span> {payModal.employee.name}</p>
+                  <p className="text-sm text-slate-600"><span className="font-bold">Functie:</span> {payModal.employee.functie || '-'}</p>
+                  <p className="text-sm text-slate-600"><span className="font-bold">Bedrag:</span> <span className="font-bold text-green-600">SRD {payModal.employee.maandloon?.toFixed(2)}</span></p>
+                </div>
+
+                <div className="flex gap-3">
+                  <button onClick={() => { setPayModal(null); setPayResult(null); }} disabled={!!paying} className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50">
+                    Annuleren
+                  </button>
+                  <button onClick={executePay} disabled={!!paying} className="flex-1 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-bold disabled:opacity-50">
+                    {paying ? 'Bezig...' : 'Uitbetalen'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

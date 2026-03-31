@@ -103,6 +103,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                 <th className="text-left p-4 text-sm font-medium text-slate-500">Appt</th>
                 <th className="text-left p-4 text-sm font-medium text-slate-500">Type</th>
                 <th className="text-right p-4 text-sm font-medium text-slate-500">Bedrag</th>
+                <th className="text-right p-4 text-sm font-medium text-slate-500">Openstaand</th>
                 <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
               </tr>
             </thead>
@@ -121,6 +122,14 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                     </span>
                   </td>
                   <td className="p-4 text-right font-bold text-slate-800">{formatSRD(p.amount)}</td>
+                  <td className="p-4 text-right">
+                    {(() => {
+                      const remaining = (p.remaining_rent || 0) + (p.remaining_service || 0) + (p.remaining_fines || 0) + (p.remaining_internet || 0);
+                      return remaining > 0 
+                        ? <span className="font-bold text-red-600">{formatSRD(remaining)}</span>
+                        : <span className="text-green-600 text-sm font-medium">Voldaan</span>;
+                    })()}
+                  </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-1">
                       <button
@@ -149,25 +158,22 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
       </div>
     </div>
 
-    {/* Kwitantie Preview Modal */}
+    {/* Kwitantie Preview Modal - alleen bon */}
     {selectedPayment && (
       <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 print:p-0 print:bg-white" onClick={() => setSelectedPayment(null)}>
-        <div className="bg-slate-100 rounded-2xl shadow-2xl max-w-[520px] w-full max-h-[95vh] overflow-auto print:max-w-none print:rounded-none print:shadow-none print:bg-white" onClick={(e) => e.stopPropagation()}>
-          {/* Toolbar */}
-          <div className="flex items-center justify-between p-3 bg-slate-800 rounded-t-2xl print:hidden">
-            <p className="text-white text-sm font-medium">Kwitantie {selectedPayment.kwitantie_nummer}</p>
-            <div className="flex items-center gap-2">
-              <button onClick={handlePrint} className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600">
-                <Receipt className="w-4 h-4" /> Afdrukken
-              </button>
-              <button onClick={() => setSelectedPayment(null)} className="px-3 py-2 text-slate-400 hover:text-white text-sm">
-                Sluiten
-              </button>
-            </div>
-          </div>
+        <div className="bg-white rounded-2xl shadow-2xl max-w-[420px] w-full max-h-[95vh] overflow-auto print:max-w-none print:rounded-none print:shadow-none" onClick={(e) => e.stopPropagation()}>
           {/* Receipt */}
           <div className="p-4 print:p-0 flex justify-center">
             <ReceiptTicket payment={selectedPayment} tenant={null} preview={true} stampData={stampData} />
+          </div>
+          {/* Bottom actions */}
+          <div className="flex items-center gap-2 p-3 border-t border-slate-100 print:hidden">
+            <button onClick={handlePrint} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600">
+              <Receipt className="w-4 h-4" /> Afdrukken
+            </button>
+            <button onClick={() => setSelectedPayment(null)} className="px-6 py-2.5 text-slate-500 hover:text-slate-700 border border-slate-200 rounded-xl text-sm font-medium">
+              Sluiten
+            </button>
           </div>
         </div>
         {/* Hidden full-size for printing */}

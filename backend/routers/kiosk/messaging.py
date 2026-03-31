@@ -36,6 +36,15 @@ async def send_manual_email(tenant_id: str, subject: str = "Bericht van uw verhu
     return {"message": f"Email verzonden naar {email}"}
 
 
+# ============== CLEAR MESSAGES LOG ==============
+
+@router.delete("/admin/messages/clear")
+async def clear_messages_log(company: dict = Depends(get_current_company)):
+    """Clear all notification messages for this company"""
+    result = await db.kiosk_messages.delete_many({"company_id": company["company_id"]})
+    return {"message": f"{result.deleted_count} berichten verwijderd"}
+
+
 # ============== WHATSAPP BUSINESS API ==============
 
 class WhatsAppMessage(BaseModel):

@@ -49,16 +49,7 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
 
   return (
     <div>
-      {/* Lease expiry warnings */}
-      {expiredLeases.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl px-5 py-4 mb-4 flex items-center gap-3" data-testid="expired-leases-warning">
-          <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
-          <div>
-            <p className="font-bold text-red-700">{expiredLeases.length} huurovereenkomst{expiredLeases.length !== 1 ? 'en' : ''} verlopen</p>
-            <p className="text-sm text-red-600">{expiredLeases.map(l => l.tenant_name).join(', ')}</p>
-          </div>
-        </div>
-      )}
+      {/* Lease expiry warnings - only show expiring soon (not already expired, those are shown in Huurovereenkomsten tab) */}
       {expiringLeases.length > 0 && (
         <div className="bg-orange-50 border border-orange-200 rounded-xl px-5 py-4 mb-4 flex items-center gap-3" data-testid="expiring-leases-warning">
           <AlertTriangle className="w-5 h-5 text-orange-500 flex-shrink-0" />

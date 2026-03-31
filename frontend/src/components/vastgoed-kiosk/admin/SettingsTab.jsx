@@ -2905,6 +2905,7 @@ function MessagesTab({ token }) {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [triggerLoading, setTriggerLoading] = useState(false);
+  const [clearLoading, setClearLoading] = useState(false);
   const PAGE_SIZE = 50;
 
   const loadMessages = async (pageNum = 0) => {
@@ -2938,6 +2939,19 @@ function MessagesTab({ token }) {
       alert(err.response?.data?.detail || 'Fout bij versturen notificaties');
     }
     setTriggerLoading(false);
+  };
+
+  const handleClearMessages = async () => {
+    if (!window.confirm('Weet u zeker dat u alle berichten wilt verwijderen? Dit kan niet ongedaan worden gemaakt.')) return;
+    setClearLoading(true);
+    try {
+      const res = await axios.delete(`${API}/admin/messages/clear`, { headers: { Authorization: `Bearer ${token}` } });
+      alert(res.data.message);
+      loadMessages(0);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Verschonen mislukt');
+    }
+    setClearLoading(false);
   };
 
   const typeLabels = {
@@ -3087,6 +3101,15 @@ function MessagesTab({ token }) {
           >
             {triggerLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
             Herinneringen versturen
+          </button>
+          <button
+            onClick={handleClearMessages}
+            disabled={clearLoading || messages.length === 0}
+            data-testid="messages-clear"
+            className="flex items-center gap-2 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50"
+          >
+            {clearLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+            Verschonen
           </button>
         </div>
       </div>

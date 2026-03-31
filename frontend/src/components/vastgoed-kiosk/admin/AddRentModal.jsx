@@ -18,6 +18,8 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
       setAmount('');
     } else if (type === 'fine') {
       setAmount('');
+    } else if (type === 'internet') {
+      setAmount(tenant?.internet_outstanding || tenant?.internet_cost || 0);
     } else if (type === 'payment') {
       setAmount('');
     }
@@ -32,7 +34,7 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
     nextMonthLabel = nextDate.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
   }
 
-  const totalDebt = (tenant?.outstanding_rent || 0) + (tenant?.service_costs || 0) + (tenant?.fines || 0);
+  const totalDebt = (tenant?.outstanding_rent || 0) + (tenant?.service_costs || 0) + (tenant?.fines || 0) + (tenant?.internet_outstanding || tenant?.internet_cost || 0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -43,10 +45,12 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
       if (type === 'rent') {
         await axios.post(`${API}/admin/tenants/${tenant.tenant_id}/advance-month`, {}, { headers });
         onSave();
-      } else if (type === 'service' || type === 'fine') {
+      } else if (type === 'service' || type === 'fine' || type === 'internet') {
         const update = {};
         if (type === 'service') {
           update.service_costs = (tenant.service_costs || 0) + parseFloat(amount);
+        } else if (type === 'internet') {
+          update.internet_outstanding = (tenant.internet_outstanding || 0) + parseFloat(amount);
         } else {
           update.fines = (tenant.fines || 0) + parseFloat(amount);
         }
@@ -175,6 +179,7 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
                 { id: 'rent', label: 'Maandhuur' },
                 { id: 'service', label: 'Servicekosten' },
                 { id: 'fine', label: 'Boete' },
+                { id: 'internet', label: 'Internet' },
                 { id: 'payment', label: 'Betaling Registreren' },
               ].map(t => (
                 <button
@@ -220,6 +225,7 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
                 {tenant.outstanding_rent > 0 && <p className="text-sm text-slate-700">Huur: SRD {(tenant.outstanding_rent).toLocaleString('nl-NL', {minimumFractionDigits: 2})}</p>}
                 {tenant.service_costs > 0 && <p className="text-sm text-slate-700">Servicekosten: SRD {(tenant.service_costs).toLocaleString('nl-NL', {minimumFractionDigits: 2})}</p>}
                 {tenant.fines > 0 && <p className="text-sm text-slate-700">Boetes: SRD {(tenant.fines).toLocaleString('nl-NL', {minimumFractionDigits: 2})}</p>}
+                {(tenant.internet_outstanding || tenant.internet_cost || 0) > 0 && <p className="text-sm text-slate-700">Internet: SRD {(tenant.internet_outstanding || tenant.internet_cost || 0).toLocaleString('nl-NL', {minimumFractionDigits: 2})}</p>}
                 <p className="text-sm font-bold text-slate-900 mt-1 border-t border-orange-200 pt-1">
                   Totaal: SRD {totalDebt.toLocaleString('nl-NL', {minimumFractionDigits: 2})}
                 </p>
