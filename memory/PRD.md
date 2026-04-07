@@ -204,6 +204,16 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 - WhatsApp/Email/Loon acties: Popup modals i.p.v. browser confirm/alert
 - Notificaties log: Verschonen knop met backend DELETE endpoint
 
+### Sprint 15 (7 april 2026) — Custom Domein Koppeling
+- Nieuwe "Domein" sub-tab in Instellingen (naast Instellingen + Notificaties)
+- Domeinnaam invoerveld met normalisatie (lowercase, strip http/https)
+- Landingspagina keuze: Kiosk Betaalpagina of Login Pagina (configureerbaar per bedrijf)
+- DNS Configuratie instructies (CNAME record met kopiëer knoppen)
+- DNS Verificatie endpoint met dnspython (check CNAME/A records)
+- Custom URL weergave card met kopiëer functie
+- Backend: `/admin/domain/verify`, `/admin/domain/lookup` endpoints
+- DB: `custom_domain`, `custom_domain_landing` velden in kiosk_companies
+
 ### P1
 - Kwitanties tab moderniseren (unified table style)
 
