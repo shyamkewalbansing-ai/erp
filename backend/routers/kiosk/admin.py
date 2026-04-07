@@ -1,21 +1,21 @@
 from .base import *
 
 import socket
+import ssl
 import dns.resolver
 
 # ============== CUSTOM DOMAIN ==============
 
 @router.post("/admin/domain/verify")
 async def verify_custom_domain(company: dict = Depends(get_current_company)):
-    """Check if the custom domain's DNS is correctly pointed"""
+    """Check if the custom domain's DNS is correctly pointed and SSL certificate is valid"""
     domain = company.get("custom_domain", "").strip()
     if not domain:
         raise HTTPException(status_code=400, detail="Geen custom domein ingesteld")
     
-    # Expected target: the main app domain
     expected_target = os.environ.get("APP_DOMAIN", "erp-kiosk-rentals.preview.emergentagent.com")
     
-    result = {"domain": domain, "status": "unknown", "details": []}
+    result = {"domain": domain, "status": "unknown", "details": [], "ssl": None}
     
     try:
         # Check CNAME record
@@ -34,6 +34,7 @@ async def verify_custom_domain(company: dict = Depends(get_current_company)):
         except dns.resolver.NXDOMAIN:
             result["status"] = "not_found"
             result["details"].append("Domein bestaat niet of is niet geconfigureerd")
+            result["ssl"] = {"status": "unavailable", "details": ["DNS niet geconfigureerd"]}
             return result
         
         # Check A record as fallback
@@ -42,7 +43,6 @@ async def verify_custom_domain(company: dict = Depends(get_current_company)):
                 answers = dns.resolver.resolve(domain, 'A')
                 ip = str(answers[0])
                 result["details"].append(f"A record gevonden: {ip}")
-                # Try to resolve our app domain's IP too
                 try:
                     app_answers = dns.resolver.resolve(expected_target, 'A')
                     app_ip = str(app_answers[0])
@@ -62,6 +62,75 @@ async def verify_custom_domain(company: dict = Depends(get_current_company)):
         result["status"] = "error"
         result["details"].append(f"DNS controle mislukt: {str(e)}")
     
+    # SSL Certificate Check
+    ssl_result = {"status": "unknown", "details": []}
+    try:
+        import asyncio
+        loop = asyncio.get_event_loop()
+        
+        def check_ssl():
+            ctx = ssl.create_default_context()
+            with ctx.wrap_socket(socket.socket(), server_hostname=domain) as s:
+                s.settimeout(10)
+                s.connect((domain, 443))
+                cert = s.getpeercert()
+                return cert
+        
+        cert = await asyncio.wait_for(loop.run_in_executor(None, check_ssl), timeout=15)
+        
+        # Parse certificate info
+        from datetime import datetime as dt
+        not_after = cert.get("notAfter", "")
+        not_before = cert.get("notBefore", "")
+        issuer = dict(x[0] for x in cert.get("issuer", []))
+        subject = dict(x[0] for x in cert.get("subject", []))
+        
+        # Check expiry
+        expiry = dt.strptime(not_after, "%b %d %H:%M:%S %Y %Z") if not_after else None
+        days_left = (expiry - dt.utcnow()).days if expiry else 0
+        
+        ssl_result["status"] = "valid" if days_left > 0 else "expired"
+        ssl_result["details"].append(f"Uitgever: {issuer.get('organizationName', issuer.get('commonName', 'Onbekend'))}")
+        ssl_result["details"].append(f"Domein: {subject.get('commonName', 'Onbekend')}")
+        ssl_result["details"].append(f"Geldig tot: {not_after}")
+        ssl_result["details"].append(f"Dagen resterend: {days_left}")
+        
+        if days_left <= 0:
+            ssl_result["details"].append("WAARSCHUWING: Certificaat is verlopen!")
+        elif days_left <= 30:
+            ssl_result["status"] = "expiring"
+            ssl_result["details"].append("WAARSCHUWING: Certificaat verloopt binnen 30 dagen")
+        
+        # Check if domain matches certificate
+        san = cert.get("subjectAltName", [])
+        cert_domains = [d[1] for d in san if d[0] == 'DNS']
+        domain_match = any(
+            domain == cd or (cd.startswith('*.') and domain.endswith(cd[1:]))
+            for cd in cert_domains
+        )
+        if domain_match:
+            ssl_result["details"].append("Domein komt overeen met certificaat")
+        else:
+            ssl_result["status"] = "mismatch"
+            ssl_result["details"].append(f"WAARSCHUWING: Domein komt niet overeen met certificaat ({', '.join(cert_domains[:3])})")
+            
+    except (socket.timeout, asyncio.TimeoutError):
+        ssl_result["status"] = "timeout"
+        ssl_result["details"].append("SSL verbinding time-out (poort 443 niet bereikbaar)")
+    except ssl.SSLCertVerificationError as e:
+        ssl_result["status"] = "invalid"
+        ssl_result["details"].append(f"SSL certificaat ongeldig: {str(e)[:120]}")
+    except ConnectionRefusedError:
+        ssl_result["status"] = "unavailable"
+        ssl_result["details"].append("Poort 443 geweigerd - geen HTTPS beschikbaar")
+    except (socket.gaierror, OSError):
+        ssl_result["status"] = "unavailable"
+        ssl_result["details"].append("Kan geen verbinding maken met domein")
+    except Exception as e:
+        ssl_result["status"] = "error"
+        ssl_result["details"].append(f"SSL controle mislukt: {str(e)[:120]}")
+    
+    result["ssl"] = ssl_result
     return result
 
 @router.get("/admin/domain/lookup")

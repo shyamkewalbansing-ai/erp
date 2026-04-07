@@ -3560,6 +3560,58 @@ function DomainSettings({ company, token, onRefresh }) {
             ))}
           </div>
         )}
+
+        {/* SSL Certificate result */}
+        {verifyResult?.ssl && (
+          <div className={`mt-4 rounded-xl border p-4 ${
+            verifyResult.ssl.status === 'valid' ? 'bg-green-50 border-green-200' :
+            verifyResult.ssl.status === 'expiring' ? 'bg-yellow-50 border-yellow-200' :
+            verifyResult.ssl.status === 'unavailable' || verifyResult.ssl.status === 'timeout' ? 'bg-slate-50 border-slate-200' :
+            'bg-red-50 border-red-200'
+          }`} data-testid="ssl-result">
+            <div className="flex items-center gap-2 mb-2">
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                verifyResult.ssl.status === 'valid' ? 'bg-green-200' :
+                verifyResult.ssl.status === 'expiring' ? 'bg-yellow-200' :
+                verifyResult.ssl.status === 'unavailable' || verifyResult.ssl.status === 'timeout' ? 'bg-slate-200' :
+                'bg-red-200'
+              }`}>
+                {verifyResult.ssl.status === 'valid' ? (
+                  <svg className="w-3.5 h-3.5 text-green-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M12 2a5 5 0 0 0-5 5v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7a5 5 0 0 0-5-5z"/></svg>
+                ) : verifyResult.ssl.status === 'expiring' ? (
+                  <AlertTriangle className="w-3.5 h-3.5 text-yellow-700" />
+                ) : (
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-700" />
+                )}
+              </div>
+              <p className={`font-bold text-sm ${
+                verifyResult.ssl.status === 'valid' ? 'text-green-700' :
+                verifyResult.ssl.status === 'expiring' ? 'text-yellow-700' :
+                verifyResult.ssl.status === 'unavailable' || verifyResult.ssl.status === 'timeout' ? 'text-slate-600' :
+                'text-red-700'
+              }`}>
+                SSL Certificaat: {
+                  verifyResult.ssl.status === 'valid' ? 'Geldig' :
+                  verifyResult.ssl.status === 'expiring' ? 'Verloopt binnenkort' :
+                  verifyResult.ssl.status === 'expired' ? 'Verlopen' :
+                  verifyResult.ssl.status === 'invalid' ? 'Ongeldig' :
+                  verifyResult.ssl.status === 'mismatch' ? 'Domein komt niet overeen' :
+                  verifyResult.ssl.status === 'timeout' ? 'Niet bereikbaar' :
+                  verifyResult.ssl.status === 'unavailable' ? 'Niet beschikbaar' :
+                  'Fout'
+                }
+              </p>
+            </div>
+            {(Array.isArray(verifyResult.ssl.details) ? verifyResult.ssl.details : [verifyResult.ssl.details]).filter(Boolean).map((d, i) => (
+              <p key={i} className={`text-xs opacity-80 ${
+                verifyResult.ssl.status === 'valid' ? 'text-green-600' :
+                verifyResult.ssl.status === 'expiring' ? 'text-yellow-600' :
+                verifyResult.ssl.status === 'unavailable' || verifyResult.ssl.status === 'timeout' ? 'text-slate-500' :
+                'text-red-600'
+              }`}>{typeof d === 'string' ? d : JSON.stringify(d)}</p>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Huidige status */}
