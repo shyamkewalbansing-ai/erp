@@ -125,7 +125,9 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "twilio_auth_token": company.get("twilio_auth_token", ""),
         "twilio_phone_number": company.get("twilio_phone_number", ""),
         "twilio_enabled": company.get("twilio_enabled", False),
-        "start_screen": company.get("start_screen", "kiosk")
+        "start_screen": company.get("start_screen", "kiosk"),
+        "custom_domain": company.get("custom_domain", ""),
+        "custom_domain_landing": company.get("custom_domain_landing", "kiosk")
     }
 
 @router.put("/auth/settings")
@@ -133,6 +135,12 @@ async def update_company_settings(data: CompanyUpdate, company: dict = Depends(g
     """Update company settings"""
     update_data = {k: v for k, v in data.dict().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    # Normalize custom domain
+    if "custom_domain" in update_data:
+        cd = update_data["custom_domain"].strip().lower()
+        cd = cd.replace("https://", "").replace("http://", "").rstrip("/")
+        update_data["custom_domain"] = cd
     
     # Check for unique PIN if PIN is being set/changed
     if "kiosk_pin" in update_data and update_data["kiosk_pin"]:

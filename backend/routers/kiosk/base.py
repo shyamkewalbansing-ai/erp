@@ -381,6 +381,9 @@ class CompanyUpdate(BaseModel):
     smtp_email: Optional[str] = None
     smtp_password: Optional[str] = None
     smtp_enabled: Optional[bool] = None
+    # Custom Domain
+    custom_domain: Optional[str] = None
+    custom_domain_landing: Optional[str] = None  # 'kiosk' or 'login'
 
 class KioskPinVerify(BaseModel):
     pin: str  # 4-digit PIN

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { 
   CreditCard, Loader2, Settings, ExternalLink, Zap, AlertTriangle, 
   FileText, Save, Eye, Phone, Bell, Check, Search, Crown, Mail, MessageSquare,
-  ScanFace, Camera, Trash2, TrendingUp, TrendingDown, Plus, X
+  ScanFace, Camera, Trash2, TrendingUp, TrendingDown, Plus, X, Globe, Copy, RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { API, axios } from './utils';
@@ -255,10 +255,19 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
         >
           <Bell className="w-4 h-4" /> Notificaties
         </button>
+        <button
+          onClick={() => setSettingsSubTab('domain')}
+          data-testid="settings-subtab-domain"
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${settingsSubTab === 'domain' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <Globe className="w-4 h-4" /> Domein
+        </button>
       </div>
 
       {settingsSubTab === 'notifications' ? (
         <MessagesTab token={token} />
+      ) : settingsSubTab === 'domain' ? (
+        <DomainSettings company={company} token={token} onRefresh={onRefresh} />
       ) : (
       <>
       {/* Facturering & Boetes */}
@@ -3342,5 +3351,246 @@ function SubscriptionTab({ company }) {
 }
 
 
+
+// ============== DOMAIN SETTINGS ==============
+function DomainSettings({ company, token, onRefresh }) {
+  const [domain, setDomain] = useState(company?.custom_domain || '');
+  const [landing, setLanding] = useState(company?.custom_domain_landing || 'kiosk');
+  const [saving, setSaving] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [verifyResult, setVerifyResult] = useState(null);
+  const [copied, setCopied] = useState(false);
+
+  const appDomain = window.location.hostname;
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/auth/settings`, {
+        custom_domain: domain.trim().toLowerCase(),
+        custom_domain_landing: landing,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success('Domein instellingen opgeslagen');
+      setVerifyResult(null);
+      onRefresh();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Opslaan mislukt');
+    }
+    setSaving(false);
+  };
+
+  const handleVerify = async () => {
+    setVerifying(true);
+    try {
+      const res = await axios.post(`${API}/admin/domain/verify`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setVerifyResult(res.data);
+    } catch (err) {
+      setVerifyResult({
+        status: 'error',
+        domain: domain,
+        details: [err.response?.data?.detail || 'Verificatie mislukt']
+      });
+    }
+    setVerifying(false);
+  };
+
+  const copyValue = (text) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const statusColors = {
+    active: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700', label: 'Actief', icon: <Check className="w-4 h-4" /> },
+    pending: { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-700', label: 'In afwachting', icon: <Loader2 className="w-4 h-4" /> },
+    misconfigured: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', label: 'Fout in configuratie', icon: <AlertTriangle className="w-4 h-4" /> },
+    not_found: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', label: 'Domein niet gevonden', icon: <AlertTriangle className="w-4 h-4" /> },
+    error: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', label: 'Fout', icon: <AlertTriangle className="w-4 h-4" /> },
+    unknown: { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-600', label: 'Onbekend', icon: <Globe className="w-4 h-4" /> },
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Domein Instellen */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
+            <Globe className="w-5 h-5 text-indigo-600" />
+          </div>
+          <div>
+            <h2 className="font-bold text-slate-900">Custom Domein</h2>
+            <p className="text-sm text-slate-500">Koppel uw eigen domeinnaam aan uw kiosk</p>
+          </div>
+        </div>
+
+        <div className="space-y-5">
+          {/* Domain input */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Domeinnaam</label>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={domain}
+                onChange={e => setDomain(e.target.value)}
+                placeholder="bijv. huur.uwbedrijf.com"
+                data-testid="domain-input"
+                className="flex-1 px-4 py-2.5 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-indigo-500"
+              />
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                data-testid="domain-save"
+                className="px-5 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-bold hover:bg-orange-600 disabled:opacity-50"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Opslaan'}
+              </button>
+            </div>
+          </div>
+
+          {/* Landing page selector */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1.5">Landingspagina</label>
+            <p className="text-xs text-slate-400 mb-2">Waar komen bezoekers terecht via uw custom domein?</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setLanding('kiosk')}
+                className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium border-2 transition ${
+                  landing === 'kiosk'
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                    : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                }`}
+              >
+                <div className="font-bold mb-0.5">Kiosk Betaalpagina</div>
+                <div className="text-xs opacity-70">Huurdersoverzicht met betaalopties</div>
+              </button>
+              <button
+                onClick={() => setLanding('login')}
+                className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium border-2 transition ${
+                  landing === 'login'
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                    : 'border-slate-200 text-slate-600 hover:border-slate-300'
+                }`}
+              >
+                <div className="font-bold mb-0.5">Login Pagina</div>
+                <div className="text-xs opacity-70">Wachtwoord / PIN verificatie</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* DNS Instructies */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
+            <Settings className="w-5 h-5 text-slate-600" />
+          </div>
+          <div>
+            <h2 className="font-bold text-slate-900">DNS Configuratie</h2>
+            <p className="text-sm text-slate-500">Voeg dit DNS record toe bij uw domeinprovider</p>
+          </div>
+        </div>
+
+        <div className="bg-slate-50 rounded-xl p-4 mb-4">
+          <div className="grid grid-cols-3 gap-4 text-sm">
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase mb-1">Type</p>
+              <p className="font-bold text-slate-900">CNAME</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase mb-1">Naam / Host</p>
+              <div className="flex items-center gap-2">
+                <p className="font-mono font-bold text-slate-900">{domain ? domain.split('.')[0] : 'uw-subdomein'}</p>
+                <button onClick={() => copyValue(domain ? domain.split('.')[0] : '')} className="text-slate-400 hover:text-indigo-500">
+                  {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-semibold text-slate-400 uppercase mb-1">Waarde / Doel</p>
+              <div className="flex items-center gap-2">
+                <p className="font-mono font-bold text-indigo-600">{appDomain}</p>
+                <button onClick={() => copyValue(appDomain)} className="text-slate-400 hover:text-indigo-500">
+                  {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="text-xs text-slate-400 space-y-1 mb-4">
+          <p>1. Log in bij uw domeinprovider (bijv. GoDaddy, Namecheap, TransIP, Cloudflare)</p>
+          <p>2. Ga naar DNS beheer voor uw domein</p>
+          <p>3. Voeg een nieuw <strong>CNAME</strong> record toe met bovenstaande gegevens</p>
+          <p>4. Wacht 5-30 minuten tot de DNS wijziging is doorgevoerd</p>
+          <p>5. Klik hieronder op "Verifiëren" om te controleren of alles correct is ingesteld</p>
+        </div>
+
+        {/* Verify button */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleVerify}
+            disabled={verifying || !domain.trim()}
+            data-testid="domain-verify"
+            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-500 text-white rounded-xl text-sm font-bold hover:bg-indigo-600 disabled:opacity-50 transition"
+          >
+            {verifying ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+            Verifiëren
+          </button>
+          {!domain.trim() && (
+            <p className="text-xs text-slate-400">Voer eerst een domeinnaam in</p>
+          )}
+        </div>
+
+        {/* Verify result */}
+        {verifyResult && (
+          <div className={`mt-4 rounded-xl border p-4 ${statusColors[verifyResult.status]?.bg} ${statusColors[verifyResult.status]?.border}`}>
+            <div className="flex items-center gap-2 mb-2">
+              <span className={statusColors[verifyResult.status]?.text}>
+                {statusColors[verifyResult.status]?.icon}
+              </span>
+              <p className={`font-bold text-sm ${statusColors[verifyResult.status]?.text}`}>
+                {statusColors[verifyResult.status]?.label}: {verifyResult.domain}
+              </p>
+            </div>
+            {verifyResult.details?.map((d, i) => (
+              <p key={i} className={`text-xs ${statusColors[verifyResult.status]?.text} opacity-80`}>{d}</p>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Huidige status */}
+      {company?.custom_domain && (
+        <div className="bg-white rounded-xl border border-slate-200 p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+              <ExternalLink className="w-5 h-5 text-green-600" />
+            </div>
+            <div>
+              <h2 className="font-bold text-slate-900">Uw Custom URL</h2>
+              <p className="text-sm text-slate-500">Deel deze link met uw huurders</p>
+            </div>
+          </div>
+          <div className="bg-slate-50 rounded-xl p-4 flex items-center justify-between">
+            <p className="font-mono text-sm font-bold text-indigo-600">https://{company.custom_domain}</p>
+            <button
+              onClick={() => copyValue(`https://${company.custom_domain}`)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-medium hover:bg-slate-50"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+              Kopiëren
+            </button>
+          </div>
+          <p className="text-xs text-slate-400 mt-2">
+            Landingspagina: <strong>{company.custom_domain_landing === 'login' ? 'Login Pagina' : 'Kiosk Betaalpagina'}</strong>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default SettingsTab;

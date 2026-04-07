@@ -1,5 +1,81 @@
 from .base import *
 
+import socket
+import dns.resolver
+
+# ============== CUSTOM DOMAIN ==============
+
+@router.post("/admin/domain/verify")
+async def verify_custom_domain(company: dict = Depends(get_current_company)):
+    """Check if the custom domain's DNS is correctly pointed"""
+    domain = company.get("custom_domain", "").strip()
+    if not domain:
+        raise HTTPException(status_code=400, detail="Geen custom domein ingesteld")
+    
+    # Expected target: the main app domain
+    expected_target = os.environ.get("APP_DOMAIN", "erp-kiosk-rentals.preview.emergentagent.com")
+    
+    result = {"domain": domain, "status": "unknown", "details": []}
+    
+    try:
+        # Check CNAME record
+        try:
+            answers = dns.resolver.resolve(domain, 'CNAME')
+            cname_target = str(answers[0].target).rstrip('.')
+            result["details"].append(f"CNAME gevonden: {cname_target}")
+            if expected_target in cname_target:
+                result["status"] = "active"
+                result["details"].append("DNS correct geconfigureerd!")
+            else:
+                result["status"] = "misconfigured"
+                result["details"].append(f"CNAME wijst naar {cname_target}, verwacht: {expected_target}")
+        except dns.resolver.NoAnswer:
+            result["details"].append("Geen CNAME record gevonden")
+        except dns.resolver.NXDOMAIN:
+            result["status"] = "not_found"
+            result["details"].append("Domein bestaat niet of is niet geconfigureerd")
+            return result
+        
+        # Check A record as fallback
+        if result["status"] == "unknown":
+            try:
+                answers = dns.resolver.resolve(domain, 'A')
+                ip = str(answers[0])
+                result["details"].append(f"A record gevonden: {ip}")
+                # Try to resolve our app domain's IP too
+                try:
+                    app_answers = dns.resolver.resolve(expected_target, 'A')
+                    app_ip = str(app_answers[0])
+                    if ip == app_ip:
+                        result["status"] = "active"
+                        result["details"].append("IP-adres komt overeen!")
+                    else:
+                        result["status"] = "misconfigured"
+                        result["details"].append(f"IP {ip} komt niet overeen met {app_ip}")
+                except Exception:
+                    result["status"] = "pending"
+                    result["details"].append("Kan doel-IP niet verifiëren")
+            except dns.resolver.NoAnswer:
+                result["status"] = "pending"
+                result["details"].append("Geen A record gevonden")
+    except Exception as e:
+        result["status"] = "error"
+        result["details"].append(f"DNS controle mislukt: {str(e)}")
+    
+    return result
+
+@router.get("/admin/domain/lookup")
+async def domain_lookup_by_host(host: str):
+    """Public endpoint: find company by custom domain"""
+    company = await db.kiosk_companies.find_one(
+        {"custom_domain": host.strip().lower()},
+        {"_id": 0, "company_id": 1, "name": 1, "custom_domain_landing": 1}
+    )
+    if not company:
+        raise HTTPException(status_code=404, detail="Domein niet gekoppeld")
+    return company
+
+
 # ============== ADMIN ENDPOINTS (authenticated) ==============
 
 @router.get("/admin/dashboard")

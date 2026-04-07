@@ -1,0 +1,66 @@
+{
+  "summary": "Comprehensive testing of new 'Domein' sub-tab in Instellingen for custom domain management. All 10 backend tests passed. All frontend features verified working. Fixed bug: /auth/me endpoint was missing custom_domain and custom_domain_landing fields.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_domain_settings.py",
+    "/app/test_reports/pytest/pytest_domain_settings.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/routers/kiosk/auth.py"
+  ],
+  "success_rate": {
+    "backend": "100% (10/10 tests passed)",
+    "frontend": "100% (all features verified)"
+  },
+  "test_credentials": {
+    "kiosk_email": "shyam@kewalbansing.net",
+    "kiosk_password": "Bharat7755",
+    "kiosk_pin": "5678"
+  },
+  "seed_data_creation": "None - used existing test data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Domain settings feature fully tested. All features working: 3 sub-tabs (Instellingen, Notificaties, Domein), Custom Domein card with input and Opslaan button, Landingspagina selector (Kiosk/Login), DNS Configuratie card with CNAME info and copy buttons, 5-step DNS instructions, Verifiëren button for DNS check, Uw Custom URL card with https URL and copy button.",
+  "tests_executed": {
+    "backend": [
+      {"test": "PUT /api/kiosk/auth/settings with custom_domain", "result": "PASS"},
+      {"test": "PUT /api/kiosk/auth/settings with custom_domain_landing=login", "result": "PASS"},
+      {"test": "PUT /api/kiosk/auth/settings with custom_domain_landing=kiosk", "result": "PASS"},
+      {"test": "POST /api/kiosk/admin/domain/verify", "result": "PASS - Returns status not_found for fake domain"},
+      {"test": "POST /api/kiosk/admin/domain/verify without domain", "result": "PASS - Returns 400"},
+      {"test": "GET /api/kiosk/admin/domain/lookup?host=existing", "result": "PASS - Returns company info"},
+      {"test": "GET /api/kiosk/admin/domain/lookup?host=nonexistent", "result": "PASS - Returns 404"},
+      {"test": "Domain normalization - strips https://", "result": "PASS"},
+      {"test": "Domain normalization - lowercase", "result": "PASS"},
+      {"test": "GET /api/kiosk/auth/me returns custom_domain fields", "result": "PASS (after fix)"}
+    ],
+    "frontend": [
+      {"test": "Instellingen tab has 3 sub-tabs", "result": "PASS - Instellingen, Notificaties, Domein"},
+      {"test": "Domein sub-tab - Custom Domein card", "result": "PASS - Shows domain input and Opslaan button"},
+      {"test": "Domein sub-tab - Landingspagina selector", "result": "PASS - Kiosk Betaalpagina and Login Pagina options"},
+      {"test": "Domein sub-tab - DNS Configuratie card", "result": "PASS - Shows CNAME, Naam/Host, Waarde/Doel with copy buttons"},
+      {"test": "Domein sub-tab - 5-step DNS instructions", "result": "PASS - All 5 steps visible in Dutch"},
+      {"test": "Domein sub-tab - Verifiëren button", "result": "PASS - Triggers DNS check, shows status indicator"},
+      {"test": "Domein sub-tab - Uw Custom URL card", "result": "PASS - Shows https URL with copy button after domain saved"}
+    ]
+  },
+  "bug_fixed": {
+    "description": "/auth/me endpoint was missing custom_domain and custom_domain_landing fields",
+    "file": "/app/backend/routers/kiosk/auth.py",
+    "fix": "Added custom_domain and custom_domain_landing to the /auth/me response"
+  },
+  "mocked_apis": {
+    "Mope Payment Gateway": "MOCKED - Uses mock_ prefix for API key",
+    "Uni5Pay Payment Gateway": "MOCKED - Always returns mock responses"
+  }
+}
