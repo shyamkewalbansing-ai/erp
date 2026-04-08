@@ -8,27 +8,37 @@ import dns.resolver
 
 @router.post("/admin/domain/verify")
 async def verify_custom_domain(company: dict = Depends(get_current_company)):
-    """Check if the custom domain's DNS is correctly pointed and SSL certificate is valid"""
+    """Check if the custom domain's DNS resolves and SSL certificate is valid"""
     domain = company.get("custom_domain", "").strip()
     if not domain:
         raise HTTPException(status_code=400, detail="Geen custom domein ingesteld")
     
-    expected_target = os.environ.get("APP_DOMAIN", "erp-kiosk-rentals.preview.emergentagent.com")
+    # The company's main domain (where the app is hosted)
+    main_domain = company.get("main_app_domain", "").strip()
     
     result = {"domain": domain, "status": "unknown", "details": [], "ssl": None}
+    resolved_ip = None
     
     try:
         # Check CNAME record
+        cname_found = False
         try:
             answers = dns.resolver.resolve(domain, 'CNAME')
             cname_target = str(answers[0].target).rstrip('.')
+            cname_found = True
             result["details"].append(f"CNAME gevonden: {cname_target}")
-            if expected_target in cname_target:
+            
+            # If company has a main domain set, check if CNAME matches
+            if main_domain and main_domain in cname_target:
                 result["status"] = "active"
-                result["details"].append("DNS correct geconfigureerd!")
-            else:
+                result["details"].append(f"DNS correct geconfigureerd! Wijst naar {cname_target}")
+            elif main_domain:
                 result["status"] = "misconfigured"
-                result["details"].append(f"CNAME wijst naar {cname_target}, verwacht: {expected_target}")
+                result["details"].append(f"CNAME wijst naar {cname_target}, verwacht: {main_domain}")
+            else:
+                # No main domain set — just verify it resolves
+                result["status"] = "active"
+                result["details"].append(f"DNS geconfigureerd, wijst naar {cname_target}")
         except dns.resolver.NoAnswer:
             result["details"].append("Geen CNAME record gevonden")
         except dns.resolver.NXDOMAIN:
@@ -37,27 +47,21 @@ async def verify_custom_domain(company: dict = Depends(get_current_company)):
             result["ssl"] = {"status": "unavailable", "details": ["DNS niet geconfigureerd"]}
             return result
         
-        # Check A record as fallback
-        if result["status"] == "unknown":
-            try:
-                answers = dns.resolver.resolve(domain, 'A')
-                ip = str(answers[0])
-                result["details"].append(f"A record gevonden: {ip}")
-                try:
-                    app_answers = dns.resolver.resolve(expected_target, 'A')
-                    app_ip = str(app_answers[0])
-                    if ip == app_ip:
-                        result["status"] = "active"
-                        result["details"].append("IP-adres komt overeen!")
-                    else:
-                        result["status"] = "misconfigured"
-                        result["details"].append(f"IP {ip} komt niet overeen met {app_ip}")
-                except Exception:
-                    result["status"] = "pending"
-                    result["details"].append("Kan doel-IP niet verifiëren")
-            except dns.resolver.NoAnswer:
-                result["status"] = "pending"
+        # Check A record (always, for IP info)
+        try:
+            answers = dns.resolver.resolve(domain, 'A')
+            resolved_ip = str(answers[0])
+            result["details"].append(f"IP-adres: {resolved_ip}")
+            if result["status"] == "unknown":
+                result["status"] = "active"
+                result["details"].append("DNS is bereikbaar via A-record")
+        except dns.resolver.NoAnswer:
+            if not cname_found:
+                result["status"] = "pending" if result["status"] == "unknown" else result["status"]
                 result["details"].append("Geen A record gevonden")
+        except Exception:
+            pass
+            
     except Exception as e:
         result["status"] = "error"
         result["details"].append(f"DNS controle mislukt: {str(e)}")
@@ -78,14 +82,11 @@ async def verify_custom_domain(company: dict = Depends(get_current_company)):
         
         cert = await asyncio.wait_for(loop.run_in_executor(None, check_ssl), timeout=15)
         
-        # Parse certificate info
         from datetime import datetime as dt
         not_after = cert.get("notAfter", "")
-        not_before = cert.get("notBefore", "")
         issuer = dict(x[0] for x in cert.get("issuer", []))
         subject = dict(x[0] for x in cert.get("subject", []))
         
-        # Check expiry
         expiry = dt.strptime(not_after, "%b %d %H:%M:%S %Y %Z") if not_after else None
         days_left = (expiry - dt.utcnow()).days if expiry else 0
         
@@ -96,12 +97,11 @@ async def verify_custom_domain(company: dict = Depends(get_current_company)):
         ssl_result["details"].append(f"Dagen resterend: {days_left}")
         
         if days_left <= 0:
-            ssl_result["details"].append("WAARSCHUWING: Certificaat is verlopen!")
+            ssl_result["details"].append("Certificaat is verlopen!")
         elif days_left <= 30:
             ssl_result["status"] = "expiring"
-            ssl_result["details"].append("WAARSCHUWING: Certificaat verloopt binnen 30 dagen")
+            ssl_result["details"].append("Certificaat verloopt binnen 30 dagen")
         
-        # Check if domain matches certificate
         san = cert.get("subjectAltName", [])
         cert_domains = [d[1] for d in san if d[0] == 'DNS']
         domain_match = any(
@@ -112,14 +112,19 @@ async def verify_custom_domain(company: dict = Depends(get_current_company)):
             ssl_result["details"].append("Domein komt overeen met certificaat")
         else:
             ssl_result["status"] = "mismatch"
-            ssl_result["details"].append(f"WAARSCHUWING: Domein komt niet overeen met certificaat ({', '.join(cert_domains[:3])})")
+            ssl_result["details"].append(f"Domein niet in certificaat. Voeg '{domain}' toe aan uw SSL certificaat (Let's Encrypt / Cloudflare)")
+            if cert_domains:
+                ssl_result["details"].append(f"Certificaat geldig voor: {', '.join(cert_domains[:5])}")
             
     except (socket.timeout, asyncio.TimeoutError):
         ssl_result["status"] = "timeout"
         ssl_result["details"].append("SSL verbinding time-out (poort 443 niet bereikbaar)")
-    except ssl.SSLCertVerificationError as e:
-        ssl_result["status"] = "invalid"
-        ssl_result["details"].append(f"SSL certificaat ongeldig: {str(e)[:120]}")
+    except ssl.SSLCertVerificationError:
+        ssl_result["status"] = "mismatch"
+        ssl_result["details"].append(f"SSL certificaat dekt '{domain}' niet")
+        ssl_result["details"].append(f"Oplossing: Voeg '{domain}' toe aan uw SSL certificaat")
+        ssl_result["details"].append("Bij Let's Encrypt: sudo certbot --nginx -d facturatie.sr -d " + domain)
+        ssl_result["details"].append("Bij Cloudflare: Voeg domein toe als proxy record")
     except ConnectionRefusedError:
         ssl_result["status"] = "unavailable"
         ssl_result["details"].append("Poort 443 geweigerd - geen HTTPS beschikbaar")

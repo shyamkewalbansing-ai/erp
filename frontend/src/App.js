@@ -120,6 +120,7 @@ const VastgoedKioskCompanySelect = lazy(() => import("./components/vastgoed-kios
 const VastgoedKioskAdmin = lazy(() => import("./components/vastgoed-kiosk/KioskAdminDashboard"));
 const VastgoedSuperAdmin = lazy(() => import("./components/vastgoed-kiosk/SuperAdminDashboard"));
 const HuurdersLayout = lazy(() => import("./components/vastgoed-kiosk/HuurdersLayout"));
+const CustomDomainResolver = lazy(() => import("./components/vastgoed-kiosk/CustomDomainResolver"));
 
 
 // Loading component for lazy loaded pages - minimal flash
@@ -453,6 +454,16 @@ function isSubdomain() {
   return true;
 }
 
+// Check if we're on a potential custom kiosk domain
+function isCustomKioskDomain() {
+  const hostname = window.location.hostname;
+  const knownDomains = ['facturatie.sr', 'www.facturatie.sr', 'app.facturatie.sr', 'localhost', '127.0.0.1'];
+  if (knownDomains.includes(hostname)) return false;
+  if (hostname.includes('.preview.emergentagent.com')) return false;
+  if (hostname.endsWith('.facturatie.sr')) return false;
+  return true;
+}
+
 // Helper to check if we should redirect to app subdomain
 function shouldRedirectToApp() {
   const hostname = window.location.hostname;
@@ -479,7 +490,9 @@ function MainAppRoutes() {
       <Routes>
         {/* Landing Page - Only on main domain */}
         <Route path="/" element={
-          onSubdomain ? <Navigate to="/login" replace /> : <LandingPage />
+          isCustomKioskDomain() ? (
+            <SafeSuspense><CustomDomainResolver /></SafeSuspense>
+          ) : onSubdomain ? <Navigate to="/login" replace /> : <LandingPage />
         } />
         
         {/* Public pages - Only on main domain */}

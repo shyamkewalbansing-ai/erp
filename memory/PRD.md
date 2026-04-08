@@ -209,8 +209,9 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 - Domeinnaam invoerveld met normalisatie (lowercase, strip http/https)
 - Landingspagina keuze: Kiosk Betaalpagina of Login Pagina (configureerbaar per bedrijf)
 - DNS Configuratie instructies (CNAME record met kopiëer knoppen)
-- DNS Verificatie endpoint met dnspython (check CNAME/A records)
-- Custom URL weergave card met kopiëer functie
+- DNS Verificatie: checkt CNAME/A records (niet meer tegen hardcoded preview domein)
+- SSL Certificaat check met duidelijke instructies (Let's Encrypt / Cloudflare)
+- Frontend routing via CustomDomainResolver: onbekende domeinen → lookup → redirect naar juiste kiosk
 - Backend: `/admin/domain/verify`, `/admin/domain/lookup` endpoints
 - DB: `custom_domain`, `custom_domain_landing` velden in kiosk_companies
 
