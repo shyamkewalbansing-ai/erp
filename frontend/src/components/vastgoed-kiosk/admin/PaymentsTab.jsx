@@ -167,12 +167,14 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
     </div>
 
     {/* Kwitantie Preview Modal - alleen bon */}
-    {selectedPayment && (
+    {selectedPayment && (() => {
+      const matchedTenant = (tenants || []).find(t => t.name === selectedPayment.tenant_name || t.tenant_code === selectedPayment.tenant_code) || null;
+      return (
       <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 print:p-0 print:bg-white" onClick={() => setSelectedPayment(null)}>
         <div className="bg-white rounded-2xl shadow-2xl max-w-[420px] w-full max-h-[95vh] overflow-auto print:max-w-none print:rounded-none print:shadow-none" onClick={(e) => e.stopPropagation()}>
           {/* Receipt */}
           <div className="p-4 print:p-0 flex justify-center">
-            <ReceiptTicket payment={selectedPayment} tenant={null} preview={true} stampData={stampData} />
+            <ReceiptTicket payment={selectedPayment} tenant={matchedTenant} preview={true} stampData={stampData} />
           </div>
           {/* Bottom actions */}
           <div className="flex items-center gap-2 p-3 border-t border-slate-100 print:hidden">
@@ -186,10 +188,11 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
         </div>
         {/* Hidden full-size for printing */}
         <div className="hidden print:block print:fixed print:inset-0 print:bg-white print:z-[9999]">
-          <ReceiptTicket payment={selectedPayment} tenant={null} preview={false} stampData={stampData} />
+          <ReceiptTicket payment={selectedPayment} tenant={matchedTenant} preview={false} stampData={stampData} />
         </div>
       </div>
-    )}
+      );
+    })()}
     </>
   );
 }
