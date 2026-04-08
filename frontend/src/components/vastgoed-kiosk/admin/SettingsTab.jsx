@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { 
   CreditCard, Loader2, Settings, ExternalLink, Zap, AlertTriangle, 
   FileText, Save, Eye, Phone, Bell, Check, Search, Crown, Mail, MessageSquare,
-  ScanFace, Camera, Trash2, TrendingUp, TrendingDown, Plus, X, Globe, Copy, RefreshCw
+  ScanFace, Camera, Trash2, TrendingUp, TrendingDown, Plus, X, Globe, Copy, RefreshCw,
+  Building2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { API, axios } from './utils';
@@ -270,6 +271,9 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
         <DomainSettings company={company} token={token} onRefresh={onRefresh} />
       ) : (
       <>
+      {/* Bedrijfsgegevens */}
+      <CompanyDetailsSection company={company} token={token} onRefresh={onRefresh} />
+
       {/* Facturering & Boetes */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-center gap-3 mb-6">
@@ -3351,6 +3355,123 @@ function SubscriptionTab({ company }) {
 }
 
 
+
+// ============== COMPANY DETAILS SECTION ==============
+function CompanyDetailsSection({ company, token, onRefresh }) {
+  const [name, setName] = useState(company?.name || '');
+  const [email] = useState(company?.email || '');
+  const [telefoon, setTelefoon] = useState(company?.telefoon || '');
+  const [adres, setAdres] = useState(company?.adres || '');
+  const [stampName, setStampName] = useState(company?.stamp_company_name || '');
+  const [stampAddress, setStampAddress] = useState(company?.stamp_address || '');
+  const [stampPhone, setStampPhone] = useState(company?.stamp_phone || '');
+  const [stampWhatsapp, setStampWhatsapp] = useState(company?.stamp_whatsapp || '');
+  const [bankName, setBankName] = useState(company?.bank_name || '');
+  const [bankAccountName, setBankAccountName] = useState(company?.bank_account_name || '');
+  const [bankAccountNumber, setBankAccountNumber] = useState(company?.bank_account_number || '');
+  const [bankDescription, setBankDescription] = useState(company?.bank_description || '');
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      await axios.put(`${API}/auth/settings`, {
+        name: name.trim() || undefined,
+        telefoon: telefoon.trim() || undefined,
+        adres: adres.trim() || undefined,
+        stamp_company_name: stampName.trim() || undefined,
+        stamp_address: stampAddress.trim() || undefined,
+        stamp_phone: stampPhone.trim() || undefined,
+        stamp_whatsapp: stampWhatsapp.trim() || undefined,
+        bank_name: bankName.trim() || undefined,
+        bank_account_name: bankAccountName.trim() || undefined,
+        bank_account_number: bankAccountNumber.trim() || undefined,
+        bank_description: bankDescription.trim() || undefined,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success('Bedrijfsgegevens opgeslagen');
+      onRefresh();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Opslaan mislukt');
+    }
+    setSaving(false);
+  };
+
+  const InputField = ({ label, value, onChange, placeholder, type = 'text', disabled = false }) => (
+    <div>
+      <label className="block text-xs font-medium text-slate-500 mb-1">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        disabled={disabled}
+        className={`w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-400 ${disabled ? 'bg-slate-50 text-slate-400' : ''}`}
+      />
+    </div>
+  );
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+            <Building2 className="w-5 h-5 text-orange-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900">Bedrijfsgegevens</h3>
+            <p className="text-sm text-slate-500">Uw bedrijfsinformatie en contactgegevens</p>
+          </div>
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          data-testid="company-details-save"
+          className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-bold hover:bg-orange-600 disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          Opslaan
+        </button>
+      </div>
+
+      <div className="space-y-5">
+        {/* Basis informatie */}
+        <div>
+          <h4 className="text-sm font-bold text-slate-700 mb-3">Algemeen</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputField label="Bedrijfsnaam" value={name} onChange={setName} placeholder="Uw bedrijfsnaam" />
+            <InputField label="Email (login)" value={email} onChange={() => {}} placeholder="" disabled />
+            <InputField label="Telefoonnummer" value={telefoon} onChange={setTelefoon} placeholder="+597 ..." />
+            <InputField label="Adres" value={adres} onChange={setAdres} placeholder="Straat, Stad" />
+          </div>
+        </div>
+
+        {/* Kwitantie / Bon gegevens */}
+        <div className="pt-4 border-t border-slate-100">
+          <h4 className="text-sm font-bold text-slate-700 mb-1">Kwitantie / Bon Gegevens</h4>
+          <p className="text-xs text-slate-400 mb-3">Deze gegevens verschijnen op uw kwitanties en bonnen</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputField label="Bedrijfsnaam (op bon)" value={stampName} onChange={setStampName} placeholder="Naam op kwitantie" />
+            <InputField label="Adres (op bon)" value={stampAddress} onChange={setStampAddress} placeholder="Adres op kwitantie" />
+            <InputField label="Telefoon (op bon)" value={stampPhone} onChange={setStampPhone} placeholder="+597 ..." />
+            <InputField label="WhatsApp (op bon)" value={stampWhatsapp} onChange={setStampWhatsapp} placeholder="+597 ..." />
+          </div>
+        </div>
+
+        {/* Bankgegevens */}
+        <div className="pt-4 border-t border-slate-100">
+          <h4 className="text-sm font-bold text-slate-700 mb-1">Bankgegevens</h4>
+          <p className="text-xs text-slate-400 mb-3">Voor betalingsinstructies aan huurders</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <InputField label="Bank" value={bankName} onChange={setBankName} placeholder="bijv. Hakrinbank, DSB" />
+            <InputField label="Rekeningnaam" value={bankAccountName} onChange={setBankAccountName} placeholder="T.n.v." />
+            <InputField label="Rekeningnummer" value={bankAccountNumber} onChange={setBankAccountNumber} placeholder="123456789" />
+            <InputField label="Omschrijving" value={bankDescription} onChange={setBankDescription} placeholder="bijv. Huur + appartementnr" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ============== DOMAIN SETTINGS ==============
 function DomainSettings({ company, token, onRefresh }) {
