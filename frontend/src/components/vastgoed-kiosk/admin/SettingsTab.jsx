@@ -3356,6 +3356,23 @@ function SubscriptionTab({ company }) {
 
 
 
+// ============== SHARED INPUT FIELD ==============
+function SettingsInput({ label, value, onChange, placeholder, type = 'text', disabled = false }) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-slate-500 mb-1">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder={placeholder}
+        disabled={disabled}
+        className={`w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-400 ${disabled ? 'bg-slate-50 text-slate-400' : ''}`}
+      />
+    </div>
+  );
+}
+
 // ============== COMPANY DETAILS SECTION ==============
 function CompanyDetailsSection({ company, token, onRefresh }) {
   const [name, setName] = useState(company?.name || '');
@@ -3396,20 +3413,6 @@ function CompanyDetailsSection({ company, token, onRefresh }) {
     setSaving(false);
   };
 
-  const InputField = ({ label, value, onChange, placeholder, type = 'text', disabled = false }) => (
-    <div>
-      <label className="block text-xs font-medium text-slate-500 mb-1">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        placeholder={placeholder}
-        disabled={disabled}
-        className={`w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-400 ${disabled ? 'bg-slate-50 text-slate-400' : ''}`}
-      />
-    </div>
-  );
-
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-6">
       <div className="flex items-center justify-between mb-6">
@@ -3438,10 +3441,10 @@ function CompanyDetailsSection({ company, token, onRefresh }) {
         <div>
           <h4 className="text-sm font-bold text-slate-700 mb-3">Algemeen</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField label="Bedrijfsnaam" value={name} onChange={setName} placeholder="Uw bedrijfsnaam" />
-            <InputField label="Email (login)" value={email} onChange={() => {}} placeholder="" disabled />
-            <InputField label="Telefoonnummer" value={telefoon} onChange={setTelefoon} placeholder="+597 ..." />
-            <InputField label="Adres" value={adres} onChange={setAdres} placeholder="Straat, Stad" />
+            <SettingsInput label="Bedrijfsnaam" value={name} onChange={setName} placeholder="Uw bedrijfsnaam" />
+            <SettingsInput label="Email (login)" value={email} onChange={() => {}} placeholder="" disabled />
+            <SettingsInput label="Telefoonnummer" value={telefoon} onChange={setTelefoon} placeholder="+597 ..." />
+            <SettingsInput label="Adres" value={adres} onChange={setAdres} placeholder="Straat, Stad" />
           </div>
         </div>
 
@@ -3450,10 +3453,10 @@ function CompanyDetailsSection({ company, token, onRefresh }) {
           <h4 className="text-sm font-bold text-slate-700 mb-1">Kwitantie / Bon Gegevens</h4>
           <p className="text-xs text-slate-400 mb-3">Deze gegevens verschijnen op uw kwitanties en bonnen</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField label="Bedrijfsnaam (op bon)" value={stampName} onChange={setStampName} placeholder="Naam op kwitantie" />
-            <InputField label="Adres (op bon)" value={stampAddress} onChange={setStampAddress} placeholder="Adres op kwitantie" />
-            <InputField label="Telefoon (op bon)" value={stampPhone} onChange={setStampPhone} placeholder="+597 ..." />
-            <InputField label="WhatsApp (op bon)" value={stampWhatsapp} onChange={setStampWhatsapp} placeholder="+597 ..." />
+            <SettingsInput label="Bedrijfsnaam (op bon)" value={stampName} onChange={setStampName} placeholder="Naam op kwitantie" />
+            <SettingsInput label="Adres (op bon)" value={stampAddress} onChange={setStampAddress} placeholder="Adres op kwitantie" />
+            <SettingsInput label="Telefoon (op bon)" value={stampPhone} onChange={setStampPhone} placeholder="+597 ..." />
+            <SettingsInput label="WhatsApp (op bon)" value={stampWhatsapp} onChange={setStampWhatsapp} placeholder="+597 ..." />
           </div>
         </div>
 
@@ -3462,10 +3465,10 @@ function CompanyDetailsSection({ company, token, onRefresh }) {
           <h4 className="text-sm font-bold text-slate-700 mb-1">Bankgegevens</h4>
           <p className="text-xs text-slate-400 mb-3">Voor betalingsinstructies aan huurders</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InputField label="Bank" value={bankName} onChange={setBankName} placeholder="bijv. Hakrinbank, DSB" />
-            <InputField label="Rekeningnaam" value={bankAccountName} onChange={setBankAccountName} placeholder="T.n.v." />
-            <InputField label="Rekeningnummer" value={bankAccountNumber} onChange={setBankAccountNumber} placeholder="123456789" />
-            <InputField label="Omschrijving" value={bankDescription} onChange={setBankDescription} placeholder="bijv. Huur + appartementnr" />
+            <SettingsInput label="Bank" value={bankName} onChange={setBankName} placeholder="bijv. Hakrinbank, DSB" />
+            <SettingsInput label="Rekeningnaam" value={bankAccountName} onChange={setBankAccountName} placeholder="T.n.v." />
+            <SettingsInput label="Rekeningnummer" value={bankAccountNumber} onChange={setBankAccountNumber} placeholder="123456789" />
+            <SettingsInput label="Omschrijving" value={bankDescription} onChange={setBankDescription} placeholder="bijv. Huur + appartementnr" />
           </div>
         </div>
       </div>
