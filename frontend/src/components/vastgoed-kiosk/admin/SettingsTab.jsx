@@ -3389,6 +3389,20 @@ function CompanyDetailsSection({ company, token, onRefresh }) {
   const [bankDescription, setBankDescription] = useState(company?.bank_description || '');
   const [saving, setSaving] = useState(false);
 
+  // Auto-sync: wijzigingen in Algemeen → Stempel velden meenemen
+  const updateName = (val) => {
+    setName(val);
+    if (!stampName || stampName === name) setStampName(val);
+  };
+  const updateTelefoon = (val) => {
+    setTelefoon(val);
+    if (!stampPhone || stampPhone === telefoon) setStampPhone(val);
+  };
+  const updateAdres = (val) => {
+    setAdres(val);
+    if (!stampAddress || stampAddress === adres) setStampAddress(val);
+  };
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -3441,10 +3455,10 @@ function CompanyDetailsSection({ company, token, onRefresh }) {
         <div>
           <h4 className="text-sm font-bold text-slate-700 mb-3">Algemeen</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <SettingsInput label="Bedrijfsnaam" value={name} onChange={setName} placeholder="Uw bedrijfsnaam" />
+            <SettingsInput label="Bedrijfsnaam" value={name} onChange={updateName} placeholder="Uw bedrijfsnaam" />
             <SettingsInput label="Email (login)" value={email} onChange={() => {}} placeholder="" disabled />
-            <SettingsInput label="Telefoonnummer" value={telefoon} onChange={setTelefoon} placeholder="+597 ..." />
-            <SettingsInput label="Adres" value={adres} onChange={setAdres} placeholder="Straat, Stad" />
+            <SettingsInput label="Telefoonnummer" value={telefoon} onChange={updateTelefoon} placeholder="+597 ..." />
+            <SettingsInput label="Adres" value={adres} onChange={updateAdres} placeholder="Straat, Stad" />
           </div>
         </div>
 
