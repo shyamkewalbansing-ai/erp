@@ -215,6 +215,9 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 - Backend: `/admin/domain/verify`, `/admin/domain/lookup` endpoints
 - DB: `custom_domain`, `custom_domain_landing` velden in kiosk_companies
 
+### Sprint 16 (8 april 2026) — Kwitantie Modal Fix
+- Kwitantie preview modal: max-h verlaagd van 95vh naar 85vh zodat "Afdrukken" en "Sluiten" knoppen altijd zichtbaar zijn op alle schermformaten
+
 ### P1
 - Kwitanties tab moderniseren (unified table style)
 

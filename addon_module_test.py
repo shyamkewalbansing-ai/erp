@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timedelta
 
 class AddonModuleDetailTester:
-    def __init__(self, base_url="https://erp-kiosk-rentals.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://vastgoed-admin-v2.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.superadmin_token = None
         self.tests_run = 0

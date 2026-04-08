@@ -21,7 +21,7 @@
 1. **Rechtermuisknop** op bureaublad → **Nieuw** → **Snelkoppeling**
 2. Plak dit:
 ```
-"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --kiosk-printing "https://erp-kiosk-rentals.preview.emergentagent.com/vastgoed"
+"C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --kiosk-printing "https://vastgoed-admin-v2.preview.emergentagent.com/vastgoed"
 ```
 3. Noem het: **Appartement Kiosk**
 4. **SLUIT ALLE CHROME VENSTERS** eerst!
@@ -29,7 +29,7 @@
 
 ## Linux
 ```bash
-chromium-browser --kiosk --kiosk-printing "https://erp-kiosk-rentals.preview.emergentagent.com/vastgoed"
+chromium-browser --kiosk --kiosk-printing "https://vastgoed-admin-v2.preview.emergentagent.com/vastgoed"
 ```
 
 ## Afsluiten

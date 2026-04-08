@@ -171,13 +171,13 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
       const matchedTenant = (tenants || []).find(t => t.name === selectedPayment.tenant_name || t.tenant_code === selectedPayment.tenant_code) || null;
       return (
       <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 print:p-0 print:bg-white" onClick={() => setSelectedPayment(null)}>
-        <div className="bg-white rounded-2xl shadow-2xl max-w-[420px] w-full max-h-[95vh] overflow-auto print:max-w-none print:rounded-none print:shadow-none" onClick={(e) => e.stopPropagation()}>
-          {/* Receipt */}
-          <div className="p-4 print:p-0 flex justify-center">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-[420px] w-full max-h-[85vh] flex flex-col print:max-w-none print:rounded-none print:shadow-none" onClick={(e) => e.stopPropagation()}>
+          {/* Receipt - scrollable */}
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 print:p-0 flex justify-center">
             <ReceiptTicket payment={selectedPayment} tenant={matchedTenant} preview={true} stampData={stampData} />
           </div>
-          {/* Bottom actions */}
-          <div className="flex items-center gap-2 p-3 border-t border-slate-100 print:hidden">
+          {/* Bottom actions - always visible */}
+          <div className="flex items-center gap-2 p-3 border-t border-slate-100 flex-shrink-0 print:hidden">
             <button onClick={handlePrint} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600">
               <Receipt className="w-4 h-4" /> Afdrukken
             </button>

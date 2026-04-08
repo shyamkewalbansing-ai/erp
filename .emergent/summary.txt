@@ -1,129 +1,133 @@
 <analysis>**original_problem_statement**: 
-The user is building a full-stack ERP system for real estate/apartment rent payments with a KIOSK terminal (Albert Heijn self-checkout replica). PRODUCT REQUIREMENTS: Manage Kiosk subscriptions via the ERP SuperAdmin dashboard, ensure continuous Face ID scanning using face-api.js, support manual payment registrations with auto-printing to a local USB printer, facilitate mock/real local payment methods (SumUp, Mope, Uni5Pay), and provide automated WhatsApp/Twilio notifications to tenants.
+The user is building a full-stack ERP system for real estate/apartment rent payments with a KIOSK terminal. PRODUCT REQUIREMENTS: Manage Kiosk subscriptions, manual payment registrations, automated WhatsApp & Email notifications, Tenant Loans, Internet Subscriptions, Tenda AC1200 Router integration, ID Card scanning via USB card readers, and Custom Domain management with SSL verification.
 
-**User's preferred language**: Dutch (You MUST automatically detect the user's primary language from their messages inside the <trajectory> tag and INSTRUCT next agent to respond in the user's preferred language only. The language here is **DUTCH**. ALWAYS RESPOND IN DUTCH.)
+**User's preferred language**: **Dutch** (INSTRUCT next agent to respond in the user's preferred language only)
 
 **what currently exists?** 
-A functional full-stack ERP. The Kiosk application is integrated, responsive, and uses Face ID for login. The Admin dashboard allows managing apartments and tenants. Payments can be processed via Cash, SumUp (Real), and Mope/Uni5Pay (Mocked). Lease agreements are auto-generated dynamically. The platform functions as an installable PWA. Dual messaging channels (WhatsApp Cloud API and Twilio WhatsApp) are integrated for automated tenant communication.
+A robust, highly functional full-stack ERP. Features include tenant management, apartments with drag-and-drop reordering, automated notifications (WhatsApp + SMTP Email), internet subscriptions with Tenda router management, ID card registration via USB scanner, custom domain routing, company detail configuration, and leasing contracts. The monolithic codebase has been successfully refactored into smaller, modular components.
 
 **Last working item**: 
-    - Last item agent was working: Implementing automated Twilio/WhatsApp notifications for 8 specific new system events requested by the user.
-    - Status: IN PROGRESS (Agent just started ing backend files to locate the endpoints for these events but wrote no code).
-    - Agent Testing Done: N
-    - Which testing method agent to use? backend testing agent
+    - Last item agent was working: Fixing the layout of the receipt (Kwitantie) preview modal. The Afdrukken and Sluiten buttons were being cut off at the bottom of the screen due to the receipt's length. The agent applied CSS layout fixes to the modal in  to ensure the buttons remain visible regardless of receipt length.
+    - Status: USER VERIFICATION PENDING
+    - Agent Testing Done: Y
+    - Which testing method agent to use? screenshot tool (Frontend)
     - User Testing Done: N
 
 **All Pending/In progress Issue list**:  
-  Issue 1: Implement 8 Automated Twilio/WhatsApp Notification Triggers (P0)
-     - Attempted fixes: Agent mapped out endpoints like  and employee salary routes but hasn't injected the  helper yet.
-     - Next debug checklist: Inject the unified  helper into the backend () for the following 8 events:
-        1. Circuit breaker (Stroombreker) turned OFF.
-        2. Circuit breaker turned ON.
-        3. Employee salary paid out.
-        4. Payment receipt generated (send to tenant).
-        5. Apartment rent price updated (notify assigned tenants).
-        6. New Lease agreement created (send document/notification).
-        7. Rent is due (cron/check based on ).
-        8. Fine/penalty applied to tenant.
-        9. Lease agreement nearing expiration (cron/check).
-     - Why fix this issue and what will be achieved with the fix? This fulfills the user's latest extensive request for system-wide automated messaging.
-     - Status: IN PROGRESS
+  Issue 1: Verify Kwitantie Modal UI Layout (P0)
+     - Attempted fixes: Agent updated the CSS structure of the receipt modal in  to correctly position the action buttons below the scrollable receipt area.
+     - Next debug checklist: Take a screenshot of the Kwitantie modal (open a receipt in Kwitanties tab) to verify the Afdrukken and Sluiten buttons are fully visible and clickable without being cut off.
+     - Why fix this issue and what will be achieved with the fix? Ensures users can actually print or close the receipt on smaller screens or when the receipt has many items.
+     - Status: TESTING PENDING
      - Is recurring issue? N
-     - Should Test frontend/backend/both after fix? Backend
-     - Blocked on other issue: None
+     - Should Test frontend/backend/both after fix? Frontend
 
 **In progress Task List**: 
-  None separate from Issue 1.
+  None
 
 **Upcoming and Future Tasks**
     Upcoming Tasks:
-    - P1: Modernize Kwitanties (Receipts) tab - Rebuild using the unified table style in the Admin Dashboard.
-    - Refactoring (P1):  (>3800 lines) and  (>3700 lines) MUST be split into smaller modules. They are becoming unmanageable.
-
+    - P1: Modernize Kwitanties (Receipts) tab - Rebuild using the unified table style used in the rest of the Admin Dashboard.
+    
     Future Tasks:
     - P2: Maandelijks financieel rapport (Automated monthly financial report).
     - P2: CSV/PDF export van betalingsrapporten.
     - P2: Wachtwoord vergeten functionaliteit.
-    - P2: Multi-building support per bedrijf.
+    - P2: Multi-gebouw ondersteuning per bedrijf.
 
 **Completed work in this session**
-- Mobile layout fix () for Kiosk payment screens (, , etc.) (DONE)
-- Apartment status bug fix: Changed  to  when removing tenants to correctly free up apartments (green/red UI) (DONE)
-- Face ID rewrite: Replaced 60fps  with  and added processing locks to stop multi-scanning/immediate retries (DONE)
-- Lease Document Generator: Removed top company stamp, enlarged bottom stamp, and made payment terms/fines dynamic based on company settings (DONE)
-- UI Tweaks: Added apartment card transparency (), equalized top/bottom bar height (), added WhatsApp SVG icon (DONE)
-- PWA Implementation: Created  and , generated UI icons, and enabled PWA installation (DONE)
-- Kiosk Receipt UI updated to mirror the detailed Huurders Receipt UI exactly, and countdown reduced to 5s (DONE)
-- Payment Flow: Removed Mope/bank logos from selection screen, removed 12s mock auto-approval, added frontend polling checks for failure, fixed SumUp success logic (DONE)
-- Twilio WhatsApp Integration: Added Twilio API as a messaging channel alternative/addition to standard WhatsApp Cloud API. Added Dashboard UI for credentials (DONE)
+- Massive Refactoring: Split  (>5300 lines) into modular components under  directory (DONE)
+- Massive Refactoring: Split  backend into a modular  package (, , , etc.) (DONE)
+- Fixed SMTP save endpoint from  to  (DONE)
+- Fixed  bug by adding  to  exports (DONE)
+- Removed all verlopen en binnen 30 dagen lease warnings from the dashboard (DONE)
+- Added Internet option to AddRentModal (DONE)
+- Show calculated openstaande saldo on Kwitanties tab and inside the printed receipt () (DONE)
+- Replaced  dialogs with proper UI modals for WhatsApp, Email, and Loon uitbetalen actions (DONE)
+- Built Domein sub-tab in Instellingen with Custom Domain mapping, DNS verification, and SSL certificate checks (DONE)
+- Created  in frontend to auto-route custom domains to specific company kiosks (DONE)
+- Built Bedrijfsgegevens (Company Details) UI in Instellingen with auto-sync to the Receipt stamp (DONE)
+- Fixed typing bug in Bedrijfsgegevens (caused by nested  component) (DONE)
 
 **Earlier issues found/mentioned but not fixed**
-   None.
+   None
 
 **Known issue recurrence from previous fork**
-  - Issue recurrence in previous fork: Face ID multi-scanning and CPU overload.
-  - Recurrence count: 1
-  - Status: RESOLVED (Completely rewrote ).
+  - Issue recurrence in previous fork: File sizes being too large for search_replace.
+  - Recurrence count: 0 (Resolved! Refactoring successfully completed)
+  - Status: RESOLVED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Unified Messaging Helper**:  in  routes messages to WhatsApp Cloud API, Twilio WhatsApp ( prefix), or both based on settings.
-- **Local Receipt Printer**:  target for silent background printing.
-- **Face ID**: Relies on  with  models.
-- **PWA**: App serves dynamic manifests based on whether the user is on  or .
+- **Modular Frontend/Backend**: The app has moved away from massive single files. Always verify imports within  and .
+- ** in Python**: Used in  to ensure helper functions (like ) are correctly exported to other modules using .
+- **Custom Domain Routing**:  acts as a route guard. If  is a custom domain, it queries  to find the associated  and redirects the user to the correct Kiosk/Admin page.
 
 **key DB schema**
-- : Added , , , .
-- :  field indicates whether it was sent via  or .
+- :
+  - 
+  - 
 
 **changes in tech stack**
-- Added  python package via pip.
+-  pip package added to backend for DNS resolution in custom domain verification.
 
 **All files of reference**
--  (Focus here for the new notification hooks)
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
 - 
 
 **Areas that need refactoring**: 
- and . Both are severely monolithic and risk hitting context limits during heavy edits.
+- None. The primary monolithic debt was entirely cleared in this session.
 
 **key api endpoints**
--  (Handles Twilio/WA settings)
--  (Tests unified messaging)
+- 
+- 
+- 
 
 **Critical Info for New Agent**
 - **Language:** Reply strictly in **Dutch**.
-- The very next step is executing the massive list of **Twilio/WhatsApp triggers** the user requested at the very end of the session. You will need to locate the 8 specific actions in  (e.g., , payment registration, lease creation) and inject the  function with appropriate Dutch message text.
-- Note: For scheduled events (like Rent is due, or Lease expiring), you may need to implement or utilize an existing daily cron job/scheduler in the FastAPI backend.
+- **Refactoring Completed:** You no longer need to deal with the 5000+ line KioskAdminDashboard or kiosk.py files. They are modularized.
+- **Custom Domains:** The user maps their production domain (e.g., ) to the main app URL using a CNAME. Nginx configuration for SSL is handled manually by the user via Certbot on their production server. The backend validates DNS and SSL using standard  and .
 
 **documents and test reports created in this job**
 - 
 - 
+- 
+- 
 
 **Last 10 User Messages and any pending HUMAN messages** 
-1. User: Asked to make Kiosk Receipt identical to Huurders Receipt. (Done)
-2. User: Asked to reduce success countdown from 15s to 5s. (Done)
-3. User: Asked to remove Mope and bank logos from payment selection. (Done)
-4. User: Complained that mocked Mope/Uni5Pay and real Pinpas auto-approved even on failures/no balance. (Done - added proper polling validation).
-5. User: Requested Twilio integration alongside WhatsApp in the Dashboard. (Done)
-6. User: Clarified they want to use Twilio specifically for WhatsApp (not SMS). (Done - prepended  to numbers).
-7. User: Encountered Channel not found error during testing.
-8. Agent: Provided instructions on how to set up the Twilio WhatsApp Sender Sandbox.
-9. User (Pending): Provided a massive list of 8 new system events that should automatically trigger a Twilio/WhatsApp message to tenants/employees (Circuit breakers, Salary, Receipts, Rent changes, Lease creation, Rent due, Fines, Expiring leases).
+1. User: Asked for a Domain sub-page in settings so companies can map custom domains. (Done)
+2. User: Approved agent's plan to build Custom Domain handling. (Done)
+3. User: Wanted an SSL certificate check added to the domain verification. (Done)
+4. User: Reported the custom domain routing wasn't working. (Done)
+5. User: Showed Certbot CLI logs from their production server failing to find Nginx server block. (Agent provided instructions to fix Nginx).
+6. User: Pointed out the lack of UI to change company details (Bedrijfsgegevens). (Done)
+7. User: Reported a typing bug where the input field loses focus after 1 letter. (Done)
+8. User: Asked for the Bedrijfsstempel (Receipt stamp) to automatically sync when Bedrijfsgegevens are changed. (Done)
+9. User: Noted that the openstaand bedrag (outstanding debt) was missing in the Kwitanties list. (Done)
+10. User: Complained it was still missing on the printed receipt itself. (Done)
+11. User: Uploaded a screenshot showing the receipt modal action buttons were cut off at the bottom. (Fix applied, pending visual verification)
 
 **Project Health Check:**
-- Broken: None.
-- Mocked: Mope Payment Gateway, Uni5Pay Payment Gateway.
+- Broken: None
+- Mocked: Mope / Uni5Pay Payment Gateways.
 
 **3rd Party Integrations**
 - SumUp Online Checkout API - Requires User API Key
-- Twilio WhatsApp API - Requires User API Key (Account SID / Auth Token)
+- Twilio WhatsApp API - Requires User API Key 
 - WhatsApp Business Cloud API - Requires User API Key
-- Mope / Uni5Pay - Mocked
+- SMTP Email (Custom user-provided credentials)
 
 **Testing status**
-  - Testing agent used after significant changes: YES (Frontend testing for Kiosk layout)
+  - Testing agent used after significant changes: YES (Iterations 88, 89, 90)
   - Troubleshoot agent used after agent stuck in loop: NO
   - Test files created: None
   - Known regressions: None
@@ -134,4 +138,4 @@ A functional full-stack ERP. The Kiosk application is integrated, responsive, an
 - **Kiosk PIN:** 
 
 **What agent forgot to execute**
-The agent received a list of 8 new backend system events to hook into the automated messaging system, mapped some endpoints via bash, but the context ended before any code was written. This is the immediate P0 task.</analysis>
+The agent applied the CSS layout fixes for the Receipt/Kwitantie Modal (overflow / absolute positioning) but finished the task without taking a screenshot to verify that the Afdrukken and Sluiten buttons are actually visible now on long receipts. You should verify this using the screenshot tool before moving to new tasks.</analysis>
