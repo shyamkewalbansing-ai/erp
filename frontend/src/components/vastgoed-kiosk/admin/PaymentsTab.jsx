@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Trash2, Receipt, Search, Calendar, FileText } from 'lucide-react';
 import ReceiptTicket from '../ReceiptTicket';
 
-function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD, token, company, onDeletePayment }) {
+function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD, token, company, tenants, onDeletePayment }) {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const months = [];
   for (let i = 0; i < 12; i++) {
@@ -24,6 +24,14 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
     bank_account_number: company.bank_account_number || '',
     bank_description: company.bank_description || '',
   } : null;
+
+  // Lookup huurder openstaand saldo per tenant
+  const tenantMap = {};
+  (tenants || []).forEach(t => {
+    const total = (t.outstanding_rent || 0) + (t.service_costs || 0) + (t.fines || 0) + (t.internet_outstanding || t.internet_cost || 0);
+    tenantMap[t.tenant_code] = total;
+    tenantMap[t.name] = total;
+  });
 
   const PRINT_SERVER_URL = 'http://localhost:5555';
   const handlePrint = async () => {
@@ -124,9 +132,9 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                   <td className="p-4 text-right font-bold text-slate-800">{formatSRD(p.amount)}</td>
                   <td className="p-4 text-right">
                     {(() => {
-                      const remaining = (p.remaining_rent || 0) + (p.remaining_service || 0) + (p.remaining_fines || 0) + (p.remaining_internet || 0);
-                      return remaining > 0 
-                        ? <span className="font-bold text-red-600">{formatSRD(remaining)}</span>
+                      const tenantOutstanding = tenantMap[p.tenant_name] || tenantMap[p.tenant_code] || 0;
+                      return tenantOutstanding > 0 
+                        ? <span className="font-bold text-red-600">{formatSRD(tenantOutstanding)}</span>
                         : <span className="text-green-600 text-sm font-medium">Voldaan</span>;
                     })()}
                   </td>

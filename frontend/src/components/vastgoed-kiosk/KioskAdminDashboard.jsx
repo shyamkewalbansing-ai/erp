@@ -280,6 +280,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
             formatSRD={formatSRD}
             token={token}
             company={company}
+            tenants={tenants}
             onDeletePayment={async (id) => {
               if (!confirm('Weet u zeker dat u deze betaling wilt verwijderen?')) return;
               try {
