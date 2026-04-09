@@ -788,6 +788,172 @@ async def delete_kas_entry(entry_id: str, company: dict = Depends(get_current_co
     return {"message": "Boeking verwijderd"}
 
 
+# ============== VERDELING (DISTRIBUTION) ENDPOINTS ==============
+
+@router.get("/admin/verdeling/rekeninghouders")
+async def list_rekeninghouders(company: dict = Depends(get_current_company)):
+    """List all account holders for income distribution"""
+    company_id = company["company_id"]
+    holders = await db.kiosk_rekeninghouders.find({"company_id": company_id}).sort("created_at", 1).to_list(100)
+    return [{
+        "holder_id": h["holder_id"],
+        "name": h["name"],
+        "percentage": h["percentage"],
+        "created_at": h.get("created_at")
+    } for h in holders]
+
+@router.post("/admin/verdeling/rekeninghouders")
+async def create_rekeninghouder(data: RekeninghouderCreate, company: dict = Depends(get_current_company)):
+    """Add an account holder for income distribution"""
+    company_id = company["company_id"]
+    
+    if data.percentage <= 0 or data.percentage > 100:
+        raise HTTPException(status_code=400, detail="Percentage moet tussen 0 en 100 liggen")
+    
+    # Check total percentage doesn't exceed 100
+    existing = await db.kiosk_rekeninghouders.find({"company_id": company_id}).to_list(100)
+    total_pct = sum(h.get("percentage", 0) for h in existing)
+    if total_pct + data.percentage > 100:
+        raise HTTPException(status_code=400, detail=f"Totaal percentage mag niet meer dan 100% zijn. Huidig: {total_pct}%, beschikbaar: {100 - total_pct}%")
+    
+    holder_id = generate_uuid()
+    now = datetime.now(timezone.utc)
+    await db.kiosk_rekeninghouders.insert_one({
+        "holder_id": holder_id,
+        "company_id": company_id,
+        "name": data.name.strip(),
+        "percentage": data.percentage,
+        "created_at": now
+    })
+    return {"holder_id": holder_id, "message": "Rekeninghouder toegevoegd"}
+
+@router.put("/admin/verdeling/rekeninghouders/{holder_id}")
+async def update_rekeninghouder(holder_id: str, data: RekeninghouderUpdate, company: dict = Depends(get_current_company)):
+    """Update an account holder"""
+    company_id = company["company_id"]
+    holder = await db.kiosk_rekeninghouders.find_one({"holder_id": holder_id, "company_id": company_id})
+    if not holder:
+        raise HTTPException(status_code=404, detail="Rekeninghouder niet gevonden")
+    
+    updates = {}
+    if data.name is not None:
+        updates["name"] = data.name.strip()
+    if data.percentage is not None:
+        if data.percentage <= 0 or data.percentage > 100:
+            raise HTTPException(status_code=400, detail="Percentage moet tussen 0 en 100 liggen")
+        # Check total excluding this holder
+        existing = await db.kiosk_rekeninghouders.find({"company_id": company_id, "holder_id": {"$ne": holder_id}}).to_list(100)
+        total_pct = sum(h.get("percentage", 0) for h in existing)
+        if total_pct + data.percentage > 100:
+            raise HTTPException(status_code=400, detail=f"Totaal percentage mag niet meer dan 100% zijn. Overig: {total_pct}%, beschikbaar: {100 - total_pct}%")
+        updates["percentage"] = data.percentage
+    
+    if updates:
+        await db.kiosk_rekeninghouders.update_one({"holder_id": holder_id}, {"$set": updates})
+    return {"message": "Rekeninghouder bijgewerkt"}
+
+@router.delete("/admin/verdeling/rekeninghouders/{holder_id}")
+async def delete_rekeninghouder(holder_id: str, company: dict = Depends(get_current_company)):
+    """Delete an account holder"""
+    result = await db.kiosk_rekeninghouders.delete_one({"holder_id": holder_id, "company_id": company["company_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Rekeninghouder niet gevonden")
+    return {"message": "Rekeninghouder verwijderd"}
+
+@router.get("/admin/verdeling/overzicht")
+async def verdeling_overzicht(company: dict = Depends(get_current_company)):
+    """Preview income distribution based on current rent income"""
+    company_id = company["company_id"]
+    
+    # Calculate total rent income (same logic as kas endpoint)
+    payments = await db.kiosk_payments.find({"company_id": company_id}).to_list(10000)
+    payment_income = sum(p.get("amount", 0) for p in payments)
+    
+    kas_entries = await db.kiosk_kas.find({"company_id": company_id}).to_list(1000)
+    manual_income = sum(e.get("amount", 0) for e in kas_entries if e.get("entry_type") == "income")
+    total_income = payment_income + manual_income
+    total_expense = sum(e.get("amount", 0) for e in kas_entries if e.get("entry_type") in ("expense", "salary"))
+    
+    holders = await db.kiosk_rekeninghouders.find({"company_id": company_id}).sort("created_at", 1).to_list(100)
+    
+    # Calculate distribution on huurinkomsten only
+    huurinkomsten = payment_income
+    total_pct = sum(h.get("percentage", 0) for h in holders)
+    restant_pct = 100 - total_pct
+    
+    verdeling = []
+    total_distributed = 0
+    for h in holders:
+        bedrag = round(huurinkomsten * h["percentage"] / 100, 2)
+        total_distributed += bedrag
+        verdeling.append({
+            "holder_id": h["holder_id"],
+            "name": h["name"],
+            "percentage": h["percentage"],
+            "bedrag": bedrag
+        })
+    
+    restant_bedrag = round(huurinkomsten - total_distributed, 2)
+    
+    return {
+        "huurinkomsten": huurinkomsten,
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "verdeling": verdeling,
+        "restant_percentage": restant_pct,
+        "restant_bedrag": restant_bedrag,
+        "total_distributed": total_distributed
+    }
+
+@router.post("/admin/verdeling/uitvoeren")
+async def verdeling_uitvoeren(data: VerdelingUitvoeren, company: dict = Depends(get_current_company)):
+    """Execute income distribution — creates expense entries in kas for each holder"""
+    company_id = company["company_id"]
+    
+    holders = await db.kiosk_rekeninghouders.find({"company_id": company_id}).to_list(100)
+    if not holders:
+        raise HTTPException(status_code=400, detail="Geen rekeninghouders ingesteld")
+    
+    # Calculate huurinkomsten
+    payments = await db.kiosk_payments.find({"company_id": company_id}).to_list(10000)
+    huurinkomsten = sum(p.get("amount", 0) for p in payments)
+    
+    if huurinkomsten <= 0:
+        raise HTTPException(status_code=400, detail="Geen huurinkomsten om te verdelen")
+    
+    now = datetime.now(timezone.utc)
+    notitie = data.notitie or ""
+    created_entries = []
+    
+    for h in holders:
+        bedrag = round(huurinkomsten * h["percentage"] / 100, 2)
+        if bedrag <= 0:
+            continue
+        entry_id = generate_uuid()
+        entry = {
+            "entry_id": entry_id,
+            "company_id": company_id,
+            "entry_type": "expense",
+            "amount": bedrag,
+            "description": f"Verdeling {h['percentage']}% aan {h['name']}" + (f" — {notitie}" if notitie else ""),
+            "category": "verdeling",
+            "related_tenant_id": "",
+            "related_tenant_name": "",
+            "related_employee_id": "",
+            "related_employee_name": h["name"],
+            "payment_id": "",
+            "created_at": now
+        }
+        await db.kiosk_kas.insert_one(entry)
+        created_entries.append({"entry_id": entry_id, "name": h["name"], "bedrag": bedrag})
+    
+    return {
+        "message": f"Verdeling uitgevoerd: {len(created_entries)} uitbetalingen aangemaakt",
+        "entries": created_entries,
+        "totaal_verdeeld": sum(e["bedrag"] for e in created_entries)
+    }
+
+
 # ============== WERKNEMERS ENDPOINTS ==============
 
 @router.get("/admin/employees")

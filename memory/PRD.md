@@ -215,8 +215,13 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 - Backend: `/admin/domain/verify`, `/admin/domain/lookup` endpoints
 - DB: `custom_domain`, `custom_domain_landing` velden in kiosk_companies
 
-### Sprint 16 (8 april 2026) — Kwitantie Modal Fix
-- Kwitantie preview modal: max-h verlaagd van 95vh naar 85vh zodat "Afdrukken" en "Sluiten" knoppen altijd zichtbaar zijn op alle schermformaten
+### Sprint 16 (8-9 april 2026) — Kwitantie Modal Fix + Verdeling Feature
+- Kwitantie preview modal: max-h verlaagd van 95vh naar 85vh zodat "Afdrukken" en "Sluiten" knoppen altijd zichtbaar zijn
+- **Verdeling feature in Bank/Kas**: Rekeninghouders beheer (CRUD), percentageverdeling van huurinkomsten, preview overzicht, uitvoeren als kas-boekingen
+  - Backend: 5 nieuwe endpoints (`/admin/verdeling/rekeninghouders` CRUD, `/admin/verdeling/overzicht`, `/admin/verdeling/uitvoeren`)
+  - Frontend: KasTab herbouwd met sub-tab switcher (Bank/Kas + Verdeling views)
+  - DB: nieuwe collectie `kiosk_rekeninghouders`
+- Dode code: Oude KasTab functie (180 regels) verwijderd uit SettingsTab.jsx
 
 ### P1
 - Kwitanties tab moderniseren (unified table style)

@@ -43,6 +43,7 @@ __all__ = [
     "LeaseCreate", "LeaseUpdate",
     "LoanCreate", "LoanUpdate", "LoanPaymentCreate",
     "InternetPlanCreate", "InternetPlanUpdate",
+    "RekeninghouderCreate", "RekeninghouderUpdate", "VerdelingUitvoeren",
 ]
 
 # JWT settings
@@ -506,4 +507,15 @@ class InternetPlanUpdate(BaseModel):
     name: Optional[str] = None
     speed: Optional[str] = None
     price: Optional[float] = None
+
+class RekeninghouderCreate(BaseModel):
+    name: str
+    percentage: float  # 0-100
+
+class RekeninghouderUpdate(BaseModel):
+    name: Optional[str] = None
+    percentage: Optional[float] = None
+
+class VerdelingUitvoeren(BaseModel):
+    notitie: Optional[str] = None
 
