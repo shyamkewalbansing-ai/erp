@@ -1004,7 +1004,7 @@ button[class*="variant-ghost"]:hover {
     right: 0;
     bottom: 0;
     width: 100vw;
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 .kiosk-fullscreen .scrollbar-hide::-webkit-scrollbar {
@@ -1023,6 +1023,19 @@ button[class*="variant-ghost"]:hover {
 .kiosk-amount-lg { font-size: clamp(20px, 3.5vh, 48px); font-weight: 800; }
 .kiosk-amount-md { font-size: clamp(16px, 2.5vh, 32px); font-weight: 700; }
 .kiosk-btn-text { font-size: clamp(14px, 2vh, 24px); font-weight: 700; }
+
+/* ===== MOBILE KIOSK (width < 640px) ===== */
+@media (max-width: 639px) {
+    .kiosk-title { font-size: 22px; }
+    .kiosk-subtitle { font-size: 14px; }
+    .kiosk-body { font-size: 13px; }
+    .kiosk-small { font-size: 11px; }
+    .kiosk-amount-lg { font-size: 28px; }
+    .kiosk-amount-md { font-size: 20px; }
+    .kiosk-btn-text { font-size: 16px; }
+    .kiosk-card { border-radius: 12px !important; }
+    .kiosk-card-row { padding: 10px 12px; }
+}
 
 /* ===== KIOSK DEVICE MODE: TOUCH ===== */
 .kiosk-touch button,

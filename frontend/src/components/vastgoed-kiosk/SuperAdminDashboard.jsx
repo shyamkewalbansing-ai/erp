@@ -6,7 +6,6 @@ import {
   ToggleLeft, ToggleRight, Power, PowerOff, RefreshCw
 } from 'lucide-react';
 import axios from 'axios';
-import VirtualKeyboard from './VirtualKeyboard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 const PRO_PRICE = 3500;
@@ -359,7 +358,6 @@ export default function SuperAdminDashboard() {
           </div>
         )}
       </div>
-      <VirtualKeyboard />
     </div>
   );
 }

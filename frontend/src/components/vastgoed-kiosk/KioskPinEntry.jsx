@@ -66,89 +66,83 @@ export default function KioskPinEntry({ companyId, companyName, onSuccess, onBac
   };
 
   return (
-    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
+    <div className="h-full bg-orange-500 flex flex-col px-3 sm:px-6 pt-2">
       {/* Header */}
-      <div className="flex items-center justify-between" style={{ height: '7vh', padding: '0 0.5vw' }}>
+      <div className="flex items-center justify-between py-2 sm:py-3">
         {onBack && (
-          <button onClick={onBack} className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }} data-testid="pin-back-btn">
-            <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
-            <span className="kiosk-body">Terug</span>
+          <button onClick={onBack} className="flex items-center gap-1.5 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 sm:px-4 sm:py-2" data-testid="pin-back-btn">
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-xs sm:text-sm">Terug</span>
           </button>
         )}
         <div className="flex items-center gap-2 text-white">
-          <Building2 style={{ width: '2.5vh', height: '2.5vh' }} />
-          <span className="kiosk-subtitle">{companyName || 'Kiosk'}</span>
+          <Building2 className="w-5 h-5" />
+          <span className="text-sm sm:text-base font-semibold">{companyName || 'Kiosk'}</span>
         </div>
-        <div style={{ width: '6vw' }} />
+        <div className="w-16" />
       </div>
 
       {/* Content */}
-      <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
-        <div className="kiosk-card flex flex-col items-center" style={{ width: 'clamp(280px, 30vw, 440px)', padding: 'clamp(16px, 3vh, 40px) clamp(16px, 2.5vw, 48px)' }}>
+      <div className="flex-1 flex items-center justify-center min-h-0 pb-4">
+        <div className="kiosk-card flex flex-col items-center w-full max-w-sm sm:max-w-md p-5 sm:p-8">
 
           {/* Mode toggle */}
           {faceEnabled && (
-            <div className="flex bg-slate-100 rounded-lg w-full" style={{ padding: '0.4vh', marginBottom: '2.5vh' }}>
+            <div className="flex bg-slate-100 rounded-lg w-full p-0.5 mb-5">
               <button onClick={() => { setMode('pin'); setError(''); }} data-testid="mode-pin"
-                className={`flex-1 flex items-center justify-center gap-2 rounded-md transition kiosk-body font-bold ${mode === 'pin' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                style={{ padding: '0.8vh 0' }}>
-                <KeyRound style={{ width: '1.8vh', height: '1.8vh' }} />
-                PIN
+                className={`flex-1 flex items-center justify-center gap-2 rounded-md transition text-sm font-bold py-2 ${mode === 'pin' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                <KeyRound className="w-4 h-4" /> PIN
               </button>
               <button onClick={() => { setMode('face'); setError(''); }} data-testid="mode-face"
-                className={`flex-1 flex items-center justify-center gap-2 rounded-md transition kiosk-body font-bold ${mode === 'face' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-                style={{ padding: '0.8vh 0' }}>
-                <ScanFace style={{ width: '1.8vh', height: '1.8vh' }} />
-                Face ID
+                className={`flex-1 flex items-center justify-center gap-2 rounded-md transition text-sm font-bold py-2 ${mode === 'face' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                <ScanFace className="w-4 h-4" /> Face ID
               </button>
             </div>
           )}
 
           {mode === 'pin' ? (
             <>
-              <h2 className="kiosk-title text-slate-900" style={{ marginBottom: '0.5vh' }}>Voer PIN in</h2>
-              <p className="kiosk-body text-slate-400" style={{ marginBottom: '3vh' }}>4-cijferige toegangscode</p>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 mb-1">Voer PIN in</h2>
+              <p className="text-sm text-slate-400 mb-5">4-cijferige toegangscode</p>
 
               {/* PIN dots */}
-              <div className="flex justify-center" style={{ gap: '1.2vw', marginBottom: '2vh' }}>
+              <div className="flex justify-center gap-3 sm:gap-4 mb-4">
                 {pin.map((digit, index) => (
                   <input key={index} ref={inputRefs[index]} type="password" inputMode="numeric" maxLength={1}
                     value={digit} onChange={(e) => handlePinChange(index, e.target.value)} onKeyDown={(e) => handleKeyDown(index, e)}
-                    className={`text-center font-bold rounded-lg border-2 transition-all outline-none ${
+                    className={`text-center font-bold rounded-xl border-2 transition-all outline-none w-12 h-14 sm:w-16 sm:h-16 text-xl sm:text-2xl ${
                       error ? 'border-red-400 bg-red-50' : digit ? 'border-orange-500 bg-orange-50' : 'border-slate-200 bg-slate-50 focus:border-orange-500'
                     }`}
-                    style={{ width: 'clamp(40px, 5vw, 72px)', height: 'clamp(48px, 7vh, 80px)', fontSize: 'clamp(18px, 2.5vh, 32px)' }}
                     disabled={loading}
                     data-testid={`pin-input-${index}`} />
                 ))}
               </div>
 
-              {error && <p className="kiosk-body text-red-500 text-center font-semibold" style={{ marginBottom: '1.5vh' }}>{error}</p>}
+              {error && <p className="text-sm text-red-500 text-center font-semibold mb-3">{error}</p>}
 
               {/* Keypad */}
-              <div className="grid grid-cols-3 w-full" style={{ gap: 'clamp(4px, 0.6vh, 10px)' }}>
+              <div className="grid grid-cols-3 w-full gap-1.5 sm:gap-2">
                 {['1','2','3','4','5','6','7','8','9','_e','0','DEL'].map((key) => (
                   key === '_e' ? <div key={key} /> : (
                     <button key={key} onClick={() => handleKeypadPress(key)} disabled={loading}
                       data-testid={`keypad-${key}`}
-                      className={`font-bold rounded-lg transition active:scale-95 disabled:opacity-50 flex items-center justify-center ${
+                      className={`font-bold rounded-xl transition active:scale-95 disabled:opacity-50 flex items-center justify-center h-12 sm:h-14 text-lg sm:text-xl ${
                         key === 'DEL' ? 'bg-slate-100 text-red-500 hover:bg-red-50'
                         : 'bg-slate-50 text-slate-900 hover:bg-orange-50 hover:text-orange-600 border border-slate-100'
-                      }`}
-                      style={{ height: 'clamp(36px, 5.5vh, 56px)', fontSize: 'clamp(16px, 2.2vh, 26px)' }}>
-                      {key === 'DEL' ? <Delete style={{ width: '2.2vh', height: '2.2vh' }} /> : key}
+                      }`}>
+                      {key === 'DEL' ? <Delete className="w-5 h-5" /> : key}
                     </button>
                   )
                 ))}
               </div>
 
-              {loading && <p className="kiosk-small text-slate-400 animate-pulse" style={{ marginTop: '2vh' }}>Verifi&euml;ren...</p>}
+              {loading && <p className="text-xs text-slate-400 animate-pulse mt-4">Verifi&euml;ren...</p>}
             </>
           ) : (
             <>
-              <h2 className="kiosk-title text-slate-900" style={{ marginBottom: '0.5vh' }}>Face ID</h2>
-              <p className="kiosk-body text-slate-400" style={{ marginBottom: '2vh' }}>Kijk in de camera om in te loggen</p>
-              {error && <p className="kiosk-body text-red-500 text-center font-semibold" style={{ marginBottom: '1.5vh' }}>{error}</p>}
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 mb-1">Face ID</h2>
+              <p className="text-sm text-slate-400 mb-4">Kijk in de camera om in te loggen</p>
+              {error && <p className="text-sm text-red-500 text-center font-semibold mb-3">{error}</p>}
               <FaceCapture mode="verify" onCapture={handleFaceCapture} onCancel={() => setMode('pin')} />
             </>
           )}

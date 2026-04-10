@@ -5,7 +5,6 @@ import {
   Copy, Check, Receipt, Zap, LogIn, Landmark, Briefcase, Wallet, Wifi
 } from 'lucide-react';
 import axios from 'axios';
-import VirtualKeyboard from './VirtualKeyboard';
 
 // Admin sub-components
 import DashboardTab from './admin/DashboardTab';
@@ -346,8 +345,6 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
           token={token}
         />
       )}
-
-      <VirtualKeyboard />
 
       {loanDetailData && (
         <LoanDetailModal

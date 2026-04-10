@@ -170,93 +170,85 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
   }
 
   return (
-    <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 3vw 0' }}>
-      {/* Header - small colored zone */}
-      <div className="flex items-center justify-between flex-wrap gap-2" style={{ minHeight: '7vh', padding: '1vh 0.5vw' }}>
-        <button onClick={onBack} className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }} data-testid="back-btn">
-          <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
-          <span className="kiosk-body">Terug</span>
+    <div className="h-full bg-orange-500 flex flex-col p-3 sm:p-6 pt-2 sm:pt-3">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-2 py-2 sm:py-3">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 sm:px-4 sm:py-2" data-testid="back-btn">
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="text-xs sm:text-sm">Terug</span>
         </button>
         <div className="flex items-center gap-2 text-white">
-          <User style={{ width: '2.2vh', height: '2.2vh' }} />
-          <span className="kiosk-subtitle truncate max-w-[30vw]">{tenant.name}</span>
-          <span className="kiosk-body opacity-70 whitespace-nowrap">Appt. {tenant.apartment_number}</span>
+          <User className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="text-sm sm:text-base font-semibold truncate max-w-[35vw] sm:max-w-[30vw]">{tenant.name}</span>
+          <span className="text-xs sm:text-sm opacity-70 whitespace-nowrap">Appt. {tenant.apartment_number}</span>
         </div>
+        <div className="hidden sm:block w-16" />
       </div>
 
-      {/* Content - white panels fill screen */}
-      <div className="flex-1 flex flex-col md:flex-row gap-[2vw] md:gap-[1vw] min-h-0 overflow-auto md:overflow-hidden" style={{ paddingBottom: '1.5vh' }}>
+      {/* Content */}
+      <div className="flex-1 flex flex-col md:flex-row gap-3 sm:gap-4 min-h-0 overflow-auto pb-2">
         {/* Left panel - Financial overview */}
         <div className="kiosk-card flex-none md:flex-[3] flex flex-col min-w-0">
-          {/* Panel header */}
-          <div style={{ padding: 'clamp(8px, 1.5vh, 20px) clamp(12px, 1.5vw, 24px)', borderBottom: '1px solid #f1f5f9' }}>
-            <span className="kiosk-subtitle text-slate-800">Financieel overzicht</span>
+          <div className="p-3 sm:p-4 border-b border-slate-100">
+            <span className="text-sm sm:text-base font-semibold text-slate-800">Financieel overzicht</span>
           </div>
-
-          {/* Financial rows */}
           <div className="flex-1 flex flex-col justify-center">
             {items.map((item, i) => (
-              <div key={i} className="kiosk-card-row flex items-center justify-between">
-                <div className="flex items-center gap-[1vw]">
-                  <div className="flex items-center justify-center rounded bg-slate-50" style={{ width: '3.5vh', height: '3.5vh' }}>
-                    <item.icon style={{ width: '1.8vh', height: '1.8vh' }} className="text-slate-400" />
+              <div key={i} className="flex items-center justify-between px-3 sm:px-5 py-2.5 sm:py-3 border-b border-slate-50 last:border-0">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center justify-center rounded bg-slate-50 w-8 h-8 sm:w-9 sm:h-9">
+                    <item.icon className={`w-4 h-4 ${item.highlight && item.value > 0 ? 'text-orange-500' : 'text-slate-400'}`} />
                   </div>
-                  <span className={`kiosk-body ${item.highlight ? 'text-orange-600 font-bold' : 'text-slate-600'}`}>{item.label}</span>
+                  <span className={`text-sm sm:text-base ${item.highlight ? 'text-orange-600 font-bold' : 'text-slate-600'}`}>{item.label}</span>
                 </div>
-                <span className={`kiosk-subtitle whitespace-nowrap ${item.highlight ? 'text-orange-600' : 'text-slate-800'}`}>
+                <span className={`text-sm sm:text-base font-semibold whitespace-nowrap ${item.highlight ? 'text-orange-600' : 'text-slate-800'}`}>
                   {formatSRD(item.value)}
                 </span>
               </div>
             ))}
           </div>
-
-          {/* Total bar */}
-          <div className="bg-slate-50 flex items-center justify-between" style={{ padding: 'clamp(10px, 1.8vh, 24px) clamp(12px, 1.5vw, 24px)', borderTop: '2px solid #e2e8f0' }}>
-            <span className="kiosk-subtitle text-slate-600">Totaal openstaand</span>
-            <span className="kiosk-amount-md text-slate-900 whitespace-nowrap">{formatSRD(total)}</span>
+          <div className="bg-slate-50 flex items-center justify-between p-3 sm:p-4 border-t-2 border-slate-200">
+            <span className="text-sm sm:text-base font-semibold text-slate-600">Totaal openstaand</span>
+            <span className="text-lg sm:text-xl font-bold text-slate-900 whitespace-nowrap">{formatSRD(total)}</span>
           </div>
         </div>
 
         {/* Right panel - Action card */}
-        <div className="kiosk-card flex-none md:flex-[2] flex flex-col items-center justify-center min-w-0 text-center" style={{ padding: 'clamp(12px, 2vh, 32px) clamp(8px, 1vw, 20px)' }}>
+        <div className="kiosk-card flex-none md:flex-[2] flex flex-col items-center justify-center min-w-0 text-center p-4 sm:p-6">
           {hasDebt ? (
             <>
-              <div className="rounded-full bg-orange-50 flex items-center justify-center" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
-                <CreditCard style={{ width: '4vh', height: '4vh' }} className="text-orange-500" />
+              <div className="rounded-full bg-orange-50 flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 mb-3 sm:mb-5">
+                <CreditCard className="w-8 h-8 sm:w-10 sm:h-10 text-orange-500" />
               </div>
-              <p className="kiosk-body text-slate-400" style={{ marginBottom: '0.5vh' }}>Te betalen</p>
-              <p className="kiosk-amount-lg text-slate-900 whitespace-nowrap" style={{ marginBottom: '3vh' }}>{formatSRD(total)}</p>
+              <p className="text-sm text-slate-400 mb-1">Te betalen</p>
+              <p className="text-2xl sm:text-3xl font-bold text-slate-900 whitespace-nowrap mb-4 sm:mb-6">{formatSRD(total)}</p>
               <button onClick={onPay} data-testid="pay-btn"
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center gap-2 rounded-lg transition active:scale-[0.98]"
-                style={{ padding: 'clamp(10px, 2vh, 24px) clamp(12px, 1.5vw, 32px)' }}>
-                <span className="kiosk-btn-text">Volgende</span>
-                <ArrowRight style={{ width: '2.5vh', height: '2.5vh' }} />
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center gap-2 rounded-xl transition active:scale-[0.98] py-3 sm:py-4">
+                <span className="text-base sm:text-lg font-bold">Volgende</span>
+                <ArrowRight className="w-5 h-5" />
               </button>
               <button onClick={loadHistory} data-testid="history-btn"
-                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center gap-2 rounded-lg transition"
-                style={{ marginTop: '1vh', padding: 'clamp(6px, 1.2vh, 16px) clamp(12px, 1.5vw, 32px)' }}>
-                <Clock style={{ width: '2vh', height: '2vh' }} />
-                <span className="kiosk-small font-semibold">Betalingsgeschiedenis</span>
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center gap-2 rounded-xl transition mt-2 py-2.5 sm:py-3">
+                <Clock className="w-4 h-4" />
+                <span className="text-xs sm:text-sm font-semibold">Betalingsgeschiedenis</span>
               </button>
             </>
           ) : (
             <>
-              <div className="rounded-full bg-green-50 flex items-center justify-center" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
-                <CheckCircle style={{ width: '4vh', height: '4vh' }} className="text-green-500" />
+              <div className="rounded-full bg-green-50 flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 mb-3 sm:mb-5">
+                <CheckCircle className="w-8 h-8 sm:w-10 sm:h-10 text-green-500" />
               </div>
-              <p className="kiosk-amount-md text-green-700" style={{ marginBottom: '0.5vh' }}>Alles betaald!</p>
-              <p className="kiosk-body text-green-500" style={{ marginBottom: '3vh' }}>Geen openstaand saldo</p>
+              <p className="text-xl sm:text-2xl font-bold text-green-700 mb-1">Alles betaald!</p>
+              <p className="text-sm text-green-500 mb-4 sm:mb-6">Geen openstaand saldo</p>
               <button onClick={onBack} data-testid="back-home-btn"
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center gap-2 rounded-lg transition active:scale-[0.98]"
-                style={{ padding: 'clamp(10px, 2vh, 24px) clamp(12px, 1.5vw, 32px)' }}>
-                <Home style={{ width: '2.5vh', height: '2.5vh' }} />
-                <span className="kiosk-btn-text">Terug naar start</span>
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center gap-2 rounded-xl transition active:scale-[0.98] py-3 sm:py-4">
+                <Home className="w-5 h-5" />
+                <span className="text-base sm:text-lg font-bold">Terug naar start</span>
               </button>
               <button onClick={loadHistory} data-testid="history-btn-no-debt"
-                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center gap-2 rounded-lg transition"
-                style={{ marginTop: '1vh', padding: 'clamp(6px, 1.2vh, 16px) clamp(12px, 1.5vw, 32px)' }}>
-                <Clock style={{ width: '2vh', height: '2vh' }} />
-                <span className="kiosk-small font-semibold">Betalingsgeschiedenis</span>
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center gap-2 rounded-xl transition mt-2 py-2.5 sm:py-3">
+                <Clock className="w-4 h-4" />
+                <span className="text-xs sm:text-sm font-semibold">Betalingsgeschiedenis</span>
               </button>
             </>
           )}

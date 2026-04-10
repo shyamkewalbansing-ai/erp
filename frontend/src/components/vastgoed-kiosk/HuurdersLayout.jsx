@@ -8,7 +8,6 @@ import KioskPaymentSelect from './KioskPaymentSelect';
 import KioskPaymentConfirm from './KioskPaymentConfirm';
 import HuurdersReceipt from './HuurdersReceipt';
 import FaceCapture from './FaceCapture';
-import VirtualKeyboard from './VirtualKeyboard';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
@@ -190,7 +189,6 @@ export default function HuurdersLayout() {
           </motion.div>
         </AnimatePresence>
       </div>
-      <VirtualKeyboard />
 
       {/* Bottom bar — responsive */}
       {step !== 'loading' && step !== 'not-found' && (
