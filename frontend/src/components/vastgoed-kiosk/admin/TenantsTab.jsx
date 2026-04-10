@@ -158,7 +158,7 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                             {getInitials(tenant.name)}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-900">{tenant.name}</p>
+                            <p className="font-bold text-slate-900 whitespace-nowrap">{tenant.name}</p>
                             <p className="text-xs text-slate-400">{tenant.tenant_code}</p>
                           </div>
                         </div>
