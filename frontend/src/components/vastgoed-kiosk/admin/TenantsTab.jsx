@@ -446,7 +446,7 @@ function LeasesTab({ leases, tenants, apartments, formatSRD, onRefresh, token })
                 </tr>
               </thead>
               <tbody>
-                {(leases || []).map(lease => {
+                {(leases || []).slice().sort((a, b) => (a.tenant_name || '').localeCompare(b.tenant_name || '')).map(lease => {
                   const isExpired = new Date(lease.end_date) < new Date();
                   const status = lease.status === 'terminated' ? 'terminated' : isExpired ? 'expired' : 'active';
                   return (
