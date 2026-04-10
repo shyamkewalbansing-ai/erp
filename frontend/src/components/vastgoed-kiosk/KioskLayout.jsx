@@ -27,6 +27,42 @@ function useKioskMode() {
 
   useEffect(() => { document.title = 'Vastgoed Kiosk'; }, []);
 
+  // Dynamic PWA manifest for kiosk — so "Add to Home Screen" opens the kiosk URL
+  useEffect(() => {
+    const kioskPath = window.location.pathname;
+    const kioskManifest = {
+      name: 'Vastgoed Kiosk',
+      short_name: 'Kiosk',
+      start_url: kioskPath,
+      scope: kioskPath,
+      display: 'standalone',
+      background_color: '#f97316',
+      theme_color: '#f97316',
+      orientation: 'any',
+      icons: [
+        { src: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+        { src: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+      ]
+    };
+    const blob = new Blob([JSON.stringify(kioskManifest)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    // Replace existing manifest link
+    let link = document.querySelector('link[rel="manifest"]');
+    if (link) {
+      link.href = url;
+    } else {
+      link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = url;
+      document.head.appendChild(link);
+    }
+    // Also set theme-color meta for mobile browser chrome
+    let meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.content = '#f97316';
+
+    return () => URL.revokeObjectURL(url);
+  }, []);
+
   useEffect(() => {
     const detect = () => {
       const isTouch = navigator.maxTouchPoints > 0 || 'ontouchstart' in window;

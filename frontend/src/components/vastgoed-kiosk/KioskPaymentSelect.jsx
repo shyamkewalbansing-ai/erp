@@ -142,6 +142,27 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
             <span>Volgende — {formatSRD(activeAmount)}</span>
             <ArrowRight className="w-5 h-5" />
           </button>
+
+          {/* Mobile custom amount input */}
+          <div className="md:hidden mt-1.5">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400 whitespace-nowrap">Ander bedrag:</span>
+              <div className="flex-1 relative">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400">SRD</span>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.01"
+                  min="0"
+                  value={customAmount}
+                  onChange={(e) => { setCustomAmount(e.target.value); setSelectedTypes(new Set()); }}
+                  className="w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-900 bg-white"
+                  placeholder="0.00"
+                  data-testid="mobile-custom-amount"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Right — Keypad (hidden on mobile, visible on desktop) */}
