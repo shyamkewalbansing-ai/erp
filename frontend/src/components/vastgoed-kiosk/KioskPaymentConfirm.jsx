@@ -263,79 +263,65 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   // ====== CHOOSE METHOD SCREEN ======
   if (!payMethod) {
     return (
-      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 3vw 0' }}>
-        <div className="flex items-center justify-between flex-wrap gap-2" style={{ minHeight: '7vh', padding: '1vh 0.5vw' }}>
-          <button onClick={onBack} className="flex items-center gap-2 font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg" style={{ padding: '0.8vh 1.2vw' }} data-testid="back-btn-confirm">
-            <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} className="text-white" />
-            <span className="kiosk-body text-white">Terug</span>
+      <div className="h-full bg-orange-500 flex flex-col px-3 sm:px-6 pt-2">
+        <div className="flex items-center justify-between flex-wrap gap-2 py-2 sm:py-3">
+          <button onClick={onBack} className="flex items-center gap-1.5 font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 sm:px-4 sm:py-2" data-testid="back-btn-confirm">
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+            <span className="text-xs sm:text-sm text-white">Terug</span>
           </button>
           <div className="text-white text-center">
-            <span className="kiosk-subtitle">Hoe wilt u betalen?</span>
-            <span className="kiosk-body opacity-70 ml-3 hidden sm:inline">{formatSRD(paymentData.amount)}</span>
+            <span className="text-sm sm:text-base font-semibold">Hoe wilt u betalen?</span>
+            <span className="text-xs sm:text-sm opacity-70 ml-2">{formatSRD(paymentData.amount)}</span>
           </div>
-          <div className="hidden sm:block" style={{ width: '6vw' }} />
+          <div className="hidden sm:block w-16" />
         </div>
-        <div className="flex-1 flex items-center justify-center min-h-0 overflow-auto" style={{ paddingBottom: '1.5vh' }}>
-          <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-[3vw] sm:gap-[1.5vw] w-full" style={{ padding: '2vh 0' }}>
+        <div className="flex-1 flex items-center justify-center min-h-0 pb-3">
+          <div className="grid grid-cols-2 gap-2.5 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-4 w-full max-w-3xl px-1">
           {/* Cash */}
           {!hideCash && (
             <button onClick={() => setPayMethod('cash')} data-testid="pay-method-cash"
-              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 w-[80vw] sm:w-auto"
-              style={{ minWidth: 'min(240px, 80vw)', maxWidth: '440px', height: 'clamp(180px, 40vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = '#22c55e'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-              <div className="rounded-full bg-green-50 group-hover:bg-green-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
-                <Banknote style={{ width: '4vh', height: '4vh' }} className="text-green-500" />
+              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 rounded-2xl border-2 border-transparent hover:border-green-500 shadow-md p-4 sm:p-6 sm:min-w-[200px] sm:max-w-[260px] sm:h-[35vh]">
+              <div className="rounded-full bg-green-50 group-hover:bg-green-100 flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 mb-2 sm:mb-4 transition-colors">
+                <Banknote className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
               </div>
-              <p className="kiosk-subtitle text-slate-900 font-bold" style={{ marginBottom: '0.5vh' }}>Contant</p>
-              <p className="kiosk-small text-slate-400">Betaal met contant geld</p>
+              <p className="text-sm sm:text-base text-slate-900 font-bold mb-0.5">Contant</p>
+              <p className="text-xs text-slate-400 hidden sm:block">Betaal met contant geld</p>
             </button>
           )}
           {/* Mope */}
           {!mopeLoading && mopeEnabled && (
             <button onClick={() => { setPayMethod('mope'); handleMopePayment(); }} data-testid="pay-method-mope"
-              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 relative w-[80vw] sm:w-auto"
-              style={{ minWidth: 'min(240px, 80vw)', maxWidth: '440px', height: 'clamp(180px, 40vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = '#10b981'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-              <div className="rounded-full bg-emerald-50 group-hover:bg-emerald-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
-                <QrCode style={{ width: '4vh', height: '4vh' }} className="text-emerald-600" />
+              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 rounded-2xl border-2 border-transparent hover:border-emerald-500 shadow-md p-4 sm:p-6 sm:min-w-[200px] sm:max-w-[260px] sm:h-[35vh]">
+              <div className="rounded-full bg-emerald-50 group-hover:bg-emerald-100 flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 mb-2 sm:mb-4 transition-colors">
+                <QrCode className="w-6 h-6 sm:w-8 sm:h-8 text-emerald-600" />
               </div>
-              <p className="kiosk-subtitle text-slate-900 font-bold" style={{ marginBottom: '0.5vh' }}>Mope</p>
-              <p className="kiosk-small text-slate-400">Scan QR-code met Mope app</p>
-              <p className="kiosk-small text-emerald-600 font-semibold" style={{ marginTop: '1vh' }}>{formatSRD(paymentData.amount)}</p>
+              <p className="text-sm sm:text-base text-slate-900 font-bold mb-0.5">Mope</p>
+              <p className="text-xs text-slate-400 hidden sm:block">Scan QR-code</p>
             </button>
           )}
           {/* Uni5Pay */}
           {!uni5Loading && uni5Enabled && (
             <button onClick={() => { setPayMethod('uni5pay'); handleUni5Payment(); }} data-testid="pay-method-uni5pay"
-              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 relative w-[80vw] sm:w-auto"
-              style={{ minWidth: 'min(240px, 80vw)', maxWidth: '440px', height: 'clamp(180px, 40vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = '#dc2626'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-              <div className="rounded-full bg-red-50 group-hover:bg-red-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
-                <Smartphone style={{ width: '4vh', height: '4vh' }} className="text-red-600" />
+              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 rounded-2xl border-2 border-transparent hover:border-red-500 shadow-md p-4 sm:p-6 sm:min-w-[200px] sm:max-w-[260px] sm:h-[35vh]">
+              <div className="rounded-full bg-red-50 group-hover:bg-red-100 flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 mb-2 sm:mb-4 transition-colors">
+                <Smartphone className="w-6 h-6 sm:w-8 sm:h-8 text-red-600" />
               </div>
-              <p className="kiosk-subtitle text-slate-900 font-bold" style={{ marginBottom: '0.5vh' }}>Uni5Pay</p>
-              <p className="kiosk-small text-slate-400">Scan QR-code met Uni5Pay app</p>
-              <p className="kiosk-small text-red-600 font-semibold" style={{ marginTop: '1vh' }}>{formatSRD(paymentData.amount)}</p>
+              <p className="text-sm sm:text-base text-slate-900 font-bold mb-0.5">Uni5Pay</p>
+              <p className="text-xs text-slate-400 hidden sm:block">Scan QR-code</p>
             </button>
           )}
           {/* Card/SumUp */}
           {!sumupLoading && sumupEnabled && (
             <button onClick={() => { setPayMethod('card'); handleCardPayment(); }} data-testid="pay-method-card"
-              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 relative w-[80vw] sm:w-auto"
-              style={{ minWidth: 'min(240px, 80vw)', maxWidth: '440px', height: 'clamp(180px, 40vh, 480px)', borderRadius: 'clamp(12px, 1.8vh, 24px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04)', border: '2px solid transparent' }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = '#3b82f6'}
-              onMouseLeave={e => e.currentTarget.style.borderColor = 'transparent'}>
-              <div className="rounded-full bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center transition-colors" style={{ width: '8vh', height: '8vh', marginBottom: '2vh' }}>
-                <CreditCard style={{ width: '4vh', height: '4vh' }} className="text-blue-500" />
+              className="group bg-white flex flex-col items-center justify-center text-center cursor-pointer overflow-hidden transition-all duration-200 hover:-translate-y-1 rounded-2xl border-2 border-transparent hover:border-blue-500 shadow-md p-4 sm:p-6 sm:min-w-[200px] sm:max-w-[260px] sm:h-[35vh]">
+              <div className="rounded-full bg-blue-50 group-hover:bg-blue-100 flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 mb-2 sm:mb-4 transition-colors">
+                <CreditCard className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
               </div>
-              <p className="kiosk-subtitle text-slate-900 font-bold" style={{ marginBottom: '0.5vh' }}>Pinpas</p>
-              <p className="kiosk-small text-slate-400">Betaal met pinpas via SumUp</p>
+              <p className="text-sm sm:text-base text-slate-900 font-bold mb-0.5">Pinpas</p>
+              <p className="text-xs text-slate-400 hidden sm:block">SumUp pinpas</p>
               {sumupExchangeRate > 1 && (
-                <p className="kiosk-small text-blue-600 font-semibold whitespace-nowrap" style={{ marginTop: '1vh' }}>
-                  {formatSRD(paymentData.amount)} = {sumupCurrency} {(paymentData.amount / sumupExchangeRate).toFixed(2)}
+                <p className="text-xs text-blue-600 font-semibold mt-1 whitespace-nowrap">
+                  {sumupCurrency} {(paymentData.amount / sumupExchangeRate).toFixed(2)}
                 </p>
               )}
             </button>
@@ -349,43 +335,42 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
   // ====== CASH CONFIRMATION ======
   if (payMethod === 'cash') {
     return (
-      <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 3vw 0' }}>
-        <div className="flex items-center" style={{ minHeight: '7vh', padding: '1vh 0.5vw' }}>
+      <div className="h-full bg-orange-500 flex flex-col px-3 sm:px-6 pt-2">
+        <div className="flex items-center py-2 sm:py-3">
           <button onClick={() => setPayMethod(null)} disabled={processing}
-            className="flex items-center gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg disabled:opacity-50" style={{ padding: '0.8vh 1.2vw' }}>
-            <ArrowLeft style={{ width: '2.2vh', height: '2.2vh' }} />
-            <span className="kiosk-body">Terug</span>
+            className="flex items-center gap-1.5 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg disabled:opacity-50 px-3 py-1.5 sm:px-4 sm:py-2">
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="text-xs sm:text-sm">Terug</span>
           </button>
         </div>
-        <div className="flex-1 flex items-center justify-center min-h-0 overflow-auto" style={{ paddingBottom: '1.5vh' }}>
-          <div className="kiosk-card flex flex-col items-center text-center w-full max-w-[520px]" style={{ padding: 'clamp(16px, 3vh, 40px) clamp(16px, 4vw, 40px)' }}>
-            <div className="bg-orange-500 rounded-lg w-full text-center" style={{ padding: 'clamp(12px, 2vh, 28px)', marginBottom: '2vh' }}>
-              <p className="kiosk-small text-orange-100" style={{ marginBottom: '0.5vh' }}>Te betalen bedrag</p>
-              <p className="kiosk-amount-lg text-white whitespace-nowrap" data-testid="confirm-amount">{formatSRD(paymentData.amount)}</p>
-              <div className="flex items-center justify-center gap-2 text-orange-100 kiosk-small" style={{ marginTop: '0.5vh' }}>
-                <Banknote style={{ width: '2vh', height: '2vh' }} />
+        <div className="flex-1 flex items-center justify-center min-h-0 pb-3">
+          <div className="kiosk-card flex flex-col items-center text-center w-full max-w-md p-4 sm:p-6">
+            <div className="bg-orange-500 rounded-lg w-full text-center p-3 sm:p-5 mb-4">
+              <p className="text-xs text-orange-100 mb-0.5">Te betalen bedrag</p>
+              <p className="text-2xl sm:text-3xl font-extrabold text-white whitespace-nowrap" data-testid="confirm-amount">{formatSRD(paymentData.amount)}</p>
+              <div className="flex items-center justify-center gap-2 text-orange-100 text-xs mt-1">
+                <Banknote className="w-4 h-4" />
                 <span>{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 w-full bg-slate-50 rounded-lg" style={{ padding: 'clamp(8px, 1.2vh, 18px) clamp(10px, 1vw, 16px)', marginBottom: '2vh' }}>
-              <div className="rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0" style={{ width: '4vh', height: '4vh' }}>
-                <User style={{ width: '2vh', height: '2vh' }} className="text-orange-500" />
+            <div className="flex items-center gap-2.5 w-full bg-slate-50 rounded-lg p-2.5 sm:p-3 mb-4">
+              <div className="rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0 w-9 h-9">
+                <User className="w-4 h-4 text-orange-500" />
               </div>
               <div className="text-left">
-                <p className="kiosk-body font-bold text-slate-900">{tenant.name}</p>
-                <p className="kiosk-small text-slate-400">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
+                <p className="text-sm font-bold text-slate-900">{tenant.name}</p>
+                <p className="text-xs text-slate-400">Appt. {tenant.apartment_number} · {tenant.tenant_code}</p>
               </div>
             </div>
 
-            {error && <div className="kiosk-body w-full bg-red-50 border border-red-200 text-red-600 rounded-lg text-center font-semibold" style={{ padding: '1vh', marginBottom: '1.5vh' }}>{error}</div>}
+            {error && <div className="text-sm w-full bg-red-50 border border-red-200 text-red-600 rounded-lg text-center font-semibold p-2 mb-3">{error}</div>}
 
             <button onClick={handleCashPayment} disabled={processing} data-testid="confirm-payment-btn"
-              className="w-full bg-green-500 hover:bg-green-600 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-lg flex items-center justify-center gap-2 transition active:scale-[0.98]"
-              style={{ padding: 'clamp(12px, 2vh, 24px)', fontSize: 'clamp(14px, 2vh, 22px)', fontWeight: 700 }}>
-              {processing ? (<><Loader2 style={{ width: '2.5vh', height: '2.5vh' }} className="animate-spin" /><span>Verwerken...</span></>) : (<><CheckCircle style={{ width: '2.5vh', height: '2.5vh' }} /><span>Bevestig betaling</span></>)}
+              className="w-full bg-green-500 hover:bg-green-600 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl flex items-center justify-center gap-2 transition active:scale-[0.98] py-3 sm:py-4 text-sm sm:text-base font-bold">
+              {processing ? (<><Loader2 className="w-5 h-5 animate-spin" /><span>Verwerken...</span></>) : (<><CheckCircle className="w-5 h-5" /><span>Bevestig betaling</span></>)}
             </button>
-            <p className="kiosk-small text-slate-400" style={{ marginTop: '1vh' }}>Contant bedrag is ontvangen</p>
+            <p className="text-xs text-slate-400 mt-2">Contant bedrag is ontvangen</p>
           </div>
         </div>
       </div>
