@@ -223,6 +223,18 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
   - DB: nieuwe collectie `kiosk_rekeninghouders`
 - Dode code: Oude KasTab functie (180 regels) verwijderd uit SettingsTab.jsx
 
+### Sprint 17 (10 april 2026) — Kiosk Responsive + Keyboard Removal
+- **VirtualKeyboard verwijderd** uit alle Kiosk schermen (KioskLayout, KioskAdminDashboard, HuurdersLayout, SuperAdminDashboard)
+- **VirtualKeyboard.jsx bestand verwijderd** (dead code cleanup)
+- **Kiosk volledig responsive** gemaakt voor mobiel (iPhone 14, 390x844):
+  - PIN entry: Touch-friendly keypad, gecentreerde card
+  - Appartement selectie: 2-kolommen grid op mobiel, 3 op tablet, 5 op desktop
+  - Tenant overzicht: Panels stapelen verticaal op mobiel
+  - Bottom bar: Compact met responsive padding/text
+- CSS: `100dvh` voor mobile address bar, media query @max-width:639px
+- Huurder naam: `whitespace-nowrap` fix in TenantsTab
+- Huurovereenkomsten: Gesorteerd op huurder naam
+
 ### P1
 - Kwitanties tab moderniseren (unified table style)
 
