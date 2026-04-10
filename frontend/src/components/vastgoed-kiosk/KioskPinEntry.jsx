@@ -105,16 +105,16 @@ export default function KioskPinEntry({ companyId, companyName, onSuccess, onBac
               <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 mb-1">Voer PIN in</h2>
               <p className="text-sm text-slate-400 mb-5">4-cijferige toegangscode</p>
 
-              {/* PIN dots */}
+              {/* PIN dots — readOnly to prevent native keyboard */}
               <div className="flex justify-center gap-3 sm:gap-4 mb-4">
                 {pin.map((digit, index) => (
-                  <input key={index} ref={inputRefs[index]} type="password" inputMode="numeric" maxLength={1}
-                    value={digit} onChange={(e) => handlePinChange(index, e.target.value)} onKeyDown={(e) => handleKeyDown(index, e)}
-                    className={`text-center font-bold rounded-xl border-2 transition-all outline-none w-12 h-14 sm:w-16 sm:h-16 text-xl sm:text-2xl ${
-                      error ? 'border-red-400 bg-red-50' : digit ? 'border-orange-500 bg-orange-50' : 'border-slate-200 bg-slate-50 focus:border-orange-500'
+                  <div key={index}
+                    className={`text-center font-bold rounded-xl border-2 transition-all w-12 h-14 sm:w-16 sm:h-16 text-xl sm:text-2xl flex items-center justify-center ${
+                      error ? 'border-red-400 bg-red-50' : digit ? 'border-orange-500 bg-orange-50' : 'border-slate-200 bg-slate-50'
                     }`}
-                    disabled={loading}
-                    data-testid={`pin-input-${index}`} />
+                    data-testid={`pin-input-${index}`}>
+                    {digit ? '●' : ''}
+                  </div>
                 ))}
               </div>
 

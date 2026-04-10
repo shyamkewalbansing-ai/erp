@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Banknote, Droplets, AlertCircle, CheckCircle, Wifi } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Banknote, Droplets, AlertCircle, CheckCircle, Wifi, Hash } from 'lucide-react';
 
 function formatSRD(amount) {
   return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -15,6 +15,7 @@ const PAYMENT_TYPES = [
 export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
   const [selectedTypes, setSelectedTypes] = useState(new Set());
   const [customAmount, setCustomAmount] = useState('');
+  const [showMobileKeypad, setShowMobileKeypad] = useState(false);
 
   if (!tenant) return null;
 
@@ -143,25 +144,39 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
             <ArrowRight className="w-5 h-5" />
           </button>
 
-          {/* Mobile custom amount input */}
+          {/* Mobile custom amount — toggle number pad */}
           <div className="md:hidden mt-1.5">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400 whitespace-nowrap">Ander bedrag:</span>
-              <div className="flex-1 relative">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400">SRD</span>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  step="0.01"
-                  min="0"
-                  value={customAmount}
-                  onChange={(e) => { setCustomAmount(e.target.value); setSelectedTypes(new Set()); }}
-                  className="w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg text-sm font-bold text-slate-900 bg-white"
-                  placeholder="0.00"
-                  data-testid="mobile-custom-amount"
-                />
+            {!showMobileKeypad ? (
+              <button
+                onClick={() => setShowMobileKeypad(true)}
+                data-testid="mobile-custom-toggle"
+                className="w-full flex items-center justify-center gap-2 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-500 hover:bg-slate-100 transition"
+              >
+                <Hash className="w-4 h-4" /> Ander bedrag invoeren
+              </button>
+            ) : (
+              <div className="bg-white border border-slate-200 rounded-xl p-2.5">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-slate-400 font-medium">Ander bedrag (SRD)</span>
+                  <button onClick={() => { setShowMobileKeypad(false); setCustomAmount(''); }} className="text-xs text-slate-400 hover:text-slate-600">Sluiten</button>
+                </div>
+                <div className={`border-2 rounded-lg text-center py-2 mb-2 ${customAmount && parseFloat(customAmount) > 0 ? 'bg-orange-50 border-orange-300' : 'bg-slate-50 border-slate-200'}`}>
+                  <span className={`font-mono font-extrabold text-xl ${customAmount && parseFloat(customAmount) > 0 ? 'text-orange-600' : 'text-slate-300'}`}>
+                    SRD {customAmount || '0.00'}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-1">
+                  {['1','2','3','DEL','4','5','6','.','7','8','9','0'].map((key) => (
+                    <button key={key} onClick={() => handleKeypadPress(key)} data-testid={`mobile-key-${key}`}
+                      className={`rounded-lg font-bold transition active:scale-95 flex items-center justify-center h-10 text-base ${
+                        key === 'DEL' ? 'bg-red-50 text-red-500 text-xs' : 'bg-slate-50 text-slate-900 hover:bg-orange-50 hover:text-orange-600 border border-slate-100'
+                      }`}>
+                      {key}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
