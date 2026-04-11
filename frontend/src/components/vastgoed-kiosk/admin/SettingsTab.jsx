@@ -1283,14 +1283,20 @@ function EmployeesTab({ token, formatSRD }) {
     } catch { alert('Verwijderen mislukt'); }
   };
 
-  const handlePay = async (emp) => {
-    if (!window.confirm(`Loon uitbetalen aan ${emp.name}: SRD ${emp.maandloon?.toFixed(2)}?\nDit wordt afgeschreven van de kas.`)) return;
+  const [payModal, setPayModal] = useState(null); // { emp, amount }
+
+  const handlePay = async () => {
+    if (!payModal) return;
+    const { emp, amount } = payModal;
+    const payAmount = parseFloat(amount);
+    if (!payAmount || payAmount <= 0) { alert('Voer een geldig bedrag in'); return; }
     setPaying(emp.employee_id);
     try {
-      await axios.post(`${API}/admin/employees/${emp.employee_id}/pay`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.post(`${API}/admin/employees/${emp.employee_id}/pay`, { amount: payAmount }, { headers: { Authorization: `Bearer ${token}` } });
       loadEmployees();
-      alert(`Loon uitbetaald: SRD ${emp.maandloon?.toFixed(2)}`);
-    } catch { alert('Uitbetaling mislukt'); }
+      setPayModal(null);
+      alert(`Loon uitbetaald: SRD ${payAmount.toFixed(2)}`);
+    } catch (err) { alert(err.response?.data?.detail || 'Uitbetaling mislukt'); }
     setPaying(null);
   };
 
@@ -1412,7 +1418,7 @@ function EmployeesTab({ token, formatSRD }) {
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
-                          onClick={() => handlePay(emp)}
+                          onClick={() => setPayModal({ emp, amount: emp.maandloon?.toString() || '0' })}
                           disabled={paying === emp.employee_id || !emp.maandloon}
                           className="text-green-500 hover:text-green-700 p-1.5 rounded hover:bg-green-50 disabled:opacity-50"
                           title="Loon uitbetalen"
@@ -1435,12 +1441,58 @@ function EmployeesTab({ token, formatSRD }) {
           </div>
         )}
       </div>
+
+      {/* Uitbetaling Modal */}
+      {payModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setPayModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full" onClick={e => e.stopPropagation()}>
+            <div className="p-5 border-b border-slate-100">
+              <h3 className="text-lg font-bold text-slate-900">Loon uitbetalen</h3>
+              <p className="text-sm text-slate-500 mt-1">{payModal.emp.name} — {payModal.emp.functie || 'Werknemer'}</p>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="flex items-center justify-between bg-slate-50 rounded-lg p-3">
+                <span className="text-sm text-slate-500">Maandloon</span>
+                <span className="text-sm font-bold text-slate-900">{formatSRD(payModal.emp.maandloon)}</span>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Uit te betalen bedrag (SRD)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  value={payModal.amount}
+                  onChange={e => setPayModal({ ...payModal, amount: e.target.value })}
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-lg font-bold text-slate-900 focus:border-orange-500 focus:outline-none"
+                  data-testid="pay-amount-input"
+                  autoFocus
+                />
+              </div>
+              <p className="text-xs text-slate-400">Dit bedrag wordt afgeschreven van de kas</p>
+            </div>
+            <div className="flex gap-3 p-4 border-t border-slate-100">
+              <button
+                onClick={handlePay}
+                disabled={paying}
+                data-testid="confirm-pay-btn"
+                className="flex-1 flex items-center justify-center gap-2 py-3 bg-green-500 text-white rounded-xl font-medium hover:bg-green-600 disabled:opacity-50"
+              >
+                {paying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Banknote className="w-4 h-4" />}
+                Uitbetalen
+              </button>
+              <button
+                onClick={() => setPayModal(null)}
+                className="px-6 py-3 text-slate-500 hover:text-slate-700 border border-slate-200 rounded-xl font-medium"
+              >
+                Annuleer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-
-// ============== POWER/STROOMBREKERS TAB ==============
 function PowerTab({ apartments, tenants, token, onRefresh }) {
   const [shellyDevices, setShellyDevices] = useState([]);
   const [loading, setLoading] = useState(true);

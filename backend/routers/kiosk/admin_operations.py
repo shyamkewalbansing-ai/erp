@@ -1036,14 +1036,22 @@ async def delete_employee(employee_id: str, company: dict = Depends(get_current_
     return {"message": "Werknemer verwijderd"}
 
 @router.post("/admin/employees/{employee_id}/pay")
-async def pay_employee(employee_id: str, company: dict = Depends(get_current_company)):
-    """Pay an employee's monthly salary - creates a kas entry"""
+async def pay_employee(employee_id: str, body: dict = None, company: dict = Depends(get_current_company)):
+    """Pay an employee — optional custom amount, defaults to maandloon"""
     emp = await db.kiosk_employees.find_one({
         "employee_id": employee_id,
         "company_id": company["company_id"]
     })
     if not emp:
         raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    
+    # Use custom amount if provided, otherwise full maandloon
+    if body and body.get("amount") is not None:
+        amount = float(body["amount"])
+        if amount <= 0:
+            raise HTTPException(status_code=400, detail="Bedrag moet groter zijn dan 0")
+    else:
+        amount = emp["maandloon"]
     
     now = datetime.now(timezone.utc)
     month_label = now.strftime("%B %Y")
@@ -1053,7 +1061,7 @@ async def pay_employee(employee_id: str, company: dict = Depends(get_current_com
         "entry_id": entry_id,
         "company_id": company["company_id"],
         "entry_type": "salary",
-        "amount": emp["maandloon"],
+        "amount": amount,
         "description": f"Loon {emp['name']} - {month_label}",
         "category": "salary",
         "related_employee_id": employee_id,
@@ -1072,7 +1080,7 @@ async def pay_employee(employee_id: str, company: dict = Depends(get_current_com
         if emp_phone:
             comp_name = company.get("stamp_company_name") or company.get("name", "")
             wa_salary_msg = (f"Beste {emp['name']},\n\n"
-                             f"Uw salaris van SRD {emp['maandloon']:,.2f} is uitbetaald.\n"
+                             f"Uw salaris van SRD {amount:,.2f} is uitbetaald.\n"
                              f"Periode: {month_label}\n\n"
                              f"Met vriendelijke groet,\n{comp_name}")
             await _send_message_auto(
@@ -1082,7 +1090,7 @@ async def pay_employee(employee_id: str, company: dict = Depends(get_current_com
     except Exception:
         pass  # Notificatie mag hoofdflow niet breken
     
-    return {"entry_id": entry_id, "amount": emp["maandloon"], "message": f"Loon uitbetaald: SRD {emp['maandloon']:.2f}"}
+    return {"entry_id": entry_id, "amount": amount, "message": f"Loon uitbetaald: SRD {amount:.2f}"}
 
 
 

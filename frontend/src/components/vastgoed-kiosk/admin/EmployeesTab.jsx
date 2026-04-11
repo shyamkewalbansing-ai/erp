@@ -14,7 +14,7 @@ function EmployeesTab({ token, formatSRD }) {
   const [email, setEmail] = useState('');
   const [saving, setSaving] = useState(false);
   const [paying, setPaying] = useState(null);
-  const [payModal, setPayModal] = useState(null); // { employee }
+  const [payModal, setPayModal] = useState(null); // { employee, amount }
   const [payResult, setPayResult] = useState(null);
 
   const loadEmployees = async () => {
@@ -68,16 +68,18 @@ function EmployeesTab({ token, formatSRD }) {
   };
 
   const handlePay = async (emp) => {
-    setPayModal({ employee: emp });
+    setPayModal({ employee: emp, amount: emp.maandloon?.toString() || '0' });
   };
 
   const executePay = async () => {
     const emp = payModal.employee;
+    const payAmount = parseFloat(payModal.amount);
+    if (!payAmount || payAmount <= 0) return;
     setPaying(emp.employee_id);
     try {
-      await axios.post(`${API}/admin/employees/${emp.employee_id}/pay`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.post(`${API}/admin/employees/${emp.employee_id}/pay`, { amount: payAmount }, { headers: { Authorization: `Bearer ${token}` } });
       loadEmployees();
-      setPayResult({ success: true, message: `Loon uitbetaald: SRD ${emp.maandloon?.toFixed(2)} aan ${emp.name}` });
+      setPayResult({ success: true, message: `Loon uitbetaald: SRD ${payAmount.toFixed(2)} aan ${emp.name}` });
     } catch {
       setPayResult({ success: false, message: 'Uitbetaling mislukt' });
     }
@@ -255,10 +257,25 @@ function EmployeesTab({ token, formatSRD }) {
                   </div>
                 </div>
 
-                <div className="bg-slate-50 rounded-xl p-4 mb-4">
+                <div className="bg-slate-50 rounded-xl p-4 mb-4 space-y-2">
                   <p className="text-sm text-slate-600"><span className="font-bold">Werknemer:</span> {payModal.employee.name}</p>
                   <p className="text-sm text-slate-600"><span className="font-bold">Functie:</span> {payModal.employee.functie || '-'}</p>
-                  <p className="text-sm text-slate-600"><span className="font-bold">Bedrag:</span> <span className="font-bold text-green-600">SRD {payModal.employee.maandloon?.toFixed(2)}</span></p>
+                  <p className="text-sm text-slate-600"><span className="font-bold">Maandloon:</span> SRD {payModal.employee.maandloon?.toFixed(2)}</p>
+                </div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Uit te betalen bedrag (SRD)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    value={payModal.amount}
+                    onChange={e => setPayModal({ ...payModal, amount: e.target.value })}
+                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-lg font-bold text-slate-900 focus:border-green-500 focus:outline-none"
+                    data-testid="pay-amount-input"
+                    autoFocus
+                  />
+                  <p className="text-xs text-slate-400 mt-1">Dit bedrag wordt afgeschreven van de kas</p>
                 </div>
 
                 <div className="flex gap-3">
