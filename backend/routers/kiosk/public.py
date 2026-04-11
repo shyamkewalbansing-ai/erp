@@ -127,7 +127,7 @@ async def get_tenants_public(company_id: str):
                 months_owed += 1
             month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
             for i in range(months_owed):
-                m_date = bt_date - relativedelta(months=i)
+                m_date = bt_date - relativedelta(months=i+1)
                 m_name = month_names_nl[m_date.month - 1]
                 overdue_months.append(f"{m_name} {m_date.year}")
             overdue_months.reverse()
@@ -256,7 +256,7 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
             # Build overdue months list (oldest first)
             all_overdue = []
             for i in range(months_owed):
-                m_date = bt_date - relativedelta(months=i)
+                m_date = bt_date - relativedelta(months=i+1)
                 m_label = f"{month_names_nl[m_date.month - 1]} {m_date.year}"
                 m_key = m_date.strftime("%Y-%m")
                 all_overdue.append({"label": m_label, "key": m_key})

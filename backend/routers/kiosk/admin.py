@@ -482,8 +482,9 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                 if remainder > 0:
                     months_owed += 1
                 # List the overdue months (counting back from billed_through)
+                # Rule: current month is NOT overdue — payment is due next month
                 for i in range(months_owed):
-                    m_date = bt_date - relativedelta(months=i)
+                    m_date = bt_date - relativedelta(months=i+1)
                     month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
                     m_name = month_names_nl[m_date.month - 1]
                     overdue_months.append(f"{m_name} {m_date.year}")
@@ -1080,7 +1081,7 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
             month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
             all_overdue = []
             for i in range(months_owed):
-                m_date = bt_date - relativedelta(months=i)
+                m_date = bt_date - relativedelta(months=i+1)
                 all_overdue.append({"label": f"{month_names_nl[m_date.month - 1]} {m_date.year}", "key": m_date.strftime("%Y-%m")})
             all_overdue.reverse()
             pay_amount = data.amount
