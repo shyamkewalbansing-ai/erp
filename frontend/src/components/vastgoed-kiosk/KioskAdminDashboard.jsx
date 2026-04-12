@@ -42,6 +42,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   const [editingItem, setEditingItem] = useState(null);
   const [selectedTenant, setSelectedTenant] = useState(null);
   const [loanDetailData, setLoanDetailData] = useState(null);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');
@@ -149,38 +150,42 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   }
 
   const TABS = [
-    { id: 'dashboard', label: 'Dashboard', icon: Building2 },
+    { id: 'dashboard', label: 'Home', icon: Building2 },
     { id: 'tenants', label: 'Huurders', icon: Users },
-    { id: 'apartments', label: 'Appartementen', icon: Home },
+    { id: 'apartments', label: 'Appt.', icon: Home },
     { id: 'payments', label: 'Kwitanties', icon: Receipt },
     { id: 'kas', label: 'Bank/Kas', icon: Landmark },
     { id: 'loans', label: 'Leningen', icon: Wallet },
     { id: 'employees', label: 'Werknemers', icon: Briefcase },
-    { id: 'power', label: 'Stroombrekers', icon: Zap },
+    { id: 'power', label: 'Stroom', icon: Zap },
     { id: 'internet', label: 'Internet', icon: Wifi },
     { id: 'settings', label: 'Instellingen', icon: Settings },
   ];
 
+  // Mobile bottom nav: show 5 main tabs + "Meer" menu
+  const MOBILE_MAIN_TABS = ['dashboard', 'tenants', 'apartments', 'payments', 'settings'];
+  const MOBILE_MORE_TABS = TABS.filter(t => !MOBILE_MAIN_TABS.includes(t.id));
+
   return (
-    <div className="fixed top-0 left-0 right-0 flex flex-col bg-slate-100" style={{ overflow: 'hidden', bottom: '7vh' }}>
-      {/* Header - fixed */}
-      <header className="bg-white border-b border-slate-200 py-3 sm:py-4 px-3 sm:px-4 lg:px-8 shadow-sm flex-shrink-0 z-20">
+    <div className="fixed inset-0 flex flex-col bg-slate-100 z-50">
+      {/* Header - compact on mobile */}
+      <header className="bg-white border-b border-slate-200 py-2 sm:py-4 px-3 sm:px-4 lg:px-8 shadow-sm flex-shrink-0 z-20">
         <div className="w-full flex items-center justify-between">
-          <div className="flex items-center gap-3 lg:gap-4">
-            <button onClick={handleBack} className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition">
-              <ArrowLeft className="w-5 h-5" />
+          <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
+            <button onClick={handleBack} className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition flex-shrink-0">
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-sm shadow-orange-500/30">
-                <Building2 className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-orange-500 flex items-center justify-center shadow-sm shadow-orange-500/30 flex-shrink-0">
+                <Building2 className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
               </div>
-              <div>
-                <h1 className="text-base lg:text-lg font-bold text-slate-900">{company?.name}</h1>
-                <p className="text-xs text-slate-500">Admin Dashboard</p>
+              <div className="min-w-0">
+                <h1 className="text-sm sm:text-base lg:text-lg font-bold text-slate-900 truncate">{company?.name}</h1>
+                <p className="text-[10px] sm:text-xs text-slate-500 hidden sm:block">Admin Dashboard</p>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 lg:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3">
             <button
               onClick={copyKioskUrl}
               className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs lg:text-sm font-medium hover:bg-slate-200 transition"
@@ -190,25 +195,25 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
             </button>
             <button
               onClick={handleBack}
-              className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 text-white rounded-xl text-xs lg:text-sm font-bold hover:bg-orange-600 transition shadow-sm shadow-orange-500/20"
+              className="flex items-center gap-1.5 px-2.5 sm:px-4 py-2 sm:py-2.5 bg-orange-500 text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-orange-600 transition shadow-sm shadow-orange-500/20"
             >
-              <ExternalLink className="w-4 h-4" />
+              <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Kiosk</span>
             </button>
             <button
               onClick={handleLogout}
               data-testid="admin-logout-button"
-              className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs lg:text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition"
+              className="flex items-center gap-1.5 px-2.5 sm:px-4 py-2 sm:py-2.5 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs sm:text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition"
             >
-              <LogIn className="w-4 h-4 rotate-180" />
+              <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4 rotate-180" />
               <span className="hidden sm:inline">Uit</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* Tabs - fixed */}
-      <div className="bg-slate-100 border-b border-slate-200 px-3 sm:px-4 lg:px-8 pt-4 pb-2 flex-shrink-0 z-10">
+      {/* Desktop tabs - hidden on mobile */}
+      <div className="hidden md:block bg-slate-100 border-b border-slate-200 px-3 sm:px-4 lg:px-8 pt-4 pb-2 flex-shrink-0 z-10">
         <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-hide" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
           {TABS.map(tab => (
             <button
@@ -221,14 +226,14 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
               }`}
             >
               <tab.icon className="w-4 h-4" />
-              <span className="hidden sm:inline">{tab.label}</span>
+              {tab.label}
             </button>
           ))}
         </div>
       </div>
 
       {/* Scrollable content area */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 lg:px-8 py-4 pb-6">
+      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 pb-20 md:pb-6">
 
         {activeTab === 'dashboard' && <DashboardTab dashboard={dashboard} payments={payments} leases={leases} formatSRD={formatSRD} />}
 
@@ -352,6 +357,62 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
           onClose={() => setLoanDetailData(null)}
           onPay={() => {}}
         />
+      )}
+
+      {/* Mobile bottom navigation bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 flex items-stretch" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        {MOBILE_MAIN_TABS.slice(0, 4).map(tabId => {
+          const tab = TABS.find(t => t.id === tabId);
+          if (!tab) return null;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => { setActiveTab(tab.id); setShowMoreMenu(false); }}
+              className={`flex-1 flex flex-col items-center justify-center py-2 transition-colors ${isActive ? 'text-orange-500' : 'text-slate-400'}`}
+              data-testid={`mobile-nav-${tab.id}`}
+            >
+              <tab.icon className={`w-5 h-5 ${isActive ? 'text-orange-500' : 'text-slate-400'}`} />
+              <span className={`text-[10px] mt-0.5 font-medium ${isActive ? 'text-orange-500' : 'text-slate-400'}`}>{tab.label}</span>
+            </button>
+          );
+        })}
+        {/* More menu button */}
+        <button
+          onClick={() => setShowMoreMenu(!showMoreMenu)}
+          className={`flex-1 flex flex-col items-center justify-center py-2 transition-colors relative ${
+            !MOBILE_MAIN_TABS.includes(activeTab) || showMoreMenu ? 'text-orange-500' : 'text-slate-400'
+          }`}
+          data-testid="mobile-nav-more"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
+          <span className="text-[10px] mt-0.5 font-medium">Meer</span>
+        </button>
+      </nav>
+
+      {/* Mobile "Meer" popup menu */}
+      {showMoreMenu && (
+        <div className="md:hidden fixed inset-0 z-40" onClick={() => setShowMoreMenu(false)}>
+          <div className="absolute bottom-16 left-2 right-2 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="p-2 grid grid-cols-3 gap-1">
+              {[...MOBILE_MORE_TABS, TABS.find(t => t.id === 'settings')].filter(Boolean).map(tab => {
+                const isActive = activeTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => { setActiveTab(tab.id); setShowMoreMenu(false); }}
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-colors ${
+                      isActive ? 'bg-orange-50 text-orange-500' : 'text-slate-600 hover:bg-slate-50'
+                    }`}
+                  >
+                    <tab.icon className="w-5 h-5" />
+                    <span className="text-[11px] font-medium">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
