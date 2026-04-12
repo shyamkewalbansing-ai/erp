@@ -1154,6 +1154,79 @@ async def delete_payment(payment_id: str, company: dict = Depends(get_current_co
     return {"message": "Betaling verwijderd"}
 
 
+@router.post("/admin/payments/fix-covered-months")
+async def fix_covered_months(company: dict = Depends(get_current_company)):
+    """One-time migration: recalculate covered_months for all payments using correct algorithm"""
+    company_id = company["company_id"]
+    payments = await db.kiosk_payments.find({"company_id": company_id}).sort("created_at", 1).to_list(10000)
+    
+    month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+    fixed = 0
+    
+    for p in payments:
+        if p.get("payment_type") not in ("rent", "partial_rent", "monthly_rent"):
+            continue
+        
+        tenant_id = p.get("tenant_id")
+        if not tenant_id:
+            continue
+        
+        tenant = await db.kiosk_tenants.find_one({"tenant_id": tenant_id, "company_id": company_id})
+        if not tenant:
+            continue
+        
+        monthly_rent = tenant.get("monthly_rent", 0)
+        outstanding = tenant.get("outstanding_rent", 0)
+        billed_through = tenant.get("rent_billed_through", "")
+        
+        if not billed_through or monthly_rent <= 0:
+            continue
+        
+        bt_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+        
+        # Calculate months owed at time of this payment
+        # Use current outstanding + sum of all later payments to reconstruct
+        later_payments = [lp for lp in payments 
+                         if lp.get("tenant_id") == tenant_id 
+                         and lp.get("payment_type") in ("rent", "partial_rent", "monthly_rent")
+                         and lp.get("created_at", "") > p.get("created_at", "")
+                        ]
+        later_sum = sum(lp.get("amount", 0) for lp in later_payments)
+        outstanding_at_time = outstanding + later_sum + p.get("amount", 0)
+        
+        months_owed = int(outstanding_at_time / monthly_rent) if monthly_rent > 0 else 0
+        remainder = outstanding_at_time - (months_owed * monthly_rent)
+        if remainder > 0:
+            months_owed += 1
+        
+        # Build covered months: exclude billed_through, count from oldest
+        all_unpaid = []
+        for i in range(months_owed):
+            m_date = bt_date - relativedelta(months=i + 1)
+            all_unpaid.append(f"{month_names_nl[m_date.month - 1]} {m_date.year}")
+        all_unpaid.reverse()
+        
+        covered = []
+        pay_amount = p.get("amount", 0)
+        for label in all_unpaid:
+            if pay_amount >= monthly_rent:
+                covered.append(label)
+                pay_amount -= monthly_rent
+            elif pay_amount > 0:
+                covered.append(label + " (gedeeltelijk)")
+                pay_amount = 0
+        
+        if covered != p.get("covered_months", []):
+            await db.kiosk_payments.update_one(
+                {"payment_id": p["payment_id"]},
+                {"$set": {"covered_months": covered}}
+            )
+            fixed += 1
+    
+    return {"message": f"{fixed} betalingen bijgewerkt", "total": len(payments)}
+
+
+
 @router.post("/admin/payments/register")
 async def register_manual_payment(data: PaymentCreate, company: dict = Depends(get_current_company)):
     """Register a manual/cash payment from admin dashboard"""

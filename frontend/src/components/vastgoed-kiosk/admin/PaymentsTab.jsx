@@ -27,6 +27,14 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
 
   const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
+  // Lookup huurder huidig saldo (fallback voor oude betalingen zonder opgeslagen remaining)
+  const tenantMap = {};
+  (tenants || []).forEach(t => {
+    const total = (t.outstanding_rent || 0) + (t.service_costs || 0) + (t.fines || 0) + (t.internet_outstanding || 0);
+    tenantMap[t.tenant_code] = total;
+    tenantMap[t.name] = total;
+  });
+
   const PRINT_SERVER_URL = 'http://localhost:5555';
   const handlePrint = async () => {
     if (!selectedPayment) return;
@@ -130,10 +138,12 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                   <td className="p-4 text-right font-bold text-slate-800">{formatSRD(p.amount)}</td>
                   <td className="p-4 text-right">
                     {(() => {
-                      const rem = (p.remaining_rent || 0) + (p.remaining_service || 0) + (p.remaining_fines || 0) + (p.remaining_internet || 0);
+                      const hasStored = p.remaining_rent !== null && p.remaining_rent !== undefined;
+                      const rem = hasStored
+                        ? (p.remaining_rent || 0) + (p.remaining_service || 0) + (p.remaining_fines || 0) + (p.remaining_internet || 0)
+                        : (tenantMap[p.tenant_name] || tenantMap[p.tenant_code] || 0);
                       if (rem > 0) return <span className="font-bold text-red-600">{formatSRD(rem)}</span>;
-                      if (p.remaining_rent !== null && p.remaining_rent !== undefined) return <span className="text-green-600 text-sm font-medium">Voldaan</span>;
-                      return <span className="text-slate-400 text-xs">-</span>;
+                      return <span className="text-green-600 text-sm font-medium">Voldaan</span>;
                     })()}
                   </td>
                   <td className="p-4 text-right">
