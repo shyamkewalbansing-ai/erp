@@ -869,7 +869,7 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     
     # Fallback: get current tenant balances if not stored
     if not has_remaining:
-        tenant_doc = await db.kiosk_tenants.find_one({"tenant_id": payment.get("tenant_id"), "company_id": company["company_id"]})
+        tenant_doc = await db.kiosk_tenants.find_one({"tenant_id": payment.get("tenant_id"), "company_id": company_id})
         if tenant_doc:
             remaining_rent = tenant_doc.get("outstanding_rent", 0)
             remaining_service = tenant_doc.get("service_costs", 0)
