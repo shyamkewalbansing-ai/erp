@@ -109,9 +109,11 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
             <table className="w-full min-w-[600px]">
               <thead className="bg-slate-50">
                 <tr>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Datum</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
-                  <th className="text-left p-4 text-sm font-medium text-slate-500">Appartement</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Appt</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Type</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Periode</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Bedrag</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Kwitantie</th>
                 </tr>
@@ -119,17 +121,18 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
               <tbody>
                 {recentPayments.map((p, i) => (
                   <tr key={p.payment_id || i} className="border-t border-slate-100 hover:bg-slate-50">
+                    <td className="p-4 text-sm text-slate-600">
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short' }) : '-'}
+                    </td>
                     <td className="p-4 font-bold text-slate-900">{p.tenant_name}</td>
                     <td className="p-4 text-slate-600">{p.apartment_number}</td>
                     <td className="p-4">
                       <span className="px-2 py-1 bg-orange-50 text-orange-600 rounded text-xs font-semibold">
-                        {p.payment_type === 'rent' ? 'Huur'
-                          : p.payment_type === 'service' ? 'Service'
-                          : p.payment_type === 'fine' ? 'Boetes'
-                          : p.payment_type === 'partial_rent' ? 'Gedeeltelijke huur'
-                          : p.payment_type === 'deposit' ? 'Borgsom'
-                          : p.payment_type?.replace('_', ' ')}
+                        {{rent:'Huur', monthly_rent:'Huur', partial_rent:'Deelbetaling', service_costs:'Service', fines:'Boetes', fine:'Boetes', deposit:'Borg', internet:'Internet'}[p.payment_type] || p.payment_type?.replace('_', ' ')}
                       </span>
+                    </td>
+                    <td className="p-4 text-sm text-slate-600">
+                      {p.covered_months?.length > 0 ? p.covered_months.join(', ') : '-'}
                     </td>
                     <td className="p-4 text-right font-bold text-slate-900">{formatSRD(p.amount)}</td>
                     <td className="p-4 text-right text-sm text-slate-400 font-mono">{p.kwitantie_nummer}</td>
