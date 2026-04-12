@@ -833,10 +833,14 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     
     # Payment type label
     type_labels = {
+        "rent": "Huurbetaling",
         "monthly_rent": "Maandhuur",
+        "partial_rent": "Gedeeltelijke Huurbetaling",
         "service_costs": "Servicekosten",
         "deposit": "Borg",
         "fine": "Boete",
+        "fines": "Boetes",
+        "internet": "Internet",
         "other": "Overig"
     }
     type_label = type_labels.get(payment_type, payment_type.replace("_", " ").title())
@@ -846,13 +850,53 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     
     # Format rent month
     rent_month_label = ""
-    if rent_month:
+    covered_months = payment.get("covered_months", [])
+    if covered_months:
+        rent_month_label = ", ".join(covered_months)
+    elif rent_month:
         try:
             y, m = rent_month.split("-")
             months_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
             rent_month_label = f"{months_nl[int(m)-1]} {y}"
         except Exception:
             rent_month_label = rent_month
+    
+    # Remaining balances from stored payment data
+    remaining_rent = payment.get("remaining_rent")
+    remaining_service = payment.get("remaining_service")
+    remaining_fines = payment.get("remaining_fines")
+    remaining_internet = payment.get("remaining_internet")
+    has_remaining = remaining_rent is not None
+    total_remaining = ((remaining_rent or 0) + (remaining_service or 0) + (remaining_fines or 0) + (remaining_internet or 0)) if has_remaining else None
+
+    # Build remaining balance HTML section
+    remaining_html = ""
+    if total_remaining is not None:
+        rows = ""
+        if remaining_rent:
+            rows += f'<tr><td>Huur</td><td>SRD {remaining_rent:,.2f}</td></tr>'
+        if remaining_service:
+            rows += f'<tr><td>Servicekosten</td><td>SRD {remaining_service:,.2f}</td></tr>'
+        if remaining_fines:
+            rows += f'<tr><td>Boetes</td><td>SRD {remaining_fines:,.2f}</td></tr>'
+        if remaining_internet:
+            rows += f'<tr><td>Internet</td><td>SRD {remaining_internet:,.2f}</td></tr>'
+        total_color = "#27ae60" if total_remaining == 0 else "#e74c3c"
+        total_text = "VOLDAAN" if total_remaining == 0 else f"SRD {total_remaining:,.2f}"
+        remaining_html = f'''
+<table class="details-table" style="margin-top:10px;">
+  <tr><td colspan="2" style="font-size:9pt;color:#7f8c8d;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #2c3e50 !important;">Openstaand na betaling</td></tr>
+  {rows}
+  <tr style="border-top:2px solid #2c3e50;"><td style="font-weight:bold;font-size:11pt;">TOTAAL OPENSTAAND</td><td style="font-weight:bold;font-size:11pt;color:{total_color};">{total_text}</td></tr>
+</table>'''
+
+    # Build rent month row
+    rent_month_row = ""
+    if rent_month_label:
+        if payment_type in ("rent", "partial_rent", "monthly_rent"):
+            rent_month_row = f'<tr><td>Betaling voor</td><td>{rent_month_label}</td></tr>'
+        else:
+            rent_month_row = f'<tr><td>Huurmaand</td><td>{rent_month_label}</td></tr>'
 
     html = f"""<!DOCTYPE html>
 <html lang="nl">
@@ -1054,7 +1098,7 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     <td>Type betaling</td>
     <td>{type_label}</td>
   </tr>
-  {f'<tr><td>Huurmaand</td><td>{rent_month_label}</td></tr>' if rent_month_label else ''}
+  {rent_month_row}
   <tr>
     <td>Betalingswijze</td>
     <td>{method_label}</td>
@@ -1065,6 +1109,8 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     <td>SRD {amount:,.2f}</td>
   </tr>
 </table>
+
+{remaining_html}
 
 <div class="stamp-section">
   <div class="stamp-rect">
@@ -1189,6 +1235,17 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
     remaining_service = updated_tenant.get("service_costs", 0) if updated_tenant else 0
     remaining_fines = updated_tenant.get("fines", 0) if updated_tenant else 0
     remaining_internet = updated_tenant.get("internet_outstanding", 0) if updated_tenant else 0
+
+    # Store remaining balances in payment document for accurate receipt display
+    await db.kiosk_payments.update_one(
+        {"payment_id": payment_id},
+        {"$set": {
+            "remaining_rent": remaining_rent,
+            "remaining_service": remaining_service,
+            "remaining_fines": remaining_fines,
+            "remaining_internet": remaining_internet,
+        }}
+    )
 
     # Auto WhatsApp
     total_remaining = remaining_rent + remaining_service + remaining_fines + remaining_internet

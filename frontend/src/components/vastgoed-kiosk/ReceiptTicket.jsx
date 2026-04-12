@@ -43,11 +43,12 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
   const rentMonth = formatRentMonth(payment.rent_month);
   const coveredMonths = payment.covered_months || [];
 
-  const remainingRent = payment.remaining_rent ?? (tenant?.outstanding_rent || 0);
-  const remainingService = payment.remaining_service ?? (tenant?.service_costs || 0);
-  const remainingFines = payment.remaining_fines ?? (tenant?.fines || 0);
-  const remainingInternet = payment.remaining_internet ?? (tenant?.internet_outstanding || 0);
-  const totalRemaining = remainingRent + remainingService + remainingFines + remainingInternet;
+  const remainingRent = payment.remaining_rent ?? null;
+  const remainingService = payment.remaining_service ?? null;
+  const remainingFines = payment.remaining_fines ?? null;
+  const remainingInternet = payment.remaining_internet ?? null;
+  const hasRemainingData = remainingRent !== null;
+  const totalRemaining = hasRemainingData ? ((remainingRent || 0) + (remainingService || 0) + (remainingFines || 0) + (remainingInternet || 0)) : null;
 
   const font = "'Courier New', 'Courier', monospace";
   // Width: 80mm for print, scaled for preview
@@ -158,7 +159,11 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
       {/* ====== OPENSTAAND SALDO ====== */}
       {dashedLine()}
       <div style={{ padding: '0 2px' }}>
-        {totalRemaining > 0 ? (
+        {totalRemaining === null ? (
+          <div style={{ textAlign: 'center', fontSize: '10px', color: '#999', padding: '4px 0' }}>
+            Saldo niet beschikbaar voor deze betaling
+          </div>
+        ) : totalRemaining > 0 ? (
           <>
             <div style={{ fontSize: '10px', color: '#555', marginBottom: '4px', textTransform: 'uppercase' }}>Openstaand na betaling:</div>
             {remainingRent > 0 && row('  Huur', formatSRD(remainingRent).replace('SRD ', ''), false, '11px')}

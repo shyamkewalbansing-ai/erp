@@ -25,40 +25,38 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
     bank_description: company.bank_description || '',
   } : null;
 
-  // Lookup huurder openstaand saldo per tenant
-  const tenantMap = {};
-  (tenants || []).forEach(t => {
-    const total = (t.outstanding_rent || 0) + (t.service_costs || 0) + (t.fines || 0) + (t.internet_outstanding || t.internet_cost || 0);
-    tenantMap[t.tenant_code] = total;
-    tenantMap[t.name] = total;
-  });
+  const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
   const PRINT_SERVER_URL = 'http://localhost:5555';
   const handlePrint = async () => {
     if (!selectedPayment) return;
-    const printData = {
-      company_name: stampData?.stamp_company_name || 'Vastgoed Beheer',
-      address: stampData?.stamp_address || '',
-      phone: stampData?.stamp_phone || '',
-      receipt_number: selectedPayment.kwitantie_nummer || '',
-      date: new Date(selectedPayment.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-      time: new Date(selectedPayment.created_at).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
-      tenant_name: selectedPayment.tenant_name || '',
-      apartment: `${selectedPayment.apartment_number || ''} / ${selectedPayment.tenant_code || ''}`,
-      payment_type: { rent: 'Huurbetaling', monthly_rent: 'Huurbetaling', partial_rent: 'Gedeelt. huurbetaling', service_costs: 'Servicekosten', fines: 'Boetes', deposit: 'Borgsom' }[selectedPayment.payment_type] || selectedPayment.payment_type,
-      amount: Number(selectedPayment.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 }),
-      total: Number(selectedPayment.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 }),
-      payment_method: { cash: 'Contant', card: 'Pinpas', mope: 'Mope', bank: 'Bank', pin: 'PIN' }[selectedPayment.payment_method] || selectedPayment.payment_method || 'Contant',
-      remaining_total: Number((selectedPayment.remaining_rent || 0) + (selectedPayment.remaining_service || 0) + (selectedPayment.remaining_fines || 0)).toLocaleString('nl-NL', { minimumFractionDigits: 2 })
-    };
+    // Try local print server first, otherwise open backend receipt HTML
     try {
       const hc = await fetch(`${PRINT_SERVER_URL}/health`, { method: 'GET', mode: 'cors' }).catch(() => null);
       if (hc?.ok) {
+        const printData = {
+          company_name: stampData?.stamp_company_name || 'Vastgoed Beheer',
+          address: stampData?.stamp_address || '',
+          phone: stampData?.stamp_phone || '',
+          receipt_number: selectedPayment.kwitantie_nummer || '',
+          date: new Date(selectedPayment.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+          time: new Date(selectedPayment.created_at).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
+          tenant_name: selectedPayment.tenant_name || '',
+          apartment: `${selectedPayment.apartment_number || ''} / ${selectedPayment.tenant_code || ''}`,
+          payment_type: { rent: 'Huurbetaling', monthly_rent: 'Huurbetaling', partial_rent: 'Gedeelt. huurbetaling', service_costs: 'Servicekosten', fines: 'Boetes', deposit: 'Borgsom' }[selectedPayment.payment_type] || selectedPayment.payment_type,
+          amount: Number(selectedPayment.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 }),
+          total: Number(selectedPayment.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 }),
+          payment_method: { cash: 'Contant', card: 'Pinpas', mope: 'Mope', bank: 'Bank', pin: 'PIN' }[selectedPayment.payment_method] || selectedPayment.payment_method || 'Contant',
+          remaining_total: Number((selectedPayment.remaining_rent || 0) + (selectedPayment.remaining_service || 0) + (selectedPayment.remaining_fines || 0)).toLocaleString('nl-NL', { minimumFractionDigits: 2 })
+        };
         await fetch(`${PRINT_SERVER_URL}/print`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(printData) });
       } else {
-        window.print();
+        // Open backend-generated receipt HTML in new tab for printing
+        window.open(`${API}/admin/payments/${selectedPayment.payment_id}/receipt?token=${token}`, '_blank');
       }
-    } catch { window.print(); }
+    } catch {
+      window.open(`${API}/admin/payments/${selectedPayment.payment_id}/receipt?token=${token}`, '_blank');
+    }
   };
 
   return (
@@ -132,10 +130,10 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                   <td className="p-4 text-right font-bold text-slate-800">{formatSRD(p.amount)}</td>
                   <td className="p-4 text-right">
                     {(() => {
-                      const tenantOutstanding = tenantMap[p.tenant_name] || tenantMap[p.tenant_code] || 0;
-                      return tenantOutstanding > 0 
-                        ? <span className="font-bold text-red-600">{formatSRD(tenantOutstanding)}</span>
-                        : <span className="text-green-600 text-sm font-medium">Voldaan</span>;
+                      const rem = (p.remaining_rent || 0) + (p.remaining_service || 0) + (p.remaining_fines || 0) + (p.remaining_internet || 0);
+                      if (rem > 0) return <span className="font-bold text-red-600">{formatSRD(rem)}</span>;
+                      if (p.remaining_rent !== null && p.remaining_rent !== undefined) return <span className="text-green-600 text-sm font-medium">Voldaan</span>;
+                      return <span className="text-slate-400 text-xs">-</span>;
                     })()}
                   </td>
                   <td className="p-4 text-right">
@@ -170,25 +168,21 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
     {selectedPayment && (() => {
       const matchedTenant = (tenants || []).find(t => t.name === selectedPayment.tenant_name || t.tenant_code === selectedPayment.tenant_code) || null;
       return (
-      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 print:p-0 print:bg-white" onClick={() => setSelectedPayment(null)}>
-        <div className="bg-white rounded-2xl shadow-2xl max-w-[420px] w-full max-h-[85vh] flex flex-col print:max-w-none print:rounded-none print:shadow-none" onClick={(e) => e.stopPropagation()}>
+      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setSelectedPayment(null)}>
+        <div className="bg-white rounded-2xl shadow-2xl max-w-[420px] w-full max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
           {/* Receipt - scrollable */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-4 print:p-0 flex justify-center">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 flex justify-center">
             <ReceiptTicket payment={selectedPayment} tenant={matchedTenant} preview={true} stampData={stampData} />
           </div>
           {/* Bottom actions - always visible */}
-          <div className="flex items-center gap-2 p-3 border-t border-slate-100 flex-shrink-0 print:hidden">
-            <button onClick={handlePrint} className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600">
+          <div className="flex items-center gap-2 p-3 border-t border-slate-100 flex-shrink-0">
+            <button onClick={handlePrint} data-testid="receipt-print-btn" className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600">
               <Receipt className="w-4 h-4" /> Afdrukken
             </button>
             <button onClick={() => setSelectedPayment(null)} className="px-6 py-2.5 text-slate-500 hover:text-slate-700 border border-slate-200 rounded-xl text-sm font-medium">
               Sluiten
             </button>
           </div>
-        </div>
-        {/* Hidden full-size for printing */}
-        <div className="hidden print:block print:fixed print:inset-0 print:bg-white print:z-[9999]">
-          <ReceiptTicket payment={selectedPayment} tenant={matchedTenant} preview={false} stampData={stampData} />
         </div>
       </div>
       );

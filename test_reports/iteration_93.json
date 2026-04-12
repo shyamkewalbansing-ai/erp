@@ -1,0 +1,80 @@
+{
+  "summary": "Tested Kwitanties (Receipts) tab bug fixes. All 3 bugs verified fixed: 1) Receipt shows correct outstanding amounts stored at time of payment, 2) Openstaand column uses stored remaining values (new payments show SRD amounts, old payments show '-'), 3) Print button opens backend HTML receipt in new tab instead of CSS print hack.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_kwitanties_bugfix.py",
+    "/app/test_reports/pytest/pytest_kwitanties_bugfix.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [],
+  "updated_files": [
+    "/app/backend/tests/test_kwitanties_bugfix.py"
+  ],
+  "success_rate": {
+    "backend": "100% (8/8 tests passed)",
+    "frontend": "100% (all features verified)"
+  },
+  "test_credentials": {
+    "kiosk_email": "shyam@kewalbansing.net",
+    "kiosk_password": "Bharat7755",
+    "kiosk_pin": "5678",
+    "company_slug": "kewalbansing"
+  },
+  "seed_data_creation": "None - used existing test data",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Kwitanties bug fixes verified. New payments (KW2026-00100, KW2026-00101) have stored remaining_rent, remaining_service, remaining_fines, remaining_internet fields. Old payments have null values and show '-' in UI. Print button opens /api/kiosk/admin/payments/{id}/receipt?token=xxx in new tab.",
+  "tests_executed": {
+    "backend_api_tests": [
+      {"test": "POST /api/kiosk/auth/login", "result": "PASS - Returns token"},
+      {"test": "GET /api/kiosk/admin/payments", "result": "PASS - Returns payments with remaining fields"},
+      {"test": "GET /api/kiosk/admin/tenants", "result": "PASS - Returns active tenants"},
+      {"test": "POST /api/kiosk/admin/payments/register", "result": "PASS - Response includes remaining_rent, remaining_service, remaining_fines, remaining_internet"},
+      {"test": "GET /api/kiosk/admin/payments/{id}", "result": "PASS - Single payment has remaining fields"},
+      {"test": "GET /api/kiosk/admin/payments/{id}/receipt", "result": "PASS - HTML contains 'Openstaand na betaling' section"},
+      {"test": "GET /api/kiosk/admin/payments/{id}/receipt (no token)", "result": "PASS - Returns 401"},
+      {"test": "Old payments remaining fields", "result": "PASS - Old payments have null remaining values"}
+    ],
+    "frontend_ui_tests": [
+      {"test": "Login via /vastgoed/admin with Wachtwoord method", "result": "PASS"},
+      {"test": "Navigate to Kwitanties tab", "result": "PASS - Tab loads with payments table"},
+      {"test": "Openstaand column header visible", "result": "PASS"},
+      {"test": "KW2026-00100 shows SRD 4.653,57 in Openstaand", "result": "PASS"},
+      {"test": "KW2026-00101 shows SRD 4.553,57 in Openstaand", "result": "PASS"},
+      {"test": "Old payments (KW2026-00099 and older) show '-' in Openstaand", "result": "PASS"},
+      {"test": "Click receipt view icon opens modal", "result": "PASS"},
+      {"test": "Receipt modal shows 'Openstaand na betaling' section", "result": "PASS"},
+      {"test": "Receipt shows Huur: 2.418,00, Servicekosten: 1.485,57, Boetes: 750,00", "result": "PASS"},
+      {"test": "Afdrukken button opens backend HTML in new tab", "result": "PASS - URL: /api/kiosk/admin/payments/{id}/receipt?token=xxx"}
+    ]
+  },
+  "bug_fixes_verified": {
+    "bug_1": {
+      "description": "Receipt showed incorrect outstanding amounts (was using current tenant balance instead of balance at time of payment)",
+      "fix": "Backend now stores remaining_rent/service/fines/internet in payment document via update_one after insert",
+      "verified": true
+    },
+    "bug_2": {
+      "description": "Openstaand column showed wrong amounts",
+      "fix": "Frontend Openstaand column uses stored payment.remaining_* fields instead of current tenant balance",
+      "verified": true
+    },
+    "bug_3": {
+      "description": "Print button opened blank page",
+      "fix": "Print now opens window.open() to backend /admin/payments/{id}/receipt?token=xxx instead of CSS print hack",
+      "verified": true
+    }
+  },
+  "mocked_apis": {
+    "Mope Payment Gateway": "MOCKED",
+    "Uni5Pay Payment Gateway": "MOCKED"
+  }
+}
