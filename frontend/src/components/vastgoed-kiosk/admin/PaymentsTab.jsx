@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Trash2, Receipt, Search, Calendar, FileText } from 'lucide-react';
+import { Trash2, Receipt, Search, Calendar, FileText, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 import ReceiptTicket from '../ReceiptTicket';
 
-function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD, token, company, tenants, onDeletePayment }) {
+function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD, token, company, tenants, onDeletePayment, onRefresh }) {
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [fixing, setFixing] = useState(false);
   const months = [];
   for (let i = 0; i < 12; i++) {
     const d = new Date();
@@ -34,6 +36,23 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
     tenantMap[t.tenant_code] = total;
     tenantMap[t.name] = total;
   });
+
+  const handleFixCoveredMonths = async () => {
+    if (!window.confirm('Wilt u de periode-gegevens van alle kwitanties herberekenen?')) return;
+    setFixing(true);
+    try {
+      const res = await fetch(`${API}/admin/payments/fix-covered-months`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      toast.success(`${data.message}`);
+      if (onRefresh) onRefresh();
+    } catch {
+      toast.error('Herberekening mislukt');
+    }
+    setFixing(false);
+  };
 
   const PRINT_SERVER_URL = 'http://localhost:5555';
   const handlePrint = async () => {
@@ -99,6 +118,16 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
           <p className="text-xs text-orange-600">{payments.length} betalingen</p>
           <p className="text-lg font-bold text-orange-600">{formatSRD(totalFiltered)}</p>
         </div>
+        <button
+          onClick={handleFixCoveredMonths}
+          disabled={fixing}
+          data-testid="fix-covered-months-btn"
+          title="Periodes herberekenen"
+          className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 disabled:opacity-50 text-xs font-medium"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${fixing ? 'animate-spin' : ''}`} />
+          {fixing ? 'Bezig...' : 'Periodes herberekenen'}
+        </button>
       </div>
 
       {/* Table */}
