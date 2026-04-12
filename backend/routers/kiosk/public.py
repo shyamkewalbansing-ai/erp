@@ -125,7 +125,7 @@ async def get_tenants_public(company_id: str):
         outstanding = t.get("outstanding_rent", 0)
         billed_through = t.get("rent_billed_through", "")
         
-        # Calculate overdue months
+        # Calculate overdue months (exclude billed_through = current billing period)
         overdue_months = []
         if billed_through and monthly_rent > 0 and outstanding > 0:
             bt_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
@@ -135,7 +135,7 @@ async def get_tenants_public(company_id: str):
                 months_owed += 1
             month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
             for i in range(months_owed):
-                m_date = bt_date - relativedelta(months=i+1)
+                m_date = bt_date - relativedelta(months=i + 1)
                 m_name = month_names_nl[m_date.month - 1]
                 overdue_months.append(f"{m_name} {m_date.year}")
             overdue_months.reverse()

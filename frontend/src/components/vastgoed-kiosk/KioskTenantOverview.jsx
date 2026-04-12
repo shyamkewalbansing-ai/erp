@@ -33,7 +33,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
 
   const items = [
     { label: 'Maandhuur', value: tenant.monthly_rent || 0, icon: Home },
-    { label: 'Openstaande huur', value: tenant.outstanding_rent || 0, icon: Wallet, highlight: true },
+    { label: 'Openstaande huur', value: tenant.outstanding_rent || 0, icon: Wallet, highlight: true, overdue: tenant.overdue_months },
     { label: 'Servicekosten', value: tenant.service_costs || 0, icon: FileText },
     { label: 'Boetes', value: tenant.fines || 0, icon: FileText },
     { label: 'Internet', value: tenant.internet_outstanding || 0, icon: Wifi },
@@ -86,7 +86,12 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                       <div className={`rounded-lg flex items-center justify-center ${isHighlight ? 'bg-orange-100' : 'bg-white'}`} style={{ width: '4vh', height: '4vh' }}>
                         <Icon style={{ width: '2vh', height: '2vh' }} className={isHighlight ? 'text-orange-500' : 'text-slate-400'} />
                       </div>
-                      <span className={`kiosk-body font-semibold ${isHighlight ? 'text-orange-700' : 'text-slate-500'}`}>{item.label}</span>
+                      <div>
+                        <span className={`kiosk-body font-semibold ${isHighlight ? 'text-orange-700' : 'text-slate-500'}`}>{item.label}</span>
+                        {item.overdue?.length > 0 && (
+                          <p style={{ fontSize: '10px' }} className="text-red-500 font-medium">{item.overdue.join(', ')}</p>
+                        )}
+                      </div>
                     </div>
                     <span className={`kiosk-subtitle whitespace-nowrap ${isHighlight ? 'text-orange-600' : 'text-slate-800'}`}>{formatSRD(item.value)}</span>
                   </div>
@@ -156,7 +161,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                 ) : payments.length === 0 ? (
                   <div className="text-center" style={{ padding: '4vh 0' }}><p className="kiosk-subtitle text-slate-400">Geen betalingen gevonden</p></div>
                 ) : (
-                  <div>{payments.map((p, i) => { const date = p.created_at ? new Date(p.created_at) : null; const dateStr = date ? date.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : ''; return (<div key={p.payment_id || i} className="kiosk-card-row flex items-center justify-between"><div className="flex items-center gap-3 min-w-0"><CheckCircle style={{ width: '2vh', height: '2vh' }} className="text-green-500 flex-shrink-0" /><div className="min-w-0"><div className="flex items-center gap-2 flex-wrap"><span className="kiosk-body font-bold text-slate-900">{formatSRD(p.amount)}</span><span className="kiosk-small px-2 py-0.5 rounded bg-orange-100 text-orange-600 font-semibold">{TYPE_LABELS[p.payment_type] || p.payment_type}</span></div><p className="kiosk-small text-slate-400">{dateStr} {p.kwitantie_nummer || ''}</p></div></div></div>); })}</div>
+                  <div>{payments.map((p, i) => { const date = p.created_at ? new Date(p.created_at) : null; const dateStr = date ? date.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : ''; const periode = p.covered_months?.length > 0 ? p.covered_months.join(', ') : ''; return (<div key={p.payment_id || i} className="kiosk-card-row flex items-center justify-between"><div className="flex items-center gap-3 min-w-0"><CheckCircle style={{ width: '2vh', height: '2vh' }} className="text-green-500 flex-shrink-0" /><div className="min-w-0"><div className="flex items-center gap-2 flex-wrap"><span className="kiosk-body font-bold text-slate-900">{formatSRD(p.amount)}</span><span className="kiosk-small px-2 py-0.5 rounded bg-orange-100 text-orange-600 font-semibold">{TYPE_LABELS[p.payment_type] || p.payment_type}</span></div><p className="kiosk-small text-slate-400">{dateStr} · {p.kwitantie_nummer || ''}</p>{periode && <p className="kiosk-small text-slate-500 font-medium">Periode: {periode}</p>}</div></div></div>); })}</div>
                 )}
               </div>
               <div style={{ padding: 'clamp(8px, 1.5vh, 16px) clamp(12px, 1.5vw, 24px)', borderTop: '1px solid #f1f5f9' }}>
@@ -199,7 +204,12 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                   <div className="flex items-center justify-center rounded bg-slate-50 w-8 h-8 sm:w-9 sm:h-9">
                     <item.icon className={`w-4 h-4 ${item.highlight && item.value > 0 ? 'text-orange-500' : 'text-slate-400'}`} />
                   </div>
-                  <span className={`text-sm sm:text-base ${item.highlight ? 'text-orange-600 font-bold' : 'text-slate-600'}`}>{item.label}</span>
+                  <div>
+                    <span className={`text-sm sm:text-base ${item.highlight ? 'text-orange-600 font-bold' : 'text-slate-600'}`}>{item.label}</span>
+                    {item.overdue?.length > 0 && (
+                      <p className="text-[11px] text-red-500 font-medium">{item.overdue.join(', ')}</p>
+                    )}
+                  </div>
                 </div>
                 <span className={`text-sm sm:text-base font-semibold whitespace-nowrap ${item.highlight ? 'text-orange-600' : 'text-slate-800'}`}>
                   {formatSRD(item.value)}
@@ -286,6 +296,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                   {payments.map((p, i) => {
                     const date = p.created_at ? new Date(p.created_at) : null;
                     const dateStr = date ? date.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
+                    const periode = p.covered_months?.length > 0 ? p.covered_months.join(', ') : '';
                     return (
                       <div key={p.payment_id || i} className="kiosk-card-row flex items-center justify-between" data-testid={`history-item-${i}`}>
                         <div className="flex items-center gap-3 min-w-0">
@@ -296,7 +307,8 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                               <span className="kiosk-small px-2 py-0.5 rounded bg-orange-100 text-orange-600 font-semibold">{TYPE_LABELS[p.payment_type] || p.payment_type}</span>
                               <span className="kiosk-small px-2 py-0.5 rounded bg-slate-100 text-slate-600">{METHOD_LABELS[p.payment_method] || p.payment_method || 'Contant'}</span>
                             </div>
-                            <p className="kiosk-small text-slate-400">{dateStr} {p.kwitantie_nummer || ''}</p>
+                            <p className="kiosk-small text-slate-400">{dateStr} · {p.kwitantie_nummer || ''}</p>
+                            {periode && <p className="kiosk-small text-slate-500 font-medium">Periode: {periode}</p>}
                           </div>
                         </div>
                       </div>
