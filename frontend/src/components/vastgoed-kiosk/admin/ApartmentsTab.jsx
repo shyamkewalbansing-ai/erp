@@ -33,27 +33,34 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete
     } catch (err) { console.error(err); }
   };
 
+  const totalIncome = filteredApartments.reduce((sum, apt) => sum + (apt.monthly_rent || 0), 0);
+
   return (
     <div className="bg-white rounded-xl border border-slate-200">
-      <div className="p-4 border-b border-slate-200 flex items-center gap-4">
-        <div className="flex-1 relative">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+      <div className="p-3 sm:p-4 border-b border-slate-200 flex flex-wrap items-center gap-2 sm:gap-4">
+        <div className="flex-1 min-w-[140px] relative">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={aptSearch}
             onChange={(e) => setAptSearch(e.target.value)}
-            placeholder="Zoek op nummer, omschrijving, huurder..."
+            placeholder="Zoek..."
             data-testid="apartment-search-input"
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-orange-500"
+            className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-500"
           />
         </div>
-        <span className="text-sm text-slate-500 whitespace-nowrap">{filteredApartments.length} appartement{filteredApartments.length !== 1 ? 'en' : ''}</span>
+        <div className="text-right px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg" data-testid="total-income">
+          <p className="text-[10px] text-green-600">Totale maandinkomen</p>
+          <p className="text-sm sm:text-lg font-bold text-green-700">{formatSRD(totalIncome)}</p>
+        </div>
+        <span className="text-xs text-slate-400 whitespace-nowrap">{filteredApartments.length} appt.</span>
         <button
           onClick={onAdd}
-          className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 whitespace-nowrap"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 whitespace-nowrap"
         >
           <Plus className="w-4 h-4" />
-          Nieuw Appartement
+          <span className="hidden sm:inline">Nieuw Appartement</span>
+          <span className="sm:hidden">Nieuw</span>
         </button>
       </div>
       <div className="overflow-x-auto">
