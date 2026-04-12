@@ -163,7 +163,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   ];
 
   // Mobile bottom nav: show 5 main tabs + "Meer" menu
-  const MOBILE_MAIN_TABS = ['dashboard', 'tenants', 'apartments', 'payments', 'settings'];
+  const MOBILE_MAIN_TABS = ['dashboard', 'tenants', 'apartments', 'payments'];
   const MOBILE_MORE_TABS = TABS.filter(t => !MOBILE_MAIN_TABS.includes(t.id));
 
   return (
@@ -233,7 +233,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
       </div>
 
       {/* Scrollable content area */}
-      <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 lg:px-8 py-3 sm:py-4 pb-20 md:pb-6">
+      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 sm:px-4 lg:px-8 py-3 sm:py-4 pb-20 md:pb-6" style={{ WebkitOverflowScrolling: 'touch' }}>
 
         {activeTab === 'dashboard' && <DashboardTab dashboard={dashboard} payments={payments} leases={leases} formatSRD={formatSRD} />}
 
@@ -360,8 +360,8 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
       )}
 
       {/* Mobile bottom navigation bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-30 flex items-stretch" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-        {MOBILE_MAIN_TABS.slice(0, 4).map(tabId => {
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-[55] flex items-stretch" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        {MOBILE_MAIN_TABS.map(tabId => {
           const tab = TABS.find(t => t.id === tabId);
           if (!tab) return null;
           const isActive = activeTab === tab.id;
@@ -392,16 +392,16 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
 
       {/* Mobile "Meer" popup menu */}
       {showMoreMenu && (
-        <div className="md:hidden fixed inset-0 z-40" onClick={() => setShowMoreMenu(false)}>
-          <div className="absolute bottom-16 left-2 right-2 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="p-2 grid grid-cols-3 gap-1">
-              {[...MOBILE_MORE_TABS, TABS.find(t => t.id === 'settings')].filter(Boolean).map(tab => {
+        <div className="md:hidden fixed inset-0 z-[60]" onClick={() => setShowMoreMenu(false)}>
+          <div className="absolute bottom-[56px] left-3 right-3 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="p-3 grid grid-cols-3 gap-2">
+              {MOBILE_MORE_TABS.map(tab => {
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
                     onClick={() => { setActiveTab(tab.id); setShowMoreMenu(false); }}
-                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-colors ${
+                    className={`flex flex-col items-center gap-1.5 p-3 rounded-xl transition-colors active:scale-95 ${
                       isActive ? 'bg-orange-50 text-orange-500' : 'text-slate-600 hover:bg-slate-50'
                     }`}
                   >

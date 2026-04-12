@@ -52,25 +52,25 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
   return (
     <div className="space-y-6">
       {/* Sub-tab selector */}
-      <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
+      <div className="flex gap-1 bg-slate-100 rounded-xl p-1 overflow-x-auto" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
         <button
           onClick={() => setTenantsSubTab('huurders')}
           data-testid="tenants-subtab-huurders"
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${tenantsSubTab === 'huurders' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap flex-shrink-0 ${tenantsSubTab === 'huurders' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
           <Users className="w-4 h-4" /> Huurders
         </button>
         <button
           onClick={() => setTenantsSubTab('contracten')}
           data-testid="tenants-subtab-contracten"
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${tenantsSubTab === 'contracten' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap flex-shrink-0 ${tenantsSubTab === 'contracten' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
-          <FileText className="w-4 h-4" /> Huurovereenkomsten
+          <FileText className="w-4 h-4" /> <span className="hidden sm:inline">Huurovereenkomsten</span><span className="sm:hidden">Contracten</span>
         </button>
         <button
           onClick={() => setTenantsSubTab('idkaart')}
           data-testid="tenants-subtab-idkaart"
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${tenantsSubTab === 'idkaart' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap flex-shrink-0 ${tenantsSubTab === 'idkaart' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
           <CreditCard className="w-4 h-4" /> ID Kaart
         </button>
@@ -84,26 +84,27 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
       <>
       {/* Huurders tabel */}
       <div className="bg-white rounded-xl border border-slate-200">
-        <div className="p-4 border-b border-slate-200 flex items-center gap-4">
-          <div className="flex-1 relative">
-            <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+        <div className="p-3 sm:p-4 border-b border-slate-200 flex flex-wrap items-center gap-2 sm:gap-4">
+          <div className="flex-1 min-w-[140px] relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={tenantSearch}
               onChange={(e) => setTenantSearch(e.target.value)}
-              placeholder="Zoek op naam, appartement, code..."
+              placeholder="Zoek..."
               data-testid="tenant-search-input"
-              className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-orange-500"
+              className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-500"
             />
           </div>
-          <span className="text-sm text-slate-500 whitespace-nowrap">{activeTenants.length} huurder{activeTenants.length !== 1 ? 's' : ''}</span>
+          <span className="text-xs text-slate-400 whitespace-nowrap">{activeTenants.length} huurder{activeTenants.length !== 1 ? 's' : ''}</span>
           <button
             onClick={onAddTenant}
             data-testid="add-tenant-button"
-            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 whitespace-nowrap"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 whitespace-nowrap"
           >
             <Plus className="w-4 h-4" />
-            Nieuwe Huurder
+            <span className="hidden sm:inline">Nieuwe Huurder</span>
+            <span className="sm:hidden">Nieuw</span>
           </button>
         </div>
         {activeTenants.length === 0 ? (
