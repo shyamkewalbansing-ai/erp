@@ -860,13 +860,23 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
         except Exception:
             rent_month_label = rent_month
     
-    # Remaining balances from stored payment data
+    # Remaining balances from stored payment data or live from tenant
     remaining_rent = payment.get("remaining_rent")
     remaining_service = payment.get("remaining_service")
     remaining_fines = payment.get("remaining_fines")
     remaining_internet = payment.get("remaining_internet")
     has_remaining = remaining_rent is not None
-    total_remaining = ((remaining_rent or 0) + (remaining_service or 0) + (remaining_fines or 0) + (remaining_internet or 0)) if has_remaining else None
+    
+    # Fallback: get current tenant balances if not stored
+    if not has_remaining:
+        tenant_doc = await db.kiosk_tenants.find_one({"tenant_id": payment.get("tenant_id"), "company_id": company["company_id"]})
+        if tenant_doc:
+            remaining_rent = tenant_doc.get("outstanding_rent", 0)
+            remaining_service = tenant_doc.get("service_costs", 0)
+            remaining_fines = tenant_doc.get("fines", 0)
+            remaining_internet = tenant_doc.get("internet_outstanding", 0)
+    
+    total_remaining = (remaining_rent or 0) + (remaining_service or 0) + (remaining_fines or 0) + (remaining_internet or 0)
 
     # Build remaining balance HTML section
     remaining_html = ""
@@ -882,9 +892,10 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
             rows += f'<tr><td>Internet</td><td>SRD {remaining_internet:,.2f}</td></tr>'
         total_color = "#27ae60" if total_remaining == 0 else "#e74c3c"
         total_text = "VOLDAAN" if total_remaining == 0 else f"SRD {total_remaining:,.2f}"
+        label = "Openstaand na betaling" if has_remaining else "Huidig openstaand saldo"
         remaining_html = f'''
 <table class="details-table" style="margin-top:10px;">
-  <tr><td colspan="2" style="font-size:9pt;color:#7f8c8d;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #2c3e50 !important;">Openstaand na betaling</td></tr>
+  <tr><td colspan="2" style="font-size:9pt;color:#7f8c8d;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #2c3e50 !important;">{label}</td></tr>
   {rows}
   <tr style="border-top:2px solid #2c3e50;"><td style="font-weight:bold;font-size:11pt;">TOTAAL OPENSTAAND</td><td style="font-weight:bold;font-size:11pt;color:{total_color};">{total_text}</td></tr>
 </table>'''
@@ -903,16 +914,16 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
 <meta charset="UTF-8">
 <title>Kwitantie {kwitantie_nummer}</title>
 <style>
-  @page {{ size: A5; margin: 15mm; }}
+  @page {{ size: A5; margin: 10mm; }}
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{
     font-family: 'Georgia', 'Times New Roman', serif;
     font-size: 11pt;
-    line-height: 1.5;
+    line-height: 1.4;
     color: #1a1a1a;
     max-width: 160mm;
     margin: 0 auto;
-    padding: 25px 30px;
+    padding: 20px 25px;
     background: #fff;
   }}
   .header {{
@@ -992,7 +1003,7 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
   }}
   .stamp-section {{
     text-align: center;
-    margin: 25px 0 15px;
+    margin: 15px 0 10px;
   }}
   .stamp-rect {{
     display: inline-flex;
@@ -1022,13 +1033,13 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     font-weight: 500;
   }}
   .footer {{
-    margin-top: 20px;
-    padding-top: 10px;
+    margin-top: 10px;
+    padding-top: 8px;
     border-top: 1px solid #ddd;
-    font-size: 7.5pt;
+    font-size: 7pt;
     color: #aaa;
     text-align: center;
-    line-height: 1.4;
+    line-height: 1.3;
   }}
   .print-bar {{
     position: fixed;
@@ -1053,6 +1064,7 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
   @media print {{
     .print-bar {{ display: none; }}
     body {{ padding: 0; margin: 0; }}
+    @page {{ margin: 8mm; }}
   }}
 </style>
 </head>
@@ -1083,7 +1095,7 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
 <table class="details-table">
   <tr>
     <td>Datum</td>
-    <td>{date_fmt}{(' om ' + time_fmt) if time_fmt else ''}</td>
+    <td>{date_fmt}</td>
   </tr>
   <tr>
     <td>Huurder</td>
