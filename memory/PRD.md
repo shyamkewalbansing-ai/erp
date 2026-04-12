@@ -12,7 +12,7 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 │   │   │   ├── __init__.py          # MongoDB index startup
 │   │   │   ├── base.py             # Router, DatabaseProxy, helpers, modellen
 │   │   │   ├── auth.py             # Auth + settings (company_id slug sync)
-│   │   │   ├── admin.py            # Admin CRUD + combined dashboard-data endpoint
+│   │   │   ├── admin.py            # Admin CRUD + combined dashboard-data + receipt HTML
 │   │   │   ├── admin_operations.py # Verdeling, employees, kas, fines
 │   │   │   ├── public.py           # Public kiosk endpoints (cached)
 │   │   │   ├── payment_gateways.py # SumUp, Mope, Uni5Pay
@@ -29,7 +29,9 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 │           └── vastgoed-kiosk/
 │               ├── KioskLayout.jsx           # Mobile layout + PWA manifest
 │               ├── KioskAdminDashboard.jsx   # Admin orchestrator (combined endpoint)
+│               ├── ReceiptTicket.jsx         # Receipt preview component
 │               └── admin/
+│                   ├── PaymentsTab.jsx       # Kwitanties + stored remaining balances
 │                   ├── SettingsTab.jsx        # URL preview + company_id sync
 │                   ├── KasTab.jsx             # Verdeling UI
 │                   ├── EmployeesTab.jsx       # Partial salary modal
@@ -38,47 +40,32 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 
 ## Wat is geïmplementeerd
 
-### Sprint 1-7 (vorige sessies)
+### Sprint 1-17 (vorige sessies)
 - ERP basis, Kiosk terminal, Face ID, PIN-code, betalingsflow
 - WhatsApp/Twilio/SMTP notificaties (9 triggers + scheduler)
 - Leningen module, Internet module, Tenda router integratie
-- SuperAdmin dashboard, SumUp checkout, Meterstanden (later verwijderd)
-
-### Sprint 8-13 (vorige sessie)
+- SuperAdmin dashboard, SumUp checkout
 - ID Kaart registratie + USB kaartlezer
-- SMTP Email integratie
 - Code refactoring: Frontend 5317→361 regels, Backend 4905→12 modules
-- UI verbeteringen batch
-
-### Sprint 14-17 (vorige sessie)
 - Custom Domein koppeling met DNS/SSL verificatie
 - Kwitantie Modal fix + Verdeling feature (Bank/Kas)
 - Kiosk volledig responsive (VirtualKeyboard verwijderd)
-- PIN screen native keyboard fix + custom number pad
-- PWA dynamic manifest fix
-- Overdue rent calculation fix (huidige maand niet als achterstand)
-- Partial salary payments
+- PIN screen + custom number pad, PWA manifest fix
+- Overdue rent calculation fix, Partial salary payments
 - Apartments gesorteerd (drag-and-drop + alfabetisch)
 
 ### Sprint 18 (12 april 2026) — Performance + Company URL Sync
-- **Performance optimalisatie:**
-  - Combined `admin/dashboard-data` endpoint (6 API calls → 1)
-  - MongoDB indexing op startup via `ensure_indexes()`
-  - In-memory caching voor public endpoints (30s TTL)
-  - Frontend parallel data loading
-  - Snelheid verbeterd van ~830ms naar ~110ms
-- **P0 Bug Fix: Bedrijfsnaam & URL Sync**
-  - Wanneer bedrijfsnaam wijzigt → slug wordt automatisch geregenereerd
-  - Cascade update van `company_id` in alle 15 MongoDB collecties
-  - Nieuw JWT token wordt teruggegeven na slug wijziging
-  - Frontend toont URL preview onder bedrijfsnaam veld
-  - Frontend slaat nieuw token op en redirect naar admin dashboard
-  - Cache invalidatie na slug wijziging
-- **Bug Fix: KioskLayout preload crash**
-  - `setApartments`/`setTenants` werden aangeroepen zonder useState declaratie
-  - Veroorzaakte "Bedrijf niet gevonden" foutmelding
-  - Opgelost door onnodige preload aanroepen te verwijderen
-- **Test resultaat:** 100% backend (11/11), 100% frontend (iteration_92)
+- **Performance optimalisatie:** Combined endpoint, MongoDB indexes, caching (~830ms→~110ms)
+- **P0 Bug Fix: Bedrijfsnaam & URL Sync** — Slug regeneratie + cascade update 15 collecties + nieuw JWT token
+- **Bug Fix: KioskLayout preload crash** — setApartments/setTenants zonder useState verwijderd
+- Test: 100% backend (11/11), 100% frontend (iteration_92)
+
+### Sprint 19 (12 april 2026) — Kwitanties Bug Fixes
+- **Bug Fix: Onjuist openstaand saldo op kwitantie** — Backend slaat nu `remaining_rent`, `remaining_service`, `remaining_fines`, `remaining_internet` op in het betaling-document bij registratie
+- **Bug Fix: Onjuiste Openstaand kolom** — Frontend toont nu het opgeslagen resterende saldo per betaling, niet het huidige huurder-saldo
+- **Bug Fix: Afdrukken lege pagina** — Print knop opent nu de backend HTML receipt in een nieuw tabblad (via `/admin/payments/{id}/receipt?token=xxx`) i.p.v. CSS print hack
+- **Verbetering: Backend receipt** — Type labels uitgebreid (rent, partial_rent, internet), covered_months weergave, "Openstaand na betaling" sectie toegevoegd
+- Test: 100% backend (8/8), 100% frontend (iteration_93)
 
 ## Inloggegevens
 - SuperAdmin ERP: admin@facturatie.sr / Bharat7755
@@ -90,22 +77,12 @@ Full-stack ERP systeem voor vastgoed/appartement huurbetalingen met een geïnteg
 - Server: app.facturatie.sr
 - Workflow: git pull → cd frontend → rm -rf build → yarn build → supervisorctl restart
 - NOOIT emergentintegrations in requirements.txt
-- Service Worker actief — cache versie bumpen bij grote wijzigingen
 
 ## Geblokkeerd
 - Mope Payment Gateway — wacht op API key (MOCKED)
 - Uni5Pay — wacht op API key (MOCKED)
 
-## Key Technical Concepts
-- **Mobile-First Kiosk:** PWA manifest dynamisch via Blob URLs, native keyboard onderdrukt op PIN via readOnly
-- **API Optimization:** auth/me + admin/tenants + admin/dashboard-data parallel geladen
-- **MongoDB Startup Indexes:** Via @app.on_event("startup") in routers/kiosk/__init__.py
-- **Company URL Sync:** Bij naam-wijziging → slugify → cascade update 15 collecties → nieuw JWT token
-
 ## Prioriteiten
-
-### P0 — Kritiek
-- ~~Bedrijfsnaam & URL Sync Bug~~ ✅ (12 april 2026)
 
 ### P1 — Hoog
 - Kwitanties tab moderniseren (unified table style van rest Admin Dashboard)
