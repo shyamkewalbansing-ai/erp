@@ -263,6 +263,15 @@ export default function KioskLayout() {
             onBack={() => goTo('select')}
             onSelect={(t) => { setTenant(t); goTo('overview'); }}
             companyId={companyId}
+            onAdmin={() => goTo('admin')}
+            onLock={() => {
+              localStorage.removeItem('kiosk_token');
+              Object.keys(sessionStorage).forEach(key => {
+                if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
+              });
+              setPinVerified(false);
+              goTo('pin');
+            }}
           />
         );
       case 'overview':
@@ -323,55 +332,10 @@ export default function KioskLayout() {
           exit="exit"
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           className={`absolute inset-0 overflow-y-auto overflow-x-hidden`}
-          style={{ paddingBottom: 'clamp(48px, 7vh, 64px)' }}
         >
           {renderStep()}
         </motion.div>
       </AnimatePresence>
-      {/* Floating bottom bar - kiosk machine style */}
-      {step !== 'loading' && step !== 'not-found' && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white flex items-center justify-between px-3 sm:px-6" style={{ height: 'clamp(48px, 7vh, 64px)' }} data-testid="kiosk-bottom-bar">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-            <div className="rounded-lg bg-orange-500 flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 shrink-0">
-              <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-            </div>
-            <span className="text-sm sm:text-base font-bold text-slate-800 truncate">{companyName || 'Kiosk'}</span>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-4">
-            {tenant && step !== 'welcome' && step !== 'pin' && step !== 'select' && (
-              <div className="hidden sm:flex items-center gap-2">
-                <span className="text-sm text-slate-400 font-medium">{tenant.name}</span>
-                <span className="text-sm font-bold text-slate-800">Appt. {tenant.apartment_number}</span>
-              </div>
-            )}
-            {(step === 'select' || step === 'overview' || step === 'payment' || step === 'confirm') && (
-              <button
-                onClick={() => goTo('admin')}
-                className="bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg transition px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm"
-                data-testid="kiosk-admin-btn"
-              >
-                Beheerder
-              </button>
-            )}
-            {(step === 'select' || step === 'welcome') && (
-              <button
-                onClick={() => {
-                  localStorage.removeItem('kiosk_token');
-                  Object.keys(sessionStorage).forEach(key => {
-                    if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
-                  });
-                  setPinVerified(false);
-                  goTo('pin');
-                }}
-                className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-lg transition px-3 py-1.5 sm:px-5 sm:py-2 text-xs sm:text-sm"
-                data-testid="kiosk-lock-btn"
-              >
-                Uit
-              </button>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

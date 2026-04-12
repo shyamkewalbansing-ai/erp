@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Building2, Keyboard, User, ScanFace } from 'lucide-react';
+import { Building2, Keyboard, User, ScanFace } from 'lucide-react';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
-export default function KioskApartmentSelect({ onBack, onSelect, companyId, codeOnly = false, onSwitchToFace }) {
+export default function KioskApartmentSelect({ onBack, onSelect, companyId, codeOnly = false, onSwitchToFace, onAdmin, onLock }) {
   const [mode, setMode] = useState(codeOnly ? 'code' : 'grid');
   const [apartments, setApartments] = useState([]);
   const [tenants, setTenants] = useState([]);
@@ -59,10 +59,20 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId, code
     <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 1.5vw 0' }}>
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2 px-1 sm:px-2 py-2 sm:py-0" style={{ minHeight: '7vh' }}>
-        <button onClick={onBack} className="flex items-center gap-1.5 sm:gap-2 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 sm:px-4 sm:py-2" data-testid="apt-back-btn">
-          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="text-xs sm:text-sm">Terug</span>
-        </button>
+        <div className="flex items-center gap-1.5">
+          {onLock && (
+            <button onClick={onLock} className="flex items-center gap-1.5 text-white font-bold transition hover:opacity-90 bg-white/20 backdrop-blur-sm rounded-lg px-3 py-1.5 sm:px-4 sm:py-2" data-testid="kiosk-lock-btn">
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              <span className="text-xs sm:text-sm">Uit</span>
+            </button>
+          )}
+          {onAdmin && (
+            <button onClick={onAdmin} className="flex items-center gap-1.5 text-orange-600 font-bold transition hover:opacity-90 bg-white rounded-lg px-3 py-1.5 sm:px-4 sm:py-2" data-testid="kiosk-admin-btn">
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span className="text-xs sm:text-sm">Beheerder</span>
+            </button>
+          )}
+        </div>
         <span className="text-sm sm:text-base font-semibold text-white">{codeOnly ? 'Voer uw huurderscode in' : 'Kies uw appartement'}</span>
         {!codeOnly && (
           <div className="flex gap-1.5">
