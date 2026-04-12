@@ -479,17 +479,23 @@ async def list_tenants(company: dict = Depends(get_current_company)):
             # Calculate how many months of rent are in outstanding
             if outstanding > 0:
                 months_owed = int(outstanding / monthly_rent) if monthly_rent > 0 else 0
-                remainder = outstanding - (months_owed * monthly_rent)
-                if remainder > 0:
+                remainder_amt = outstanding - (months_owed * monthly_rent)
+                if remainder_amt > 0:
                     months_owed += 1
-                # List the overdue months (counting back from billed_through)
-                # Rule: current month is NOT overdue — payment is due next month
+                # Build list of unpaid months from oldest to newest
+                # The months in outstanding go from (billed_through - months_owed + 1) to billed_through
+                month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
                 for i in range(months_owed):
-                    m_date = bt_date - relativedelta(months=i+1)
-                    month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
-                    m_name = month_names_nl[m_date.month - 1]
-                    overdue_months.append(f"{m_name} {m_date.year}")
-                overdue_months.reverse()
+                    # oldest first: bt_date - (months_owed-1-i) months
+                    m_date = bt_date - relativedelta(months=months_owed - 1 - i)
+                    # Check if this month's due date has passed (= actually overdue)
+                    if billing_next_month:
+                        due_dt = (m_date + relativedelta(months=1)).replace(day=min(billing_day, 28))
+                    else:
+                        due_dt = m_date.replace(day=min(billing_day, 28))
+                    if now >= due_dt.replace(tzinfo=timezone.utc):
+                        m_name = month_names_nl[m_date.month - 1]
+                        overdue_months.append(f"{m_name} {m_date.year}")
 
         result.append({
             "tenant_id": t["tenant_id"],
@@ -1175,19 +1181,32 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
         outstanding = tenant.get("outstanding_rent", 0)
         billed_through = tenant.get("rent_billed_through", "")
         if billed_through and monthly_rent > 0 and outstanding > 0:
+            # Get billing settings to determine due dates
+            comp_settings = await db.kiosk_companies.find_one({"company_id": company_id})
+            b_day = comp_settings.get("billing_day", 1) if comp_settings else 1
+            b_next = comp_settings.get("billing_next_month", True) if comp_settings else True
+            
             bt_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
             months_owed = int(outstanding / monthly_rent) if monthly_rent > 0 else 0
             remainder = outstanding - (months_owed * monthly_rent)
             if remainder > 0:
                 months_owed += 1
             month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
-            all_overdue = []
+            # Build list: oldest to newest, from (bt - months_owed + 1) to bt
+            all_unpaid = []
             for i in range(months_owed):
-                m_date = bt_date - relativedelta(months=i+1)
-                all_overdue.append({"label": f"{month_names_nl[m_date.month - 1]} {m_date.year}", "key": m_date.strftime("%Y-%m")})
-            all_overdue.reverse()
+                m_date = bt_date - relativedelta(months=months_owed - 1 - i)
+                m_label = f"{month_names_nl[m_date.month - 1]} {m_date.year}"
+                # Check if due date has passed (overdue) or is current billing
+                if b_next:
+                    due_dt = (m_date + relativedelta(months=1)).replace(day=min(b_day, 28))
+                else:
+                    due_dt = m_date.replace(day=min(b_day, 28))
+                is_overdue = now >= due_dt.replace(tzinfo=timezone.utc)
+                all_unpaid.append({"label": m_label, "overdue": is_overdue})
+            # Map payment amount to months (oldest/overdue first)
             pay_amount = data.amount
-            for m in all_overdue:
+            for m in all_unpaid:
                 if pay_amount >= monthly_rent:
                     covered_months.append(m["label"])
                     pay_amount -= monthly_rent
