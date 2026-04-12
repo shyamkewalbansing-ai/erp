@@ -127,7 +127,12 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "twilio_enabled": company.get("twilio_enabled", False),
         "start_screen": company.get("start_screen", "kiosk"),
         "custom_domain": company.get("custom_domain", ""),
-        "custom_domain_landing": company.get("custom_domain_landing", "kiosk")
+        "custom_domain_landing": company.get("custom_domain_landing", "kiosk"),
+        "smtp_host": company.get("smtp_host", ""),
+        "smtp_port": company.get("smtp_port", 587),
+        "smtp_email": company.get("smtp_email", ""),
+        "smtp_password": company.get("smtp_password", ""),
+        "smtp_enabled": company.get("smtp_enabled", False),
     }
 
 @router.put("/auth/settings")
