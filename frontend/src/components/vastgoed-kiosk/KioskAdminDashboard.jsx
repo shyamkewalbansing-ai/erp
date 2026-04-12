@@ -167,7 +167,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   const MOBILE_MORE_TABS = TABS.filter(t => !MOBILE_MAIN_TABS.includes(t.id));
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-slate-100 z-50">
+    <div className="fixed inset-0 flex flex-col bg-slate-100 z-50" style={{ overflow: 'hidden' }}>
       {/* Header - compact on mobile */}
       <header className="bg-white border-b border-slate-200 py-2 sm:py-4 px-3 sm:px-4 lg:px-8 shadow-sm flex-shrink-0 z-20">
         <div className="w-full flex items-center justify-between">
@@ -185,7 +185,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-2 lg:gap-3">
+          <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
             <button
               onClick={copyKioskUrl}
               className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs lg:text-sm font-medium hover:bg-slate-200 transition"
@@ -195,7 +195,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
             </button>
             <button
               onClick={handleBack}
-              className="flex items-center gap-1.5 px-2.5 sm:px-4 py-2 sm:py-2.5 bg-orange-500 text-white rounded-xl text-xs sm:text-sm font-bold hover:bg-orange-600 transition shadow-sm shadow-orange-500/20"
+              className="w-8 h-8 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 flex items-center justify-center gap-1.5 bg-orange-500 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold hover:bg-orange-600 transition shadow-sm shadow-orange-500/20"
             >
               <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Kiosk</span>
@@ -203,7 +203,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
             <button
               onClick={handleLogout}
               data-testid="admin-logout-button"
-              className="flex items-center gap-1.5 px-2.5 sm:px-4 py-2 sm:py-2.5 bg-slate-100 border border-slate-200 text-slate-600 rounded-xl text-xs sm:text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition"
+              className="w-8 h-8 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 flex items-center justify-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-600 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition"
             >
               <LogIn className="w-3.5 h-3.5 sm:w-4 sm:h-4 rotate-180" />
               <span className="hidden sm:inline">Uit</span>
@@ -233,7 +233,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
       </div>
 
       {/* Scrollable content area */}
-      <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-3 sm:px-4 lg:px-8 py-3 sm:py-4 pb-20 md:pb-6" style={{ WebkitOverflowScrolling: 'touch' }}>
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-3 sm:px-4 lg:px-8 py-3 sm:py-4 pb-20 md:pb-6" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
 
         {activeTab === 'dashboard' && <DashboardTab dashboard={dashboard} payments={payments} leases={leases} formatSRD={formatSRD} />}
 

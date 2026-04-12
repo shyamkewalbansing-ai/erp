@@ -241,25 +241,25 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
   return (
     <div className="space-y-6">
       {/* Sub-tab selector */}
-      <div className="flex gap-1 bg-slate-100 rounded-xl p-1">
+      <div className="flex gap-1 bg-slate-100 rounded-xl p-1 overflow-x-auto" style={{scrollbarWidth: 'none'}}>
         <button
           onClick={() => setSettingsSubTab('general')}
           data-testid="settings-subtab-general"
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${settingsSubTab === 'general' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap flex-shrink-0 ${settingsSubTab === 'general' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
           <Settings className="w-4 h-4" /> Instellingen
         </button>
         <button
           onClick={() => setSettingsSubTab('notifications')}
           data-testid="settings-subtab-notifications"
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${settingsSubTab === 'notifications' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap flex-shrink-0 ${settingsSubTab === 'notifications' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
-          <Bell className="w-4 h-4" /> Notificaties
+          <Bell className="w-4 h-4" /> <span className="hidden sm:inline">Notificaties</span><span className="sm:hidden">Notif.</span>
         </button>
         <button
           onClick={() => setSettingsSubTab('domain')}
           data-testid="settings-subtab-domain"
-          className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition ${settingsSubTab === 'domain' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+          className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap flex-shrink-0 ${settingsSubTab === 'domain' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
         >
           <Globe className="w-4 h-4" /> Domein
         </button>
@@ -275,7 +275,7 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
       <CompanyDetailsSection company={company} token={token} onRefresh={onRefresh} />
 
       {/* Facturering & Boetes */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
             <Settings className="w-5 h-5 text-slate-600" />
@@ -390,7 +390,7 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
       </div>
 
       {/* Kiosk PIN Beveiliging */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
             <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -465,7 +465,7 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
       </div>
 
       {/* Startscherm na inloggen */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
             <Settings className="w-5 h-5 text-orange-600" />
@@ -518,7 +518,7 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
       </div>
 
       {/* Bedrijfsstempel */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
             <FileText className="w-5 h-5 text-red-700" />
@@ -633,7 +633,7 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
       </div>
 
       {/* Betaalmethoden / Bankoverschrijving */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
             <CreditCard className="w-5 h-5 text-blue-600" />
@@ -679,7 +679,7 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
       </div>
 
       {/* WhatsApp Business API */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-green-50 flex items-center justify-center">
             <ExternalLink className="w-5 h-5 text-green-600" />
@@ -1309,7 +1309,7 @@ function EmployeesTab({ token, formatSRD }) {
     <div className="space-y-6">
       {/* Samenvatting */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
               <Users className="w-5 h-5 text-blue-600" />
@@ -1318,7 +1318,7 @@ function EmployeesTab({ token, formatSRD }) {
           </div>
           <p className="text-2xl font-bold text-slate-900">{activeEmps.length}</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
               <Banknote className="w-5 h-5 text-purple-600" />
@@ -1327,7 +1327,7 @@ function EmployeesTab({ token, formatSRD }) {
           </div>
           <p className="text-2xl font-bold text-slate-900">{formatSRD(totalLoon)}</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
               <DollarSign className="w-5 h-5 text-green-600" />
@@ -3304,22 +3304,22 @@ function CompanyDetailsSection({ company, token, onRefresh }) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-            <Building2 className="w-5 h-5 text-orange-600" />
+    <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
+      <div className="flex items-start sm:items-center justify-between gap-3 mb-4 sm:mb-6">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+            <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900">Bedrijfsgegevens</h3>
-            <p className="text-sm text-slate-500">Uw bedrijfsinformatie en contactgegevens</p>
+            <h3 className="font-bold text-slate-900 text-sm sm:text-base">Bedrijfsgegevens</h3>
+            <p className="text-xs sm:text-sm text-slate-500 hidden sm:block">Uw bedrijfsinformatie en contactgegevens</p>
           </div>
         </div>
         <button
           onClick={handleSave}
           disabled={saving}
           data-testid="company-details-save"
-          className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-bold hover:bg-orange-600 disabled:opacity-50"
+          className="flex items-center gap-1.5 px-3 sm:px-5 py-2 sm:py-2.5 bg-orange-500 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold hover:bg-orange-600 disabled:opacity-50 flex-shrink-0"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           Opslaan
@@ -3446,7 +3446,7 @@ function DomainSettings({ company, token, onRefresh }) {
   return (
     <div className="space-y-6">
       {/* Domein Instellen */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-lg bg-indigo-100 flex items-center justify-center">
             <Globe className="w-5 h-5 text-indigo-600" />
@@ -3514,7 +3514,7 @@ function DomainSettings({ company, token, onRefresh }) {
       </div>
 
       {/* DNS Instructies */}
-      <div className="bg-white rounded-xl border border-slate-200 p-6">
+      <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
             <Settings className="w-5 h-5 text-slate-600" />
@@ -3648,7 +3648,7 @@ function DomainSettings({ company, token, onRefresh }) {
 
       {/* Huidige status */}
       {company?.custom_domain && (
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-4 sm:p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
               <ExternalLink className="w-5 h-5 text-green-600" />
