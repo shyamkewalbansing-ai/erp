@@ -108,7 +108,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
             Geen betalingen gevonden
           </div>
         ) : (
-          <table className="w-full min-w-[600px]">
+          <table className="w-full min-w-[700px]">
             <thead className="bg-slate-50">
               <tr>
                 <th className="text-left p-4 text-sm font-medium text-slate-500">Datum</th>
@@ -116,6 +116,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                 <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
                 <th className="text-left p-4 text-sm font-medium text-slate-500">Appt</th>
                 <th className="text-left p-4 text-sm font-medium text-slate-500">Type</th>
+                <th className="text-left p-4 text-sm font-medium text-slate-500">Periode</th>
                 <th className="text-right p-4 text-sm font-medium text-slate-500">Bedrag</th>
                 <th className="text-right p-4 text-sm font-medium text-slate-500">Openstaand</th>
                 <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
@@ -132,8 +133,11 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                   <td className="p-4 text-slate-600">{p.apartment_number}</td>
                   <td className="p-4">
                     <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs">
-                      {{monthly_rent:'Maandhuur',service_costs:'Servicekosten',deposit:'Borg',fine:'Boete',partial_rent:'Deelbetaling',other:'Overig'}[p.payment_type] || p.payment_type?.replace('_', ' ')}
+                      {{monthly_rent:'Maandhuur',rent:'Huurbetaling',service_costs:'Servicekosten',deposit:'Borg',fine:'Boete',fines:'Boete',partial_rent:'Deelbetaling',internet:'Internet',other:'Overig'}[p.payment_type] || p.payment_type?.replace('_', ' ')}
                     </span>
+                  </td>
+                  <td className="p-4 text-sm text-slate-600">
+                    {p.covered_months?.length > 0 ? p.covered_months.join(', ') : '-'}
                   </td>
                   <td className="p-4 text-right font-bold text-slate-800">{formatSRD(p.amount)}</td>
                   <td className="p-4 text-right">
