@@ -914,73 +914,73 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
 <meta charset="UTF-8">
 <title>Kwitantie {kwitantie_nummer}</title>
 <style>
-  @page {{ size: A5; margin: 10mm; }}
+  @page {{ size: A4; margin: 0 !important; }}
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{
     font-family: 'Georgia', 'Times New Roman', serif;
-    font-size: 11pt;
-    line-height: 1.4;
+    font-size: 9pt;
+    line-height: 1.3;
     color: #1a1a1a;
-    max-width: 160mm;
-    margin: 0 auto;
-    padding: 20px 25px;
     background: #fff;
+  }}
+  .page {{
+    width: 100%;
+    max-width: 180mm;
+    margin: 0 auto;
+    padding: 12mm 15mm;
+    page-break-inside: avoid;
   }}
   .header {{
     border-bottom: 2px solid #2c3e50;
-    padding-bottom: 15px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
   }}
-  .header-left {{ flex: 1; }}
   .company-name {{
-    font-size: 16pt;
+    font-size: 13pt;
     font-weight: bold;
     color: #2c3e50;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
   }}
   .company-info {{
-    font-size: 8pt;
+    font-size: 7pt;
     color: #7f8c8d;
-    margin-top: 4px;
-    line-height: 1.4;
+    margin-top: 2px;
+    line-height: 1.3;
   }}
   .receipt-title {{
     text-align: center;
-    margin-bottom: 20px;
+    margin: 10px 0;
   }}
   .receipt-title h1 {{
-    font-size: 18pt;
+    font-size: 14pt;
     color: #2c3e50;
     letter-spacing: 2px;
     text-transform: uppercase;
   }}
   .receipt-number {{
-    font-size: 10pt;
+    font-size: 9pt;
     color: #e67e22;
     font-weight: bold;
     font-family: 'Courier New', monospace;
-    margin-top: 4px;
+    margin-top: 2px;
   }}
   .details-table {{
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
   }}
   .details-table td {{
-    padding: 8px 12px;
+    padding: 4px 8px;
     border-bottom: 1px solid #eee;
-    font-size: 10pt;
+    font-size: 9pt;
   }}
   .details-table td:first-child {{
     color: #7f8c8d;
     width: 35%;
-    font-size: 9pt;
+    font-size: 8pt;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
   }}
   .details-table td:last-child {{
     font-weight: 600;
@@ -992,60 +992,45 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     border-bottom: 2px solid #2c3e50 !important;
   }}
   .amount-row td {{
-    padding: 12px;
-    font-size: 14pt !important;
+    padding: 8px;
+    font-size: 12pt !important;
     font-weight: bold !important;
   }}
   .amount-row td:last-child {{
     color: #27ae60;
     text-align: right;
-    font-size: 16pt !important;
+    font-size: 13pt !important;
   }}
   .stamp-section {{
     text-align: center;
-    margin: 15px 0 10px;
+    margin: 10px 0 6px;
   }}
   .stamp-rect {{
     display: inline-flex;
     align-items: center;
-    gap: 10px;
-    border: 2.5px solid #991b1b;
-    padding: 10px 16px;
+    gap: 8px;
+    border: 2px solid #991b1b;
+    padding: 6px 12px;
     transform: rotate(-5deg);
     opacity: 0.8;
-    background: rgba(255,255,255,0.5);
   }}
-  .stamp-house {{
-    flex-shrink: 0;
-  }}
-  .stamp-info p {{
-    margin: 0;
-    line-height: 1.4;
-  }}
-  .stamp-info .stamp-name {{
-    color: #991b1b;
-    font-weight: bold;
-    font-size: 9pt;
-  }}
-  .stamp-info .stamp-detail {{
-    color: #1a1a1a;
-    font-size: 8pt;
-    font-weight: 500;
-  }}
+  .stamp-info p {{ margin: 0; line-height: 1.3; }}
+  .stamp-info .stamp-name {{ color: #991b1b; font-weight: bold; font-size: 8pt; }}
+  .stamp-info .stamp-detail {{ color: #1a1a1a; font-size: 7pt; }}
   .footer {{
-    margin-top: 10px;
-    padding-top: 8px;
+    margin-top: 6px;
+    padding-top: 4px;
     border-top: 1px solid #ddd;
-    font-size: 7pt;
+    font-size: 6.5pt;
     color: #aaa;
     text-align: center;
-    line-height: 1.3;
+    line-height: 1.2;
   }}
   .print-bar {{
     position: fixed;
     top: 0; left: 0; right: 0;
     background: #2c3e50;
-    padding: 10px 20px;
+    padding: 8px 16px;
     text-align: center;
     z-index: 1000;
   }}
@@ -1053,18 +1038,19 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     background: #e67e22;
     color: white;
     border: none;
-    padding: 8px 30px;
+    padding: 8px 24px;
     font-size: 13px;
     border-radius: 4px;
     cursor: pointer;
     font-weight: bold;
-    margin: 0 5px;
+    margin: 0 4px;
   }}
   .print-bar button:hover {{ background: #d35400; }}
   @media print {{
-    .print-bar {{ display: none; }}
+    .print-bar {{ display: none !important; }}
     body {{ padding: 0; margin: 0; }}
-    @page {{ margin: 8mm; }}
+    .page {{ padding: 8mm 12mm; margin: 0; }}
+    @page {{ margin: 0 !important; }}
   }}
 </style>
 </head>
@@ -1074,16 +1060,14 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
   <button onclick="window.close()">Sluiten</button>
 </div>
 
-<div style="margin-top: 50px;">
+<div class="page" style="margin-top: 40px;">
 
 <div class="header">
-  <div class="header-left">
-    <div class="company-name">{stamp_name}</div>
-    <div class="company-info">
-      {stamp_address}<br/>
-      {('Tel: ' + stamp_phone) if stamp_phone else ''}{(' | WhatsApp: ' + stamp_whatsapp) if stamp_whatsapp else ''}<br/>
-      {company_email}
-    </div>
+  <div class="company-name">{stamp_name}</div>
+  <div class="company-info">
+    {stamp_address}
+    {(' | Tel: ' + stamp_phone) if stamp_phone else ''}{(' | WhatsApp: ' + stamp_whatsapp) if stamp_whatsapp else ''}
+    {(' | ' + company_email) if company_email else ''}
   </div>
 </div>
 
@@ -1093,39 +1077,20 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
 </div>
 
 <table class="details-table">
-  <tr>
-    <td>Datum</td>
-    <td>{date_fmt}</td>
-  </tr>
-  <tr>
-    <td>Huurder</td>
-    <td>{tenant_name} {('(' + tenant_code + ')') if tenant_code else ''}</td>
-  </tr>
-  <tr>
-    <td>Appartement</td>
-    <td>{apartment_number}</td>
-  </tr>
-  <tr>
-    <td>Type betaling</td>
-    <td>{type_label}</td>
-  </tr>
+  <tr><td>Datum</td><td>{date_fmt}</td></tr>
+  <tr><td>Huurder</td><td>{tenant_name} {('(' + tenant_code + ')') if tenant_code else ''}</td></tr>
+  <tr><td>Appartement</td><td>{apartment_number}</td></tr>
+  <tr><td>Type betaling</td><td>{type_label}</td></tr>
   {rent_month_row}
-  <tr>
-    <td>Betalingswijze</td>
-    <td>{method_label}</td>
-  </tr>
-  {f'<tr><td>Omschrijving</td><td>{description}</td></tr>' if description else ''}
-  <tr class="amount-row">
-    <td>Ontvangen bedrag</td>
-    <td>SRD {amount:,.2f}</td>
-  </tr>
+  <tr><td>Betalingswijze</td><td>{method_label}</td></tr>
+  <tr class="amount-row"><td>Ontvangen bedrag</td><td>SRD {amount:,.2f}</td></tr>
 </table>
 
 {remaining_html}
 
 <div class="stamp-section">
   <div class="stamp-rect">
-    <svg class="stamp-house" width="40" height="36" viewBox="0 0 52 48" fill="none">
+    <svg width="30" height="28" viewBox="0 0 52 48" fill="none">
       <polygon points="12,18 28,6 44,18" fill="#991b1b"/>
       <rect x="14" y="18" width="28" height="20" fill="#991b1b"/>
       <rect x="18" y="22" width="6" height="6" fill="white"/>
@@ -1134,21 +1099,17 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
       <rect x="4" y="28" width="24" height="16" fill="#7f1d1d"/>
       <rect x="8" y="31" width="5" height="5" fill="white"/>
       <rect x="16" y="31" width="5" height="5" fill="white"/>
-      <rect x="8" y="38" width="5" height="6" fill="white"/>
-      <rect x="16" y="38" width="5" height="6" fill="white"/>
     </svg>
     <div class="stamp-info">
       <p class="stamp-name">{stamp_name}</p>
       <p class="stamp-detail">{stamp_address}</p>
-      <p class="stamp-detail">Tel : {stamp_phone}</p>
-      {f'<p class="stamp-detail">Whatsapp : {stamp_whatsapp}</p>' if stamp_whatsapp else ''}
+      <p class="stamp-detail">Tel: {stamp_phone}</p>
     </div>
   </div>
 </div>
 
 <div class="footer">
-  {stamp_name} &bull; {stamp_address}<br/>
-  Kwitantie {kwitantie_nummer} &bull; Betaling-ID: {payment_id}
+  {stamp_name} &bull; {stamp_address} &bull; {kwitantie_nummer}
 </div>
 
 </div>
