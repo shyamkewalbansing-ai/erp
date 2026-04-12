@@ -105,7 +105,8 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
         {recentPayments.length === 0 ? (
           <div className="p-12 text-center text-slate-400">Nog geen betalingen</div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="overflow-x-auto hidden md:block">
             <table className="w-full min-w-[600px]">
               <thead className="bg-slate-50">
                 <tr>
@@ -141,6 +142,27 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
               </tbody>
             </table>
           </div>
+          <div className="md:hidden divide-y divide-slate-100">
+            {recentPayments.map((p, i) => (
+              <div key={p.payment_id || i} className="p-3">
+                <div className="flex items-start justify-between mb-1">
+                  <div>
+                    <p className="font-bold text-slate-900 text-sm">{p.tenant_name}</p>
+                    <p className="text-xs text-slate-400">{p.apartment_number} · {p.created_at ? new Date(p.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short' }) : ''}</p>
+                  </div>
+                  <p className="font-bold text-slate-900 text-sm">{formatSRD(p.amount)}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2 py-0.5 bg-orange-50 text-orange-600 rounded text-[10px] font-semibold">
+                    {{rent:'Huur', monthly_rent:'Huur', partial_rent:'Deelbetaling', service_costs:'Service', fines:'Boetes', fine:'Boetes', deposit:'Borg', internet:'Internet'}[p.payment_type] || p.payment_type}
+                  </span>
+                  {p.covered_months?.length > 0 && <span className="text-[10px] text-slate-500">{p.covered_months.join(', ')}</span>}
+                  <span className="text-[10px] text-slate-400 font-mono">{p.kwitantie_nummer}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          </>
         )}
       </div>
     </div>

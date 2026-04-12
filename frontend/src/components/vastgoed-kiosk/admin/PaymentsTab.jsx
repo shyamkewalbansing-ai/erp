@@ -90,33 +90,31 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
     <>
     <div className="bg-white rounded-xl border border-slate-200">
       {/* Filters */}
-      <div className="p-4 border-b border-slate-200 flex items-center gap-4">
-        <div className="flex-1 relative">
-          <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+      <div className="p-3 sm:p-4 border-b border-slate-200 flex flex-wrap items-center gap-2 sm:gap-3">
+        <div className="flex-1 min-w-[140px] relative">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Zoek op naam, appartement, kwitantienummer..."
-            className="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-orange-500"
+            placeholder="Zoek..."
+            data-testid="payment-search"
+            className="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-500"
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Calendar className="w-5 h-5 text-slate-400" />
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)}
-            className="px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-orange-500"
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-500"
           >
             <option value="all">Alle maanden</option>
             {months.map(m => (
               <option key={m.value} value={m.value}>{m.label}</option>
             ))}
-          </select>
-        </div>
-        <div className="text-right px-4 py-2 bg-orange-50 rounded-lg">
-          <p className="text-xs text-orange-600">{payments.length} betalingen</p>
-          <p className="text-lg font-bold text-orange-600">{formatSRD(totalFiltered)}</p>
+        </select>
+        <div className="text-right px-3 py-1.5 bg-orange-50 rounded-lg">
+          <p className="text-[10px] text-orange-600">{payments.length} betalingen</p>
+          <p className="text-sm sm:text-lg font-bold text-orange-600">{formatSRD(totalFiltered)}</p>
         </div>
         <button
           onClick={handleFixCoveredMonths}
@@ -126,12 +124,12 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
           className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 disabled:opacity-50 text-xs font-medium"
         >
           <RefreshCw className={`w-3.5 h-3.5 ${fixing ? 'animate-spin' : ''}`} />
-          {fixing ? 'Bezig...' : 'Periodes herberekenen'}
+          <span className="hidden sm:inline">{fixing ? 'Bezig...' : 'Periodes herberekenen'}</span>
         </button>
       </div>
 
-      {/* Table */}
-      <div className="overflow-x-auto">
+      {/* Table - Desktop */}
+      <div className="overflow-x-auto hidden md:block">
         {payments.length === 0 ? (
           <div className="p-12 text-center text-slate-400">
             Geen betalingen gevonden
@@ -181,22 +179,8 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <button
-                        onClick={() => setSelectedPayment(p)}
-                        data-testid={`receipt-view-${p.payment_id}`}
-                        className="text-slate-400 hover:text-orange-500 p-1"
-                        title="Kwitantie bekijken"
-                      >
-                        <FileText className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => onDeletePayment(p.payment_id)}
-                        data-testid={`delete-payment-${p.payment_id}`}
-                        className="text-slate-400 hover:text-red-500 p-1"
-                        title="Verwijderen"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <button onClick={() => setSelectedPayment(p)} data-testid={`receipt-view-${p.payment_id}`} className="text-slate-400 hover:text-orange-500 p-1" title="Kwitantie bekijken"><FileText className="w-4 h-4" /></button>
+                      <button onClick={() => onDeletePayment(p.payment_id)} data-testid={`delete-payment-${p.payment_id}`} className="text-slate-400 hover:text-red-500 p-1" title="Verwijderen"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </td>
                 </tr>
@@ -204,6 +188,46 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
             </tbody>
           </table>
         )}
+      </div>
+      {/* Mobile card layout */}
+      <div className="md:hidden divide-y divide-slate-100">
+        {payments.length === 0 ? (
+          <div className="p-8 text-center text-slate-400 text-sm">Geen betalingen gevonden</div>
+        ) : payments.map(p => {
+          const hasStored = p.remaining_rent !== null && p.remaining_rent !== undefined;
+          const rem = hasStored
+            ? (p.remaining_rent || 0) + (p.remaining_service || 0) + (p.remaining_fines || 0) + (p.remaining_internet || 0)
+            : (tenantMap[p.tenant_name] || tenantMap[p.tenant_code] || 0);
+          return (
+            <div key={p.payment_id} className="p-4">
+              <div className="flex items-start justify-between mb-1.5">
+                <div>
+                  <p className="font-bold text-slate-900 text-sm">{p.tenant_name}</p>
+                  <p className="text-xs text-slate-400">{p.apartment_number} · {new Date(p.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                </div>
+                <p className="font-bold text-slate-900">{formatSRD(p.amount)}</p>
+              </div>
+              <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-medium">
+                  {{monthly_rent:'Maandhuur',rent:'Huur',service_costs:'Service',deposit:'Borg',fine:'Boete',fines:'Boete',partial_rent:'Deelbetaling',internet:'Internet',other:'Overig'}[p.payment_type] || p.payment_type}
+                </span>
+                <span className="text-[10px] text-orange-600 font-mono">{p.kwitantie_nummer}</span>
+              </div>
+              {p.covered_months?.length > 0 && (
+                <p className="text-xs text-slate-500 mb-1.5">Periode: {p.covered_months.join(', ')}</p>
+              )}
+              <div className="flex items-center justify-between pt-1.5 border-t border-slate-50">
+                <span className="text-xs">
+                  {rem > 0 ? <span className="font-bold text-red-600">Open: {formatSRD(rem)}</span> : <span className="text-green-600 font-medium">Voldaan</span>}
+                </span>
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setSelectedPayment(p)} className="text-slate-400 hover:text-orange-500 p-1.5"><FileText className="w-4 h-4" /></button>
+                  <button onClick={() => onDeletePayment(p.payment_id)} className="text-slate-400 hover:text-red-500 p-1.5"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
 
