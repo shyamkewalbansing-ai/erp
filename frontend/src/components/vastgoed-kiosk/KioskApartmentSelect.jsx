@@ -97,7 +97,14 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId, code
       <div className="flex-1 min-h-0 overflow-auto pb-3">
         {mode === 'grid' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 px-1 sm:px-2">
-            {apartments.map((apt) => {
+            {[...apartments].sort((a, b) => {
+              const numA = a.number?.replace(/[^0-9]/g, '') || '';
+              const numB = b.number?.replace(/[^0-9]/g, '') || '';
+              const prefA = a.number?.replace(/[0-9]/g, '') || '';
+              const prefB = b.number?.replace(/[0-9]/g, '') || '';
+              if (prefA !== prefB) return prefA.localeCompare(prefB);
+              return (parseInt(numA) || 0) - (parseInt(numB) || 0);
+            }).map((apt) => {
               const tenant = tenants.find(t => t.apartment_id === apt.apartment_id && t.status === 'active');
               const hasTenant = !!tenant;
               return (
