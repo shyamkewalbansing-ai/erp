@@ -483,19 +483,11 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                 if remainder_amt > 0:
                     months_owed += 1
                 # Build list of unpaid months from oldest to newest
-                # The months in outstanding go from (billed_through - months_owed + 1) to billed_through
                 month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
                 for i in range(months_owed):
-                    # oldest first: bt_date - (months_owed-1-i) months
                     m_date = bt_date - relativedelta(months=months_owed - 1 - i)
-                    # Check if this month's due date has passed (= actually overdue)
-                    if billing_next_month:
-                        due_dt = (m_date + relativedelta(months=1)).replace(day=min(billing_day, 28))
-                    else:
-                        due_dt = m_date.replace(day=min(billing_day, 28))
-                    if now >= due_dt.replace(tzinfo=timezone.utc):
-                        m_name = month_names_nl[m_date.month - 1]
-                        overdue_months.append(f"{m_name} {m_date.year}")
+                    m_name = month_names_nl[m_date.month - 1]
+                    overdue_months.append(f"{m_name} {m_date.year}")
 
         result.append({
             "tenant_id": t["tenant_id"],
