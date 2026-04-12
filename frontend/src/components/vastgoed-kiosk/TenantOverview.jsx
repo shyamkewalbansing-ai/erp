@@ -93,7 +93,13 @@ export default function TenantOverview({ tenant, onBack, onPay }) {
                 </div>
                 <div>
                   <p className="font-semibold text-[#0f172a]">Maandhuur</p>
-                  <p className="text-sm text-[#64748b]">{currentMonth}</p>
+                  <p className="text-sm text-[#64748b]">
+                    {tenant.rent_billed_through ? (() => {
+                      const [y, m] = tenant.rent_billed_through.split('-');
+                      const months = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+                      return `Gefactureerd t/m ${months[parseInt(m)-1]} ${y}`;
+                    })() : currentMonth}
+                  </p>
                 </div>
               </div>
               <p className="text-2xl font-bold text-[#0f172a]">{formatSRD(tenant.monthly_rent)}</p>
@@ -107,6 +113,9 @@ export default function TenantOverview({ tenant, onBack, onPay }) {
                 </div>
                 <div>
                   <p className="font-semibold text-[#0f172a]">Openstaande huur</p>
+                  {tenant.overdue_months?.length > 0 && (
+                    <p className="text-sm text-[#dc2626] font-medium">{tenant.overdue_months.join(', ')}</p>
+                  )}
                 </div>
               </div>
               <p className={`text-2xl font-bold ${tenant.outstanding_rent > 0 ? 'text-[#dc2626]' : 'text-[#16a34a]'}`} data-testid="outstanding-rent">
