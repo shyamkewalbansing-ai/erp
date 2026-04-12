@@ -1,5 +1,6 @@
 from .base import *
 
+import asyncio
 import socket
 import ssl
 import dns.resolver
@@ -521,6 +522,61 @@ async def list_tenants(company: dict = Depends(get_current_company)):
         })
     
     return result
+
+# ============== COMBINED DASHBOARD ENDPOINT (1 call instead of 6) ==============
+
+@router.get("/admin/dashboard-data")
+async def get_dashboard_data(company: dict = Depends(get_current_company)):
+    """Combined endpoint - returns all admin dashboard data in one call"""
+    company_id = company["company_id"]
+    
+    # Parallel fetch all data
+    tenants_raw, apartments_raw, payments_raw, leases_raw, kas_entries, employees_raw = await asyncio.gather(
+        db.kiosk_tenants.find({"company_id": company_id}).to_list(500),
+        db.kiosk_apartments.find({"company_id": company_id}).sort("order", 1).to_list(200),
+        db.kiosk_payments.find({"company_id": company_id}).sort("created_at", -1).to_list(10000),
+        db.kiosk_leases.find({"company_id": company_id}).to_list(200),
+        db.kiosk_kas.find({"company_id": company_id}).sort("created_at", -1).to_list(1000),
+        db.kiosk_employees.find({"company_id": company_id}).to_list(100),
+    )
+    
+    # Process apartments
+    apartments = [{k: v for k, v in a.items() if k != '_id'} for a in apartments_raw]
+    
+    # Process payments
+    payments = [{k: v for k, v in p.items() if k != '_id'} for p in payments_raw]
+    
+    # Process leases
+    leases = [{k: v for k, v in l.items() if k != '_id'} for l in leases_raw]
+    
+    # Process kas
+    total_income_kas = sum(p.get("amount", 0) for p in payments_raw)
+    manual_income = sum(e.get("amount", 0) for e in kas_entries if e.get("entry_type") == "income")
+    total_income = total_income_kas + manual_income
+    total_expense = sum(e.get("amount", 0) for e in kas_entries if e.get("entry_type") in ("expense", "salary"))
+    kas = {
+        "entries": [{k: v for k, v in e.items() if k != '_id'} for e in kas_entries],
+        "total_income": total_income,
+        "total_expense": total_expense,
+        "balance": total_income - total_expense,
+    }
+    
+    # Process employees
+    employees = [{k: v for k, v in e.items() if k != '_id'} for e in employees_raw]
+    
+    # Process tenants (simplified — no billing logic, just current state)
+    tenants = []
+    for t in tenants_raw:
+        tenants.append({k: v for k, v in t.items() if k != '_id'})
+    
+    return {
+        "apartments": apartments,
+        "payments": payments,
+        "leases": leases,
+        "kas": kas,
+        "employees": employees,
+        "tenants_raw": tenants,
+    }
 
 @router.post("/admin/tenants")
 async def create_tenant(data: TenantCreate, company: dict = Depends(get_current_company)):

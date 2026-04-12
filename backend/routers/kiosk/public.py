@@ -2,28 +2,36 @@ from .base import *
 
 @router.get("/public/{company_id}/company")
 async def get_company_public(company_id: str):
-    """Get company info for kiosk display (public)"""
+    """Get company info for kiosk display (public) — cached"""
+    cache_key = f"pub_company_{company_id}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+    
     company = await db.kiosk_companies.find_one({"company_id": company_id})
     if not company:
         raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
     
     sub_status = company.get("subscription_status", "active")
     if sub_status in ("blocked", "expired"):
-        return {
+        result = {
             "name": company["name"],
             "company_id": company["company_id"],
             "has_pin": bool(company.get("kiosk_pin")),
             "subscription_blocked": True,
             "subscription_message": "Uw abonnement is verlopen. Neem contact op met de beheerder."
         }
+    else:
+        result = {
+            "name": company["name"],
+            "company_id": company["company_id"],
+            "has_pin": bool(company.get("kiosk_pin")),
+            "subscription_blocked": False,
+            "start_screen": company.get("start_screen", "kiosk")
+        }
     
-    return {
-        "name": company["name"],
-        "company_id": company["company_id"],
-        "has_pin": bool(company.get("kiosk_pin")),
-        "subscription_blocked": False,
-        "start_screen": company.get("start_screen", "kiosk")
-    }
+    _cache_set(cache_key, result, 60)
+    return result
 
 @router.post("/public/{company_id}/verify-pin")
 async def verify_kiosk_pin(company_id: str, data: KioskPinVerify):

@@ -28,7 +28,8 @@ __all__ = [
     "datetime", "timezone", "timedelta", "relativedelta",
     "jwt", "bcrypt", "os", "uuid", "re", "httpx", "asyncio",
     # Core objects
-    "router", "security", "db", "set_database",
+    "router", "security", "db", "set_database", "ensure_indexes",
+    "_cache_get", "_cache_set", "_cache_invalidate",
     "JWT_SECRET", "JWT_ALGORITHM", "JWT_EXPIRATION_HOURS",
     # Helpers
     "generate_uuid", "slugify_company_name",
@@ -67,6 +68,46 @@ db = _DatabaseProxy()
 
 def set_database(database):
     db._db = database
+
+# ============== PERFORMANCE: MongoDB Indexes ==============
+async def ensure_indexes():
+    """Create indexes for frequently queried collections"""
+    try:
+        await db.kiosk_companies.create_index("company_id", unique=True)
+        await db.kiosk_companies.create_index("custom_domain")
+        await db.kiosk_tenants.create_index([("company_id", 1), ("status", 1)])
+        await db.kiosk_tenants.create_index([("company_id", 1), ("apartment_id", 1)])
+        await db.kiosk_apartments.create_index([("company_id", 1), ("order", 1)])
+        await db.kiosk_payments.create_index([("company_id", 1), ("created_at", -1)])
+        await db.kiosk_payments.create_index([("company_id", 1), ("tenant_id", 1)])
+        await db.kiosk_leases.create_index([("company_id", 1)])
+        await db.kiosk_kas.create_index([("company_id", 1), ("created_at", -1)])
+        await db.kiosk_employees.create_index([("company_id", 1)])
+        await db.kiosk_rekeninghouders.create_index([("company_id", 1)])
+    except Exception:
+        pass  # Indexes may already exist
+
+# ============== PERFORMANCE: In-memory cache ==============
+_cache = {}
+_cache_ttl = {}
+CACHE_DURATION = 30  # seconds
+
+def _cache_get(key):
+    import time
+    if key in _cache and _cache_ttl.get(key, 0) > time.time():
+        return _cache[key]
+    return None
+
+def _cache_set(key, value, ttl=CACHE_DURATION):
+    import time
+    _cache[key] = value
+    _cache_ttl[key] = time.time() + ttl
+
+def _cache_invalidate(prefix):
+    keys_to_remove = [k for k in _cache if k.startswith(prefix)]
+    for k in keys_to_remove:
+        _cache.pop(k, None)
+        _cache_ttl.pop(k, None)
 
 # ============== HELPER FUNCTIONS ==============
 

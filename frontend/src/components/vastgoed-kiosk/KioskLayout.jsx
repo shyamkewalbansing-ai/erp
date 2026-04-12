@@ -101,21 +101,21 @@ export default function KioskLayout() {
 
   useEffect(() => {
     if (companyId) {
-      axios.get(`${API}/public/${companyId}/company`).then(res => {
-        setCompanyName(res.data.name);
-        const screen = res.data.start_screen || 'kiosk';
+      // Preload company info for fast navigation
+      Promise.all([
+        axios.get(`${API}/public/${companyId}/company`),
+      ]).then(([compRes]) => {
+        setCompanyName(compRes.data.name);
+        const screen = compRes.data.start_screen || 'kiosk';
         setStartScreen(screen);
         
-        // Check subscription
-        if (res.data.subscription_blocked) {
+        if (compRes.data.subscription_blocked) {
           setSubscriptionBlocked(true);
           return;
         }
         
-        const hasPin = res.data.has_pin;
+        const hasPin = compRes.data.has_pin;
         setRequiresPin(hasPin);
-        
-        // Check if already verified in this session (via email+password or PIN login)
         const alreadyVerified = sessionStorage.getItem(`kiosk_pin_verified_${companyId}`) === 'true';
         
         if (alreadyVerified) {
@@ -124,12 +124,7 @@ export default function KioskLayout() {
           return;
         }
         
-        if (!hasPin) {
-          setStep('no-pin');
-          return;
-        }
-        
-        // Has PIN but not verified - show PIN entry
+        if (!hasPin) { setStep('no-pin'); return; }
         setStep('pin');
       }).catch(() => {
         setCompanyNotFound(true);

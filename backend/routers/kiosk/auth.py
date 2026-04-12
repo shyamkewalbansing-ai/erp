@@ -151,10 +151,52 @@ async def update_company_settings(data: CompanyUpdate, company: dict = Depends(g
         if existing:
             raise HTTPException(status_code=400, detail="Deze PIN code is al in gebruik door een ander bedrijf. Kies een andere PIN.")
     
+    old_company_id = company["company_id"]
+    new_company_id = None
+    new_token = None
+    
+    # If name changed, regenerate slug and cascade company_id update
+    if "name" in update_data and update_data["name"].strip():
+        new_slug = slugify_company_name(update_data["name"])
+        if new_slug != old_company_id:
+            # Check uniqueness
+            existing_slug = await db.kiosk_companies.find_one({"company_id": new_slug})
+            if existing_slug:
+                raise HTTPException(status_code=400, detail=f"De URL '{new_slug}' is al in gebruik. Kies een andere bedrijfsnaam.")
+            
+            new_company_id = new_slug
+            update_data["company_id"] = new_company_id
+            
+            # Cascade update company_id in all related collections
+            collections = [
+                db.kiosk_tenants, db.kiosk_apartments, db.kiosk_payments,
+                db.kiosk_leases, db.kiosk_kas, db.kiosk_employees,
+                db.kiosk_loans, db.kiosk_loan_payments, db.kiosk_internet_plans,
+                db.kiosk_rekeninghouders, db.kiosk_messages, db.kiosk_wa_messages,
+                db.kiosk_shelly_devices, db.kiosk_tenda_routers,
+            ]
+            await asyncio.gather(*[
+                col.update_many(
+                    {"company_id": old_company_id},
+                    {"$set": {"company_id": new_company_id}}
+                ) for col in collections
+            ])
+            
+            new_token = create_token(new_company_id)
+            
+            # Invalidate caches for old company_id
+            _cache_invalidate(f"pub_company_{old_company_id}")
+            _cache_invalidate(f"pub_apt_{old_company_id}")
+            _cache_invalidate(f"pub_ten_{old_company_id}")
+    
     await db.kiosk_companies.update_one(
-        {"company_id": company["company_id"]},
+        {"company_id": old_company_id},
         {"$set": update_data}
     )
     
-    return {"message": "Instellingen bijgewerkt"}
+    result = {"message": "Instellingen bijgewerkt"}
+    if new_company_id:
+        result["company_id"] = new_company_id
+        result["token"] = new_token
+    return result
 

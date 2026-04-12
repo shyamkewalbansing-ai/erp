@@ -3272,7 +3272,7 @@ function CompanyDetailsSection({ company, token, onRefresh }) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await axios.put(`${API}/auth/settings`, {
+      const res = await axios.put(`${API}/auth/settings`, {
         name: name.trim() || undefined,
         telefoon: telefoon.trim() || undefined,
         adres: adres.trim() || undefined,
@@ -3285,6 +3285,16 @@ function CompanyDetailsSection({ company, token, onRefresh }) {
         bank_account_number: bankAccountNumber.trim() || undefined,
         bank_description: bankDescription.trim() || undefined,
       }, { headers: { Authorization: `Bearer ${token}` } });
+      // If company name changed, backend returns new token + company_id
+      if (res.data.token && res.data.company_id) {
+        localStorage.setItem('kiosk_token', res.data.token);
+        toast.success(`Bedrijfsgegevens opgeslagen. URL bijgewerkt naar /vastgoed/${res.data.company_id}`);
+        // Navigate to new URL after brief delay
+        setTimeout(() => {
+          window.location.href = `/vastgoed/admin`;
+        }, 800);
+        return;
+      }
       toast.success('Bedrijfsgegevens opgeslagen');
       onRefresh();
     } catch (err) {
@@ -3321,7 +3331,25 @@ function CompanyDetailsSection({ company, token, onRefresh }) {
         <div>
           <h4 className="text-sm font-bold text-slate-700 mb-3">Algemeen</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <SettingsInput label="Bedrijfsnaam" value={name} onChange={updateName} placeholder="Uw bedrijfsnaam" />
+            <div>
+              <SettingsInput label="Bedrijfsnaam" value={name} onChange={updateName} placeholder="Uw bedrijfsnaam" />
+              {(() => {
+                const slug = name.trim().toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/[\s]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+                const currentSlug = company?.company_id;
+                if (slug && slug !== currentSlug) {
+                  return (
+                    <p className="text-xs text-orange-600 mt-1" data-testid="url-preview">
+                      URL wordt: <span className="font-mono font-bold">/vastgoed/{slug}</span>
+                    </p>
+                  );
+                }
+                return (
+                  <p className="text-xs text-slate-400 mt-1">
+                    Huidige URL: <span className="font-mono">/vastgoed/{currentSlug}</span>
+                  </p>
+                );
+              })()}
+            </div>
             <SettingsInput label="Email (login)" value={email} onChange={() => {}} placeholder="" disabled />
             <SettingsInput label="Telefoonnummer" value={telefoon} onChange={updateTelefoon} placeholder="+597 ..." />
             <SettingsInput label="Adres" value={adres} onChange={updateAdres} placeholder="Straat, Stad" />

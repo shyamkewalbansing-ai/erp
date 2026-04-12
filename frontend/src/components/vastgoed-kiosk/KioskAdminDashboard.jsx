@@ -85,20 +85,18 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   const loadData = async () => {
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const [meRes, dashRes, aptRes, tenRes, payRes, leaseRes] = await Promise.all([
+      const [meRes, dashRes, tenRes, combinedRes] = await Promise.all([
         axios.get(`${API}/auth/me`, { headers }),
         axios.get(`${API}/admin/dashboard`, { headers }),
-        axios.get(`${API}/admin/apartments`, { headers }),
         axios.get(`${API}/admin/tenants`, { headers }),
-        axios.get(`${API}/admin/payments`, { headers }),
-        axios.get(`${API}/admin/leases`, { headers })
+        axios.get(`${API}/admin/dashboard-data`, { headers }),
       ]);
       setCompany(meRes.data);
       setDashboard(dashRes.data);
-      setApartments(aptRes.data);
       setTenants(tenRes.data);
-      setPayments(payRes.data);
-      setLeases(leaseRes.data);
+      setApartments(combinedRes.data.apartments);
+      setPayments(combinedRes.data.payments);
+      setLeases(combinedRes.data.leases);
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.removeItem('kiosk_token');
