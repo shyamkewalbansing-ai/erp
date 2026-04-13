@@ -331,8 +331,7 @@ export default function KioskLayout() {
           animate="center"
           exit="exit"
           transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className={`absolute inset-0 overflow-y-auto overflow-x-hidden`}
-          style={{ paddingBottom: 'clamp(48px, 7vh, 64px)' }}
+          className={`absolute inset-0 overflow-y-auto overflow-x-hidden md:pb-16`}
         >
           {renderStep()}
         </motion.div>
