@@ -477,10 +477,11 @@ class TenantUpdate(BaseModel):
 class PaymentCreate(BaseModel):
     tenant_id: str
     amount: float
-    payment_type: str  # rent, partial_rent, service_costs, fines, deposit
+    payment_type: str
     payment_method: str = "cash"
     description: Optional[str] = None
     rent_month: Optional[str] = None
+    processed_by: Optional[str] = None  # employee name who processed
 
 class CashEntryCreate(BaseModel):
     entry_type: str  # income, expense, salary
@@ -498,9 +499,9 @@ class EmployeeCreate(BaseModel):
     telefoon: Optional[str] = None
     email: Optional[str] = None
     start_date: Optional[str] = None
-    role: Optional[str] = None  # beheerder, boekhouder, kiosk_medewerker
-    employee_type: Optional[str] = "vast"  # vast, los (aannemer)
-    password: Optional[str] = None  # for login
+    role: Optional[str] = None
+    employee_type: Optional[str] = "vast"
+    pin: Optional[str] = None
 
 class EmployeeUpdate(BaseModel):
     name: Optional[str] = None
@@ -511,7 +512,8 @@ class EmployeeUpdate(BaseModel):
     status: Optional[str] = None
     role: Optional[str] = None
     employee_type: Optional[str] = None
-    password: Optional[str] = None
+    pin: Optional[str] = None
+    signature: Optional[str] = None  # base64 signature image
 
 class LeaseCreate(BaseModel):
     tenant_id: str

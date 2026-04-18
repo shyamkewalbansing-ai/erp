@@ -755,6 +755,8 @@ async def list_payments(
         "kwitantie_nummer": p.get("kwitantie_nummer"),
         "status": p.get("status", "approved"),
         "processed_by": p.get("processed_by", ""),
+        "approved_by": p.get("approved_by", ""),
+        "has_signature": bool(p.get("approval_signature")),
         "created_at": p["created_at"]
     } for p in payments]
 
@@ -915,6 +917,27 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
         else:
             rent_month_row = f'<tr><td>Huurmaand</td><td>{rent_month_label}</td></tr>'
 
+    # Build processed/approved info
+    processed_by = payment.get("processed_by", "")
+    approved_by = payment.get("approved_by", "")
+    approval_signature = payment.get("approval_signature", "")
+    
+    process_html = ""
+    if processed_by or approved_by:
+        process_html = '<table class="details-table" style="margin-top:8px;">'
+        if processed_by:
+            process_html += f'<tr><td>Verwerkt door</td><td>{processed_by}</td></tr>'
+        if approved_by:
+            process_html += f'<tr><td>Goedgekeurd door</td><td>{approved_by}</td></tr>'
+        process_html += '</table>'
+    
+    signature_html = ""
+    if approval_signature:
+        signature_html = f'''
+<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-25deg);opacity:0.12;pointer-events:none;z-index:0;">
+  <img src="{approval_signature}" style="width:220px;height:auto;" />
+</div>'''
+
     html = f"""<!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -1067,7 +1090,9 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
   <button onclick="window.close()">Sluiten</button>
 </div>
 
-<div class="page" style="margin-top: 40px;">
+<div class="page" style="margin-top: 40px; position: relative;">
+
+{signature_html}
 
 <div class="header">
   <div class="company-name">{stamp_name}</div>
@@ -1094,6 +1119,8 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
 </table>
 
 {remaining_html}
+
+{process_html}
 
 <div class="stamp-section">
   <div class="stamp-rect">
@@ -1287,9 +1314,15 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
     }
 
 
+class ApprovePaymentData(BaseModel):
+    approved_by: Optional[str] = None
+    signature: Optional[str] = None  # base64 signature image
+
 @router.post("/admin/payments/{payment_id}/approve")
-async def approve_payment(payment_id: str, company: dict = Depends(get_current_company)):
+async def approve_payment(payment_id: str, data: ApprovePaymentData = None, company: dict = Depends(get_current_company)):
     """Approve a pending payment - updates tenant balances and sends WhatsApp"""
+    if data is None:
+        data = ApprovePaymentData()
     company_id = company["company_id"]
     payment = await db.kiosk_payments.find_one({"payment_id": payment_id, "company_id": company_id})
     if not payment:
@@ -1328,17 +1361,22 @@ async def approve_payment(payment_id: str, company: dict = Depends(get_current_c
     remaining_fines = updated_tenant.get("fines", 0) if updated_tenant else 0
     remaining_internet = updated_tenant.get("internet_outstanding", 0) if updated_tenant else 0
 
-    # Update payment status + store remaining balances
+    # Update payment status + store remaining balances + approval info
+    approve_update = {
+        "status": "approved",
+        "approved_at": now,
+        "remaining_rent": remaining_rent,
+        "remaining_service": remaining_service,
+        "remaining_fines": remaining_fines,
+        "remaining_internet": remaining_internet,
+    }
+    if data.approved_by:
+        approve_update["approved_by"] = data.approved_by
+    if data.signature:
+        approve_update["approval_signature"] = data.signature
     await db.kiosk_payments.update_one(
         {"payment_id": payment_id},
-        {"$set": {
-            "status": "approved",
-            "approved_at": now,
-            "remaining_rent": remaining_rent,
-            "remaining_service": remaining_service,
-            "remaining_fines": remaining_fines,
-            "remaining_internet": remaining_internet,
-        }}
+        {"$set": approve_update}
     )
 
     # Send WhatsApp confirmation

@@ -18,7 +18,7 @@ function EmployeesTab({ token, formatSRD }) {
   const [payResult, setPayResult] = useState(null);
   const [role, setRole] = useState('kiosk_medewerker');
   const [empType, setEmpType] = useState('vast');
-  const [password, setPassword] = useState('');
+  const [pin, setPin] = useState('');
 
   const loadEmployees = async () => {
     try {
@@ -32,7 +32,7 @@ function EmployeesTab({ token, formatSRD }) {
 
   const resetForm = () => {
     setName(''); setFunctie(''); setMaandloon(''); setTelefoon(''); setEmail('');
-    setRole('kiosk_medewerker'); setEmpType('vast'); setPassword('');
+    setRole('kiosk_medewerker'); setEmpType('vast'); setPin('');
     setEditingEmp(null); setShowForm(false);
   };
 
@@ -41,7 +41,7 @@ function EmployeesTab({ token, formatSRD }) {
     setName(emp.name); setFunctie(emp.functie || ''); setMaandloon(emp.maandloon?.toString() || '');
     setTelefoon(emp.telefoon || ''); setEmail(emp.email || '');
     setRole(emp.role || 'kiosk_medewerker'); setEmpType(emp.employee_type || 'vast');
-    setPassword('');
+    setPin('');
     setShowForm(true);
   };
 
@@ -52,11 +52,11 @@ function EmployeesTab({ token, formatSRD }) {
     try {
       if (editingEmp) {
         const updateData = { name, functie, maandloon: parseFloat(maandloon) || 0, telefoon, email, role, employee_type: empType };
-        if (password) updateData.password = password;
+        if (pin) updateData.pin = pin;
         await axios.put(`${API}/admin/employees/${editingEmp.employee_id}`, updateData, { headers: { Authorization: `Bearer ${token}` } });
       } else {
         const createData = { name, functie, maandloon: parseFloat(maandloon) || 0, telefoon, email, role, employee_type: empType };
-        if (password) createData.password = password;
+        if (pin) createData.pin = pin;
         await axios.post(`${API}/admin/employees`, createData, { headers: { Authorization: `Bearer ${token}` } });
       }
       resetForm();
@@ -175,8 +175,8 @@ function EmployeesTab({ token, formatSRD }) {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Wachtwoord {editingEmp?.has_password ? '(laat leeg om niet te wijzigen)' : ''}</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Voor inlog" data-testid="emp-password-input" />
+                <label className="block text-xs font-medium text-slate-600 mb-1">PIN code (4 cijfers) {editingEmp?.has_pin ? '(laat leeg om niet te wijzigen)' : ''}</label>
+                <input type="text" inputMode="numeric" maxLength={4} pattern="[0-9]*" value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0,4))} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="bijv. 1234" data-testid="emp-pin-input" />
               </div>
             </div>
             <div className="flex gap-2">

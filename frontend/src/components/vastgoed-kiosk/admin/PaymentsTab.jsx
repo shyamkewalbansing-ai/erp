@@ -3,11 +3,13 @@ import { Trash2, Receipt, Search, Calendar, FileText, RefreshCw, CheckCircle, XC
 import { toast } from 'sonner';
 import axios from 'axios';
 import ReceiptTicket from '../ReceiptTicket';
+import SignatureModal from './SignatureModal';
 
 function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD, token, company, tenants, onDeletePayment, onRefresh }) {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [fixing, setFixing] = useState(false);
   const [approving, setApproving] = useState(null);
+  const [signatureTarget, setSignatureTarget] = useState(null); // payment_id to approve
   const months = [];
   for (let i = 0; i < 12; i++) {
     const d = new Date();
@@ -57,10 +59,21 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
   };
 
   const handleApprove = async (paymentId) => {
-    if (!window.confirm('Betaling goedkeuren? Saldo wordt bijgewerkt.')) return;
+    // Open signature modal instead of direct approve
+    setSignatureTarget(paymentId);
+  };
+
+  const handleApproveWithSignature = async (signatureData) => {
+    const paymentId = signatureTarget;
+    setSignatureTarget(null);
     setApproving(paymentId);
     try {
-      await axios.post(`${API}/admin/payments/${paymentId}/approve`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.post(`${API}/admin/payments/${paymentId}/approve`, {
+        approved_by: company?.name || 'Beheerder',
+        signature: signatureData
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      // Save signature for future use
+      localStorage.setItem('kiosk_approval_signature', signatureData);
       toast.success('Betaling goedgekeurd');
       if (onRefresh) onRefresh();
     } catch (err) {
@@ -306,6 +319,15 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
       </div>
       );
     })()}
+
+    {/* Signature Modal for approval */}
+    {signatureTarget && (
+      <SignatureModal
+        savedSignature={localStorage.getItem('kiosk_approval_signature') || ''}
+        onConfirm={handleApproveWithSignature}
+        onCancel={() => setSignatureTarget(null)}
+      />
+    )}
     </>
   );
 }

@@ -4,13 +4,31 @@ import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
-export default function KioskApartmentSelect({ onBack, onSelect, companyId, codeOnly = false, onSwitchToFace, onAdmin, onLock }) {
+export default function KioskApartmentSelect({ onBack, onSelect, companyId, codeOnly = false, onSwitchToFace, onAdmin, onLock, kioskEmployee, onEmployeeLogin }) {
   const [mode, setMode] = useState(codeOnly ? 'code' : 'grid');
   const [apartments, setApartments] = useState([]);
   const [tenants, setTenants] = useState([]);
   const [searchCode, setSearchCode] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showEmpLogin, setShowEmpLogin] = useState(false);
+  const [empPin, setEmpPin] = useState('');
+  const [empLoading, setEmpLoading] = useState(false);
+
+  const handleEmpLogin = async () => {
+    if (empPin.length !== 4) return;
+    setEmpLoading(true);
+    setError('');
+    try {
+      const res = await axios.post(`${API}/public/${companyId}/employee/login`, { pin: empPin });
+      onEmployeeLogin(res.data);
+      setShowEmpLogin(false);
+      setEmpPin('');
+    } catch {
+      setError('Ongeldige PIN');
+    }
+    setEmpLoading(false);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -66,6 +84,11 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId, code
               <span className="text-xs sm:text-sm">Uit</span>
             </button>
           )}
+          {/* Employee login button */}
+          <button onClick={() => setShowEmpLogin(true)} className={`flex items-center gap-1.5 font-bold transition hover:opacity-90 rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm ${kioskEmployee ? 'bg-green-500 text-white' : 'text-white bg-white/20 backdrop-blur-sm'}`} data-testid="kiosk-employee-btn">
+            <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span>{kioskEmployee ? kioskEmployee.name.split(' ')[0] : 'Medewerker'}</span>
+          </button>
           {onAdmin && (
             <button onClick={onAdmin} className="flex items-center gap-1.5 text-orange-600 font-bold transition hover:opacity-90 bg-white rounded-lg px-3 py-1.5 sm:px-4 sm:py-2" data-testid="kiosk-admin-btn">
               <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -187,6 +210,44 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId, code
           </div>
         )}
       </div>
+
+      {/* Employee PIN Login Modal */}
+      {showEmpLogin && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => { setShowEmpLogin(false); setEmpPin(''); setError(''); }}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-slate-900 text-center mb-1">Medewerker Login</h3>
+            <p className="text-sm text-slate-500 text-center mb-4">Voer uw 4-cijferige PIN in</p>
+            {kioskEmployee && (
+              <div className="mb-4 p-3 bg-green-50 rounded-xl text-center">
+                <p className="text-sm text-green-700">Ingelogd als: <strong>{kioskEmployee.name}</strong></p>
+                <p className="text-xs text-green-600">{({beheerder:'Beheerder',boekhouder:'Boekhouder',kiosk_medewerker:'Kiosk Medewerker'})[kioskEmployee.role] || kioskEmployee.role}</p>
+                <button onClick={() => { onEmployeeLogin(null); setShowEmpLogin(false); }} className="mt-2 text-xs text-red-500 font-bold">Uitloggen</button>
+              </div>
+            )}
+            <div className="flex justify-center gap-3 mb-4">
+              {[0,1,2,3].map(i => (
+                <div key={i} className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center text-xl font-bold ${empPin.length > i ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-slate-200'}`}>
+                  {empPin[i] ? '*' : ''}
+                </div>
+              ))}
+            </div>
+            {error && <p className="text-red-500 text-sm text-center mb-3">{error}</p>}
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              {['1','2','3','4','5','6','7','8','9','','0',''].map((key, i) => {
+                if (key === '' && i === 9) return <div key={i} />;
+                if (key === '' && i === 11) return (
+                  <button key={i} onClick={() => setEmpPin(p => p.slice(0,-1))} className="h-12 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm hover:bg-slate-200 active:scale-95">DEL</button>
+                );
+                return (
+                  <button key={i} onClick={() => { if (empPin.length < 4) { const np = empPin + key; setEmpPin(np); if (np.length === 4) { setTimeout(() => { setEmpLoading(true); axios.post(`${API}/public/${companyId}/employee/login`, { pin: np }).then(r => { onEmployeeLogin(r.data); setShowEmpLogin(false); setEmpPin(''); setError(''); }).catch(() => { setError('Ongeldige PIN'); setEmpPin(''); }).finally(() => setEmpLoading(false)); }, 200); } } }}
+                    className="h-12 rounded-xl bg-slate-50 text-slate-900 font-bold text-lg hover:bg-orange-50 border border-slate-100 active:scale-95">{key}</button>
+                );
+              })}
+            </div>
+            {empLoading && <p className="text-center text-orange-500 text-sm font-bold animate-pulse">Verifiëren...</p>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

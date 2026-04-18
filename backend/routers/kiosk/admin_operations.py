@@ -983,7 +983,8 @@ async def list_employees(company: dict = Depends(get_current_company)):
             "status": e.get("status", "active"),
             "role": e.get("role", "kiosk_medewerker"),
             "employee_type": e.get("employee_type", "vast"),
-            "has_password": bool(e.get("password_hash")),
+            "has_pin": bool(e.get("pin")),
+            "has_signature": bool(e.get("signature")),
             "total_paid": total_paid,
             "created_at": e.get("created_at")
         })
@@ -1007,13 +1008,16 @@ async def create_employee(data: EmployeeCreate, company: dict = Depends(get_curr
         "start_date": data.start_date or now.strftime("%Y-%m-%d"),
         "role": data.role or "kiosk_medewerker",
         "employee_type": data.employee_type or "vast",
+        "pin": data.pin or "",
         "status": "active",
         "created_at": now
     }
     
-    # Hash password if provided
-    if data.password:
-        employee["password_hash"] = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    # Check PIN uniqueness within company
+    if data.pin:
+        existing = await db.kiosk_employees.find_one({"company_id": company["company_id"], "pin": data.pin, "status": "active"})
+        if existing:
+            raise HTTPException(status_code=400, detail="Deze PIN is al in gebruik door een andere werknemer")
     
     await db.kiosk_employees.insert_one(employee)
     return {"employee_id": employee_id, "message": "Werknemer aangemaakt"}
@@ -1021,11 +1025,17 @@ async def create_employee(data: EmployeeCreate, company: dict = Depends(get_curr
 @router.put("/admin/employees/{employee_id}")
 async def update_employee(employee_id: str, data: EmployeeUpdate, company: dict = Depends(get_current_company)):
     """Update an employee"""
-    updates = {k: v for k, v in data.dict().items() if v is not None and k != 'password'}
-    if data.password:
-        updates["password_hash"] = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    updates = {k: v for k, v in data.dict().items() if v is not None}
     if not updates:
         raise HTTPException(status_code=400, detail="Geen wijzigingen")
+    # Check PIN uniqueness
+    if "pin" in updates and updates["pin"]:
+        existing = await db.kiosk_employees.find_one({
+            "company_id": company["company_id"], "pin": updates["pin"],
+            "employee_id": {"$ne": employee_id}, "status": "active"
+        })
+        if existing:
+            raise HTTPException(status_code=400, detail="Deze PIN is al in gebruik door een andere werknemer")
     updates["updated_at"] = datetime.now(timezone.utc)
     
     result = await db.kiosk_employees.update_one(

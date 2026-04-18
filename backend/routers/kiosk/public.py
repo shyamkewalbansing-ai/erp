@@ -1,5 +1,30 @@
 from .base import *
 
+class EmployeePinLogin(BaseModel):
+    pin: str
+
+@router.post("/public/{company_id}/employee/login")
+async def employee_pin_login(company_id: str, data: EmployeePinLogin):
+    """Employee login via PIN on kiosk"""
+    company = await db.kiosk_companies.find_one({"company_id": company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    
+    employee = await db.kiosk_employees.find_one({
+        "company_id": company_id, "pin": data.pin, "status": "active"
+    })
+    if not employee:
+        raise HTTPException(status_code=401, detail="Ongeldige PIN")
+    
+    return {
+        "employee_id": employee["employee_id"],
+        "name": employee["name"],
+        "role": employee.get("role", "kiosk_medewerker"),
+        "functie": employee.get("functie", ""),
+    }
+
+
+
 @router.get("/public/{company_id}/company")
 async def get_company_public(company_id: str):
     """Get company info for kiosk display (public) — cached"""
@@ -296,6 +321,7 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
         "covered_months": covered_months,
         "kwitantie_nummer": kwitantie_nummer,
         "status": "pending",
+        "processed_by": data.processed_by or "Kiosk",
         "created_at": now
     }
     

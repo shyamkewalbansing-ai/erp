@@ -92,6 +92,7 @@ export default function KioskLayout() {
   const [requiresPin, setRequiresPin] = useState(false);
   const [pinVerified, setPinVerified] = useState(false);
   const [startScreen, setStartScreen] = useState('kiosk');
+  const [kioskEmployee, setKioskEmployee] = useState(null); // logged in employee {name, role, employee_id}
 
   const modeClasses = [
     kioskMode.isTouch ? 'kiosk-touch' : '',
@@ -270,8 +271,11 @@ export default function KioskLayout() {
                 if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
               });
               setPinVerified(false);
+              setKioskEmployee(null);
               goTo('pin');
             }}
+            kioskEmployee={kioskEmployee}
+            onEmployeeLogin={(emp) => setKioskEmployee(emp)}
           />
         );
       case 'overview':
@@ -299,6 +303,7 @@ export default function KioskLayout() {
             onBack={() => goTo('payment')}
             onSuccess={(result) => { setPaymentResult(result); goTo('receipt'); }}
             companyId={companyId}
+            kioskEmployee={kioskEmployee}
           />
         );
       case 'receipt':
