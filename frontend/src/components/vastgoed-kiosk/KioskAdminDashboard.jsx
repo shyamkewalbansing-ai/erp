@@ -23,7 +23,7 @@ import AddRentModal from './admin/AddRentModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
-export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthenticated = false, onBack, onLock }) {
+export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthenticated = false, onBack, onLock, kioskEmployee }) {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [company, setCompany] = useState(null);
@@ -149,7 +149,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     );
   }
 
-  const TABS = [
+  const ALL_TABS = [
     { id: 'dashboard', label: 'Home', icon: Building2 },
     { id: 'tenants', label: 'Huurders', icon: Users },
     { id: 'apartments', label: 'Appt.', icon: Home },
@@ -162,9 +162,24 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     { id: 'settings', label: 'Instellingen', icon: Settings },
   ];
 
-  // Mobile bottom nav: show 5 main tabs + "Meer" menu
-  const MOBILE_MAIN_TABS = ['dashboard', 'tenants', 'apartments', 'payments'];
+  // Role-based access control
+  const ROLE_TABS = {
+    beheerder: ['dashboard', 'tenants', 'apartments', 'payments', 'kas', 'loans', 'employees', 'power', 'internet', 'settings'],
+    boekhouder: ['dashboard', 'tenants', 'payments', 'kas'],
+    kiosk_medewerker: ['dashboard', 'payments'],
+  };
+  const employeeRole = kioskEmployee?.role;
+  const allowedTabIds = employeeRole ? (ROLE_TABS[employeeRole] || ROLE_TABS.kiosk_medewerker) : null;
+  const TABS = allowedTabIds ? ALL_TABS.filter(t => allowedTabIds.includes(t.id)) : ALL_TABS;
+
+  // Mobile bottom nav
+  const MOBILE_MAIN_TABS = ['dashboard', 'tenants', 'apartments', 'payments'].filter(id => TABS.some(t => t.id === id));
   const MOBILE_MORE_TABS = TABS.filter(t => !MOBILE_MAIN_TABS.includes(t.id));
+
+  // Reset tab when role changes
+  useEffect(() => {
+    if (!TABS.some(t => t.id === activeTab)) setActiveTab(TABS[0]?.id || 'dashboard');
+  }, [employeeRole]); // eslint-disable-line
 
   return (
     <div className="fixed inset-0 flex flex-col bg-slate-100 z-50" style={{ overflow: 'hidden' }}>
@@ -181,7 +196,9 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
               </div>
               <div className="min-w-0">
                 <h1 className="text-sm sm:text-base lg:text-lg font-bold text-slate-900 truncate">{company?.name}</h1>
-                <p className="text-[10px] sm:text-xs text-slate-500 hidden sm:block">Admin Dashboard</p>
+                <p className="text-[10px] sm:text-xs text-slate-500 hidden sm:block">
+                  {kioskEmployee ? `${kioskEmployee.name} · ${{beheerder:'Beheerder',boekhouder:'Boekhouder',kiosk_medewerker:'Kiosk Medewerker'}[kioskEmployee.role] || kioskEmployee.role}` : 'Admin Dashboard'}
+                </p>
               </div>
             </div>
           </div>

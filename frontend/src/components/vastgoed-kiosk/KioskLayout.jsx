@@ -247,6 +247,7 @@ export default function KioskLayout() {
           <KioskAdminDashboard 
             companyId={companyId}
             pinAuthenticated={pinVerified}
+            kioskEmployee={kioskEmployee}
             onBack={() => goTo('select')}
             onLock={() => {
               localStorage.removeItem('kiosk_token');
