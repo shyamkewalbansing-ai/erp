@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Trash2, Receipt, Search, Calendar, FileText, RefreshCw } from 'lucide-react';
+import { Trash2, Receipt, Search, Calendar, FileText, RefreshCw, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import axios from 'axios';
 import ReceiptTicket from '../ReceiptTicket';
 
 function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD, token, company, tenants, onDeletePayment, onRefresh }) {
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [fixing, setFixing] = useState(false);
+  const [approving, setApproving] = useState(null);
   const months = [];
   for (let i = 0; i < 12; i++) {
     const d = new Date();
@@ -52,6 +54,32 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
       toast.error('Herberekening mislukt');
     }
     setFixing(false);
+  };
+
+  const handleApprove = async (paymentId) => {
+    if (!window.confirm('Betaling goedkeuren? Saldo wordt bijgewerkt.')) return;
+    setApproving(paymentId);
+    try {
+      await axios.post(`${API}/admin/payments/${paymentId}/approve`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success('Betaling goedgekeurd');
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Goedkeuren mislukt');
+    }
+    setApproving(null);
+  };
+
+  const handleReject = async (paymentId) => {
+    if (!window.confirm('Betaling afwijzen? Dit kan niet ongedaan worden.')) return;
+    setApproving(paymentId);
+    try {
+      await axios.post(`${API}/admin/payments/${paymentId}/reject`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success('Betaling afgewezen');
+      if (onRefresh) onRefresh();
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Afwijzen mislukt');
+    }
+    setApproving(null);
   };
 
   const PRINT_SERVER_URL = 'http://localhost:5555';
@@ -155,7 +183,11 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                   <td className="p-4 text-sm text-slate-600">
                     {new Date(p.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </td>
-                  <td className="p-4 font-mono text-sm text-orange-600">{p.kwitantie_nummer}</td>
+                  <td className="p-4 font-mono text-sm text-orange-600">
+                    {p.kwitantie_nummer}
+                    {p.status === 'pending' && <span className="ml-2 px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded text-[10px] font-bold">IN AFWACHTING</span>}
+                    {p.status === 'rejected' && <span className="ml-2 px-1.5 py-0.5 bg-red-100 text-red-600 rounded text-[10px] font-bold">AFGEWEZEN</span>}
+                  </td>
                   <td className="p-4 font-medium text-slate-900">{p.tenant_name}</td>
                   <td className="p-4 text-slate-600">{p.apartment_number}</td>
                   <td className="p-4">
@@ -179,8 +211,17 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => setSelectedPayment(p)} data-testid={`receipt-view-${p.payment_id}`} className="text-slate-400 hover:text-orange-500 p-1" title="Kwitantie bekijken"><FileText className="w-4 h-4" /></button>
-                      <button onClick={() => onDeletePayment(p.payment_id)} data-testid={`delete-payment-${p.payment_id}`} className="text-slate-400 hover:text-red-500 p-1" title="Verwijderen"><Trash2 className="w-4 h-4" /></button>
+                      {p.status === 'pending' ? (
+                        <>
+                          <button onClick={() => handleApprove(p.payment_id)} disabled={approving === p.payment_id} className="text-green-500 hover:text-green-700 p-1 disabled:opacity-50" title="Goedkeuren"><CheckCircle className="w-5 h-5" /></button>
+                          <button onClick={() => handleReject(p.payment_id)} disabled={approving === p.payment_id} className="text-red-400 hover:text-red-600 p-1 disabled:opacity-50" title="Afwijzen"><XCircle className="w-5 h-5" /></button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={() => setSelectedPayment(p)} data-testid={`receipt-view-${p.payment_id}`} className="text-slate-400 hover:text-orange-500 p-1" title="Kwitantie bekijken"><FileText className="w-4 h-4" /></button>
+                          <button onClick={() => onDeletePayment(p.payment_id)} data-testid={`delete-payment-${p.payment_id}`} className="text-slate-400 hover:text-red-500 p-1" title="Verwijderen"><Trash2 className="w-4 h-4" /></button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -212,17 +253,28 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                   {{monthly_rent:'Maandhuur',rent:'Huur',service_costs:'Service',deposit:'Borg',fine:'Boete',fines:'Boete',partial_rent:'Deelbetaling',internet:'Internet',other:'Overig'}[p.payment_type] || p.payment_type}
                 </span>
                 <span className="text-[10px] text-orange-600 font-mono">{p.kwitantie_nummer}</span>
+                {p.status === 'pending' && <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded text-[10px] font-bold">IN AFWACHTING</span>}
+                {p.status === 'rejected' && <span className="px-1.5 py-0.5 bg-red-100 text-red-600 rounded text-[10px] font-bold">AFGEWEZEN</span>}
               </div>
               {p.covered_months?.length > 0 && (
                 <p className="text-xs text-slate-500 mb-1.5">Periode: {p.covered_months.join(', ')}</p>
               )}
               <div className="flex items-center justify-between pt-1.5 border-t border-slate-50">
                 <span className="text-xs">
-                  {rem > 0 ? <span className="font-bold text-red-600">Open: {formatSRD(rem)}</span> : <span className="text-green-600 font-medium">Voldaan</span>}
+                  {p.status === 'pending' ? <span className="font-medium text-yellow-600">Wacht op goedkeuring</span> : rem > 0 ? <span className="font-bold text-red-600">Open: {formatSRD(rem)}</span> : <span className="text-green-600 font-medium">Voldaan</span>}
                 </span>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => setSelectedPayment(p)} className="text-slate-400 hover:text-orange-500 p-1.5"><FileText className="w-4 h-4" /></button>
-                  <button onClick={() => onDeletePayment(p.payment_id)} className="text-slate-400 hover:text-red-500 p-1.5"><Trash2 className="w-4 h-4" /></button>
+                <div className="flex items-center gap-0.5">
+                  {p.status === 'pending' ? (
+                    <>
+                      <button onClick={() => handleApprove(p.payment_id)} disabled={approving === p.payment_id} className="text-green-500 hover:text-green-700 p-1.5 disabled:opacity-50"><CheckCircle className="w-5 h-5" /></button>
+                      <button onClick={() => handleReject(p.payment_id)} disabled={approving === p.payment_id} className="text-red-400 hover:text-red-600 p-1.5 disabled:opacity-50"><XCircle className="w-5 h-5" /></button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={() => setSelectedPayment(p)} className="text-slate-400 hover:text-orange-500 p-1.5"><FileText className="w-4 h-4" /></button>
+                      <button onClick={() => onDeletePayment(p.payment_id)} className="text-slate-400 hover:text-red-500 p-1.5"><Trash2 className="w-4 h-4" /></button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

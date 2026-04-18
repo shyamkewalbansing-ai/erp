@@ -293,74 +293,14 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
         "rent_month": data.rent_month,
         "covered_months": covered_months,
         "kwitantie_nummer": kwitantie_nummer,
+        "status": "pending",
         "created_at": now
     }
     
     await db.kiosk_payments.insert_one(payment)
     
-    # Update tenant balances
-    update_fields = {}
-    if data.payment_type in ["rent", "partial_rent"]:
-        new_outstanding = max(0, tenant.get("outstanding_rent", 0) - data.amount)
-        update_fields["outstanding_rent"] = new_outstanding
-    elif data.payment_type == "service_costs":
-        new_service = max(0, tenant.get("service_costs", 0) - data.amount)
-        update_fields["service_costs"] = new_service
-    elif data.payment_type == "fines":
-        new_fines = max(0, tenant.get("fines", 0) - data.amount)
-        update_fields["fines"] = new_fines
-    elif data.payment_type == "internet":
-        new_internet = max(0, tenant.get("internet_outstanding", 0) - data.amount)
-        update_fields["internet_outstanding"] = new_internet
-    elif data.payment_type == "deposit":
-        new_deposit = tenant.get("deposit_paid", 0) + data.amount
-        update_fields["deposit_paid"] = new_deposit
-    
-    if update_fields:
-        update_fields["updated_at"] = now
-        await db.kiosk_tenants.update_one(
-            {"tenant_id": data.tenant_id},
-            {"$set": update_fields}
-        )
-    
-    # Get updated tenant balances for receipt
-    updated_tenant = await db.kiosk_tenants.find_one({"tenant_id": data.tenant_id})
-    remaining_rent = updated_tenant.get("outstanding_rent", 0) if updated_tenant else 0
-    remaining_service = updated_tenant.get("service_costs", 0) if updated_tenant else 0
-    remaining_fines = updated_tenant.get("fines", 0) if updated_tenant else 0
-    remaining_internet = updated_tenant.get("internet_outstanding", 0) if updated_tenant else 0
-    
-    # === AUTO WHATSAPP: Payment confirmation ===
-    total_remaining = remaining_rent + remaining_service + remaining_fines + remaining_internet
-    comp_name = ""
-    try:
-        c = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
-        comp_name = c.get("stamp_company_name") or c.get("name", "") if c else ""
-    except Exception:
-        pass
-    
-    type_labels = {"rent": "Huurbetaling", "monthly_rent": "Huurbetaling", "partial_rent": "Gedeeltelijke betaling", "service_costs": "Servicekosten", "fines": "Boetes", "deposit": "Borg", "internet": "Internet"}
-    type_label = type_labels.get(data.payment_type, data.payment_type)
-    covered_str = ", ".join(covered_months) if covered_months else ""
-    
-    if total_remaining <= 0:
-        wa_msg = (f"Beste {tenant['name']},\n\n"
-                  f"Uw betaling van SRD {data.amount:,.2f} ({type_label}) is ontvangen.\n"
-                  f"Kwitantie: {kwitantie_nummer}\n"
-                  f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
-                  f"Uw saldo is nu VOLLEDIG VOLDAAN.\n\n"
-                  f"Bedankt voor uw betaling!\n{comp_name}")
-    else:
-        wa_msg = (f"Beste {tenant['name']},\n\n"
-                  f"Uw betaling van SRD {data.amount:,.2f} ({type_label}) is ontvangen.\n"
-                  f"Kwitantie: {kwitantie_nummer}\n"
-                  f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
-                  f"Resterend saldo: SRD {total_remaining:,.2f}\n\n"
-                  f"Met vriendelijke groet,\n{comp_name}")
-    
-    if tenant.get("phone") or tenant.get("telefoon"):
-        tenant_phone = tenant.get("phone") or tenant.get("telefoon", "")
-        await _send_message_auto(company_id, tenant_phone, wa_msg, data.tenant_id, tenant["name"], "payment_confirmation")
+    # Do NOT update tenant balances - wait for admin approval
+    # Do NOT send WhatsApp - wait for admin approval
     
     return {
         "payment_id": payment_id,
@@ -374,10 +314,7 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
         "apartment_number": tenant.get("apartment_number", ""),
         "rent_month": data.rent_month,
         "covered_months": covered_months,
-        "created_at": now.isoformat(),
-        "remaining_rent": remaining_rent,
-        "remaining_service": remaining_service,
-        "remaining_fines": remaining_fines,
-        "remaining_internet": remaining_internet
+        "status": "pending",
+        "created_at": now.isoformat()
     }
 

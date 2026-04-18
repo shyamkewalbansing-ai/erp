@@ -748,6 +748,7 @@ async def list_payments(
         "remaining_fines": p.get("remaining_fines"),
         "remaining_internet": p.get("remaining_internet"),
         "kwitantie_nummer": p.get("kwitantie_nummer"),
+        "status": p.get("status", "approved"),
         "created_at": p["created_at"]
     } for p in payments]
 
@@ -1258,68 +1259,12 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
         "rent_month": data.rent_month,
         "covered_months": covered_months,
         "kwitantie_nummer": kwitantie_nummer,
+        "status": "pending",
         "created_at": now
     }
     await db.kiosk_payments.insert_one(payment)
 
-    # Update tenant balances
-    update_fields = {}
-    if data.payment_type in ["rent", "partial_rent"]:
-        update_fields["outstanding_rent"] = max(0, tenant.get("outstanding_rent", 0) - data.amount)
-    elif data.payment_type == "service_costs":
-        update_fields["service_costs"] = max(0, tenant.get("service_costs", 0) - data.amount)
-    elif data.payment_type == "fines":
-        update_fields["fines"] = max(0, tenant.get("fines", 0) - data.amount)
-    elif data.payment_type == "internet":
-        update_fields["internet_outstanding"] = max(0, tenant.get("internet_outstanding", 0) - data.amount)
-    elif data.payment_type == "deposit":
-        update_fields["deposit_paid"] = tenant.get("deposit_paid", 0) + data.amount
-    if update_fields:
-        update_fields["updated_at"] = now
-        await db.kiosk_tenants.update_one({"tenant_id": data.tenant_id}, {"$set": update_fields})
-
-    # Refresh balances
-    updated_tenant = await db.kiosk_tenants.find_one({"tenant_id": data.tenant_id})
-    remaining_rent = updated_tenant.get("outstanding_rent", 0) if updated_tenant else 0
-    remaining_service = updated_tenant.get("service_costs", 0) if updated_tenant else 0
-    remaining_fines = updated_tenant.get("fines", 0) if updated_tenant else 0
-    remaining_internet = updated_tenant.get("internet_outstanding", 0) if updated_tenant else 0
-
-    # Store remaining balances in payment document for accurate receipt display
-    await db.kiosk_payments.update_one(
-        {"payment_id": payment_id},
-        {"$set": {
-            "remaining_rent": remaining_rent,
-            "remaining_service": remaining_service,
-            "remaining_fines": remaining_fines,
-            "remaining_internet": remaining_internet,
-        }}
-    )
-
-    # Auto WhatsApp
-    total_remaining = remaining_rent + remaining_service + remaining_fines + remaining_internet
-    comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
-    comp_name = (comp.get("stamp_company_name") or comp.get("name", "")) if comp else ""
-    type_labels = {"rent": "Huurbetaling", "partial_rent": "Gedeeltelijke betaling", "service_costs": "Servicekosten", "fines": "Boetes", "deposit": "Borg", "internet": "Internet"}
-    type_label = type_labels.get(data.payment_type, data.payment_type)
-    covered_str = ", ".join(covered_months) if covered_months else ""
-
-    if total_remaining <= 0:
-        wa_msg = (f"Beste {tenant['name']},\n\n"
-                  f"Uw betaling van SRD {data.amount:,.2f} ({type_label}) is ontvangen.\n"
-                  f"Kwitantie: {kwitantie_nummer}\n"
-                  f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
-                  f"Uw saldo is nu VOLLEDIG VOLDAAN.\n\nBedankt voor uw betaling!\n{comp_name}")
-    else:
-        wa_msg = (f"Beste {tenant['name']},\n\n"
-                  f"Uw betaling van SRD {data.amount:,.2f} ({type_label}) is ontvangen.\n"
-                  f"Kwitantie: {kwitantie_nummer}\n"
-                  f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
-                  f"Resterend saldo: SRD {total_remaining:,.2f}\n\nMet vriendelijke groet,\n{comp_name}")
-
-    if tenant.get("phone") or tenant.get("telefoon"):
-        tenant_phone = tenant.get("phone") or tenant.get("telefoon", "")
-        await _send_message_auto(company_id, tenant_phone, wa_msg, data.tenant_id, tenant["name"], "payment_confirmation")
+    # Do NOT update tenant balances yet - wait for admin approval
 
     return {
         "payment_id": payment_id,
@@ -1329,13 +1274,106 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
         "payment_method": data.payment_method,
         "tenant_name": tenant["name"],
         "apartment_number": tenant.get("apartment_number", ""),
+        "status": "pending",
         "created_at": now.isoformat(),
-        "remaining_rent": remaining_rent,
-        "remaining_service": remaining_service,
-        "remaining_fines": remaining_fines,
-        "remaining_internet": remaining_internet,
-        "whatsapp_sent": bool(tenant.get("phone") or tenant.get("telefoon"))
+        "covered_months": covered_months
     }
 
 
+@router.post("/admin/payments/{payment_id}/approve")
+async def approve_payment(payment_id: str, company: dict = Depends(get_current_company)):
+    """Approve a pending payment - updates tenant balances and sends WhatsApp"""
+    company_id = company["company_id"]
+    payment = await db.kiosk_payments.find_one({"payment_id": payment_id, "company_id": company_id})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    if payment.get("status") == "approved":
+        raise HTTPException(status_code=400, detail="Betaling is al goedgekeurd")
 
+    tenant = await db.kiosk_tenants.find_one({"tenant_id": payment["tenant_id"], "company_id": company_id})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+
+    now = datetime.now(timezone.utc)
+    amount = payment["amount"]
+    payment_type = payment["payment_type"]
+
+    # Update tenant balances
+    update_fields = {}
+    if payment_type in ["rent", "partial_rent"]:
+        update_fields["outstanding_rent"] = max(0, tenant.get("outstanding_rent", 0) - amount)
+    elif payment_type == "service_costs":
+        update_fields["service_costs"] = max(0, tenant.get("service_costs", 0) - amount)
+    elif payment_type == "fines":
+        update_fields["fines"] = max(0, tenant.get("fines", 0) - amount)
+    elif payment_type == "internet":
+        update_fields["internet_outstanding"] = max(0, tenant.get("internet_outstanding", 0) - amount)
+    elif payment_type == "deposit":
+        update_fields["deposit_paid"] = tenant.get("deposit_paid", 0) + amount
+    if update_fields:
+        update_fields["updated_at"] = now
+        await db.kiosk_tenants.update_one({"tenant_id": payment["tenant_id"]}, {"$set": update_fields})
+
+    # Get updated balances
+    updated_tenant = await db.kiosk_tenants.find_one({"tenant_id": payment["tenant_id"]})
+    remaining_rent = updated_tenant.get("outstanding_rent", 0) if updated_tenant else 0
+    remaining_service = updated_tenant.get("service_costs", 0) if updated_tenant else 0
+    remaining_fines = updated_tenant.get("fines", 0) if updated_tenant else 0
+    remaining_internet = updated_tenant.get("internet_outstanding", 0) if updated_tenant else 0
+
+    # Update payment status + store remaining balances
+    await db.kiosk_payments.update_one(
+        {"payment_id": payment_id},
+        {"$set": {
+            "status": "approved",
+            "approved_at": now,
+            "remaining_rent": remaining_rent,
+            "remaining_service": remaining_service,
+            "remaining_fines": remaining_fines,
+            "remaining_internet": remaining_internet,
+        }}
+    )
+
+    # Send WhatsApp confirmation
+    total_remaining = remaining_rent + remaining_service + remaining_fines + remaining_internet
+    comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
+    comp_name = (comp.get("stamp_company_name") or comp.get("name", "")) if comp else ""
+    type_labels = {"rent": "Huurbetaling", "partial_rent": "Gedeeltelijke betaling", "service_costs": "Servicekosten", "fines": "Boetes", "deposit": "Borg", "internet": "Internet"}
+    type_label = type_labels.get(payment_type, payment_type)
+    covered_str = ", ".join(payment.get("covered_months", []))
+
+    if total_remaining <= 0:
+        wa_msg = (f"Beste {tenant['name']},\n\n"
+                  f"Uw betaling van SRD {amount:,.2f} ({type_label}) is goedgekeurd.\n"
+                  f"Kwitantie: {payment['kwitantie_nummer']}\n"
+                  f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
+                  f"Uw saldo is nu VOLLEDIG VOLDAAN.\n\nBedankt voor uw betaling!\n{comp_name}")
+    else:
+        wa_msg = (f"Beste {tenant['name']},\n\n"
+                  f"Uw betaling van SRD {amount:,.2f} ({type_label}) is goedgekeurd.\n"
+                  f"Kwitantie: {payment['kwitantie_nummer']}\n"
+                  f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
+                  f"Resterend saldo: SRD {total_remaining:,.2f}\n\nMet vriendelijke groet,\n{comp_name}")
+
+    if tenant.get("phone") or tenant.get("telefoon"):
+        tenant_phone = tenant.get("phone") or tenant.get("telefoon", "")
+        await _send_message_auto(company_id, tenant_phone, wa_msg, payment["tenant_id"], tenant["name"], "payment_confirmation")
+
+    return {"message": "Betaling goedgekeurd", "status": "approved"}
+
+
+@router.post("/admin/payments/{payment_id}/reject")
+async def reject_payment(payment_id: str, company: dict = Depends(get_current_company)):
+    """Reject a pending payment"""
+    company_id = company["company_id"]
+    payment = await db.kiosk_payments.find_one({"payment_id": payment_id, "company_id": company_id})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    if payment.get("status") == "approved":
+        raise HTTPException(status_code=400, detail="Goedgekeurde betaling kan niet worden afgewezen")
+
+    await db.kiosk_payments.update_one(
+        {"payment_id": payment_id},
+        {"$set": {"status": "rejected", "rejected_at": datetime.now(timezone.utc)}}
+    )
+    return {"message": "Betaling afgewezen", "status": "rejected"}

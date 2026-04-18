@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { CheckCircle, Home } from 'lucide-react';
+import { CheckCircle, Home, Clock } from 'lucide-react';
 import ReceiptTicket from './ReceiptTicket';
 import axios from 'axios';
 
@@ -196,105 +196,91 @@ export default function HuurdersReceipt({ payment, tenant, companyId, onDone }) 
       `}</style>
 
       {phase !== 'done' ? (
-        /* ===== SHOW + EJECT: Tekst bovenaan, kassabon eronder ===== */
+        /* ===== SHOW: Pending approval message ===== */
         <>
           {/* Header */}
           <div className="flex items-center justify-center flex-shrink-0" style={{ height: '6vh' }}>
-            <span className="kiosk-subtitle text-white font-bold">Betaling voltooid</span>
+            <span className="kiosk-subtitle text-white font-bold">Betaling ingediend</span>
           </div>
 
-          <div className="flex-1 flex flex-col items-center min-h-0 overflow-hidden" style={{ paddingBottom: '1.5vh' }}>
+          <div className="flex-1 flex flex-col items-center justify-center min-h-0 overflow-hidden" style={{ paddingBottom: '1.5vh' }}>
             {/* Success text block */}
-            <div className="flex flex-col items-center text-center flex-shrink-0" style={{ marginBottom: 'clamp(10px, 1.5vh, 20px)' }}>
+            <div className="flex flex-col items-center text-center flex-shrink-0">
               <div style={{
                 animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',
                 width: 'clamp(48px, 7vh, 72px)', height: 'clamp(48px, 7vh, 72px)',
-                borderRadius: '50%', marginBottom: 'clamp(6px, 1vh, 12px)',
-                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                borderRadius: '50%', marginBottom: 'clamp(10px, 1.5vh, 18px)',
+                background: 'linear-gradient(135deg, #f59e0b, #d97706)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>
-                <CheckCircle style={{ width: '3.5vh', height: '3.5vh' }} className="text-white" strokeWidth={2.5} />
+                <Clock style={{ width: '3.5vh', height: '3.5vh' }} className="text-white" strokeWidth={2.5} />
               </div>
-              <h1 className="text-white font-black" style={{ fontSize: 'clamp(18px, 2.8vh, 30px)', marginBottom: '0.3vh' }}>
-                Betaling geslaagd!
+              <h1 className="text-white font-black" style={{ fontSize: 'clamp(18px, 2.8vh, 30px)', marginBottom: '0.5vh' }}>
+                Betaling ontvangen
               </h1>
-              <p className="text-white/70 font-medium" style={{ fontSize: 'clamp(13px, 1.6vh, 18px)' }}>
-                {formatSRD(payment.amount)} - {kwNr}
+              <p className="text-white/80 font-bold" style={{ fontSize: 'clamp(14px, 2vh, 22px)', marginBottom: '0.5vh' }}>
+                {formatSRD(payment.amount)}
               </p>
-              {phase === 'ejecting' && (
-                <div className="flex items-center gap-2" style={{ marginTop: '0.8vh' }}>
-                  <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                  <p className="text-white/80 font-bold" style={{ fontSize: 'clamp(12px, 1.4vh, 16px)' }}>Bon wordt geprint...</p>
-                </div>
-              )}
-            </div>
-
-            {/* Kassabon centered underneath */}
-            <div className="flex-1 flex justify-center overflow-hidden" style={{ width: '100%' }}>
-              <div className={phase === 'show' ? 'receipt-appear' : 'receipt-eject'}
-                data-testid="receipt-paper"
-                style={{ display: 'flex', justifyContent: 'center' }}>
-                <div className="bg-white rounded-t-lg shadow-2xl" style={{ overflow: 'hidden' }}>
-                  <ReceiptTicket payment={payment} tenant={tenant} preview={true} stampData={stampData} />
-                </div>
-              </div>
+              <p className="text-white/60 font-medium" style={{ fontSize: 'clamp(12px, 1.5vh, 16px)' }}>
+                Wacht op goedkeuring van beheerder
+              </p>
+              <p className="text-white/40 font-mono" style={{ fontSize: 'clamp(11px, 1.3vh, 14px)', marginTop: '0.5vh' }}>
+                {kwNr}
+              </p>
             </div>
           </div>
         </>
 
       ) : (
-        /* ===== DONE: Eén grote gecentreerde kaart ===== */
+        /* ===== DONE: Wacht op goedkeuring ===== */
         <>
           <div className="flex items-center justify-center flex-shrink-0" style={{ height: '6vh' }}>
-            <span className="kiosk-subtitle text-white font-bold">Betaling voltooid</span>
+            <span className="kiosk-subtitle text-white font-bold">Betaling ingediend</span>
           </div>
 
           <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
             <div className="kiosk-card flex flex-col items-center text-center" style={{
-              width: 'clamp(400px, 50vw, 700px)',
+              width: 'clamp(320px, 50vw, 600px)',
               padding: 'clamp(20px, 3vh, 40px) clamp(24px, 3vw, 48px)',
               animation: 'fadeUp 0.5s ease-out forwards'
             }}>
-              {/* Success icon */}
-              <div className="rounded-full bg-emerald-50 flex items-center justify-center" style={{
+              {/* Pending icon */}
+              <div className="rounded-full bg-amber-50 flex items-center justify-center" style={{
                 width: 'clamp(56px, 8vh, 84px)', height: 'clamp(56px, 8vh, 84px)',
-                border: '3px solid #bbf7d0', marginBottom: 'clamp(8px, 1.5vh, 16px)',
+                border: '3px solid #fde68a', marginBottom: 'clamp(8px, 1.5vh, 16px)',
                 animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s forwards', opacity: 0
               }}>
-                <CheckCircle style={{ width: '4vh', height: '4vh' }} className="text-emerald-500" />
+                <Clock style={{ width: '4vh', height: '4vh' }} className="text-amber-500" />
               </div>
 
-              <h2 className="font-black text-emerald-500 tracking-tight" style={{
-                fontSize: 'clamp(22px, 3.5vh, 38px)', marginBottom: '0.3vh',
+              <h2 className="font-black text-amber-600 tracking-tight" style={{
+                fontSize: 'clamp(20px, 3vh, 34px)', marginBottom: '0.5vh',
                 animation: 'fadeUp 0.4s ease-out 0.35s forwards', opacity: 0
-              }}>{allPaid ? 'Alles betaald!' : 'Betaling geslaagd!'}</h2>
+              }}>Wacht op goedkeuring</h2>
 
               <p className="text-slate-400 font-medium" style={{
                 fontSize: 'clamp(12px, 1.5vh, 16px)', marginBottom: 'clamp(12px, 2vh, 24px)',
                 animation: 'fadeUp 0.4s ease-out 0.45s forwards', opacity: 0
-              }}>{payment.tenant_name || tenant?.name || ''} - Appt. {payment.apartment_number || ''}</p>
+              }}>Uw betaling wordt verwerkt door de beheerder</p>
 
-              {/* Details grid */}
+              {/* Details */}
               <div style={{
                 width: '100%', marginBottom: 'clamp(12px, 2vh, 24px)',
                 animation: 'fadeUp 0.4s ease-out 0.55s forwards', opacity: 0
               }}>
                 <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #f1f5f9' }}>
                   {[
-                    { label: 'Betaald bedrag', value: formatSRD(payment.amount), bold: true },
+                    { label: 'Bedrag', value: formatSRD(payment.amount), bold: true },
                     { label: 'Kwitantie', value: kwNr },
                     { label: 'Betaalwijze', value: METHOD_LABELS[payment.payment_method] || 'Contant' },
-                    { label: 'Openstaande huur', value: formatSRD(remainingRent), green: remainingRent <= 0 },
-                    { label: 'Servicekosten', value: formatSRD(remainingService), green: remainingService <= 0 },
-                    { label: 'Boetes', value: formatSRD(remainingFines), green: remainingFines <= 0 },
-                    { label: 'Internet', value: formatSRD(remainingInternet), green: remainingInternet <= 0 },
+                    { label: 'Status', value: 'In afwachting', pending: true },
                   ].map((row, i) => (
                     <div key={i} className="flex items-center justify-between" style={{
                       padding: 'clamp(8px, 1.2vh, 14px) clamp(14px, 1.8vw, 24px)',
                       background: i % 2 === 0 ? '#f8fafc' : 'white'
                     }}>
                       <span className="text-slate-500" style={{ fontSize: 'clamp(12px, 1.5vh, 16px)' }}>{row.label}</span>
-                      <span className={`font-bold ${row.green ? 'text-emerald-500' : row.bold ? 'text-slate-900' : 'text-slate-700'}`}
+                      <span className={`font-bold ${row.pending ? 'text-amber-600' : row.bold ? 'text-slate-900' : 'text-slate-700'}`}
                         style={{ fontSize: 'clamp(13px, 1.6vh, 17px)' }}>{row.value}</span>
                     </div>
                   ))}
