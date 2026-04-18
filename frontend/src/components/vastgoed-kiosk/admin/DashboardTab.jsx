@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { 
-  Users, CreditCard, Home, DollarSign, AlertTriangle, FileText, Wifi
+  Users, CreditCard, Home, DollarSign, AlertTriangle, FileText, Wifi, Clock
 } from 'lucide-react';
 
 function DashboardTab({ dashboard, payments, leases, formatSRD }) {
@@ -43,9 +43,10 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
     { icon: AlertTriangle, label: 'Open Boetes', value: formatSRD(dashboard.total_fines) },
     { icon: Wifi, label: 'Open Internet', value: formatSRD(dashboard.total_internet || 0) },
     { icon: CreditCard, label: 'Ontvangen (maand)', value: formatSRD(dashboard.total_received_month) },
+    ...(dashboard.total_pending_month > 0 ? [{ icon: Clock, label: 'In afwachting', value: formatSRD(dashboard.total_pending_month), pending: true }] : []),
   ];
 
-  const recentPayments = (payments || []).slice(0, 6);
+  const recentPayments = (payments || []).filter(p => p.status !== 'rejected').slice(0, 6);
 
   return (
     <div>
@@ -60,12 +61,12 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
         {/* Mobile: grid cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:hidden gap-px bg-slate-100">
           {stats.map((stat, i) => (
-            <div key={i} className="bg-white p-4">
+            <div key={i} className={`bg-white p-4 ${stat.pending ? 'bg-yellow-50' : ''}`}>
               <div className="flex items-center gap-2 mb-1">
-                <stat.icon className="w-4 h-4 text-orange-500" />
+                <stat.icon className={`w-4 h-4 ${stat.pending ? 'text-yellow-500' : 'text-orange-500'}`} />
                 <p className="text-xs text-slate-500">{stat.label}</p>
               </div>
-              <p className="text-base font-bold text-slate-900">{stat.value}</p>
+              <p className={`text-base font-bold ${stat.pending ? 'text-yellow-600' : 'text-slate-900'}`}>{stat.value}</p>
             </div>
           ))}
         </div>

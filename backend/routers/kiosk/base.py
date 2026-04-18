@@ -498,6 +498,9 @@ class EmployeeCreate(BaseModel):
     telefoon: Optional[str] = None
     email: Optional[str] = None
     start_date: Optional[str] = None
+    role: Optional[str] = None  # beheerder, boekhouder, kiosk_medewerker
+    employee_type: Optional[str] = "vast"  # vast, los (aannemer)
+    password: Optional[str] = None  # for login
 
 class EmployeeUpdate(BaseModel):
     name: Optional[str] = None
@@ -506,6 +509,9 @@ class EmployeeUpdate(BaseModel):
     telefoon: Optional[str] = None
     email: Optional[str] = None
     status: Optional[str] = None
+    role: Optional[str] = None
+    employee_type: Optional[str] = None
+    password: Optional[str] = None
 
 class LeaseCreate(BaseModel):
     tenant_id: str

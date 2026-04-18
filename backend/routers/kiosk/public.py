@@ -213,17 +213,19 @@ async def lookup_tenant_by_code(company_id: str, code: str):
 
 @router.get("/public/{company_id}/tenant/{tenant_id}/payments")
 async def get_tenant_payment_history(company_id: str, tenant_id: str, limit: int = 10):
-    """Get last N payments for a tenant (public kiosk endpoint)"""
+    """Get last N approved payments for a tenant (public kiosk endpoint)"""
     company = await db.kiosk_companies.find_one({"company_id": company_id})
     if not company:
         raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
     payments = await db.kiosk_payments.find(
-        {"company_id": company_id, "tenant_id": tenant_id},
-        {"_id": 0, "payment_id": 1, "amount": 1, "payment_type": 1, "payment_method": 1, "kwitantie_nummer": 1, "created_at": 1, "covered_months": 1}
+        {"company_id": company_id, "tenant_id": tenant_id, "status": {"$in": ["approved", None]}},
+        {"_id": 0, "payment_id": 1, "amount": 1, "payment_type": 1, "payment_method": 1, "kwitantie_nummer": 1, "created_at": 1, "covered_months": 1, "status": 1}
     ).sort("created_at", -1).limit(limit).to_list(limit)
     for p in payments:
         if hasattr(p.get("created_at"), "isoformat"):
             p["created_at"] = p["created_at"].isoformat()
+        if not p.get("status"):
+            p["status"] = "approved"
     return payments
 
 

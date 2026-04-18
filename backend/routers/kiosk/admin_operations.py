@@ -981,6 +981,9 @@ async def list_employees(company: dict = Depends(get_current_company)):
             "email": e.get("email", ""),
             "start_date": e.get("start_date", ""),
             "status": e.get("status", "active"),
+            "role": e.get("role", "kiosk_medewerker"),
+            "employee_type": e.get("employee_type", "vast"),
+            "has_password": bool(e.get("password_hash")),
             "total_paid": total_paid,
             "created_at": e.get("created_at")
         })
@@ -1002,9 +1005,15 @@ async def create_employee(data: EmployeeCreate, company: dict = Depends(get_curr
         "telefoon": data.telefoon or "",
         "email": data.email or "",
         "start_date": data.start_date or now.strftime("%Y-%m-%d"),
+        "role": data.role or "kiosk_medewerker",
+        "employee_type": data.employee_type or "vast",
         "status": "active",
         "created_at": now
     }
+    
+    # Hash password if provided
+    if data.password:
+        employee["password_hash"] = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
     await db.kiosk_employees.insert_one(employee)
     return {"employee_id": employee_id, "message": "Werknemer aangemaakt"}
@@ -1012,7 +1021,9 @@ async def create_employee(data: EmployeeCreate, company: dict = Depends(get_curr
 @router.put("/admin/employees/{employee_id}")
 async def update_employee(employee_id: str, data: EmployeeUpdate, company: dict = Depends(get_current_company)):
     """Update an employee"""
-    updates = {k: v for k, v in data.dict().items() if v is not None}
+    updates = {k: v for k, v in data.dict().items() if v is not None and k != 'password'}
+    if data.password:
+        updates["password_hash"] = bcrypt.hashpw(data.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     if not updates:
         raise HTTPException(status_code=400, detail="Geen wijzigingen")
     updates["updated_at"] = datetime.now(timezone.utc)
@@ -1056,6 +1067,10 @@ async def pay_employee(employee_id: str, body: dict = None, company: dict = Depe
     now = datetime.now(timezone.utc)
     month_label = now.strftime("%B %Y")
     
+    # Generate kwitantie nummer for salary payment
+    count = await db.kiosk_payments.count_documents({"company_id": company["company_id"]})
+    kwitantie_nummer = f"KW{now.year}-{str(count + 1).zfill(5)}"
+    
     entry_id = generate_uuid()
     entry = {
         "entry_id": entry_id,
@@ -1069,10 +1084,30 @@ async def pay_employee(employee_id: str, body: dict = None, company: dict = Depe
         "related_tenant_id": "",
         "related_tenant_name": "",
         "payment_id": "",
+        "kwitantie_nummer": kwitantie_nummer,
         "created_at": now
     }
     
     await db.kiosk_kas.insert_one(entry)
+    
+    # Also create a payment record for the salary kwitantie
+    salary_payment = {
+        "payment_id": entry_id,
+        "company_id": company["company_id"],
+        "tenant_id": "",
+        "tenant_name": emp["name"],
+        "tenant_code": "",
+        "apartment_number": "",
+        "amount": amount,
+        "payment_type": "salary",
+        "payment_method": "cash",
+        "description": f"Loon {emp['name']} - {month_label}",
+        "kwitantie_nummer": kwitantie_nummer,
+        "status": "approved",
+        "covered_months": [month_label],
+        "created_at": now
+    }
+    await db.kiosk_payments.insert_one(salary_payment)
     
     # === AUTO WHATSAPP: Salaris uitbetaald notificatie ===
     try:

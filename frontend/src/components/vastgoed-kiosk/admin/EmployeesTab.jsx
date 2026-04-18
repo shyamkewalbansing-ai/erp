@@ -14,8 +14,11 @@ function EmployeesTab({ token, formatSRD }) {
   const [email, setEmail] = useState('');
   const [saving, setSaving] = useState(false);
   const [paying, setPaying] = useState(null);
-  const [payModal, setPayModal] = useState(null); // { employee, amount }
+  const [payModal, setPayModal] = useState(null);
   const [payResult, setPayResult] = useState(null);
+  const [role, setRole] = useState('kiosk_medewerker');
+  const [empType, setEmpType] = useState('vast');
+  const [password, setPassword] = useState('');
 
   const loadEmployees = async () => {
     try {
@@ -29,6 +32,7 @@ function EmployeesTab({ token, formatSRD }) {
 
   const resetForm = () => {
     setName(''); setFunctie(''); setMaandloon(''); setTelefoon(''); setEmail('');
+    setRole('kiosk_medewerker'); setEmpType('vast'); setPassword('');
     setEditingEmp(null); setShowForm(false);
   };
 
@@ -36,6 +40,8 @@ function EmployeesTab({ token, formatSRD }) {
     setEditingEmp(emp);
     setName(emp.name); setFunctie(emp.functie || ''); setMaandloon(emp.maandloon?.toString() || '');
     setTelefoon(emp.telefoon || ''); setEmail(emp.email || '');
+    setRole(emp.role || 'kiosk_medewerker'); setEmpType(emp.employee_type || 'vast');
+    setPassword('');
     setShowForm(true);
   };
 
@@ -45,13 +51,13 @@ function EmployeesTab({ token, formatSRD }) {
     setSaving(true);
     try {
       if (editingEmp) {
-        await axios.put(`${API}/admin/employees/${editingEmp.employee_id}`, {
-          name, functie, maandloon: parseFloat(maandloon) || 0, telefoon, email
-        }, { headers: { Authorization: `Bearer ${token}` } });
+        const updateData = { name, functie, maandloon: parseFloat(maandloon) || 0, telefoon, email, role, employee_type: empType };
+        if (password) updateData.password = password;
+        await axios.put(`${API}/admin/employees/${editingEmp.employee_id}`, updateData, { headers: { Authorization: `Bearer ${token}` } });
       } else {
-        await axios.post(`${API}/admin/employees`, {
-          name, functie, maandloon: parseFloat(maandloon) || 0, telefoon, email
-        }, { headers: { Authorization: `Bearer ${token}` } });
+        const createData = { name, functie, maandloon: parseFloat(maandloon) || 0, telefoon, email, role, employee_type: empType };
+        if (password) createData.password = password;
+        await axios.post(`${API}/admin/employees`, createData, { headers: { Authorization: `Bearer ${token}` } });
       }
       resetForm();
       loadEmployees();
@@ -136,7 +142,7 @@ function EmployeesTab({ token, formatSRD }) {
         {/* Form */}
         {showForm && (
           <form onSubmit={handleSubmit} className="p-4 border-b border-slate-200 bg-slate-50">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-3">
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Naam *</label>
                 <input value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" required data-testid="emp-name-input" />
@@ -153,14 +159,33 @@ function EmployeesTab({ token, formatSRD }) {
                 <label className="block text-xs font-medium text-slate-600 mb-1">Telefoon</label>
                 <input value={telefoon} onChange={e => setTelefoon(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" />
               </div>
-              <div className="flex gap-2">
-                <button type="submit" disabled={saving} className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50" data-testid="emp-submit-btn">
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (editingEmp ? 'Bijwerken' : 'Opslaan')}
-                </button>
-                <button type="button" onClick={resetForm} className="px-4 py-2 bg-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-300">
-                  Annuleer
-                </button>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Rol</label>
+                <select value={role} onChange={e => setRole(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" data-testid="emp-role-select">
+                  <option value="beheerder">Beheerder</option>
+                  <option value="boekhouder">Boekhouder</option>
+                  <option value="kiosk_medewerker">Kiosk Medewerker</option>
+                </select>
               </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Type</label>
+                <select value={empType} onChange={e => setEmpType(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" data-testid="emp-type-select">
+                  <option value="vast">Vaste werknemer</option>
+                  <option value="los">Losse werker / Aannemer</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Wachtwoord {editingEmp?.has_password ? '(laat leeg om niet te wijzigen)' : ''}</label>
+                <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Voor inlog" data-testid="emp-password-input" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" disabled={saving} className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50" data-testid="emp-submit-btn">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (editingEmp ? 'Bijwerken' : 'Opslaan')}
+              </button>
+              <button type="button" onClick={resetForm} className="px-4 py-2 bg-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-300">
+                Annuleer
+              </button>
             </div>
           </form>
         )}
@@ -171,15 +196,17 @@ function EmployeesTab({ token, formatSRD }) {
             <p className="text-slate-400">Nog geen werknemers</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[600px]">
+          <>
+          <div className="overflow-x-auto hidden md:block">
+            <table className="w-full min-w-[700px]">
               <thead className="bg-slate-50">
                 <tr>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Werknemer</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Functie</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Rol</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Type</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Maandloon</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Totaal Betaald</th>
-                  <th className="text-left p-4 text-sm font-medium text-slate-500">Telefoon</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
                 </tr>
               </thead>
@@ -198,9 +225,22 @@ function EmployeesTab({ token, formatSRD }) {
                       </div>
                     </td>
                     <td className="p-4 text-slate-600">{emp.functie || '-'}</td>
+                    <td className="p-4">
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                        emp.role === 'beheerder' ? 'bg-purple-100 text-purple-600' :
+                        emp.role === 'boekhouder' ? 'bg-blue-100 text-blue-600' :
+                        'bg-green-100 text-green-600'
+                      }`}>
+                        {{beheerder:'Beheerder',boekhouder:'Boekhouder',kiosk_medewerker:'Kiosk'}[emp.role] || emp.role || 'Kiosk'}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${emp.employee_type === 'los' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-600'}`}>
+                        {emp.employee_type === 'los' ? 'Los' : 'Vast'}
+                      </span>
+                    </td>
                     <td className="p-4 text-right font-bold text-slate-900">{formatSRD(emp.maandloon)}</td>
                     <td className="p-4 text-right font-bold text-slate-900">{formatSRD(emp.total_paid || 0)}</td>
-                    <td className="p-4 text-slate-600">{emp.telefoon || '-'}</td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
@@ -225,10 +265,47 @@ function EmployeesTab({ token, formatSRD }) {
               </tbody>
             </table>
           </div>
+          {/* Mobile card layout */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {activeEmps.map(emp => {
+              const ROLE_LABELS = {beheerder:'Beheerder',boekhouder:'Boekhouder',kiosk_medewerker:'Kiosk'};
+              return (
+                <div key={emp.employee_id} className="p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-blue-500 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                        {emp.name?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                      <div>
+                        <p className="font-bold text-slate-900 text-sm">{emp.name}</p>
+                        <p className="text-xs text-slate-400">{emp.functie || '-'}</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${emp.role === 'beheerder' ? 'bg-purple-100 text-purple-600' : emp.role === 'boekhouder' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
+                        {ROLE_LABELS[emp.role] || 'Kiosk'}
+                      </span>
+                      {emp.employee_type === 'los' && <span className="px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded text-[10px] font-bold">Los</span>}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs mb-2">
+                    <div className="flex justify-between"><span className="text-slate-400">Maandloon</span><span className="font-bold text-slate-700">{formatSRD(emp.maandloon)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Betaald</span><span className="font-bold text-slate-700">{formatSRD(emp.total_paid || 0)}</span></div>
+                  </div>
+                  <div className="flex items-center justify-end gap-0.5 pt-2 border-t border-slate-50">
+                    <button onClick={() => handlePay(emp)} className="text-green-500 hover:text-green-700 p-1.5"><Banknote className="w-4 h-4" /></button>
+                    <button onClick={() => openEdit(emp)} className="text-slate-400 hover:text-orange-500 p-1.5"><Pencil className="w-4 h-4" /></button>
+                    <button onClick={() => handleDelete(emp)} className="text-slate-400 hover:text-red-500 p-1.5"><Trash2 className="w-4 h-4" /></button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          </>
         )}
-      </div>
 
       {/* Loon Uitbetalen Modal */}
+      </div>
       {payModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => { if (!paying) { setPayModal(null); setPayResult(null); } }}>
           <div className="bg-white rounded-2xl w-full max-w-md mx-4 p-6" onClick={e => e.stopPropagation()}>

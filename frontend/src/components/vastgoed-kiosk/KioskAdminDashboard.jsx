@@ -139,7 +139,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
       paymentDate.getMonth() === parseInt(month) - 1;
   });
 
-  const totalFiltered = filteredPayments.reduce((sum, p) => sum + (p.amount || 0), 0);
+  const totalFiltered = filteredPayments.filter(p => p.status !== 'rejected').reduce((sum, p) => sum + (p.amount || 0), 0);
 
   if (loading) {
     return (

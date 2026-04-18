@@ -175,7 +175,10 @@ async def get_dashboard(company: dict = Depends(get_current_company)):
         "company_id": company_id,
         "created_at": {"$gte": start_of_month}
     }).to_list(1000)
-    total_received_month = sum(p.get("amount", 0) for p in payments_this_month)
+    approved_payments = [p for p in payments_this_month if p.get("status", "approved") == "approved"]
+    pending_payments = [p for p in payments_this_month if p.get("status") == "pending"]
+    total_received_month = sum(p.get("amount", 0) for p in approved_payments)
+    total_pending_month = sum(p.get("amount", 0) for p in pending_payments)
     
     return {
         "total_apartments": total_apartments,
@@ -185,7 +188,9 @@ async def get_dashboard(company: dict = Depends(get_current_company)):
         "total_fines": total_fines,
         "total_internet": total_internet,
         "total_received_month": total_received_month,
-        "payments_count_month": len(payments_this_month)
+        "total_pending_month": total_pending_month,
+        "payments_count_month": len(approved_payments),
+        "pending_count_month": len(pending_payments)
     }
 
 # Apartments CRUD
@@ -749,6 +754,7 @@ async def list_payments(
         "remaining_internet": p.get("remaining_internet"),
         "kwitantie_nummer": p.get("kwitantie_nummer"),
         "status": p.get("status", "approved"),
+        "processed_by": p.get("processed_by", ""),
         "created_at": p["created_at"]
     } for p in payments]
 
@@ -1260,6 +1266,7 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
         "covered_months": covered_months,
         "kwitantie_nummer": kwitantie_nummer,
         "status": "pending",
+        "processed_by": company.get("name", "Beheerder"),
         "created_at": now
     }
     await db.kiosk_payments.insert_one(payment)
