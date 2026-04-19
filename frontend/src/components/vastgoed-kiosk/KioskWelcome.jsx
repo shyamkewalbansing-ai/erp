@@ -1,7 +1,7 @@
 import { Building2, ArrowRight, Banknote, Droplets, Receipt, Settings, LogIn } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
-export default function KioskWelcome({ onStart, onAdmin, companyName, companyId, onLock }) {
+export default function KioskWelcome({ onStart, onAdmin, companyName, companyId, onLock, kioskEmployee }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -25,12 +25,14 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId,
           <span className="kiosk-subtitle">{companyName || 'Kiosk'}</span>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={onAdmin} data-testid="admin-btn"
-            className="flex items-center gap-1 text-white/80 hover:text-white transition rounded-lg"
-            style={{ padding: '0.8vh 1.2vw', background: 'rgba(255,255,255,0.15)' }}>
-            <Settings style={{ width: '2vh', height: '2vh' }} />
-            <span className="kiosk-small hidden sm:inline">Beheerder</span>
-          </button>
+          {kioskEmployee?.role !== 'kiosk_medewerker' && (
+            <button onClick={onAdmin} data-testid="admin-btn"
+              className="flex items-center gap-1 text-white/80 hover:text-white transition rounded-lg"
+              style={{ padding: '0.8vh 1.2vw', background: 'rgba(255,255,255,0.15)' }}>
+              <Settings style={{ width: '2vh', height: '2vh' }} />
+              <span className="kiosk-small hidden sm:inline">Beheerder</span>
+            </button>
+          )}
           <button onClick={handleLogout} data-testid="kiosk-welcome-logout"
             className="flex items-center gap-1 text-white/80 hover:text-white transition rounded-lg"
             style={{ padding: '0.8vh 1.2vw', background: 'rgba(255,255,255,0.15)' }}>

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Building2, Users, Home, ArrowLeft, Loader2, Settings, ExternalLink,
-  Copy, Check, Receipt, Zap, LogIn, Landmark, Briefcase, Wallet, Wifi
+  Copy, Check, Receipt, Zap, LogIn, Landmark, Briefcase, Wallet, Wifi,
+  AlertTriangle
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -157,7 +158,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   const ROLE_TABS = {
     beheerder: ['dashboard', 'tenants', 'apartments', 'payments', 'kas', 'loans', 'employees', 'power', 'internet', 'settings'],
     boekhouder: ['dashboard', 'tenants', 'payments', 'kas'],
-    kiosk_medewerker: ['dashboard', 'payments'],
+    kiosk_medewerker: [], // No admin dashboard access - only kiosk
   };
   const employeeRole = kioskEmployee?.role;
   const allowedTabIds = employeeRole ? (ROLE_TABS[employeeRole] || ROLE_TABS.kiosk_medewerker) : null;
@@ -173,6 +174,30 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
+
+  // Block access for kiosk_medewerker role
+  if (employeeRole === 'kiosk_medewerker') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md text-center" data-testid="rbac-blocked-dashboard">
+          <div className="w-16 h-16 rounded-2xl bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-8 h-8 text-red-500" />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Geen toegang</h2>
+          <p className="text-sm text-slate-500 mb-5">
+            Als Kiosk Medewerker heeft u geen toegang tot het Admin Dashboard. U kunt alleen betalingen registreren via de Kiosk.
+          </p>
+          <button
+            onClick={handleBack}
+            data-testid="rbac-back-to-kiosk"
+            className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition active:scale-95"
+          >
+            Terug naar Kiosk
+          </button>
+        </div>
       </div>
     );
   }

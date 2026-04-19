@@ -233,6 +233,7 @@ export default function KioskLayout() {
             onAdmin={() => goTo('admin')}
             companyName={companyName} 
             companyId={companyId}
+            kioskEmployee={kioskEmployee}
             onLock={() => {
               localStorage.removeItem('kiosk_token');
               Object.keys(sessionStorage).forEach(key => {
@@ -359,7 +360,7 @@ export default function KioskLayout() {
                 <span className="text-sm font-bold text-slate-800">Appt. {tenant.apartment_number}</span>
               </div>
             )}
-            {(step === 'select' || step === 'overview' || step === 'payment' || step === 'confirm') && (
+            {(step === 'select' || step === 'overview' || step === 'payment' || step === 'confirm') && kioskEmployee?.role !== 'kiosk_medewerker' && (
               <button
                 onClick={() => goTo('admin')}
                 className="bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg transition px-5 py-2 text-sm"
