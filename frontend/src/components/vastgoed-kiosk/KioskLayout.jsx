@@ -222,6 +222,7 @@ export default function KioskLayout() {
             companyId={companyId}
             companyName={companyName}
             onSuccess={() => { setPinVerified(true); goTo(startScreen === 'dashboard' ? 'admin' : 'select'); }}
+            onEmployeeLogin={(emp) => setKioskEmployee(emp)}
             onBack={() => navigate('/vastgoed')}
           />
         );
