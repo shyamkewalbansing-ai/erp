@@ -17,8 +17,8 @@ function KioskClock() {
   const timeStr = time.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
   return (
     <div className="text-right" data-testid="kiosk-clock">
-      <p className="text-2xl font-bold text-slate-800 tracking-tight" style={{ fontFamily: 'Outfit, sans-serif' }}>{timeStr}</p>
-      <p className="text-sm text-slate-400 capitalize">{dateStr}</p>
+      <p className="text-lg sm:text-2xl font-bold text-white tracking-tight" style={{ fontFamily: 'Outfit, sans-serif' }}>{timeStr}</p>
+      <p className="hidden sm:block text-sm text-white/80 capitalize">{dateStr}</p>
     </div>
   );
 }
@@ -140,30 +140,30 @@ function KioskLoginScreen({ onSuccess }) {
   // ============ MAIN KIOSK SCREEN ============
   if (view === 'main') {
     return (
-      <div className="h-screen bg-[#F4F5F7] flex flex-col overflow-hidden" style={{ fontFamily: 'Outfit, sans-serif' }}>
+      <div className="h-screen bg-orange-500 flex flex-col overflow-hidden" style={{ fontFamily: 'Outfit, sans-serif' }}>
         {/* Top Bar */}
-        <div className="flex items-center justify-between px-8 py-5 bg-white border-b border-slate-200/60">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#FF5C00] flex items-center justify-center shadow-lg shadow-orange-500/20">
-              <Building2 className="w-7 h-7 text-white" />
+        <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 bg-orange-600/20 backdrop-blur-sm border-b border-white/20">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white flex items-center justify-center shadow-lg">
+              <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-orange-600" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">Appartement Kiosk</h1>
-              <p className="text-xs text-slate-400 font-medium">Huurbetalingen Suriname</p>
+              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">Appartement Kiosk</h1>
+              <p className="text-[11px] sm:text-xs text-white/80 font-medium">Huurbetalingen Suriname</p>
             </div>
           </div>
           <KioskClock />
         </div>
 
         {/* Main Content - Centered Card */}
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.06)] border border-slate-100 w-full max-w-2xl p-10 md:p-14" data-testid="kiosk-login-card">
+        <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
+          <div className="bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] w-full max-w-2xl p-8 sm:p-10 md:p-14" data-testid="kiosk-login-card">
             {/* Welcome */}
-            <div className="text-center mb-10">
-              <h2 className="text-4xl md:text-5xl font-bold text-slate-900 tracking-tight mb-3">
+            <div className="text-center mb-8 sm:mb-10">
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 tracking-tight mb-2 sm:mb-3">
                 Welkom
               </h2>
-              <p className="text-lg text-slate-400 font-medium">Kies een inlogmethode</p>
+              <p className="text-base sm:text-lg text-slate-400 font-medium">Kies een inlogmethode</p>
             </div>
 
             {/* Login Method Buttons */}
@@ -172,7 +172,7 @@ function KioskLoginScreen({ onSuccess }) {
               <button
                 onClick={() => setShowPinModal(true)}
                 data-testid="kiosk-pin-login-btn"
-                className="w-full h-20 md:h-24 bg-[#FF5C00] hover:bg-[#E05200] text-white rounded-2xl shadow-lg shadow-orange-500/20 flex items-center justify-center gap-4 text-xl md:text-2xl font-semibold transition-all active:scale-[0.97]"
+                className="w-full h-20 md:h-24 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-4 text-xl md:text-2xl font-semibold transition-all active:scale-[0.97]"
               >
                 <Lock className="w-7 h-7 md:w-8 md:h-8" />
                 Inloggen met PIN code
@@ -182,9 +182,9 @@ function KioskLoginScreen({ onSuccess }) {
               <button
                 onClick={() => { resetForm(); setView('password'); }}
                 data-testid="kiosk-password-login-btn"
-                className="h-20 w-full bg-white text-slate-800 border-2 border-slate-200 hover:border-[#FF5C00] hover:bg-orange-50 rounded-2xl flex items-center justify-center gap-3 text-lg md:text-xl font-semibold transition-all active:scale-[0.97]"
+                className="h-20 w-full bg-white text-slate-800 border-2 border-slate-200 hover:border-orange-500 hover:bg-orange-50 rounded-2xl flex items-center justify-center gap-3 text-lg md:text-xl font-semibold transition-all active:scale-[0.97]"
               >
-                <KeyRound className="w-6 h-6 md:w-7 md:h-7 text-[#FF5C00]" />
+                <KeyRound className="w-6 h-6 md:w-7 md:h-7 text-orange-500" />
                 Wachtwoord
               </button>
             </div>
@@ -194,7 +194,7 @@ function KioskLoginScreen({ onSuccess }) {
               <button
                 onClick={() => { resetForm(); setView('register'); }}
                 data-testid="switch-to-register"
-                className="flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-[#FF5C00] transition"
+                className="flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-orange-500 transition"
               >
                 <UserPlus className="w-4 h-4" />
                 Nieuw account
@@ -225,15 +225,15 @@ function KioskLoginScreen({ onSuccess }) {
   // ============ PASSWORD LOGIN ============
   if (view === 'password') {
     return (
-      <div className="h-screen bg-[#F4F5F7] flex flex-col overflow-hidden" style={{ fontFamily: 'Outfit, sans-serif' }}>
-        <div className="flex items-center justify-between px-8 py-5 bg-white border-b border-slate-200/60">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#FF5C00] flex items-center justify-center shadow-lg shadow-orange-500/20">
-              <Building2 className="w-7 h-7 text-white" />
+      <div className="h-screen bg-orange-500 flex flex-col overflow-hidden" style={{ fontFamily: 'Outfit, sans-serif' }}>
+        <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 bg-orange-600/20 backdrop-blur-sm border-b border-white/20">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white flex items-center justify-center shadow-lg">
+              <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-orange-600" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">Appartement Kiosk</h1>
-              <p className="text-xs text-slate-400 font-medium">Huurbetalingen Suriname</p>
+              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">Appartement Kiosk</h1>
+              <p className="text-[11px] sm:text-xs text-white/80 font-medium">Huurbetalingen Suriname</p>
             </div>
           </div>
           <KioskClock />
@@ -327,15 +327,15 @@ function KioskLoginScreen({ onSuccess }) {
   // ============ REGISTER ============
   if (view === 'register') {
     return (
-      <div className="h-screen bg-[#F4F5F7] flex flex-col overflow-hidden" style={{ fontFamily: 'Outfit, sans-serif' }}>
-        <div className="flex items-center justify-between px-8 py-5 bg-white border-b border-slate-200/60">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#FF5C00] flex items-center justify-center shadow-lg shadow-orange-500/20">
-              <Building2 className="w-7 h-7 text-white" />
+      <div className="h-screen bg-orange-500 flex flex-col overflow-hidden" style={{ fontFamily: 'Outfit, sans-serif' }}>
+        <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 bg-orange-600/20 backdrop-blur-sm border-b border-white/20">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white flex items-center justify-center shadow-lg">
+              <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-orange-600" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">Appartement Kiosk</h1>
-              <p className="text-xs text-slate-400 font-medium">Huurbetalingen Suriname</p>
+              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">Appartement Kiosk</h1>
+              <p className="text-[11px] sm:text-xs text-white/80 font-medium">Huurbetalingen Suriname</p>
             </div>
           </div>
           <KioskClock />
@@ -447,15 +447,15 @@ function KioskLoginScreen({ onSuccess }) {
   // ============ SUPERADMIN ============
   if (view === 'superadmin') {
     return (
-      <div className="h-screen bg-[#F4F5F7] flex flex-col overflow-hidden" style={{ fontFamily: 'Outfit, sans-serif' }}>
-        <div className="flex items-center justify-between px-8 py-5 bg-white border-b border-slate-200/60">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-[#FF5C00] flex items-center justify-center shadow-lg shadow-orange-500/20">
-              <Building2 className="w-7 h-7 text-white" />
+      <div className="h-screen bg-orange-500 flex flex-col overflow-hidden" style={{ fontFamily: 'Outfit, sans-serif' }}>
+        <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 bg-orange-600/20 backdrop-blur-sm border-b border-white/20">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white flex items-center justify-center shadow-lg">
+              <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-orange-600" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">Appartement Kiosk</h1>
-              <p className="text-xs text-slate-400 font-medium">Huurbetalingen Suriname</p>
+              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">Appartement Kiosk</h1>
+              <p className="text-[11px] sm:text-xs text-white/80 font-medium">Huurbetalingen Suriname</p>
             </div>
           </div>
           <KioskClock />
