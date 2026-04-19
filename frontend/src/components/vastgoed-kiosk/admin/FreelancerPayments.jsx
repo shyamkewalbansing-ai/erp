@@ -155,22 +155,22 @@ function FreelancerPayments({ token, formatSRD, employees, onChange }) {
 }
 
 function FreelancerPaymentModal({ token, employees, onClose, onCreated }) {
-  const [employeeId, setEmployeeId] = useState('');
+  const [employeeName, setEmployeeName] = useState('');
+  const [functie, setFunctie] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [method, setMethod] = useState('cash');
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [saving, setSaving] = useState(false);
 
-  const losseEmps = employees.filter(e => e.status === 'active');
-
   const submit = async (e) => {
     e.preventDefault();
-    if (!employeeId || parseFloat(amount) <= 0) return;
+    if (!employeeName.trim() || parseFloat(amount) <= 0) return;
     setSaving(true);
     try {
       const r = await axios.post(`${API}/admin/freelancer-payments`, {
-        employee_id: employeeId,
+        employee_name: employeeName.trim(),
+        functie: functie.trim(),
         amount: parseFloat(amount),
         description,
         payment_method: method,
@@ -198,23 +198,24 @@ function FreelancerPaymentModal({ token, employees, onClose, onCreated }) {
 
         <form onSubmit={submit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Ontvanger *</label>
-            <select value={employeeId} onChange={e => setEmployeeId(e.target.value)} required
-              data-testid="fp-employee-select"
-              className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white">
-              <option value="">— Kies werker —</option>
-              {losseEmps.map(e => (
-                <option key={e.employee_id} value={e.employee_id}>
-                  {e.name}{e.functie ? ` · ${e.functie}` : ''}{e.employee_type === 'los' ? ' (Los)' : ''}
-                </option>
-              ))}
-            </select>
-            {losseEmps.length === 0 && <p className="text-xs text-slate-400 mt-1">Maak eerst een werknemer aan.</p>}
+            <label className="block text-xs font-medium text-slate-600 mb-1">Naam ontvanger *</label>
+            <input type="text" value={employeeName} onChange={e => setEmployeeName(e.target.value)} required autoFocus
+              data-testid="fp-name-input"
+              className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm"
+              placeholder="bijv. Rakesh Jaglal" />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Functie / Type werk</label>
+            <input type="text" value={functie} onChange={e => setFunctie(e.target.value)}
+              data-testid="fp-functie-input"
+              className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm"
+              placeholder="bijv. Schilder, Loodgieter" />
           </div>
 
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Bedrag (SRD) *</label>
-            <input type="number" step="0.01" min="0.01" value={amount} onChange={e => setAmount(e.target.value)} required autoFocus
+            <input type="number" step="0.01" min="0.01" value={amount} onChange={e => setAmount(e.target.value)} required
               data-testid="fp-amount-input"
               className="w-full px-3 py-3 border border-slate-300 rounded-lg text-lg font-bold" placeholder="0.00" />
           </div>
@@ -248,7 +249,7 @@ function FreelancerPaymentModal({ token, employees, onClose, onCreated }) {
               className="flex-1 py-2.5 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50">
               Annuleren
             </button>
-            <button type="submit" disabled={saving || !employeeId || !amount}
+            <button type="submit" disabled={saving || !employeeName.trim() || !amount}
               data-testid="fp-submit-btn"
               className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2">
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <ReceiptIcon className="w-4 h-4" />}

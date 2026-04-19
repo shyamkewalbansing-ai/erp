@@ -529,7 +529,9 @@ class EmployeeUpdate(BaseModel):
     signature: Optional[str] = None  # base64 signature image
 
 class FreelancerPaymentCreate(BaseModel):
-    employee_id: str
+    employee_id: Optional[str] = None
+    employee_name: str
+    functie: Optional[str] = None
     amount: float
     description: Optional[str] = None
     payment_method: str = "cash"  # cash | bank

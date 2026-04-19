@@ -1155,11 +1155,19 @@ async def pay_employee(employee_id: str, body: dict = None, company: dict = Depe
 async def create_freelancer_payment(data: FreelancerPaymentCreate, company: dict = Depends(get_current_company)):
     """Register a payment to a freelancer/contractor (losse werker/aannemer) and generate a receipt"""
     company_id = company["company_id"]
-    emp = await db.kiosk_employees.find_one({"employee_id": data.employee_id, "company_id": company_id})
-    if not emp:
-        raise HTTPException(status_code=404, detail="Werker niet gevonden")
+    name = (data.employee_name or "").strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Naam is verplicht")
     if data.amount <= 0:
         raise HTTPException(status_code=400, detail="Bedrag moet positief zijn")
+
+    functie = (data.functie or "").strip()
+    # If employee_id provided, lookup for extra info
+    if data.employee_id:
+        emp = await db.kiosk_employees.find_one({"employee_id": data.employee_id, "company_id": company_id})
+        if emp:
+            if not functie:
+                functie = emp.get("functie", "")
 
     now = datetime.now(timezone.utc)
     payment_date = now
@@ -1182,9 +1190,9 @@ async def create_freelancer_payment(data: FreelancerPaymentCreate, company: dict
         "payment_id": payment_id,
         "company_id": company_id,
         "employee_id": data.employee_id,
-        "employee_name": emp["name"],
-        "functie": emp.get("functie", ""),
-        "employee_type": emp.get("employee_type", "los"),
+        "employee_name": name,
+        "functie": functie,
+        "employee_type": "los",
         "amount": data.amount,
         "description": (data.description or "").strip() or "Uitbetaling",
         "payment_method": data.payment_method,
@@ -1196,14 +1204,14 @@ async def create_freelancer_payment(data: FreelancerPaymentCreate, company: dict
     }
     await db.kiosk_freelancer_payments.insert_one(entry)
 
-    # Also register in kas as expense (category: salary/freelancer)
+    # Also register in kas as expense (category: freelancer)
     try:
         await db.kiosk_kas.insert_one({
             "entry_id": generate_uuid(),
             "company_id": company_id,
             "entry_type": "expense",
             "amount": data.amount,
-            "description": f"Uitbetaling {emp['name']}: {entry['description']}",
+            "description": f"Uitbetaling {name}: {entry['description']}",
             "category": "freelancer",
             "reference_id": payment_id,
             "created_at": payment_date
@@ -1214,7 +1222,7 @@ async def create_freelancer_payment(data: FreelancerPaymentCreate, company: dict
     return {
         "payment_id": payment_id,
         "kwitantie_nummer": kwitantie_nummer,
-        "employee_name": emp["name"],
+        "employee_name": name,
         "amount": data.amount,
         "created_at": now.isoformat()
     }
