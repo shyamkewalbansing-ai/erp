@@ -18,7 +18,6 @@ function EmployeesTab({ token, formatSRD }) {
   const [payModal, setPayModal] = useState(null);
   const [payResult, setPayResult] = useState(null);
   const [role, setRole] = useState('kiosk_medewerker');
-  const [empType, setEmpType] = useState('vast');
   const [pin, setPin] = useState('');
 
   const loadEmployees = async () => {
@@ -33,7 +32,7 @@ function EmployeesTab({ token, formatSRD }) {
 
   const resetForm = () => {
     setName(''); setFunctie(''); setMaandloon(''); setTelefoon(''); setEmail('');
-    setRole('kiosk_medewerker'); setEmpType('vast'); setPin('');
+    setRole('kiosk_medewerker'); setPin('');
     setEditingEmp(null); setShowForm(false);
   };
 
@@ -41,7 +40,7 @@ function EmployeesTab({ token, formatSRD }) {
     setEditingEmp(emp);
     setName(emp.name); setFunctie(emp.functie || ''); setMaandloon(emp.maandloon?.toString() || '');
     setTelefoon(emp.telefoon || ''); setEmail(emp.email || '');
-    setRole(emp.role || 'kiosk_medewerker'); setEmpType(emp.employee_type || 'vast');
+    setRole(emp.role || 'kiosk_medewerker');
     setPin('');
     setShowForm(true);
   };
@@ -52,11 +51,11 @@ function EmployeesTab({ token, formatSRD }) {
     setSaving(true);
     try {
       if (editingEmp) {
-        const updateData = { name, functie, maandloon: parseFloat(maandloon) || 0, telefoon, email, role, employee_type: empType };
+        const updateData = { name, functie, maandloon: parseFloat(maandloon) || 0, telefoon, email, role };
         if (pin) updateData.pin = pin;
         await axios.put(`${API}/admin/employees/${editingEmp.employee_id}`, updateData, { headers: { Authorization: `Bearer ${token}` } });
       } else {
-        const createData = { name, functie, maandloon: parseFloat(maandloon) || 0, telefoon, email, role, employee_type: empType };
+        const createData = { name, functie, maandloon: parseFloat(maandloon) || 0, telefoon, email, role };
         if (pin) createData.pin = pin;
         await axios.post(`${API}/admin/employees`, createData, { headers: { Authorization: `Bearer ${token}` } });
       }
@@ -169,13 +168,6 @@ function EmployeesTab({ token, formatSRD }) {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Type</label>
-                <select value={empType} onChange={e => setEmpType(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" data-testid="emp-type-select">
-                  <option value="vast">Vaste werknemer</option>
-                  <option value="los">Losse werker / Aannemer</option>
-                </select>
-              </div>
-              <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">PIN code (4 cijfers) {editingEmp?.has_pin ? '(laat leeg om niet te wijzigen)' : ''}</label>
                 <input type="text" inputMode="numeric" maxLength={4} pattern="[0-9]*" value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0,4))} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="bijv. 1234" data-testid="emp-pin-input" />
               </div>
@@ -205,7 +197,6 @@ function EmployeesTab({ token, formatSRD }) {
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Werknemer</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Functie</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Rol</th>
-                  <th className="text-left p-4 text-sm font-medium text-slate-500">Type</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Maandloon</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Totaal Betaald</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
@@ -233,11 +224,6 @@ function EmployeesTab({ token, formatSRD }) {
                         'bg-green-100 text-green-600'
                       }`}>
                         {{beheerder:'Beheerder',boekhouder:'Boekhouder',kiosk_medewerker:'Kiosk'}[emp.role] || emp.role || 'Kiosk'}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${emp.employee_type === 'los' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-600'}`}>
-                        {emp.employee_type === 'los' ? 'Los' : 'Vast'}
                       </span>
                     </td>
                     <td className="p-4 text-right font-bold text-slate-900">{formatSRD(emp.maandloon)}</td>
@@ -286,7 +272,6 @@ function EmployeesTab({ token, formatSRD }) {
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${emp.role === 'beheerder' ? 'bg-purple-100 text-purple-600' : emp.role === 'boekhouder' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
                         {ROLE_LABELS[emp.role] || 'Kiosk'}
                       </span>
-                      {emp.employee_type === 'los' && <span className="px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded text-[10px] font-bold">Los</span>}
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs mb-2">
