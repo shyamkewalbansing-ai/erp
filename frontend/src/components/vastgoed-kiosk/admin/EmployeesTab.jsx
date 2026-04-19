@@ -3,6 +3,7 @@ import { Users, Plus, Pencil, Trash2, Loader2, Briefcase, Banknote, DollarSign }
 import { API, axios } from './utils';
 import FreelancerPayments from './FreelancerPayments';
 import Loonstroken from './Loonstroken';
+import PayrollCalendar from './PayrollCalendar';
 
 function EmployeesTab({ token, formatSRD }) {
   const [employees, setEmployees] = useState([]);
@@ -17,6 +18,7 @@ function EmployeesTab({ token, formatSRD }) {
   const [saving, setSaving] = useState(false);
   const [role, setRole] = useState('kiosk_medewerker');
   const [pin, setPin] = useState('');
+  const [payrollRefreshKey, setPayrollRefreshKey] = useState(0);
 
   const loadEmployees = async () => {
     try {
@@ -260,8 +262,11 @@ function EmployeesTab({ token, formatSRD }) {
         )}
       </div>
 
+      {/* Payroll Kalender */}
+      <PayrollCalendar token={token} employees={employees} formatSRD={formatSRD} refreshKey={payrollRefreshKey} />
+
       {/* Loonstroken sectie */}
-      <Loonstroken token={token} formatSRD={formatSRD} employees={employees} onChange={loadEmployees} />
+      <Loonstroken token={token} formatSRD={formatSRD} employees={employees} onChange={() => { loadEmployees(); setPayrollRefreshKey(k => k + 1); }} />
 
       {/* Losse Uitbetalingen sectie */}
       <FreelancerPayments token={token} formatSRD={formatSRD} employees={employees} onChange={loadEmployees} />
