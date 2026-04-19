@@ -1,13 +1,12 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Building2, Hand, ScanFace, AlertTriangle } from 'lucide-react';
+import { Building2, AlertTriangle, KeyRound, Loader2 } from 'lucide-react';
 import axios from 'axios';
 import KioskTenantOverview from './KioskTenantOverview';
 import KioskPaymentSelect from './KioskPaymentSelect';
 import KioskPaymentConfirm from './KioskPaymentConfirm';
 import HuurdersReceipt from './HuurdersReceipt';
-import FaceCapture from './FaceCapture';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
@@ -27,7 +26,9 @@ export default function HuurdersLayout() {
   const [companyName, setCompanyName] = useState('');
   const [companyNotFound, setCompanyNotFound] = useState(false);
   const [subscriptionBlocked, setSubscriptionBlocked] = useState(false);
-  const [faceKey, setFaceKey] = useState(0);
+  const [lookupCode, setLookupCode] = useState('');
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState('');
 
   useEffect(() => { document.title = 'Huurders Portaal'; }, []);
 
@@ -59,9 +60,25 @@ export default function HuurdersLayout() {
     setTenant(null);
     setPaymentData(null);
     setPaymentResult(null);
-    setFaceKey(k => k + 1);
+    setLookupCode('');
+    setLookupError('');
     setStep('select');
   }, []);
+
+  const handleLookup = async () => {
+    if (!lookupCode.trim()) return;
+    setLookupLoading(true);
+    setLookupError('');
+    try {
+      const res = await axios.get(`${API}/public/${companyId}/tenants/lookup/${lookupCode.trim()}`);
+      setTenant(res.data);
+      goTo('overview');
+    } catch {
+      setLookupError('Huurder niet gevonden. Controleer uw code.');
+    } finally {
+      setLookupLoading(false);
+    }
+  };
 
   // Error/blocked states
   if (subscriptionBlocked) {
@@ -110,20 +127,36 @@ export default function HuurdersLayout() {
             {/* Header */}
             <div className="flex items-center justify-center py-3 sm:py-4 px-4">
               <div className="flex items-center gap-2">
-                <ScanFace className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                <span className="text-base sm:text-lg text-white font-bold">Face ID Inloggen</span>
+                <KeyRound className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <span className="text-base sm:text-lg text-white font-bold">Huurders Portaal</span>
               </div>
             </div>
-            {/* Face capture card — centered and responsive */}
+            {/* Code input card */}
             <div className="flex-1 flex items-center justify-center px-4 pb-4 min-h-0">
               <div className="bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-md flex flex-col items-center p-5 sm:p-8">
                 <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-1">Welkom</h2>
-                <p className="text-xs sm:text-sm text-slate-400 mb-4 sm:mb-5 text-center">Kijk in de camera om in te loggen</p>
-                <FaceCapture key={faceKey} mode="verify-continuous" onCapture={async (descriptor) => {
-                  const res = await axios.post(`${API}/public/${companyId}/face/verify-tenant`, { descriptor });
-                  setTenant(res.data);
-                  setTimeout(() => goTo('overview'), 500);
-                }} />
+                <p className="text-xs sm:text-sm text-slate-400 mb-5 text-center">Voer uw huurderscode of appartementnummer in</p>
+                <input
+                  type="text"
+                  value={lookupCode}
+                  onChange={(e) => { setLookupCode(e.target.value.toUpperCase()); setLookupError(''); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleLookup(); }}
+                  placeholder="bijv. A01 of H123"
+                  data-testid="huurder-lookup-input"
+                  className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-center text-xl font-bold tracking-widest focus:border-orange-500 focus:outline-none mb-3 uppercase"
+                  autoFocus
+                />
+                {lookupError && (
+                  <p className="text-sm text-red-500 text-center font-semibold mb-3" data-testid="huurder-lookup-error">{lookupError}</p>
+                )}
+                <button
+                  onClick={handleLookup}
+                  disabled={lookupLoading || !lookupCode.trim()}
+                  data-testid="huurder-lookup-btn"
+                  className="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-xl transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {lookupLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Inloggen'}
+                </button>
               </div>
             </div>
           </div>

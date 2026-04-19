@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { CreditCard, Trash2, Check, ScanFace, Camera } from 'lucide-react';
+import { CreditCard, Trash2 } from 'lucide-react';
 import { API, axios } from './utils';
-import FaceCapture from '../FaceCapture';
 
 function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) {
   const [name, setName] = useState(tenant?.name || '');
@@ -24,9 +23,6 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
   const cardBufferRef = useRef('');
   const cardTimerRef = useRef(null);
   const [loading, setLoading] = useState(false);
-  const [showFaceCapture, setShowFaceCapture] = useState(false);
-  const [faceRegistered, setFaceRegistered] = useState(!!tenant?.face_id_enabled);
-  const [faceSaving, setFaceSaving] = useState(false);
 
   const availableApartments = apartments.filter(a => a.status !== 'occupied' || a.apartment_id === tenant?.apartment_id);
 
@@ -86,27 +82,6 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleFaceRegister = async (descriptor) => {
-    if (!tenant || !companyId) return;
-    setFaceSaving(true);
-    try {
-      await axios.post(`${API}/public/${companyId}/tenant/${tenant.tenant_id}/face/register`, { descriptor });
-      setFaceRegistered(true);
-      setShowFaceCapture(false);
-    } catch (err) {
-      alert(err.response?.data?.detail || 'Face ID registratie mislukt');
-    } finally { setFaceSaving(false); }
-  };
-
-  const handleFaceDelete = async () => {
-    if (!tenant || !companyId) return;
-    if (!window.confirm('Face ID verwijderen voor deze huurder?')) return;
-    try {
-      await axios.delete(`${API}/public/${companyId}/tenant/${tenant.tenant_id}/face`);
-      setFaceRegistered(false);
-    } catch { alert('Verwijderen mislukt'); }
   };
 
   return (
@@ -265,46 +240,6 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
               <p className="text-xs text-slate-400">Scan de ID kaart met de USB kaartlezer of vul handmatig in</p>
             </div>
           </div>
-          {/* Face ID Section - only when editing existing tenant */}
-          {tenant && companyId && (
-            <div className="border-t border-slate-200 pt-4">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <ScanFace className="w-4 h-4 text-violet-600" />
-                  <p className="text-sm font-semibold text-slate-700">Face ID</p>
-                </div>
-                {faceRegistered && (
-                  <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                    <Check className="w-3 h-3" /> Geregistreerd
-                  </span>
-                )}
-              </div>
-              {showFaceCapture ? (
-                <div className="bg-slate-50 rounded-xl p-4">
-                  <FaceCapture
-                    mode="register"
-                    onCapture={handleFaceRegister}
-                    onCancel={() => setShowFaceCapture(false)}
-                    buttonLabel={`Registreer ${tenant.name}`}
-                  />
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  <button type="button" onClick={() => setShowFaceCapture(true)} data-testid="tenant-modal-face-register-btn"
-                    className="flex items-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 text-sm font-medium transition">
-                    <Camera className="w-4 h-4" />
-                    {faceRegistered ? 'Opnieuw registreren' : 'Gezicht registreren'}
-                  </button>
-                  {faceRegistered && (
-                    <button type="button" onClick={handleFaceDelete} data-testid="tenant-modal-face-delete-btn"
-                      className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 text-sm font-medium transition">
-                      <Trash2 className="w-4 h-4" /> Verwijderen
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
           <div className="flex gap-3">
             <button type="button" onClick={onClose} className="flex-1 py-3 border rounded-xl">Annuleren</button>
             <button type="submit" disabled={loading} className="flex-1 py-3 bg-orange-500 text-white rounded-xl disabled:opacity-50">

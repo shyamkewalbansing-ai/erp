@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   Users, CreditCard, Plus, Pencil, Trash2, DollarSign, Search, 
-  FileText, Mail, Eye, ScanFace, XCircle, CheckCircle
+  FileText, Mail, Eye, XCircle, CheckCircle
 } from 'lucide-react';
 import { API, axios, formatSRD } from './utils';
 import LeaseModal from './LeaseModal';
@@ -126,7 +126,6 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                   <th className="text-right p-4 text-sm font-medium text-slate-500 whitespace-nowrap">Boetes</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500 whitespace-nowrap">Internet</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500 whitespace-nowrap">Totaal</th>
-                  <th className="text-center p-4 text-sm font-medium text-slate-500">Face ID</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Status</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
                 </tr>
@@ -193,15 +192,6 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                       </td>
                       <td className={`p-4 text-right font-black whitespace-nowrap ${total > 0 ? 'text-orange-600' : 'text-slate-800'}`}>
                         {formatSRD(total)}
-                      </td>
-                      <td className="p-4 text-center">
-                        {tenant.face_id_enabled ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-semibold bg-violet-100 text-violet-600" data-testid={`face-badge-${tenant.tenant_id}`}>
-                            <ScanFace className="w-3 h-3" /> Actief
-                          </span>
-                        ) : (
-                          <span className="text-xs text-slate-300">—</span>
-                        )}
                       </td>
                       <td className="p-4">
                         {hasArrears ? (
