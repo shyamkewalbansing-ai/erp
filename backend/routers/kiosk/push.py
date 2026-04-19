@@ -191,6 +191,7 @@ async def send_push_to_company(
     url: Optional[str] = None,
     tag: Optional[str] = None,
     exclude_subscriber_id: Optional[str] = None,
+    extra_data: Optional[dict] = None,
 ) -> int:
     """Send a push notification to all enabled devices of a company.
     Returns number of successful sends. Auto-cleans expired subscriptions.
@@ -214,6 +215,8 @@ async def send_push_to_company(
         "tag": tag or "kiosk",
         "timestamp": int(datetime.now(timezone.utc).timestamp() * 1000),
     }
+    if extra_data:
+        payload.update(extra_data)
     payload_json = json.dumps(payload)
 
     sent = 0

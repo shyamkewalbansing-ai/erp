@@ -12,6 +12,60 @@ function urlB64ToUint8Array(b64) {
   return arr;
 }
 
+// Persist auth token to IndexedDB so the service worker can approve payments
+// directly from the notification action (SW has no access to localStorage).
+const IDB_NAME = 'kiosk-auth';
+const IDB_STORE = 'tokens';
+
+function idbPut(key, value) {
+  return new Promise((resolve) => {
+    try {
+      const req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = () => { req.result.createObjectStore(IDB_STORE); };
+      req.onsuccess = () => {
+        try {
+          const tx = req.result.transaction(IDB_STORE, 'readwrite');
+          tx.objectStore(IDB_STORE).put(value, key);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        } catch (e) { resolve(false); }
+      };
+      req.onerror = () => resolve(false);
+    } catch (e) { resolve(false); }
+  });
+}
+
+function idbDelete(key) {
+  return new Promise((resolve) => {
+    try {
+      const req = indexedDB.open(IDB_NAME, 1);
+      req.onupgradeneeded = () => { req.result.createObjectStore(IDB_STORE); };
+      req.onsuccess = () => {
+        try {
+          const tx = req.result.transaction(IDB_STORE, 'readwrite');
+          tx.objectStore(IDB_STORE).delete(key);
+          tx.oncomplete = () => resolve(true);
+          tx.onerror = () => resolve(false);
+        } catch (e) { resolve(false); }
+      };
+      req.onerror = () => resolve(false);
+    } catch (e) { resolve(false); }
+  });
+}
+
+export async function persistAuthForServiceWorker({ token, userName = '' }) {
+  await idbPut('auth', {
+    token,
+    api_base: process.env.REACT_APP_BACKEND_URL || '',
+    user_name: userName,
+    stored_at: Date.now(),
+  });
+}
+
+export async function clearAuthForServiceWorker() {
+  await idbDelete('auth');
+}
+
 export function isPushSupported() {
   return (
     typeof window !== 'undefined' &&
@@ -89,6 +143,8 @@ export async function subscribeToPush({ token, subscriberType = 'company', subsc
   };
 
   const res = await axios.post(`${API}/admin/push/subscribe`, body, { headers: { Authorization: `Bearer ${token}` } });
+  // Persist auth so SW can act on notification action buttons (approve/reject)
+  try { await persistAuthForServiceWorker({ token, userName: subscriberName }); } catch (e) { /* noop */ }
   return res.data;
 }
 
@@ -102,6 +158,7 @@ export async function unsubscribeFromPush(token) {
     } catch (e) { /* noop */ }
     try { await sub.unsubscribe(); } catch (e) { /* noop */ }
   }
+  try { await clearAuthForServiceWorker(); } catch (e) { /* noop */ }
 }
 
 export async function listDevices(token) {

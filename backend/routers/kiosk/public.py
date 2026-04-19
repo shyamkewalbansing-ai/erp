@@ -378,11 +378,13 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
             push_title = "Nieuwe Kiosk betaling"
             push_body = f"{tenant['name']} • SRD {data.amount:,.2f} ({type_lbl}) • {kwitantie_nummer}"
             push_tag = f"payment-{payment_id}"
+            extra = {"payment_id": payment_id}
         else:
             push_title = "Kwitantie wacht op goedkeuring"
             push_body = f"{tenant['name']} • SRD {data.amount:,.2f} ({type_lbl}) • {kwitantie_nummer}"
             push_tag = f"approval-{payment_id}"
-        asyncio.create_task(send_push_to_company(company_id, push_title, push_body, url="/vastgoed", tag=push_tag))
+            extra = {"payment_id": payment_id, "actions_hint": "approve"}
+        asyncio.create_task(send_push_to_company(company_id, push_title, push_body, url="/vastgoed", tag=push_tag, extra_data=extra))
     except Exception:
         pass
 

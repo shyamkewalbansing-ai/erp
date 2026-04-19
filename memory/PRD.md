@@ -4,6 +4,8 @@
 
 ### Geïmplementeerd:
 - **Web Push (VAPID)** voor PWA op desktop + mobiel, werkt ook als app gesloten is
+- **Notification Actions** - "Goedkeuren" + "Bekijken" knoppen op pending approval pushes; Service Worker roept `/api/kiosk/admin/payments/{id}/approve` rechtstreeks aan zonder app te openen
+- Auth token persisted in IndexedDB bij subscribe, zodat SW API calls kan doen (push action → approve endpoint met Bearer token)
 - VAPID keys gegenereerd en in `backend/.env`: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
 - Dependencies: `pywebpush==2.3.0`, `py-vapid==1.9.4`, `http-ece==1.2.1`
 - **Backend** (`/app/backend/routers/kiosk/push.py`):

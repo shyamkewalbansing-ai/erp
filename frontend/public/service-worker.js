@@ -289,6 +289,26 @@ async function cacheIndexNow() {
 console.log('[SW] Service Worker loaded - Boekhouding Offline v3');
 
 // ============== WEB PUSH NOTIFICATIONS ==============
+// IndexedDB helpers (SW has no access to localStorage)
+const IDB_NAME = 'kiosk-auth';
+const IDB_STORE = 'tokens';
+
+function idbGet(key) {
+  return new Promise((resolve) => {
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => { req.result.createObjectStore(IDB_STORE); };
+    req.onsuccess = () => {
+      try {
+        const tx = req.result.transaction(IDB_STORE, 'readonly');
+        const r = tx.objectStore(IDB_STORE).get(key);
+        r.onsuccess = () => resolve(r.result || null);
+        r.onerror = () => resolve(null);
+      } catch (e) { resolve(null); }
+    };
+    req.onerror = () => resolve(null);
+  });
+}
+
 self.addEventListener('push', (event) => {
   let data = { title: 'Notificatie', body: '', url: '/vastgoed', tag: 'kiosk' };
   try {
@@ -300,16 +320,23 @@ self.addEventListener('push', (event) => {
     try { data.body = event.data ? event.data.text() : ''; } catch (_) {}
   }
 
+  const actions = [];
+  if (data.actions_hint === 'approve' && data.payment_id) {
+    actions.push({ action: 'approve', title: 'Goedkeuren' });
+    actions.push({ action: 'view', title: 'Bekijken' });
+  }
+
   const options = {
     body: data.body,
     icon: '/kiosk-icons/icon-192.png',
     badge: '/kiosk-icons/icon-192.png',
     tag: data.tag,
     renotify: true,
-    requireInteraction: false,
+    requireInteraction: !!data.payment_id,
     vibrate: [200, 100, 200],
-    data: { url: data.url || '/vastgoed' },
+    data: { url: data.url || '/vastgoed', payment_id: data.payment_id || null, api_base: data.api_base || '' },
     silent: false,
+    actions,
   };
 
   event.waitUntil(
@@ -317,12 +344,64 @@ self.addEventListener('push', (event) => {
   );
 });
 
+async function approvePaymentFromNotification(paymentId, apiBase) {
+  const authObj = await idbGet('auth');
+  if (!authObj || !authObj.token) {
+    return { ok: false, reason: 'no-token' };
+  }
+  const base = apiBase || authObj.api_base || '';
+  try {
+    const resp = await fetch(`${base}/api/kiosk/admin/payments/${paymentId}/approve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authObj.token}`,
+      },
+      body: JSON.stringify({ approved_by: authObj.user_name || 'Push goedkeuring' }),
+    });
+    if (!resp.ok) return { ok: false, reason: `http-${resp.status}` };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, reason: 'network' };
+  }
+}
+
 self.addEventListener('notificationclick', (event) => {
+  const action = event.action;
+  const d = event.notification.data || {};
   event.notification.close();
-  const targetUrl = (event.notification.data && event.notification.data.url) || '/vastgoed';
+
+  if (action === 'approve' && d.payment_id) {
+    event.waitUntil((async () => {
+      const r = await approvePaymentFromNotification(d.payment_id, d.api_base);
+      if (r.ok) {
+        await self.registration.showNotification('✅ Goedgekeurd', {
+          body: 'Kwitantie is goedgekeurd.',
+          icon: '/kiosk-icons/icon-192.png',
+          tag: `approved-${d.payment_id}`,
+          silent: false,
+        });
+      } else {
+        await self.registration.showNotification('Goedkeuring mislukt', {
+          body: r.reason === 'no-token'
+            ? 'Log eerst in via de Admin Dashboard om vanuit meldingen goed te keuren.'
+            : 'Kon niet goedkeuren. Open de app om opnieuw te proberen.',
+          icon: '/kiosk-icons/icon-192.png',
+          tag: `approve-fail-${d.payment_id}`,
+          requireInteraction: true,
+          silent: false,
+        });
+      }
+      // Also open/focus the app
+      const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      if (clients.length > 0 && 'focus' in clients[0]) { clients[0].focus(); }
+    })());
+    return;
+  }
+
+  const targetUrl = d.url || '/vastgoed';
   event.waitUntil((async () => {
     const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    // Try to focus an existing client on the target URL
     for (const client of allClients) {
       try {
         const u = new URL(client.url);
@@ -331,12 +410,10 @@ self.addEventListener('notificationclick', (event) => {
         }
       } catch (_) {}
     }
-    // Or focus any open client and navigate
     if (allClients.length > 0 && 'navigate' in allClients[0]) {
       try { await allClients[0].navigate(targetUrl); } catch (_) {}
       return allClients[0].focus();
     }
-    // Or open a new window
     if (self.clients.openWindow) {
       return self.clients.openWindow(targetUrl);
     }
