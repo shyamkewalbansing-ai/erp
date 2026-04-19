@@ -482,6 +482,7 @@ class PaymentCreate(BaseModel):
     description: Optional[str] = None
     rent_month: Optional[str] = None
     processed_by: Optional[str] = None  # employee name who processed
+    processed_by_role: Optional[str] = None  # role: beheerder | boekhouder | kiosk_medewerker
 
 class CashEntryCreate(BaseModel):
     entry_type: str  # income, expense, salary

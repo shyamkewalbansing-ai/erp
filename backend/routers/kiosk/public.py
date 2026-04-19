@@ -322,14 +322,65 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
         "kwitantie_nummer": kwitantie_nummer,
         "status": "pending",
         "processed_by": data.processed_by or "Kiosk",
+        "processed_by_role": data.processed_by_role or "",
         "created_at": now
     }
-    
+
+    # Auto-approve if processed by a Beheerder via Kiosk
+    auto_approved = (data.processed_by_role == "beheerder")
+    if auto_approved:
+        update_fields = {}
+        if data.payment_type in ["rent", "partial_rent"]:
+            update_fields["outstanding_rent"] = max(0, tenant.get("outstanding_rent", 0) - data.amount)
+        elif data.payment_type == "service_costs":
+            update_fields["service_costs"] = max(0, tenant.get("service_costs", 0) - data.amount)
+        elif data.payment_type == "fines":
+            update_fields["fines"] = max(0, tenant.get("fines", 0) - data.amount)
+        elif data.payment_type == "internet":
+            update_fields["internet_outstanding"] = max(0, tenant.get("internet_outstanding", 0) - data.amount)
+        elif data.payment_type == "deposit":
+            update_fields["deposit_paid"] = tenant.get("deposit_paid", 0) + data.amount
+        if update_fields:
+            update_fields["updated_at"] = now
+            await db.kiosk_tenants.update_one({"tenant_id": data.tenant_id}, {"$set": update_fields})
+
+        updated_tenant = await db.kiosk_tenants.find_one({"tenant_id": data.tenant_id})
+        payment["status"] = "approved"
+        payment["approved_at"] = now
+        payment["approved_by"] = data.processed_by or ""
+        payment["remaining_rent"] = updated_tenant.get("outstanding_rent", 0) if updated_tenant else 0
+        payment["remaining_service"] = updated_tenant.get("service_costs", 0) if updated_tenant else 0
+        payment["remaining_fines"] = updated_tenant.get("fines", 0) if updated_tenant else 0
+        payment["remaining_internet"] = updated_tenant.get("internet_outstanding", 0) if updated_tenant else 0
+
     await db.kiosk_payments.insert_one(payment)
-    
-    # Do NOT update tenant balances - wait for admin approval
-    # Do NOT send WhatsApp - wait for admin approval
-    
+
+    # Send WhatsApp only if auto-approved
+    if auto_approved:
+        try:
+            tenant_phone = tenant.get("phone") or tenant.get("telefoon", "")
+            if tenant_phone:
+                comp_name = company.get("stamp_company_name") or company.get("name", "")
+                type_labels = {"rent": "Huurbetaling", "partial_rent": "Gedeeltelijke betaling", "service_costs": "Servicekosten", "fines": "Boetes", "deposit": "Borg", "internet": "Internet"}
+                type_label = type_labels.get(data.payment_type, data.payment_type)
+                covered_str = ", ".join(covered_months)
+                total_remaining = payment["remaining_rent"] + payment["remaining_service"] + payment["remaining_fines"] + payment["remaining_internet"]
+                if total_remaining <= 0:
+                    wa_msg = (f"Beste {tenant['name']},\n\n"
+                              f"Uw betaling van SRD {data.amount:,.2f} ({type_label}) is ontvangen.\n"
+                              f"Kwitantie: {kwitantie_nummer}\n"
+                              f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
+                              f"Uw saldo is nu VOLLEDIG VOLDAAN.\n\nBedankt voor uw betaling!\n{comp_name}")
+                else:
+                    wa_msg = (f"Beste {tenant['name']},\n\n"
+                              f"Uw betaling van SRD {data.amount:,.2f} ({type_label}) is ontvangen.\n"
+                              f"Kwitantie: {kwitantie_nummer}\n"
+                              f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
+                              f"Resterend saldo: SRD {total_remaining:,.2f}\n\nMet vriendelijke groet,\n{comp_name}")
+                await _send_message_auto(company_id, tenant_phone, wa_msg, data.tenant_id, tenant["name"], "payment_confirmation")
+        except Exception:
+            pass
+
     return {
         "payment_id": payment_id,
         "kwitantie_nummer": kwitantie_nummer,
@@ -342,7 +393,7 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
         "apartment_number": tenant.get("apartment_number", ""),
         "rent_month": data.rent_month,
         "covered_months": covered_months,
-        "status": "pending",
+        "status": payment["status"],
         "created_at": now.isoformat()
     }
 

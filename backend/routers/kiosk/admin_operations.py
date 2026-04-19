@@ -712,9 +712,12 @@ async def list_kas_entries(company: dict = Depends(get_current_company)):
     # All kas entries (income, expense, salary)
     entries = await db.kiosk_kas.find({"company_id": company_id}).sort("created_at", -1).to_list(1000)
     
-    # Total income from rent payments (kiosk_payments)
-    payments = await db.kiosk_payments.find({"company_id": company_id}).to_list(10000)
-    payment_income = sum(p.get("amount", 0) for p in payments)
+    # Total income from rent payments (kiosk_payments) - ONLY approved
+    payments = await db.kiosk_payments.find({
+        "company_id": company_id,
+        "status": {"$in": ["approved", None]}
+    }).to_list(10000)
+    payment_income = sum(p.get("amount", 0) for p in payments if p.get("status", "approved") != "pending" and p.get("status") != "rejected")
     
     # Manual income from kas entries
     manual_income = sum(e.get("amount", 0) for e in entries if e.get("entry_type") == "income")
@@ -865,9 +868,12 @@ async def verdeling_overzicht(company: dict = Depends(get_current_company)):
     """Preview income distribution based on current rent income"""
     company_id = company["company_id"]
     
-    # Calculate total rent income (same logic as kas endpoint)
-    payments = await db.kiosk_payments.find({"company_id": company_id}).to_list(10000)
-    payment_income = sum(p.get("amount", 0) for p in payments)
+    # Calculate total rent income (same logic as kas endpoint) - ONLY approved
+    payments = await db.kiosk_payments.find({
+        "company_id": company_id,
+        "status": {"$ne": "pending"}
+    }).to_list(10000)
+    payment_income = sum(p.get("amount", 0) for p in payments if p.get("status") != "rejected")
     
     kas_entries = await db.kiosk_kas.find({"company_id": company_id}).to_list(1000)
     manual_income = sum(e.get("amount", 0) for e in kas_entries if e.get("entry_type") == "income")
@@ -914,9 +920,12 @@ async def verdeling_uitvoeren(data: VerdelingUitvoeren, company: dict = Depends(
     if not holders:
         raise HTTPException(status_code=400, detail="Geen rekeninghouders ingesteld")
     
-    # Calculate huurinkomsten
-    payments = await db.kiosk_payments.find({"company_id": company_id}).to_list(10000)
-    huurinkomsten = sum(p.get("amount", 0) for p in payments)
+    # Calculate huurinkomsten - only approved payments
+    payments = await db.kiosk_payments.find({
+        "company_id": company_id,
+        "status": {"$ne": "pending"}
+    }).to_list(10000)
+    huurinkomsten = sum(p.get("amount", 0) for p in payments if p.get("status") != "rejected")
     
     if huurinkomsten <= 0:
         raise HTTPException(status_code=400, detail="Geen huurinkomsten om te verdelen")
