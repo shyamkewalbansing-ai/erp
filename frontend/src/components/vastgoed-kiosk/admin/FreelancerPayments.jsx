@@ -79,7 +79,7 @@ function FreelancerPayments({ token, formatSRD, employees, onChange }) {
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Kwitantie</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Ontvanger</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Omschrijving</th>
-                  <th className="text-left p-4 text-sm font-medium text-slate-500">Methode</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Afgetrokken van</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Verwerkt door</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Bedrag</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
@@ -92,7 +92,11 @@ function FreelancerPayments({ token, formatSRD, employees, onChange }) {
                     <td className="p-4 text-sm font-mono text-orange-600">{p.kwitantie_nummer}</td>
                     <td className="p-4 font-bold text-slate-900">{p.employee_name}{p.functie && <span className="text-xs text-slate-400 font-normal block">{p.functie}</span>}</td>
                     <td className="p-4 text-sm text-slate-600 max-w-xs truncate">{p.description || '-'}</td>
-                    <td className="p-4 text-sm text-slate-600">{p.payment_method === 'bank' ? 'Bank' : 'Contant'}</td>
+                    <td className="p-4 text-sm">
+                      <span className={`px-2 py-0.5 rounded text-xs font-semibold ${p.payment_method === 'bank' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                        Van {p.payment_method === 'bank' ? 'Bank' : 'Kas'}
+                      </span>
+                    </td>
                     <td className="p-4 text-sm text-slate-600">{p.processed_by || '-'}</td>
                     <td className="p-4 text-right font-bold text-slate-900">{formatSRD(p.amount)}</td>
                     <td className="p-4 text-right">
@@ -123,7 +127,9 @@ function FreelancerPayments({ token, formatSRD, employees, onChange }) {
                 </div>
                 <div className="flex items-center gap-2 flex-wrap mb-1.5">
                   <span className="text-[10px] text-orange-600 font-mono">{p.kwitantie_nummer}</span>
-                  <span className="px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px]">{p.payment_method === 'bank' ? 'Bank' : 'Contant'}</span>
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold ${p.payment_method === 'bank' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
+                    Van {p.payment_method === 'bank' ? 'Bank' : 'Kas'}
+                  </span>
                 </div>
                 {p.description && <p className="text-xs text-slate-500 mb-1">{p.description}</p>}
                 {p.processed_by && <p className="text-[11px] text-slate-400 mb-2">Verwerkt door: <span className="text-slate-600 font-semibold">{p.processed_by}</span></p>}
@@ -230,10 +236,11 @@ function FreelancerPaymentModal({ token, employees, onClose, onCreated }) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Betaalmethode</label>
+              <label className="block text-xs font-medium text-slate-600 mb-1">Uit betaald vanuit</label>
               <select value={method} onChange={e => setMethod(e.target.value)}
+                data-testid="fp-method-select"
                 className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white">
-                <option value="cash">Contant</option>
+                <option value="cash">Kas (contant)</option>
                 <option value="bank">Bank</option>
               </select>
             </div>
@@ -242,6 +249,11 @@ function FreelancerPaymentModal({ token, employees, onClose, onCreated }) {
               <input type="date" value={date} onChange={e => setDate(e.target.value)}
                 className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm" />
             </div>
+          </div>
+
+          {/* Info box */}
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-xs text-slate-600">
+            <p><strong className="text-orange-700">Info:</strong> Dit bedrag wordt als uitgave geboekt in <strong>Bank/Kas</strong> onder categorie &quot;freelancer&quot;. Uw saldo daalt met SRD {parseFloat(amount) > 0 ? parseFloat(amount).toFixed(2) : '0,00'}.</p>
           </div>
 
           <div className="flex gap-2 pt-2">

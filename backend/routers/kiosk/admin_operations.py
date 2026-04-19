@@ -1206,14 +1206,18 @@ async def create_freelancer_payment(data: FreelancerPaymentCreate, company: dict
 
     # Also register in kas as expense (category: freelancer)
     try:
+        source_label = "Kas" if data.payment_method == "cash" else "Bank"
         await db.kiosk_kas.insert_one({
             "entry_id": generate_uuid(),
             "company_id": company_id,
             "entry_type": "expense",
             "amount": data.amount,
-            "description": f"Uitbetaling {name}: {entry['description']}",
+            "description": f"Losse uitbetaling ({source_label}) - {name}: {entry['description']}",
             "category": "freelancer",
+            "payment_method": data.payment_method,
+            "related_employee_name": name,
             "reference_id": payment_id,
+            "kwitantie_nummer": kwitantie_nummer,
             "created_at": payment_date
         })
     except Exception:
