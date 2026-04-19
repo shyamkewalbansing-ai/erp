@@ -76,7 +76,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
       const res = await axios.post(`${API}/public/${companyId}/payments`, {
         tenant_id: tenant.tenant_id, amount: paymentData.amount,
         payment_type: paymentData.payment_type, payment_method: 'cash',
-        processed_by: kioskEmployee?.name || 'Kiosk',
+        processed_by: kioskEmployee?.name || '',
         processed_by_role: kioskEmployee?.role || '',
         description: paymentData.description, rent_month: paymentData.rent_month || null,
       });
@@ -156,7 +156,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
       const res = await axios.post(`${API}/public/${companyId}/payments`, {
         tenant_id: tenant.tenant_id, amount: paymentData.amount,
         payment_type: paymentData.payment_type, payment_method: 'card',
-        processed_by: kioskEmployee?.name || 'Kiosk',
+        processed_by: kioskEmployee?.name || '',
         processed_by_role: kioskEmployee?.role || '',
         description: `${paymentData.description} (SumUp Pinpas)`,
         rent_month: paymentData.rent_month || null,
@@ -208,7 +208,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
       const res = await axios.post(`${API}/public/${companyId}/payments`, {
         tenant_id: tenant.tenant_id, amount: paymentData.amount,
         payment_type: paymentData.payment_type, payment_method: 'mope',
-        processed_by: kioskEmployee?.name || 'Kiosk',
+        processed_by: kioskEmployee?.name || '',
         processed_by_role: kioskEmployee?.role || '',
         description: `${paymentData.description} (Mope)`,
         rent_month: paymentData.rent_month || null,
@@ -259,7 +259,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
       const res = await axios.post(`${API}/public/${companyId}/payments`, {
         tenant_id: tenant.tenant_id, amount: paymentData.amount,
         payment_type: paymentData.payment_type, payment_method: 'uni5pay',
-        processed_by: kioskEmployee?.name || 'Kiosk',
+        processed_by: kioskEmployee?.name || '',
         processed_by_role: kioskEmployee?.role || '',
         description: `${paymentData.description} (Uni5Pay)`,
         rent_month: paymentData.rent_month || null,

@@ -1000,11 +1000,14 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint
     approval_signature = payment.get("approval_signature", "")
     
     process_html = ""
-    if processed_by or approved_by:
+    # Hide generic "Kiosk" label (legacy default value)
+    show_processed = processed_by and processed_by.strip().lower() != "kiosk"
+    show_approved = approved_by and approved_by.strip().lower() != "kiosk"
+    if show_processed or show_approved:
         process_html = '<table class="details-table" style="margin-top:8px;">'
-        if processed_by:
-            process_html += f'<tr><td>Verwerkt door</td><td>{processed_by}</td></tr>'
-        if approved_by:
+        if show_processed:
+            process_html += f'<tr><td>Ontvangen door</td><td>{processed_by}</td></tr>'
+        if show_approved:
             process_html += f'<tr><td>Goedgekeurd door</td><td>{approved_by}</td></tr>'
         process_html += '</table>'
     

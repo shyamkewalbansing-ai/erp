@@ -335,7 +335,7 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
         "covered_months": covered_months,
         "kwitantie_nummer": kwitantie_nummer,
         "status": "pending",
-        "processed_by": data.processed_by or "Kiosk",
+        "processed_by": (data.processed_by or "").strip() or tenant["name"],
         "processed_by_role": data.processed_by_role or "",
         "created_at": now
     }
