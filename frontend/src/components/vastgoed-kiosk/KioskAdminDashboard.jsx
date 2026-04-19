@@ -141,14 +141,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
 
   const totalFiltered = filteredPayments.filter(p => p.status !== 'rejected').reduce((sum, p) => sum + (p.amount || 0), 0);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
-      </div>
-    );
-  }
-
+  // Role-based tab definitions (MUST be before loading return to avoid hook order issues)
   const ALL_TABS = [
     { id: 'dashboard', label: 'Home', icon: Building2 },
     { id: 'tenants', label: 'Huurders', icon: Users },
@@ -161,8 +154,6 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     { id: 'internet', label: 'Internet', icon: Wifi },
     { id: 'settings', label: 'Instellingen', icon: Settings },
   ];
-
-  // Role-based access control
   const ROLE_TABS = {
     beheerder: ['dashboard', 'tenants', 'apartments', 'payments', 'kas', 'loans', 'employees', 'power', 'internet', 'settings'],
     boekhouder: ['dashboard', 'tenants', 'payments', 'kas'],
@@ -171,15 +162,20 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   const employeeRole = kioskEmployee?.role;
   const allowedTabIds = employeeRole ? (ROLE_TABS[employeeRole] || ROLE_TABS.kiosk_medewerker) : null;
   const TABS = allowedTabIds ? ALL_TABS.filter(t => allowedTabIds.includes(t.id)) : ALL_TABS;
-
-  // Mobile bottom nav
   const MOBILE_MAIN_TABS = ['dashboard', 'tenants', 'apartments', 'payments'].filter(id => TABS.some(t => t.id === id));
   const MOBILE_MORE_TABS = TABS.filter(t => !MOBILE_MAIN_TABS.includes(t.id));
 
-  // Reset tab when role changes
   useEffect(() => {
     if (!TABS.some(t => t.id === activeTab)) setActiveTab(TABS[0]?.id || 'dashboard');
   }, [employeeRole]); // eslint-disable-line
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-orange-500" />
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 flex flex-col bg-slate-100 z-50" style={{ overflow: 'hidden' }}>
