@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   Building2, Users, Home, CreditCard, Loader2, Search,
   Crown, ArrowLeft, TrendingUp, DollarSign, Shield,
-  ToggleLeft, ToggleRight, Power, PowerOff, RefreshCw
+  ToggleLeft, ToggleRight, Power, PowerOff, RefreshCw,
+  LogIn, Trash2
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -68,6 +69,48 @@ export default function SuperAdminDashboard() {
       await axios.put(`${API}/superadmin/companies/${companyId}/subscription`, {}, { headers: { Authorization: `Bearer ${token}` } });
       loadData();
     } catch { alert('Abonnement wijzigen mislukt'); }
+  };
+
+  const handleImpersonate = async (company) => {
+    if (!window.confirm(`Inloggen als "${company.name}"? U krijgt volledige toegang tot dit bedrijf.`)) return;
+    try {
+      const res = await axios.post(
+        `${API}/superadmin/companies/${company.company_id}/impersonate`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      // Store regular company token + mark session as PIN-verified so kiosk skips PIN
+      localStorage.setItem('kiosk_token', res.data.token);
+      sessionStorage.setItem(`kiosk_pin_verified_${res.data.company_id}`, 'true');
+      // Go straight to the company admin dashboard
+      navigate(`/vastgoed/${res.data.company_id}`);
+    } catch (err) {
+      alert('Inloggen mislukt: ' + (err.response?.data?.detail || err.message));
+    }
+  };
+
+  const handleDeleteCompany = async (company) => {
+    const confirm1 = window.prompt(
+      `⚠️ DEFINITIEF VERWIJDEREN\n\n` +
+      `Bedrijf "${company.name}" en ALLE gerelateerde data (huurders, appartementen, betalingen, loonstroken, etc.) worden PERMANENT verwijderd.\n\n` +
+      `Dit kan NIET ongedaan gemaakt worden.\n\n` +
+      `Typ de bedrijfsnaam exact over om te bevestigen:\n"${company.name}"`
+    );
+    if (confirm1 === null) return;
+    if (confirm1.trim() !== company.name) {
+      alert('Naam komt niet overeen. Verwijderen geannuleerd.');
+      return;
+    }
+    try {
+      const res = await axios.delete(
+        `${API}/superadmin/companies/${company.company_id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert(`Bedrijf verwijderd. ${res.data.records_removed || 0} records verwijderd.`);
+      loadData();
+    } catch (err) {
+      alert('Verwijderen mislukt: ' + (err.response?.data?.detail || err.message));
+    }
   };
 
   const handleLogout = () => {
@@ -286,6 +329,24 @@ export default function SuperAdminDashboard() {
                               title={c.subscription === 'pro' ? 'Downgrade naar Gratis' : 'Upgrade naar PRO'}
                             >
                               {c.subscription === 'pro' ? 'PRO uit' : 'PRO aan'}
+                            </button>
+                            {/* Login as company */}
+                            <button
+                              onClick={() => handleImpersonate(c)}
+                              data-testid={`impersonate-${c.company_id}`}
+                              className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-50 transition"
+                              title={`Inloggen als ${c.name}`}
+                            >
+                              <LogIn className="w-5 h-5" />
+                            </button>
+                            {/* Delete company */}
+                            <button
+                              onClick={() => handleDeleteCompany(c)}
+                              data-testid={`delete-${c.company_id}`}
+                              className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition"
+                              title={`Bedrijf ${c.name} verwijderen`}
+                            >
+                              <Trash2 className="w-5 h-5" />
                             </button>
                           </div>
                         </td>

@@ -170,6 +170,58 @@ async def superadmin_create_company(data: SuperAdminCreateCompany, admin=Depends
     await db.kiosk_companies.insert_one(company)
     return {"company_id": company_id, "name": data.name, "message": "Bedrijf aangemaakt"}
 
+@router.delete("/superadmin/companies/{company_id}")
+async def superadmin_delete_company(company_id: str, admin=Depends(get_superadmin)):
+    """Permanently delete a company and ALL its related data."""
+    comp = await db.kiosk_companies.find_one({"company_id": company_id})
+    if not comp:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+
+    # Cascade delete across all company-scoped collections
+    collections = [
+        db.kiosk_companies,
+        db.kiosk_tenants, db.kiosk_apartments, db.kiosk_locations, db.kiosk_payments,
+        db.kiosk_leases, db.kiosk_kas, db.kiosk_employees,
+        db.kiosk_loans, db.kiosk_loan_payments, db.kiosk_internet_plans,
+        db.kiosk_rekeninghouders, db.kiosk_messages, db.kiosk_wa_messages,
+        db.kiosk_shelly_devices, db.kiosk_tenda_routers,
+        db.kiosk_freelancer_payments, db.kiosk_loonstroken,
+        db.kiosk_push_subscriptions,
+    ]
+    total = 0
+    for col in collections:
+        try:
+            r = await col.delete_many({"company_id": company_id})
+            total += r.deleted_count
+        except Exception:
+            pass
+
+    # Invalidate caches
+    try:
+        _cache_invalidate(f"pub_company_{company_id}")
+        _cache_invalidate(f"pub_apt_{company_id}")
+        _cache_invalidate(f"pub_ten_{company_id}")
+    except Exception:
+        pass
+
+    return {"deleted": True, "company_id": company_id, "records_removed": total}
+
+
+@router.post("/superadmin/companies/{company_id}/impersonate")
+async def superadmin_impersonate_company(company_id: str, admin=Depends(get_superadmin)):
+    """Generate a regular company token so the superadmin can log in as this company."""
+    comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
+    if not comp:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    token = create_token(company_id)
+    return {
+        "token": token,
+        "company_id": company_id,
+        "name": comp.get("name", ""),
+        "email": comp.get("email", ""),
+    }
+
+
 @router.get("/superadmin/payments")
 async def superadmin_payments(admin=Depends(get_superadmin)):
     payments = await db.kiosk_payments.find({}, {"_id": 0}).sort("created_at", -1).limit(200).to_list(200)
