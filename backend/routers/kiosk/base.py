@@ -42,7 +42,8 @@ __all__ = [
     "LocationCreate", "LocationUpdate",
     "TenantCreate", "TenantUpdate", "PaymentCreate",
     "CashEntryCreate", "EmployeeCreate", "EmployeeUpdate",
-    "FreelancerPaymentCreate",
+    "FreelancerPaymentCreate", "LoonstrookCreate",
+    "_build_a4_receipt_html",
     "LeaseCreate", "LeaseUpdate",
     "LoanCreate", "LoanUpdate", "LoanPaymentCreate",
     "InternetPlanCreate", "InternetPlanUpdate",
@@ -532,12 +533,29 @@ class FreelancerPaymentCreate(BaseModel):
     employee_id: Optional[str] = None
     employee_name: str
     functie: Optional[str] = None
+    telefoon: Optional[str] = None
     amount: float
     description: Optional[str] = None
     payment_method: str = "cash"  # cash | bank
     payment_date: Optional[str] = None  # YYYY-MM-DD, defaults to today
     processed_by: Optional[str] = None
     processed_by_role: Optional[str] = None
+
+class LoonstrookCreate(BaseModel):
+    employee_id: str
+    period_label: str  # e.g. "April 2026"
+    bruto_loon: float
+    overuren_bedrag: float = 0
+    bonus: float = 0
+    belasting_aftrek: float = 0
+    overige_aftrek: float = 0
+    dagen_gewerkt: Optional[int] = None
+    uren_gewerkt: Optional[float] = None
+    payment_method: str = "bank"
+    payment_date: Optional[str] = None
+    processed_by: Optional[str] = None
+    processed_by_role: Optional[str] = None
+    notes: Optional[str] = None
 
 class LeaseCreate(BaseModel):
     tenant_id: str
@@ -592,3 +610,140 @@ class RekeninghouderUpdate(BaseModel):
 class VerdelingUitvoeren(BaseModel):
     notitie: Optional[str] = None
 
+
+
+# ============ SHARED A4 RECEIPT/LOONSTROOK TEMPLATE ============
+def _build_a4_receipt_html(
+    doc_type: str,              # "UITBETALINGSKWITANTIE" | "LOONSTROOK" | etc
+    doc_number: str,
+    date_str: str,
+    receiver_name: str,
+    receiver_extra_label: Optional[str] = None,
+    receiver_extra_value: Optional[str] = None,
+    receiver_phone: Optional[str] = None,
+    method_label: Optional[str] = None,
+    processed_by: Optional[str] = None,
+    description: Optional[str] = None,
+    amount: float = 0,
+    amount_label: str = "BEDRAG",
+    breakdown_rows: Optional[List[tuple]] = None,  # List of (label, value_formatted) tuples
+    stamp_name: str = "",
+    stamp_address: str = "",
+    stamp_phone: str = "",
+    stamp_whatsapp: str = "",
+    company_email: str = "",
+    noprint: bool = False,
+    include_sig_line: bool = True,
+) -> str:
+    """Build a consistent A4-style HTML receipt. Used for kwitantie, freelancer uitbetaling, loonstrook."""
+    # Basic HTML escaping for values
+    def esc(v):
+        return (str(v) if v is not None else "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+    extra_row = ""
+    if receiver_extra_label and receiver_extra_value:
+        extra_row = f'<tr><td>{esc(receiver_extra_label)}</td><td>{esc(receiver_extra_value)}</td></tr>'
+    phone_row = f'<tr><td>Telefoon</td><td>{esc(receiver_phone)}</td></tr>' if receiver_phone else ""
+    method_row = f'<tr><td>Betaalmethode</td><td>{esc(method_label)}</td></tr>' if method_label else ""
+    processed_row = f'<tr><td>Verwerkt door</td><td>{esc(processed_by)}</td></tr>' if processed_by else ""
+
+    breakdown_html = ""
+    if breakdown_rows:
+        breakdown_html = '<table class="breakdown-table"><tbody>'
+        for label, val in breakdown_rows:
+            breakdown_html += f'<tr><td>{esc(label)}</td><td style="text-align:right">{esc(val)}</td></tr>'
+        breakdown_html += '</tbody></table>'
+
+    desc_html = ""
+    if description:
+        desc_html = f'<div class="desc"><strong>Omschrijving:</strong><br>{esc(description)}</div>'
+
+    sig_html = ""
+    if include_sig_line:
+        sig_html = '''<div class="sig-line"><div class="sig-line-rule"></div><p>Handtekening ontvanger</p></div>'''
+
+    print_bar = '' if noprint else '<div class="print-bar"><button onclick="window.print()">Afdrukken / Print</button><button onclick="window.close()">Sluiten</button></div>'
+
+    return f"""<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<title>{esc(doc_type)} {esc(doc_number)}</title>
+<style>
+  @page {{ size: A4; margin: 0 !important; }}
+  * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  body {{ font-family: 'Georgia', 'Times New Roman', serif; font-size: 9pt; line-height: 1.3; color: #000; background: #fff; }}
+  .page {{ width: 210mm; min-height: 140mm; margin: 0 auto; padding: 12mm 15mm; background: #fff; }}
+  .header {{ border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 10px; text-align: center; }}
+  .company-name {{ font-size: 13pt; font-weight: bold; color: #000; text-transform: uppercase; letter-spacing: 0.5px; }}
+  .company-info {{ font-size: 7pt; color: #000; margin-top: 2px; line-height: 1.3; }}
+  .doc-title {{ text-align: center; margin: 10px 0; }}
+  .doc-title h1 {{ font-size: 14pt; color: #000; letter-spacing: 2px; text-transform: uppercase; }}
+  .doc-number {{ font-size: 9pt; color: #000; font-weight: bold; font-family: 'Courier New', monospace; margin-top: 2px; }}
+  .details-table {{ width: 100%; border-collapse: collapse; margin-bottom: 8px; }}
+  .details-table td {{ padding: 4px 8px; border-bottom: 1px solid #000; font-size: 9pt; color: #000; }}
+  .details-table td:first-child {{ width: 35%; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.3px; }}
+  .details-table td:last-child {{ font-weight: 600; }}
+  .breakdown-table {{ width: 100%; border-collapse: collapse; margin: 8px 0; }}
+  .breakdown-table td {{ padding: 3px 8px; font-size: 9pt; border-bottom: 1px dotted #888; }}
+  .amount-row td {{ padding: 8px; font-size: 12pt !important; font-weight: bold !important; color: #000 !important; border-top: 2px solid #000 !important; border-bottom: 2px solid #000 !important; }}
+  .amount-row td:last-child {{ text-align: right; font-size: 13pt !important; }}
+  .desc {{ margin: 10px 0; padding: 8px 10px; border-left: 3px solid #000; font-size: 9pt; background: transparent; }}
+  .stamp-section {{ display: flex; align-items: center; justify-content: space-around; gap: 12px; margin: 14px 0 6px; flex-wrap: wrap; }}
+  .stamp-rect {{ display: inline-flex; align-items: center; gap: 8px; border: 2px solid #991b1b; padding: 6px 12px; transform: rotate(-5deg); opacity: 0.85; }}
+  .stamp-info p {{ margin: 0; line-height: 1.3; }}
+  .stamp-info .stamp-name {{ color: #991b1b; font-weight: bold; font-size: 8pt; }}
+  .stamp-info .stamp-detail {{ color: #1a1a1a; font-size: 7pt; }}
+  .sig-line {{ margin-top: 14px; text-align: right; }}
+  .sig-line-rule {{ border-top: 1px solid #000; width: 50%; margin-left: auto; margin-top: 30px; }}
+  .sig-line p {{ font-size: 8pt; margin-top: 3px; text-align: right; padding-right: 40px; }}
+  .footer {{ margin-top: 6px; padding-top: 4px; border-top: 1px solid #000; font-size: 6.5pt; color: #000; text-align: center; line-height: 1.2; }}
+  .print-bar {{ position: fixed; top: 0; left: 0; right: 0; background: #2c3e50; padding: 8px 16px; text-align: center; z-index: 1000; }}
+  .print-bar button {{ background: #e67e22; color: white; border: none; padding: 8px 24px; font-size: 13px; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 0 4px; }}
+  @media print {{ .print-bar {{ display: none !important; }} body {{ padding: 0; margin: 0; }} .page {{ padding: 8mm 12mm; margin: 0; }} @page {{ margin: 0 !important; }} }}
+</style>
+</head>
+<body>
+{print_bar}
+<div class="page" style="margin-top: {'0' if noprint else '40px'};">
+  <div class="header">
+    <div class="company-name">{esc(stamp_name)}</div>
+    <div class="company-info">{esc(stamp_address)}{(' | Tel: ' + esc(stamp_phone)) if stamp_phone else ''}{(' | WhatsApp: ' + esc(stamp_whatsapp)) if stamp_whatsapp else ''}{(' | ' + esc(company_email)) if company_email else ''}</div>
+  </div>
+  <div class="doc-title">
+    <h1>{esc(doc_type)}</h1>
+    <div class="doc-number">Nr. {esc(doc_number)}</div>
+  </div>
+  <table class="details-table">
+    <tr><td>Datum</td><td>{esc(date_str)}</td></tr>
+    <tr><td>Ontvanger</td><td>{esc(receiver_name)}</td></tr>
+    {extra_row}
+    {phone_row}
+    {method_row}
+    {processed_row}
+  </table>
+  {breakdown_html}
+  <table class="details-table">
+    <tr class="amount-row"><td>{esc(amount_label)}</td><td>SRD {amount:,.2f}</td></tr>
+  </table>
+  {desc_html}
+  <div class="stamp-section">
+    <div class="stamp-rect">
+      <svg width="30" height="28" viewBox="0 0 52 48" fill="none">
+        <polygon points="12,18 28,6 44,18" fill="#991b1b"/>
+        <rect x="14" y="18" width="28" height="20" fill="#991b1b"/>
+        <rect x="18" y="22" width="6" height="6" fill="white"/>
+        <rect x="28" y="22" width="6" height="6" fill="white"/>
+      </svg>
+      <div class="stamp-info">
+        <p class="stamp-name">{esc(stamp_name)}</p>
+        <p class="stamp-detail">{esc(stamp_address)}</p>
+        <p class="stamp-detail">Tel: {esc(stamp_phone)}</p>
+      </div>
+    </div>
+  </div>
+  {sig_html}
+  <div class="footer">Bedankt &mdash; {esc(stamp_name)}</div>
+</div>
+</body>
+</html>"""

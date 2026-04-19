@@ -1192,6 +1192,7 @@ async def create_freelancer_payment(data: FreelancerPaymentCreate, company: dict
         "employee_id": data.employee_id,
         "employee_name": name,
         "functie": functie,
+        "telefoon": (data.telefoon or "").strip(),
         "employee_type": "los",
         "amount": data.amount,
         "description": (data.description or "").strip() or "Uitbetaling",
@@ -1256,62 +1257,259 @@ async def delete_freelancer_payment(payment_id: str, company: dict = Depends(get
 
 
 @router.get("/admin/freelancer-payments/{payment_id}/receipt")
-async def get_freelancer_receipt(payment_id: str, company: dict = Depends(get_current_company)):
-    """Return HTML receipt for a freelancer payment (for printing)"""
+async def get_freelancer_receipt(payment_id: str, company: dict = Depends(get_current_company), noprint: Optional[str] = None):
+    """Return A4-styled HTML receipt for a freelancer payment (same style as main kwitantie)"""
     p = await db.kiosk_freelancer_payments.find_one({"payment_id": payment_id, "company_id": company["company_id"]}, {"_id": 0})
     if not p:
         raise HTTPException(status_code=404, detail="Betaling niet gevonden")
     stamp_name = company.get("stamp_company_name") or company.get("name", "")
     stamp_address = company.get("stamp_address", "")
     stamp_phone = company.get("stamp_phone", "")
+    stamp_whatsapp = company.get("stamp_whatsapp", "")
+    company_email = company.get("email", "")
     date_fmt = p["payment_date"].strftime("%d-%m-%Y") if isinstance(p.get("payment_date"), datetime) else str(p.get("payment_date", ""))
     method_label = {"cash": "Contant", "bank": "Bank overboeking"}.get(p.get("payment_method", "cash"), "Contant")
-    html = f"""<!DOCTYPE html><html lang='nl'><head><meta charset='UTF-8'>
-<title>Kwitantie {p['kwitantie_nummer']}</title>
-<style>
-@page {{ size: A5; margin: 0; }}
-body {{ font-family: 'Courier New', monospace; margin: 0; padding: 20px; color: #000; }}
-.receipt {{ max-width: 480px; margin: 0 auto; border: 2px solid #000; padding: 20px; }}
-.header {{ text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 12px; }}
-.header h1 {{ margin: 0; font-size: 18px; letter-spacing: 2px; }}
-.header .sub {{ font-size: 11px; color: #333; }}
-.title {{ text-align: center; font-size: 14px; font-weight: bold; margin: 10px 0; letter-spacing: 2px; background: #000; color: #fff; padding: 4px; }}
-.row {{ display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #888; font-size: 12px; }}
-.row span:first-child {{ color: #555; }}
-.row span:last-child {{ font-weight: bold; }}
-.amount-box {{ background: #f5f5f5; border: 2px solid #000; padding: 10px; margin: 12px 0; text-align: center; }}
-.amount-box .lbl {{ font-size: 10px; color: #666; }}
-.amount-box .val {{ font-size: 22px; font-weight: bold; }}
-.desc {{ margin: 10px 0; padding: 8px; background: #f9f9f9; border-left: 3px solid #000; font-size: 11px; }}
-.footer {{ text-align: center; font-size: 10px; color: #666; margin-top: 12px; border-top: 2px dashed #000; padding-top: 10px; }}
-.sig-line {{ margin-top: 20px; text-align: center; font-size: 10px; }}
-.sig-line .line {{ border-top: 1px solid #000; margin: 28px 20px 4px; }}
-</style></head><body>
-<div class='receipt'>
-  <div class='header'>
-    <h1>{stamp_name}</h1>
-    <div class='sub'>{stamp_address}</div>
-    <div class='sub'>{stamp_phone}</div>
-  </div>
-  <div class='title'>UITBETALINGS KWITANTIE</div>
-  <div class='row'><span>Kwitantie nr.</span><span>{p['kwitantie_nummer']}</span></div>
-  <div class='row'><span>Datum</span><span>{date_fmt}</span></div>
-  <div class='row'><span>Ontvanger</span><span>{p['employee_name']}</span></div>
-  {('<div class="row"><span>Functie</span><span>' + p.get('functie','') + '</span></div>') if p.get('functie') else ''}
-  <div class='row'><span>Betaalmethode</span><span>{method_label}</span></div>
-  <div class='row'><span>Verwerkt door</span><span>{p.get('processed_by','')}</span></div>
-  <div class='amount-box'>
-    <div class='lbl'>BEDRAG</div>
-    <div class='val'>SRD {p['amount']:,.2f}</div>
-  </div>
-  <div class='desc'><strong>Omschrijving:</strong><br>{p.get('description','')}</div>
-  <div class='sig-line'>
-    <div class='line'></div>
-    Handtekening ontvanger
-  </div>
-  <div class='footer'>Bedankt &mdash; {stamp_name}</div>
-</div>
-<script>window.onload = () => window.print();</script>
-</body></html>"""
+    processed_by = p.get("processed_by", "")
+    functie = p.get("functie", "")
+    telefoon = p.get("telefoon", "")
+
+    html = _build_a4_receipt_html(
+        doc_type="UITBETALINGSKWITANTIE",
+        doc_number=p["kwitantie_nummer"],
+        date_str=date_fmt,
+        receiver_name=p["employee_name"],
+        receiver_extra_label="Functie" if functie else None,
+        receiver_extra_value=functie if functie else None,
+        receiver_phone=telefoon,
+        method_label=method_label,
+        processed_by=processed_by,
+        description=p.get("description", ""),
+        amount=p["amount"],
+        stamp_name=stamp_name,
+        stamp_address=stamp_address,
+        stamp_phone=stamp_phone,
+        stamp_whatsapp=stamp_whatsapp,
+        company_email=company_email,
+        noprint=bool(noprint),
+        include_sig_line=True,
+    )
     from fastapi.responses import HTMLResponse
     return HTMLResponse(content=html)
+
+
+@router.post("/admin/freelancer-payments/{payment_id}/send-whatsapp")
+async def send_freelancer_receipt_whatsapp(payment_id: str, company: dict = Depends(get_current_company)):
+    """Send freelancer payment confirmation + receipt link via WhatsApp (Twilio)"""
+    company_id = company["company_id"]
+    p = await db.kiosk_freelancer_payments.find_one({"payment_id": payment_id, "company_id": company_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    phone = p.get("telefoon", "").strip()
+    if not phone:
+        raise HTTPException(status_code=400, detail="Geen telefoonnummer geregistreerd voor deze ontvanger")
+
+    comp_name = company.get("stamp_company_name") or company.get("name", "")
+    date_fmt = p["payment_date"].strftime("%d-%m-%Y") if isinstance(p.get("payment_date"), datetime) else str(p.get("payment_date", ""))
+    msg = (
+        f"Beste {p['employee_name']},\n\n"
+        f"U heeft een uitbetaling ontvangen:\n"
+        f"Bedrag: SRD {p['amount']:,.2f}\n"
+        f"Datum: {date_fmt}\n"
+        f"Kwitantie: {p['kwitantie_nummer']}\n"
+        f"Omschrijving: {p.get('description','')}\n\n"
+        f"Met vriendelijke groet,\n{comp_name}"
+    )
+    try:
+        await _send_message_auto(company_id, phone, msg, None, p["employee_name"], "freelancer_payment")
+        return {"message": "WhatsApp bericht verstuurd"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Versturen mislukt: {str(e)}")
+
+
+# ============ LOONSTROOK ============
+@router.post("/admin/loonstroken")
+async def create_loonstrook(data: LoonstrookCreate, company: dict = Depends(get_current_company)):
+    """Generate loonstrook (pay slip) for a regular employee"""
+    company_id = company["company_id"]
+    emp = await db.kiosk_employees.find_one({"employee_id": data.employee_id, "company_id": company_id})
+    if not emp:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+
+    bruto_totaal = data.bruto_loon + data.overuren_bedrag + data.bonus
+    totale_aftrek = data.belasting_aftrek + data.overige_aftrek
+    netto_loon = bruto_totaal - totale_aftrek
+    if netto_loon <= 0:
+        raise HTTPException(status_code=400, detail="Netto loon moet positief zijn")
+
+    now = datetime.now(timezone.utc)
+    payment_date = now
+    if data.payment_date:
+        try:
+            payment_date = datetime.fromisoformat(data.payment_date).replace(tzinfo=timezone.utc)
+        except Exception:
+            pass
+
+    year = payment_date.year
+    counter_key = f"loonstrook_{company_id}_{year}"
+    last = await db.kiosk_counters.find_one({"key": counter_key})
+    next_num = (last.get("value", 0) if last else 0) + 1
+    await db.kiosk_counters.update_one({"key": counter_key}, {"$set": {"value": next_num}}, upsert=True)
+    strook_nummer = f"LS{year}-{next_num:05d}"
+
+    loon_id = generate_uuid()
+    doc = {
+        "loonstrook_id": loon_id,
+        "company_id": company_id,
+        "employee_id": data.employee_id,
+        "employee_name": emp["name"],
+        "functie": emp.get("functie", ""),
+        "telefoon": emp.get("telefoon", ""),
+        "period_label": data.period_label,
+        "bruto_loon": data.bruto_loon,
+        "overuren_bedrag": data.overuren_bedrag,
+        "bonus": data.bonus,
+        "belasting_aftrek": data.belasting_aftrek,
+        "overige_aftrek": data.overige_aftrek,
+        "netto_loon": netto_loon,
+        "dagen_gewerkt": data.dagen_gewerkt,
+        "uren_gewerkt": data.uren_gewerkt,
+        "payment_method": data.payment_method,
+        "payment_date": payment_date,
+        "strook_nummer": strook_nummer,
+        "notes": data.notes,
+        "processed_by": data.processed_by or company.get("name", "Beheerder"),
+        "processed_by_role": data.processed_by_role or "beheerder",
+        "created_at": now
+    }
+    await db.kiosk_loonstroken.insert_one(doc)
+
+    # Kas boeking
+    try:
+        source_label = "Kas" if data.payment_method == "cash" else "Bank"
+        await db.kiosk_kas.insert_one({
+            "entry_id": generate_uuid(),
+            "company_id": company_id,
+            "entry_type": "expense",
+            "amount": netto_loon,
+            "description": f"Loonuitbetaling ({source_label}) - {emp['name']} ({data.period_label})",
+            "category": "loon",
+            "payment_method": data.payment_method,
+            "related_employee_name": emp["name"],
+            "reference_id": loon_id,
+            "kwitantie_nummer": strook_nummer,
+            "created_at": payment_date
+        })
+    except Exception:
+        pass
+
+    return {
+        "loonstrook_id": loon_id,
+        "strook_nummer": strook_nummer,
+        "employee_name": emp["name"],
+        "netto_loon": netto_loon,
+        "created_at": now.isoformat()
+    }
+
+
+@router.get("/admin/loonstroken")
+async def list_loonstroken(company: dict = Depends(get_current_company), employee_id: Optional[str] = None):
+    query = {"company_id": company["company_id"]}
+    if employee_id:
+        query["employee_id"] = employee_id
+    items = await db.kiosk_loonstroken.find(query, {"_id": 0}).sort("created_at", -1).to_list(2000)
+    return items
+
+
+@router.delete("/admin/loonstroken/{loonstrook_id}")
+async def delete_loonstrook(loonstrook_id: str, company: dict = Depends(get_current_company)):
+    result = await db.kiosk_loonstroken.delete_one({"loonstrook_id": loonstrook_id, "company_id": company["company_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Loonstrook niet gevonden")
+    await db.kiosk_kas.delete_many({"company_id": company["company_id"], "reference_id": loonstrook_id})
+    return {"message": "Loonstrook verwijderd"}
+
+
+@router.get("/admin/loonstroken/{loonstrook_id}/receipt")
+async def get_loonstrook_receipt(loonstrook_id: str, company: dict = Depends(get_current_company), noprint: Optional[str] = None):
+    """Return A4-styled Loonstrook HTML"""
+    p = await db.kiosk_loonstroken.find_one({"loonstrook_id": loonstrook_id, "company_id": company["company_id"]}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Loonstrook niet gevonden")
+    stamp_name = company.get("stamp_company_name") or company.get("name", "")
+    stamp_address = company.get("stamp_address", "")
+    stamp_phone = company.get("stamp_phone", "")
+    stamp_whatsapp = company.get("stamp_whatsapp", "")
+    company_email = company.get("email", "")
+    date_fmt = p["payment_date"].strftime("%d-%m-%Y") if isinstance(p.get("payment_date"), datetime) else str(p.get("payment_date", ""))
+    method_label = {"cash": "Contant", "bank": "Bank overboeking"}.get(p.get("payment_method", "cash"), "Bank")
+
+    breakdown = []
+    if p.get("dagen_gewerkt"):
+        breakdown.append(("Dagen gewerkt", str(p["dagen_gewerkt"])))
+    if p.get("uren_gewerkt"):
+        breakdown.append(("Uren gewerkt", f"{p['uren_gewerkt']:.1f}"))
+    breakdown.append(("Bruto loon", f"SRD {p['bruto_loon']:,.2f}"))
+    if p.get("overuren_bedrag", 0) > 0:
+        breakdown.append(("Overuren", f"SRD {p['overuren_bedrag']:,.2f}"))
+    if p.get("bonus", 0) > 0:
+        breakdown.append(("Bonus", f"SRD {p['bonus']:,.2f}"))
+    bruto_totaal = p['bruto_loon'] + p.get('overuren_bedrag', 0) + p.get('bonus', 0)
+    breakdown.append(("Bruto totaal", f"SRD {bruto_totaal:,.2f}"))
+    if p.get("belasting_aftrek", 0) > 0:
+        breakdown.append(("Belasting aftrek", f"- SRD {p['belasting_aftrek']:,.2f}"))
+    if p.get("overige_aftrek", 0) > 0:
+        breakdown.append(("Overige aftrek", f"- SRD {p['overige_aftrek']:,.2f}"))
+
+    html = _build_a4_receipt_html(
+        doc_type="LOONSTROOK",
+        doc_number=p["strook_nummer"],
+        date_str=date_fmt,
+        receiver_name=p["employee_name"],
+        receiver_extra_label="Functie" if p.get("functie") else None,
+        receiver_extra_value=p.get("functie") if p.get("functie") else None,
+        receiver_phone=p.get("telefoon"),
+        method_label=method_label,
+        processed_by=p.get("processed_by"),
+        description=p.get("notes", "") or f"Loonuitbetaling periode: {p['period_label']}",
+        amount=p["netto_loon"],
+        amount_label="NETTO LOON",
+        breakdown_rows=breakdown,
+        stamp_name=stamp_name,
+        stamp_address=stamp_address,
+        stamp_phone=stamp_phone,
+        stamp_whatsapp=stamp_whatsapp,
+        company_email=company_email,
+        noprint=bool(noprint),
+        include_sig_line=True,
+    )
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html)
+
+
+@router.post("/admin/loonstroken/{loonstrook_id}/send-whatsapp")
+async def send_loonstrook_whatsapp(loonstrook_id: str, company: dict = Depends(get_current_company)):
+    """Send loonstrook summary via WhatsApp"""
+    company_id = company["company_id"]
+    p = await db.kiosk_loonstroken.find_one({"loonstrook_id": loonstrook_id, "company_id": company_id}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Loonstrook niet gevonden")
+    phone = (p.get("telefoon", "") or "").strip()
+    if not phone:
+        raise HTTPException(status_code=400, detail="Geen telefoonnummer geregistreerd voor werknemer")
+
+    comp_name = company.get("stamp_company_name") or company.get("name", "")
+    date_fmt = p["payment_date"].strftime("%d-%m-%Y") if isinstance(p.get("payment_date"), datetime) else str(p.get("payment_date", ""))
+    msg = (
+        f"Beste {p['employee_name']},\n\n"
+        f"Uw loonstrook voor {p['period_label']} is beschikbaar:\n"
+        f"Netto loon: SRD {p['netto_loon']:,.2f}\n"
+        f"Datum: {date_fmt}\n"
+        f"Strook nr: {p['strook_nummer']}\n\n"
+        f"Met vriendelijke groet,\n{comp_name}"
+    )
+    try:
+        await _send_message_auto(company_id, phone, msg, None, p["employee_name"], "loonstrook")
+        return {"message": "WhatsApp bericht verstuurd"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Versturen mislukt: {str(e)}")
+

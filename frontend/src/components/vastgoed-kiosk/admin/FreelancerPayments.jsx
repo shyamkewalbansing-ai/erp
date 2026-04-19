@@ -1,11 +1,15 @@
 import { useState, useEffect, useCallback } from 'react';
-import { HandCoins, Receipt as ReceiptIcon, Trash2, Plus, Printer, Loader2, X } from 'lucide-react';
+import { HandCoins, Receipt as ReceiptIcon, Trash2, Plus, Printer, Loader2, X, MessageCircle, Send } from 'lucide-react';
 import { API, axios } from './utils';
 
 function FreelancerPayments({ token, formatSRD, employees, onChange }) {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [previewPayment, setPreviewPayment] = useState(null);
+  const [previewHtml, setPreviewHtml] = useState('');
+  const [previewLoading, setPreviewLoading] = useState(false);
+  const [waSending, setWaSending] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -28,14 +32,56 @@ function FreelancerPayments({ token, formatSRD, employees, onChange }) {
   };
 
   const openReceipt = (payment) => {
-    const url = `${API}/admin/freelancer-payments/${payment.payment_id}/receipt?_t=${Date.now()}`;
-    const win = window.open('', '_blank', 'width=550,height=700');
-    // Inject Authorization via fetch -> document.write
-    fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.text())
-      .then(html => {
-        if (win) { win.document.open(); win.document.write(html); win.document.close(); }
+    setPreviewPayment(payment);
+  };
+
+  const openPrintNewTab = (payment) => {
+    // Fetch authenticated HTML, open in new tab as srcDoc
+    axios.get(`${API}/admin/freelancer-payments/${payment.payment_id}/receipt`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => {
+        const win = window.open('', '_blank');
+        if (win) { win.document.open(); win.document.write(r.data); win.document.close(); }
       });
+  };
+
+  useEffect(() => {
+    if (!previewPayment) { setPreviewHtml(''); return; }
+    setPreviewLoading(true);
+    axios.get(`${API}/admin/freelancer-payments/${previewPayment.payment_id}/receipt?noprint=1`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => setPreviewHtml(r.data))
+      .catch(() => setPreviewHtml('<p style="text-align:center;padding:40px;font-family:sans-serif">Kon kwitantie niet laden</p>'))
+      .finally(() => setPreviewLoading(false));
+  }, [previewPayment, token]);
+
+  const handleSendWhatsApp = async () => {
+    if (!previewPayment) return;
+    if (!previewPayment.telefoon) {
+      // Use wa.me fallback if no phone
+      alert('Geen telefoonnummer geregistreerd. Voeg een telefoonnummer toe in de uitbetaling.');
+      return;
+    }
+    setWaSending(true);
+    try {
+      await axios.post(`${API}/admin/freelancer-payments/${previewPayment.payment_id}/send-whatsapp`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      alert('WhatsApp bericht verstuurd!');
+    } catch (err) {
+      alert('Versturen mislukt: ' + (err.response?.data?.detail || err.message));
+    }
+    setWaSending(false);
+  };
+
+  const handleShareWhatsAppLink = () => {
+    if (!previewPayment) return;
+    const phone = (previewPayment.telefoon || '').replace(/[^0-9]/g, '');
+    const msg = encodeURIComponent(
+      `Beste ${previewPayment.employee_name},\n\n` +
+      `U heeft een uitbetaling ontvangen:\n` +
+      `Bedrag: SRD ${Number(previewPayment.amount).toLocaleString('nl-NL', { minimumFractionDigits: 2 })}\n` +
+      `Kwitantie: ${previewPayment.kwitantie_nummer}\n` +
+      `Omschrijving: ${previewPayment.description || ''}`
+    );
+    const url = phone ? `https://wa.me/${phone}?text=${msg}` : `https://wa.me/?text=${msg}`;
+    window.open(url, '_blank');
   };
 
   const total = payments.reduce((s, p) => s + (p.amount || 0), 0);
@@ -90,7 +136,7 @@ function FreelancerPayments({ token, formatSRD, employees, onChange }) {
                   <tr key={p.payment_id} className="border-t border-slate-100 hover:bg-slate-50" data-testid={`fp-row-${p.payment_id}`}>
                     <td className="p-4 text-sm text-slate-600">{new Date(p.payment_date || p.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
                     <td className="p-4 text-sm font-mono text-orange-600">{p.kwitantie_nummer}</td>
-                    <td className="p-4 font-bold text-slate-900">{p.employee_name}{p.functie && <span className="text-xs text-slate-400 font-normal block">{p.functie}</span>}</td>
+                    <td className="p-4 font-bold text-slate-900">{p.employee_name}{p.functie && <span className="text-xs text-slate-400 font-normal block">{p.functie}</span>}{p.telefoon && <span className="text-[10px] text-green-600 font-normal block">{p.telefoon}</span>}</td>
                     <td className="p-4 text-sm text-slate-600 max-w-xs truncate">{p.description || '-'}</td>
                     <td className="p-4 text-sm">
                       <span className={`px-2 py-0.5 rounded text-xs font-semibold ${p.payment_method === 'bank' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>
@@ -156,6 +202,52 @@ function FreelancerPayments({ token, formatSRD, employees, onChange }) {
           }}
         />
       )}
+
+      {/* Preview Modal */}
+      {previewPayment && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={() => setPreviewPayment(null)}>
+          <div className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-4xl h-[100dvh] sm:h-[92vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-3 sm:p-4 border-b border-slate-100 flex-shrink-0">
+              <div className="flex items-center gap-2 min-w-0">
+                <ReceiptIcon className="w-5 h-5 text-orange-500 flex-shrink-0" />
+                <h3 className="font-bold text-slate-900 text-sm sm:text-base truncate">Kwitantie {previewPayment.kwitantie_nummer}</h3>
+              </div>
+              <button onClick={() => setPreviewPayment(null)} data-testid="fp-preview-close" className="w-9 h-9 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 flex-shrink-0">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 min-h-0 overflow-hidden bg-slate-100 relative">
+              {previewLoading ? (
+                <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" /> Laden...
+                </div>
+              ) : (
+                <iframe srcDoc={previewHtml} title="Kwitantie" className="w-full h-full border-0 bg-white" data-testid="fp-preview-iframe" />
+              )}
+            </div>
+            <div className="flex items-center gap-2 p-3 border-t border-slate-200 flex-shrink-0 bg-white flex-wrap" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
+              <button onClick={() => setPreviewPayment(null)} className="px-3 py-2.5 text-slate-600 hover:text-slate-900 border border-slate-200 rounded-xl text-sm font-medium">
+                <X className="w-4 h-4 inline mr-1" /> Sluiten
+              </button>
+              <button onClick={handleShareWhatsAppLink} data-testid="fp-wa-share-btn"
+                className="flex items-center gap-1.5 px-3 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-bold active:scale-95">
+                <MessageCircle className="w-4 h-4" /> WhatsApp (handmatig)
+              </button>
+              {previewPayment.telefoon && (
+                <button onClick={handleSendWhatsApp} disabled={waSending} data-testid="fp-wa-send-btn"
+                  className="flex items-center gap-1.5 px-3 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold disabled:opacity-50 active:scale-95">
+                  {waSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  Verstuur direct
+                </button>
+              )}
+              <button onClick={() => openPrintNewTab(previewPayment)} data-testid="fp-print-btn"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl text-sm font-bold active:scale-95">
+                <Printer className="w-4 h-4" /> Afdrukken / PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -163,6 +255,7 @@ function FreelancerPayments({ token, formatSRD, employees, onChange }) {
 function FreelancerPaymentModal({ token, employees, onClose, onCreated }) {
   const [employeeName, setEmployeeName] = useState('');
   const [functie, setFunctie] = useState('');
+  const [telefoon, setTelefoon] = useState('');
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [method, setMethod] = useState('cash');
@@ -177,6 +270,7 @@ function FreelancerPaymentModal({ token, employees, onClose, onCreated }) {
       const r = await axios.post(`${API}/admin/freelancer-payments`, {
         employee_name: employeeName.trim(),
         functie: functie.trim(),
+        telefoon: telefoon.trim(),
         amount: parseFloat(amount),
         description,
         payment_method: method,
@@ -217,6 +311,14 @@ function FreelancerPaymentModal({ token, employees, onClose, onCreated }) {
               data-testid="fp-functie-input"
               className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm"
               placeholder="bijv. Schilder, Loodgieter" />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Telefoon (voor WhatsApp kwitantie)</label>
+            <input type="tel" value={telefoon} onChange={e => setTelefoon(e.target.value)}
+              data-testid="fp-telefoon-input"
+              className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm"
+              placeholder="+597 8812345" />
           </div>
 
           <div>
