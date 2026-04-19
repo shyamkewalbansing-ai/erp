@@ -116,6 +116,7 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Appt</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Type</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Periode</th>
+                  <th className="text-left p-4 text-sm font-medium text-slate-500">Ontvangen door</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Bedrag</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Kwitantie</th>
                 </tr>
@@ -136,6 +137,16 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
                     <td className="p-4 text-sm text-slate-600">
                       {p.covered_months?.length > 0 ? p.covered_months.join(', ') : '-'}
                     </td>
+                    <td className="p-4 text-sm">
+                      {p.processed_by ? (
+                        <div className="flex flex-col">
+                          <span className="text-slate-700 font-medium">{p.processed_by}</span>
+                          {p.approved_by && p.approved_by !== p.processed_by && (
+                            <span className="text-[10px] text-slate-400">gk: {p.approved_by}</span>
+                          )}
+                        </div>
+                      ) : <span className="text-slate-300">—</span>}
+                    </td>
                     <td className="p-4 text-right font-bold text-slate-900">{formatSRD(p.amount)}</td>
                     <td className="p-4 text-right text-sm text-slate-400 font-mono">{p.kwitantie_nummer}</td>
                   </tr>
@@ -153,13 +164,21 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
                   </div>
                   <p className="font-bold text-slate-900 text-sm">{formatSRD(p.amount)}</p>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
                   <span className="px-2 py-0.5 bg-orange-50 text-orange-600 rounded text-[10px] font-semibold">
                     {{rent:'Huur', monthly_rent:'Huur', partial_rent:'Deelbetaling', service_costs:'Service', fines:'Boetes', fine:'Boetes', deposit:'Borg', internet:'Internet'}[p.payment_type] || p.payment_type}
                   </span>
                   {p.covered_months?.length > 0 && <span className="text-[10px] text-slate-500">{p.covered_months.join(', ')}</span>}
                   <span className="text-[10px] text-slate-400 font-mono">{p.kwitantie_nummer}</span>
                 </div>
+                {p.processed_by && (
+                  <p className="text-[11px] text-slate-500">
+                    Ontvangen door: <span className="text-slate-700 font-semibold">{p.processed_by}</span>
+                    {p.approved_by && p.approved_by !== p.processed_by && (
+                      <span className="text-slate-400"> · gk: {p.approved_by}</span>
+                    )}
+                  </p>
+                )}
               </div>
             ))}
           </div>
