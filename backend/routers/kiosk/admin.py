@@ -1028,7 +1028,7 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint
     font-family: 'Georgia', 'Times New Roman', serif;
     font-size: 9pt;
     line-height: 1.3;
-    color: #1a1a1a;
+    color: #000;
     background: #fff;
   }}
   .page {{
@@ -1039,20 +1039,20 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint
     page-break-inside: avoid;
   }}
   .header {{
-    border-bottom: 2px solid #2c3e50;
+    border-bottom: 2px solid #000;
     padding-bottom: 8px;
     margin-bottom: 10px;
   }}
   .company-name {{
     font-size: 13pt;
     font-weight: bold;
-    color: #2c3e50;
+    color: #000;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }}
   .company-info {{
     font-size: 7pt;
-    color: #7f8c8d;
+    color: #000;
     margin-top: 2px;
     line-height: 1.3;
   }}
@@ -1062,13 +1062,13 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint
   }}
   .receipt-title h1 {{
     font-size: 14pt;
-    color: #2c3e50;
+    color: #000;
     letter-spacing: 2px;
     text-transform: uppercase;
   }}
   .receipt-number {{
     font-size: 9pt;
-    color: #e67e22;
+    color: #000;
     font-weight: bold;
     font-family: 'Courier New', monospace;
     margin-top: 2px;
@@ -1080,11 +1080,12 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint
   }}
   .details-table td {{
     padding: 4px 8px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #000;
     font-size: 9pt;
+    color: #000;
   }}
   .details-table td:first-child {{
-    color: #7f8c8d;
+    color: #000;
     width: 35%;
     font-size: 8pt;
     text-transform: uppercase;
@@ -1092,20 +1093,21 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint
   }}
   .details-table td:last-child {{
     font-weight: 600;
-    color: #1a1a1a;
+    color: #000;
   }}
   .amount-row {{
-    background: #f8f9fa;
-    border-top: 2px solid #2c3e50 !important;
-    border-bottom: 2px solid #2c3e50 !important;
+    background: #fff;
+    border-top: 2px solid #000 !important;
+    border-bottom: 2px solid #000 !important;
   }}
   .amount-row td {{
     padding: 8px;
     font-size: 12pt !important;
     font-weight: bold !important;
+    color: #000 !important;
   }}
   .amount-row td:last-child {{
-    color: #27ae60;
+    color: #000 !important;
     text-align: right;
     font-size: 13pt !important;
   }}
@@ -1140,18 +1142,18 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint
     margin: 0 auto 2px;
   }}
   .approval-signature .sig-label {{
-    border-top: 1.5px solid #2c3e50;
+    border-top: 1.5px solid #000;
     padding-top: 3px;
     font-size: 7.5pt;
-    color: #2c3e50;
+    color: #000;
     font-weight: bold;
   }}
   .footer {{
     margin-top: 6px;
     padding-top: 4px;
-    border-top: 1px solid #ddd;
+    border-top: 1px solid #000;
     font-size: 6.5pt;
-    color: #aaa;
+    color: #000;
     text-align: center;
     line-height: 1.2;
   }}

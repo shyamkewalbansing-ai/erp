@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Trash2, Receipt, Search, Calendar, FileText, RefreshCw, CheckCircle, XCircle, Clock, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
@@ -7,6 +7,8 @@ import SignatureModal from './SignatureModal';
 
 function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD, token, company, tenants, onDeletePayment, onRefresh }) {
   const [selectedPayment, setSelectedPayment] = useState(null);
+  const [receiptHtml, setReceiptHtml] = useState('');
+  const [receiptLoading, setReceiptLoading] = useState(false);
   const [fixing, setFixing] = useState(false);
   const [approving, setApproving] = useState(null);
   const [signatureTarget, setSignatureTarget] = useState(null); // payment_id to approve
@@ -98,6 +100,16 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
   const handlePrintDirect = (payment) => {
     window.open(`${API}/admin/payments/${payment.payment_id}/receipt?token=${token}`, '_blank');
   };
+
+  // Fetch receipt HTML when preview modal opens
+  useEffect(() => {
+    if (!selectedPayment) { setReceiptHtml(''); return; }
+    setReceiptLoading(true);
+    axios.get(`${API}/admin/payments/${selectedPayment.payment_id}/receipt?token=${token}&noprint=1`)
+      .then(r => setReceiptHtml(r.data))
+      .catch(() => setReceiptHtml('<p style="text-align:center;padding:40px;font-family:sans-serif">Kon kwitantie niet laden</p>'))
+      .finally(() => setReceiptLoading(false));
+  }, [selectedPayment, token]);
 
   const PRINT_SERVER_URL = 'http://localhost:5555';
   const handlePrint = async () => {
@@ -336,13 +348,20 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
             </button>
           </div>
           {/* Receipt iframe */}
-          <div className="flex-1 min-h-0 overflow-hidden bg-slate-100">
-            <iframe
-              src={`${API}/admin/payments/${selectedPayment.payment_id}/receipt?token=${token}&noprint=1`}
-              title="Kwitantie"
-              className="w-full h-full border-0 bg-white"
-              data-testid="receipt-iframe"
-            />
+          <div className="flex-1 min-h-0 overflow-hidden bg-slate-100 relative">
+            {receiptLoading && (
+              <div className="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">
+                <RefreshCw className="w-5 h-5 animate-spin mr-2" /> Laden...
+              </div>
+            )}
+            {!receiptLoading && (
+              <iframe
+                srcDoc={receiptHtml}
+                title="Kwitantie"
+                className="w-full h-full border-0 bg-white"
+                data-testid="receipt-iframe"
+              />
+            )}
           </div>
           {/* Bottom actions */}
           <div className="flex items-center gap-2 p-3 border-t border-slate-100 flex-shrink-0">
