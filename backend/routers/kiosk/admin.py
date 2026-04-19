@@ -868,8 +868,8 @@ async def get_payment(payment_id: str, company: dict = Depends(get_current_compa
 
 
 @router.get("/admin/payments/{payment_id}/receipt")
-async def generate_receipt(payment_id: str, token: Optional[str] = None):
-    """Generate printable receipt/kwitantie HTML"""
+async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint: Optional[str] = None):
+    """Generate printable receipt/kwitantie HTML. Pass ?noprint=1 to disable auto-print (for iframe preview)."""
     if not token:
         raise HTTPException(status_code=401, detail="Token vereist")
     try:
@@ -1011,8 +1011,9 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     signature_html = ""
     if approval_signature:
         signature_html = f'''
-<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-25deg);opacity:0.12;pointer-events:none;z-index:0;">
-  <img src="{approval_signature}" style="width:220px;height:auto;" />
+<div class="approval-signature">
+  <div class="sig-label">Goedgekeurd door {approved_by or "Beheerder"}</div>
+  <img src="{approval_signature}" alt="Handtekening" />
 </div>'''
 
     html = f"""<!DOCTYPE html>
@@ -1109,8 +1110,12 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     font-size: 13pt !important;
   }}
   .stamp-section {{
-    text-align: center;
-    margin: 10px 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    gap: 12px;
+    margin: 14px 0 6px;
+    flex-wrap: wrap;
   }}
   .stamp-rect {{
     display: inline-flex;
@@ -1119,11 +1124,28 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
     border: 2px solid #991b1b;
     padding: 6px 12px;
     transform: rotate(-5deg);
-    opacity: 0.8;
+    opacity: 0.85;
   }}
   .stamp-info p {{ margin: 0; line-height: 1.3; }}
   .stamp-info .stamp-name {{ color: #991b1b; font-weight: bold; font-size: 8pt; }}
   .stamp-info .stamp-detail {{ color: #1a1a1a; font-size: 7pt; }}
+  .approval-signature {{
+    text-align: center;
+    min-width: 160px;
+  }}
+  .approval-signature img {{
+    max-width: 180px;
+    max-height: 60px;
+    display: block;
+    margin: 0 auto 2px;
+  }}
+  .approval-signature .sig-label {{
+    border-top: 1.5px solid #2c3e50;
+    padding-top: 3px;
+    font-size: 7.5pt;
+    color: #2c3e50;
+    font-weight: bold;
+  }}
   .footer {{
     margin-top: 6px;
     padding-top: 4px;
@@ -1162,14 +1184,9 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
 </style>
 </head>
 <body>
-<div class="print-bar">
-  <button onclick="window.print()">Afdrukken / Print</button>
-  <button onclick="window.close()">Sluiten</button>
-</div>
+{'' if noprint else '<div class="print-bar"><button onclick="window.print()">Afdrukken / Print</button><button onclick="window.close()">Sluiten</button></div>'}
 
-<div class="page" style="margin-top: 40px; position: relative;">
-
-{signature_html}
+<div class="page" style="{'margin-top: 0' if noprint else 'margin-top: 40px'}; position: relative;">
 
 <div class="header">
   <div class="company-name">{stamp_name}</div>
@@ -1217,6 +1234,7 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None):
       <p class="stamp-detail">Tel: {stamp_phone}</p>
     </div>
   </div>
+  {signature_html}
 </div>
 
 <div class="footer">

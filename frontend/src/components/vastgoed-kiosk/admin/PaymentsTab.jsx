@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash2, Receipt, Search, Calendar, FileText, RefreshCw, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Trash2, Receipt, Search, Calendar, FileText, RefreshCw, CheckCircle, XCircle, Clock, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import ReceiptTicket from '../ReceiptTicket';
@@ -93,6 +93,10 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
       toast.error(err.response?.data?.detail || 'Afwijzen mislukt');
     }
     setApproving(null);
+  };
+
+  const handlePrintDirect = (payment) => {
+    window.open(`${API}/admin/payments/${payment.payment_id}/receipt?token=${token}`, '_blank');
   };
 
   const PRINT_SERVER_URL = 'http://localhost:5555';
@@ -243,6 +247,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                       ) : (
                         <>
                           <button onClick={() => setSelectedPayment(p)} data-testid={`receipt-view-${p.payment_id}`} className="text-slate-400 hover:text-orange-500 p-1" title="Kwitantie bekijken"><FileText className="w-4 h-4" /></button>
+                          <button onClick={() => handlePrintDirect(p)} data-testid={`receipt-print-direct-${p.payment_id}`} className="text-slate-400 hover:text-blue-500 p-1" title="Afdrukken"><Printer className="w-4 h-4" /></button>
                           <button onClick={() => onDeletePayment(p.payment_id)} data-testid={`delete-payment-${p.payment_id}`} className="text-slate-400 hover:text-red-500 p-1" title="Verwijderen"><Trash2 className="w-4 h-4" /></button>
                         </>
                       )}
@@ -303,7 +308,8 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                     </>
                   ) : (
                     <>
-                      <button onClick={() => setSelectedPayment(p)} className="text-slate-400 hover:text-orange-500 p-1.5"><FileText className="w-4 h-4" /></button>
+                      <button onClick={() => setSelectedPayment(p)} className="text-slate-400 hover:text-orange-500 p-1.5" title="Kwitantie bekijken"><FileText className="w-4 h-4" /></button>
+                      <button onClick={() => handlePrintDirect(p)} className="text-slate-400 hover:text-blue-500 p-1.5" title="Afdrukken"><Printer className="w-4 h-4" /></button>
                       <button onClick={() => onDeletePayment(p.payment_id)} className="text-slate-400 hover:text-red-500 p-1.5"><Trash2 className="w-4 h-4" /></button>
                     </>
                   )}
@@ -315,20 +321,34 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
       </div>
     </div>
 
-    {/* Kwitantie Preview Modal - alleen bon */}
-    {selectedPayment && (() => {
-      const matchedTenant = (tenants || []).find(t => t.name === selectedPayment.tenant_name || t.tenant_code === selectedPayment.tenant_code) || null;
-      return (
-      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={() => setSelectedPayment(null)}>
-        <div className="bg-white rounded-2xl shadow-2xl max-w-[420px] w-full max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-          {/* Receipt - scrollable */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-4 flex justify-center">
-            <ReceiptTicket payment={selectedPayment} tenant={matchedTenant} preview={true} stampData={stampData} />
+    {/* Kwitantie Preview Modal - toont volledige HTML kwitantie zoals geprint */}
+    {selectedPayment && (
+      <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-2 sm:p-4" onClick={() => setSelectedPayment(null)}>
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[92vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+          {/* Header */}
+          <div className="flex items-center justify-between p-3 sm:p-4 border-b border-slate-100 flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <Receipt className="w-5 h-5 text-orange-500" />
+              <h3 className="font-bold text-slate-900">Kwitantie {selectedPayment.kwitantie_nummer}</h3>
+            </div>
+            <button onClick={() => setSelectedPayment(null)} className="w-9 h-9 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600">
+              <XCircle className="w-5 h-5" />
+            </button>
           </div>
-          {/* Bottom actions - always visible */}
+          {/* Receipt iframe */}
+          <div className="flex-1 min-h-0 overflow-hidden bg-slate-100">
+            <iframe
+              src={`${API}/admin/payments/${selectedPayment.payment_id}/receipt?token=${token}&noprint=1`}
+              title="Kwitantie"
+              className="w-full h-full border-0 bg-white"
+              data-testid="receipt-iframe"
+            />
+          </div>
+          {/* Bottom actions */}
           <div className="flex items-center gap-2 p-3 border-t border-slate-100 flex-shrink-0">
-            <button onClick={handlePrint} data-testid="receipt-print-btn" className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-medium hover:bg-orange-600">
-              <Receipt className="w-4 h-4" /> Afdrukken
+            <button onClick={() => handlePrintDirect(selectedPayment)} data-testid="receipt-print-btn"
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-bold hover:bg-orange-600">
+              <Printer className="w-4 h-4" /> Afdrukken
             </button>
             <button onClick={() => setSelectedPayment(null)} className="px-6 py-2.5 text-slate-500 hover:text-slate-700 border border-slate-200 rounded-xl text-sm font-medium">
               Sluiten
@@ -336,8 +356,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
           </div>
         </div>
       </div>
-      );
-    })()}
+    )}
 
     {/* Signature Modal for approval */}
     {signatureTarget && (
