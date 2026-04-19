@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, Keyboard, User, ScanFace } from 'lucide-react';
+import { Building2, User, ScanFace } from 'lucide-react';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
@@ -97,20 +97,7 @@ export default function KioskApartmentSelect({ onBack, onSelect, companyId, code
           )}
         </div>
         <span className="text-sm sm:text-base font-semibold text-white">{codeOnly ? 'Voer uw huurderscode in' : 'Kies uw appartement'}</span>
-        {!codeOnly && (
-          <div className="flex gap-1.5">
-            <button onClick={() => { setMode('grid'); setError(''); }} data-testid="mode-grid"
-              className={`flex items-center gap-1 rounded-lg transition text-xs sm:text-sm font-bold px-2.5 py-1.5 sm:px-4 sm:py-2 ${mode === 'grid' ? 'bg-white text-orange-600' : 'text-white bg-white/20 backdrop-blur-sm hover:bg-white/30'}`}>
-              <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>Appartement</span>
-            </button>
-            <button onClick={() => { setMode('code'); setError(''); }} data-testid="mode-code"
-              className={`flex items-center gap-1 rounded-lg transition text-xs sm:text-sm font-bold px-2.5 py-1.5 sm:px-4 sm:py-2 ${mode === 'code' ? 'bg-white text-orange-600' : 'text-white bg-white/20 backdrop-blur-sm hover:bg-white/30'}`}>
-              <Keyboard className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span>Code</span>
-            </button>
-          </div>
-        )}
+        {!codeOnly && <div className="w-16" />}
         {codeOnly && onSwitchToFace && (
           <button onClick={onSwitchToFace} data-testid="switch-to-face"
             className="flex items-center gap-1 rounded-lg transition text-xs sm:text-sm font-bold text-white bg-white/20 backdrop-blur-sm hover:bg-white/30 px-2.5 py-1.5 sm:px-4 sm:py-2">
