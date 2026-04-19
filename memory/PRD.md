@@ -1,5 +1,30 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 24 (19 april 2026) — Web Push Notifications
+
+### Geïmplementeerd:
+- **Web Push (VAPID)** voor PWA op desktop + mobiel, werkt ook als app gesloten is
+- VAPID keys gegenereerd en in `backend/.env`: `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`
+- Dependencies: `pywebpush==2.3.0`, `py-vapid==1.9.4`, `http-ece==1.2.1`
+- **Backend** (`/app/backend/routers/kiosk/push.py`):
+  - `GET /api/kiosk/public/push/vapid-public-key`
+  - `POST /api/kiosk/admin/push/subscribe`
+  - `POST /api/kiosk/admin/push/unsubscribe`
+  - `GET /api/kiosk/admin/push/subscriptions`
+  - `PATCH /api/kiosk/admin/push/subscriptions/{id}` (toggle enabled)
+  - `DELETE /api/kiosk/admin/push/subscriptions/{id}`
+  - `POST /api/kiosk/admin/push/test`
+  - Helper `send_push_to_company()` met auto-cleanup van verlopen (410/404) subscriptions
+- **Trigger points** (vuur push naar alle staff devices):
+  - `public.py` Kiosk payment endpoint: pending → "Kwitantie wacht op goedkeuring"; auto-approved → "Nieuwe Kiosk betaling"
+  - `admin.py` approve endpoint: "Kwitantie goedgekeurd"
+  - `admin_operations.py` apply-fines: "Achterstallige huur - Boetes toegepast"
+- **Frontend**:
+  - Service worker push + notificationclick event handlers in `/app/frontend/public/service-worker.js`
+  - Client helper `pushClient.js` (subscribe/unsubscribe/list/toggle/test)
+  - `PushNotificationsSettings.jsx` component in nieuwe "Push" sub-tab onder Instellingen
+  - Per-device toggle switches + test-knop + status indicator
+
 ## Sprint 23 (19 april 2026)
 
 ### Geïmplementeerd:

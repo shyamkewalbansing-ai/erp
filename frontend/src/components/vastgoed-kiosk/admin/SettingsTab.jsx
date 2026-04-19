@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { API, axios } from './utils';
+import PushNotificationsSettings from './PushNotificationsSettings';
 
 function SettingsTab({ company, token, onRefresh, tenants }) {
   const [settingsSubTab, setSettingsSubTab] = useState('general');
@@ -256,6 +257,13 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
           <Bell className="w-4 h-4" /> <span className="hidden sm:inline">Notificaties</span><span className="sm:hidden">Notif.</span>
         </button>
         <button
+          onClick={() => setSettingsSubTab('push')}
+          data-testid="settings-subtab-push"
+          className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap flex-shrink-0 ${settingsSubTab === 'push' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <Bell className="w-4 h-4" /> Push
+        </button>
+        <button
           onClick={() => setSettingsSubTab('domain')}
           data-testid="settings-subtab-domain"
           className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap flex-shrink-0 ${settingsSubTab === 'domain' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
@@ -266,6 +274,8 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
 
       {settingsSubTab === 'notifications' ? (
         <MessagesTab token={token} />
+      ) : settingsSubTab === 'push' ? (
+        <PushNotificationsSettings token={token} />
       ) : settingsSubTab === 'domain' ? (
         <DomainSettings company={company} token={token} onRefresh={onRefresh} />
       ) : (

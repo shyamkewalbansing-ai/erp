@@ -369,6 +369,23 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
 
     await db.kiosk_payments.insert_one(payment)
 
+    # Send Web Push to all staff devices
+    try:
+        from .push import send_push_to_company
+        type_labels_push = {"rent": "Huur", "partial_rent": "Huur (deel)", "service_costs": "Servicekosten", "fines": "Boete", "deposit": "Borg", "internet": "Internet"}
+        type_lbl = type_labels_push.get(data.payment_type, data.payment_type)
+        if auto_approved:
+            push_title = "Nieuwe Kiosk betaling"
+            push_body = f"{tenant['name']} • SRD {data.amount:,.2f} ({type_lbl}) • {kwitantie_nummer}"
+            push_tag = f"payment-{payment_id}"
+        else:
+            push_title = "Kwitantie wacht op goedkeuring"
+            push_body = f"{tenant['name']} • SRD {data.amount:,.2f} ({type_lbl}) • {kwitantie_nummer}"
+            push_tag = f"approval-{payment_id}"
+        asyncio.create_task(send_push_to_company(company_id, push_title, push_body, url="/vastgoed", tag=push_tag))
+    except Exception:
+        pass
+
     # Send WhatsApp only if auto-approved
     if auto_approved:
         try:

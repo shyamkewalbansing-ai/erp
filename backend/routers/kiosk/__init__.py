@@ -15,6 +15,7 @@ from . import messaging
 from . import superadmin
 from . import faceid
 from . import scheduler
+from . import push
 
 # Re-export for server.py
 from .scheduler import _kiosk_daily_scheduler

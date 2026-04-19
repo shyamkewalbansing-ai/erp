@@ -60,11 +60,33 @@ async def apply_fines(company: dict = Depends(get_current_company)):
         except Exception:
             pass  # Notificatie mag hoofdflow niet breken
     
+    # Single summary push to staff
+    try:
+        await _push_fine_summary(company_id, updated_count, fine_amount)
+    except Exception:
+        pass
+
     return {
         "message": f"Boetes toegepast op {updated_count} huurders",
         "amount_per_tenant": fine_amount,
         "tenants_affected": updated_count
     }
+
+
+async def _push_fine_summary(company_id: str, updated_count: int, fine_amount: float):
+    if updated_count <= 0:
+        return
+    try:
+        from .push import send_push_to_company
+        await send_push_to_company(
+            company_id,
+            title="Achterstallige huur - Boetes toegepast",
+            body=f"{updated_count} huurder(s) • SRD {fine_amount:,.2f} per huurder",
+            url="/vastgoed",
+            tag="fines-applied",
+        )
+    except Exception:
+        pass
 
 
 @router.post("/admin/tenants/{tenant_id}/advance-month")

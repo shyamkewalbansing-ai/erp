@@ -1557,6 +1557,19 @@ async def approve_payment(payment_id: str, data: ApprovePaymentData = None, comp
         tenant_phone = tenant.get("phone") or tenant.get("telefoon", "")
         await _send_message_auto(company_id, tenant_phone, wa_msg, payment["tenant_id"], tenant["name"], "payment_confirmation")
 
+    # Web Push to staff devices
+    try:
+        from .push import send_push_to_company
+        asyncio.create_task(send_push_to_company(
+            company_id,
+            title="Kwitantie goedgekeurd",
+            body=f"{tenant['name']} • SRD {amount:,.2f} • {payment['kwitantie_nummer']}",
+            url="/vastgoed",
+            tag=f"approved-{payment_id}",
+        ))
+    except Exception:
+        pass
+
     return {"message": "Betaling goedgekeurd", "status": "approved"}
 
 

@@ -287,3 +287,58 @@ async function cacheIndexNow() {
 }
 
 console.log('[SW] Service Worker loaded - Boekhouding Offline v3');
+
+// ============== WEB PUSH NOTIFICATIONS ==============
+self.addEventListener('push', (event) => {
+  let data = { title: 'Notificatie', body: '', url: '/vastgoed', tag: 'kiosk' };
+  try {
+    if (event.data) {
+      const parsed = event.data.json();
+      data = { ...data, ...parsed };
+    }
+  } catch (e) {
+    try { data.body = event.data ? event.data.text() : ''; } catch (_) {}
+  }
+
+  const options = {
+    body: data.body,
+    icon: '/kiosk-icons/icon-192.png',
+    badge: '/kiosk-icons/icon-192.png',
+    tag: data.tag,
+    renotify: true,
+    requireInteraction: false,
+    vibrate: [200, 100, 200],
+    data: { url: data.url || '/vastgoed' },
+    silent: false,
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Notificatie', options)
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/vastgoed';
+  event.waitUntil((async () => {
+    const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    // Try to focus an existing client on the target URL
+    for (const client of allClients) {
+      try {
+        const u = new URL(client.url);
+        if (u.pathname.startsWith(targetUrl.split('?')[0]) && 'focus' in client) {
+          return client.focus();
+        }
+      } catch (_) {}
+    }
+    // Or focus any open client and navigate
+    if (allClients.length > 0 && 'navigate' in allClients[0]) {
+      try { await allClients[0].navigate(targetUrl); } catch (_) {}
+      return allClients[0].focus();
+    }
+    // Or open a new window
+    if (self.clients.openWindow) {
+      return self.clients.openWindow(targetUrl);
+    }
+  })());
+});
