@@ -167,7 +167,8 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
   const remainingService = payment.remaining_service ?? 0;
   const remainingFines = payment.remaining_fines ?? 0;
   const totalRemaining = remainingRent + remainingService + remainingFines;
-  const allPaid = totalRemaining <= 0;
+  const isPending = payment.status === 'pending';
+  const allPaid = !isPending && totalRemaining <= 0;
 
   return (
     <div className="h-full bg-orange-500 flex flex-col overflow-hidden" style={{ padding: '1.5vh 1.5vw 0' }}
@@ -260,7 +261,7 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
               <h2 className="font-black text-emerald-500 tracking-tight" style={{
                 fontSize: 'clamp(22px, 3.5vh, 38px)', marginBottom: '0.3vh',
                 animation: 'fadeUp 0.4s ease-out 0.35s forwards', opacity: 0
-              }}>{allPaid ? 'Alles betaald!' : 'Betaling geslaagd!'}</h2>
+              }}>{isPending ? 'Betaling ontvangen (wacht op goedkeuring)' : (allPaid ? 'Alles betaald!' : 'Betaling geslaagd!')}</h2>
 
               <p className="text-slate-400 font-medium" style={{
                 fontSize: 'clamp(12px, 1.5vh, 16px)', marginBottom: 'clamp(12px, 2vh, 24px)',

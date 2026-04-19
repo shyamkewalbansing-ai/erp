@@ -1358,6 +1358,10 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
         "tenant_name": tenant["name"],
         "apartment_number": tenant.get("apartment_number", ""),
         "status": "approved",
+        "remaining_rent": payment.get("remaining_rent", 0),
+        "remaining_service": payment.get("remaining_service", 0),
+        "remaining_fines": payment.get("remaining_fines", 0),
+        "remaining_internet": payment.get("remaining_internet", 0),
         "created_at": now.isoformat(),
         "covered_months": covered_months
     }

@@ -394,6 +394,10 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
         "rent_month": data.rent_month,
         "covered_months": covered_months,
         "status": payment["status"],
+        "remaining_rent": payment.get("remaining_rent", tenant.get("outstanding_rent", 0)),
+        "remaining_service": payment.get("remaining_service", tenant.get("service_costs", 0)),
+        "remaining_fines": payment.get("remaining_fines", tenant.get("fines", 0)),
+        "remaining_internet": payment.get("remaining_internet", tenant.get("internet_outstanding", 0)),
         "created_at": now.isoformat()
     }
 
