@@ -70,6 +70,7 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete
             <tr>
               <th className="w-10 p-4"></th>
               <th className="text-left p-4 text-sm font-medium text-slate-500">Nummer</th>
+              <th className="text-left p-4 text-sm font-medium text-slate-500">Locatie</th>
               <th className="text-left p-4 text-sm font-medium text-slate-500">Omschrijving</th>
               <th className="text-left p-4 text-sm font-medium text-slate-500">Huurder</th>
               <th className="text-left p-4 text-sm font-medium text-slate-500">Huur</th>
@@ -98,6 +99,7 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete
                     <GripVertical className="w-4 h-4 mx-auto" />
                   </td>
                   <td className="p-4 font-bold text-slate-900">{apt.number}</td>
+                  <td className="p-4 text-slate-500">{apt.location_name || <span className="text-slate-300">—</span>}</td>
                   <td className="p-4 text-slate-500">{apt.description || '-'}</td>
                   <td className="p-4">{tenant?.name || <span className="text-slate-400">-</span>}</td>
                   <td className="p-4">{formatSRD(apt.monthly_rent)}</td>
@@ -141,6 +143,7 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete
                     {isOccupied ? 'Bezet' : 'Vrij'}
                   </span>
                 </div>
+                {apt.location_name && <p className="text-[11px] text-violet-500 font-semibold truncate">{apt.location_name}</p>}
                 {apt.description && <p className="text-[11px] text-slate-400 truncate">{apt.description}</p>}
                 <p className="text-sm font-bold text-orange-600">{formatSRD(apt.monthly_rent)}</p>
               </div>

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Building2, Users, Home, ArrowLeft, Loader2, Settings, ExternalLink,
   Copy, Check, Receipt, Zap, LogIn, Landmark, Briefcase, Wallet, Wifi,
-  AlertTriangle
+  AlertTriangle, MapPin
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -11,6 +11,7 @@ import axios from 'axios';
 import DashboardTab from './admin/DashboardTab';
 import TenantsTab from './admin/TenantsTab';
 import ApartmentsTab from './admin/ApartmentsTab';
+import LocationsTab from './admin/LocationsTab';
 import PaymentsTab from './admin/PaymentsTab';
 import SettingsTab from './admin/SettingsTab';
 import KasTab from './admin/KasTab';
@@ -146,6 +147,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   const ALL_TABS = [
     { id: 'dashboard', label: 'Home', icon: Building2 },
     { id: 'tenants', label: 'Huurders', icon: Users },
+    { id: 'locations', label: 'Locaties', icon: MapPin },
     { id: 'apartments', label: 'Appt.', icon: Home },
     { id: 'payments', label: 'Kwitanties', icon: Receipt },
     { id: 'kas', label: 'Bank/Kas', icon: Landmark },
@@ -156,7 +158,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     { id: 'settings', label: 'Instellingen', icon: Settings },
   ];
   const ROLE_TABS = {
-    beheerder: ['dashboard', 'tenants', 'apartments', 'payments', 'kas', 'loans', 'employees', 'power', 'internet', 'settings'],
+    beheerder: ['dashboard', 'tenants', 'locations', 'apartments', 'payments', 'kas', 'loans', 'employees', 'power', 'internet', 'settings'],
     boekhouder: ['dashboard', 'tenants', 'payments', 'kas'],
     kiosk_medewerker: [], // No admin dashboard access - only kiosk
   };
@@ -287,6 +289,14 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
             onAddRent={(t) => { setSelectedTenant(t); setShowAddRentModal(true); }}
             onRefresh={loadData}
             token={token}
+          />
+        )}
+
+        {activeTab === 'locations' && (
+          <LocationsTab
+            token={token}
+            apartments={apartments}
+            onRefresh={loadData}
           />
         )}
 

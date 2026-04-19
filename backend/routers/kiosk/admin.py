@@ -205,6 +205,8 @@ async def list_apartments(company: dict = Depends(get_current_company)):
         "monthly_rent": apt.get("monthly_rent", 0),
         "status": apt.get("status", "available"),
         "sort_order": apt.get("sort_order", 999),
+        "location_id": apt.get("location_id"),
+        "location_name": apt.get("location_name"),
         "created_at": apt.get("created_at")
     } for apt in apartments]
 
@@ -230,7 +232,12 @@ async def create_apartment(data: ApartmentCreate, company: dict = Depends(get_cu
     """Create a new apartment"""
     apartment_id = generate_uuid()
     now = datetime.now(timezone.utc)
-    
+
+    location_name = None
+    if data.location_id:
+        loc = await db.kiosk_locations.find_one({"location_id": data.location_id, "company_id": company["company_id"]})
+        location_name = loc["name"] if loc else None
+
     apartment = {
         "apartment_id": apartment_id,
         "company_id": company["company_id"],
@@ -238,6 +245,8 @@ async def create_apartment(data: ApartmentCreate, company: dict = Depends(get_cu
         "description": data.description,
         "monthly_rent": data.monthly_rent,
         "status": "available",
+        "location_id": data.location_id,
+        "location_name": location_name,
         "created_at": now,
         "updated_at": now
     }
@@ -256,6 +265,13 @@ async def update_apartment(apartment_id: str, data: ApartmentUpdate, company: di
         raise HTTPException(status_code=404, detail="Appartement niet gevonden")
     
     update_data = {k: v for k, v in data.dict().items() if v is not None}
+    # Resolve location_name when location_id changes
+    if "location_id" in update_data:
+        if update_data["location_id"]:
+            loc = await db.kiosk_locations.find_one({"location_id": update_data["location_id"], "company_id": company["company_id"]})
+            update_data["location_name"] = loc["name"] if loc else None
+        else:
+            update_data["location_name"] = None
     update_data["updated_at"] = datetime.now(timezone.utc)
     
     await db.kiosk_apartments.update_one(
@@ -304,6 +320,67 @@ async def delete_apartment(apartment_id: str, company: dict = Depends(get_curren
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Appartement niet gevonden")
     return {"message": "Appartement verwijderd"}
+
+# ============ LOCATIONS CRUD ============
+@router.get("/admin/locations")
+async def list_locations(company: dict = Depends(get_current_company)):
+    """List all locations"""
+    locations = await db.kiosk_locations.find(
+        {"company_id": company["company_id"]},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(500)
+    return locations
+
+@router.post("/admin/locations")
+async def create_location(data: LocationCreate, company: dict = Depends(get_current_company)):
+    """Create a new location"""
+    now = datetime.now(timezone.utc)
+    location = {
+        "location_id": generate_uuid(),
+        "company_id": company["company_id"],
+        "name": data.name.strip(),
+        "address": (data.address or "").strip(),
+        "created_at": now,
+        "updated_at": now
+    }
+    await db.kiosk_locations.insert_one(location)
+    return {"location_id": location["location_id"], "message": "Locatie aangemaakt"}
+
+@router.put("/admin/locations/{location_id}")
+async def update_location(location_id: str, data: LocationUpdate, company: dict = Depends(get_current_company)):
+    """Update a location"""
+    loc = await db.kiosk_locations.find_one({"location_id": location_id, "company_id": company["company_id"]})
+    if not loc:
+        raise HTTPException(status_code=404, detail="Locatie niet gevonden")
+    update_data = {k: v for k, v in data.dict().items() if v is not None}
+    if "name" in update_data:
+        update_data["name"] = update_data["name"].strip()
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    await db.kiosk_locations.update_one(
+        {"location_id": location_id},
+        {"$set": update_data}
+    )
+    # Propagate name change to all apartments linked to this location
+    if "name" in update_data:
+        await db.kiosk_apartments.update_many(
+            {"company_id": company["company_id"], "location_id": location_id},
+            {"$set": {"location_name": update_data["name"]}}
+        )
+    return {"message": "Locatie bijgewerkt"}
+
+@router.delete("/admin/locations/{location_id}")
+async def delete_location(location_id: str, company: dict = Depends(get_current_company)):
+    """Delete a location. Apartments linked to this location are unlinked (not deleted)."""
+    result = await db.kiosk_locations.delete_one({"location_id": location_id, "company_id": company["company_id"]})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Locatie niet gevonden")
+    # Unlink apartments
+    await db.kiosk_apartments.update_many(
+        {"company_id": company["company_id"], "location_id": location_id},
+        {"$set": {"location_id": None, "location_name": None}}
+    )
+    return {"message": "Locatie verwijderd"}
+
 
 # Tenants CRUD
 @router.get("/admin/tenants")

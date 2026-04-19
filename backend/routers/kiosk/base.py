@@ -39,6 +39,7 @@ __all__ = [
     # Models
     "CompanyRegister", "CompanyLogin", "CompanyUpdate",
     "KioskPinVerify", "ApartmentCreate", "ApartmentUpdate",
+    "LocationCreate", "LocationUpdate",
     "TenantCreate", "TenantUpdate", "PaymentCreate",
     "CashEntryCreate", "EmployeeCreate", "EmployeeUpdate",
     "LeaseCreate", "LeaseUpdate",
@@ -434,12 +435,22 @@ class ApartmentCreate(BaseModel):
     number: str
     description: Optional[str] = None
     monthly_rent: float = 0
+    location_id: Optional[str] = None
 
 class ApartmentUpdate(BaseModel):
     number: Optional[str] = None
     description: Optional[str] = None
     monthly_rent: Optional[float] = None
     status: Optional[str] = None
+    location_id: Optional[str] = None
+
+class LocationCreate(BaseModel):
+    name: str
+    address: Optional[str] = None
+
+class LocationUpdate(BaseModel):
+    name: Optional[str] = None
+    address: Optional[str] = None
 
 class TenantCreate(BaseModel):
     name: str

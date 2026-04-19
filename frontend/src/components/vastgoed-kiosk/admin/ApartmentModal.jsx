@@ -1,25 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { API, axios } from './utils';
 
 function ApartmentModal({ apartment, onClose, onSave, token }) {
   const [number, setNumber] = useState(apartment?.number || '');
   const [description, setDescription] = useState(apartment?.description || '');
   const [monthlyRent, setMonthlyRent] = useState(apartment?.monthly_rent || 0);
+  const [locationId, setLocationId] = useState(apartment?.location_id || '');
+  const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    axios.get(`${API}/admin/locations`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => setLocations(r.data || []))
+      .catch(() => setLocations([]));
+  }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const data = { number, description, monthly_rent: parseFloat(monthlyRent) };
+      const data = { number, description, monthly_rent: parseFloat(monthlyRent), location_id: locationId || null };
       if (apartment) {
         await axios.put(`${API}/admin/apartments/${apartment.apartment_id}`, data, { headers });
       } else {
         await axios.post(`${API}/admin/apartments`, data, { headers });
       }
       onSave();
-    } catch (err) {
+    } catch {
       alert('Opslaan mislukt');
     } finally {
       setLoading(false);
@@ -34,7 +42,22 @@ function ApartmentModal({ apartment, onClose, onSave, token }) {
           <div>
             <label className="block text-sm font-medium mb-1">Nummer *</label>
             <input type="text" value={number} onChange={(e) => setNumber(e.target.value)} required
+              data-testid="apt-number-input"
               className="w-full px-4 py-3 border rounded-xl" placeholder="A1" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Locatie</label>
+            <select value={locationId} onChange={(e) => setLocationId(e.target.value)}
+              data-testid="apt-location-select"
+              className="w-full px-4 py-3 border rounded-xl bg-white">
+              <option value="">— Geen locatie —</option>
+              {locations.map(loc => (
+                <option key={loc.location_id} value={loc.location_id}>{loc.name}</option>
+              ))}
+            </select>
+            {locations.length === 0 && (
+              <p className="text-xs text-slate-400 mt-1">Maak eerst een locatie aan onder het &quot;Locaties&quot; tabblad.</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Omschrijving</label>
@@ -48,7 +71,8 @@ function ApartmentModal({ apartment, onClose, onSave, token }) {
           </div>
           <div className="flex gap-3">
             <button type="button" onClick={onClose} className="flex-1 py-3 border rounded-xl">Annuleren</button>
-            <button type="submit" disabled={loading} className="flex-1 py-3 bg-orange-500 text-white rounded-xl disabled:opacity-50">
+            <button type="submit" disabled={loading} data-testid="apt-submit-btn"
+              className="flex-1 py-3 bg-orange-500 text-white rounded-xl disabled:opacity-50">
               {loading ? 'Opslaan...' : 'Opslaan'}
             </button>
           </div>
@@ -57,7 +81,5 @@ function ApartmentModal({ apartment, onClose, onSave, token }) {
     </div>
   );
 }
-
-
 
 export default ApartmentModal;

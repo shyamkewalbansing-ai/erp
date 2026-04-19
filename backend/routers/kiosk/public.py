@@ -129,8 +129,22 @@ async def get_apartments_public(company_id: str):
         "apartment_id": apt["apartment_id"],
         "number": apt["number"],
         "description": apt.get("description", ""),
-        "status": apt.get("status", "available")
+        "status": apt.get("status", "available"),
+        "location_id": apt.get("location_id"),
+        "location_name": apt.get("location_name")
     } for apt in apartments]
+
+@router.get("/public/{company_id}/locations")
+async def get_locations_public(company_id: str):
+    """Get all locations for a company (public for kiosk)"""
+    company = await db.kiosk_companies.find_one({"company_id": company_id})
+    if not company:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    locations = await db.kiosk_locations.find(
+        {"company_id": company_id},
+        {"_id": 0}
+    ).sort("created_at", 1).to_list(500)
+    return locations
 
 @router.get("/public/{company_id}/tenants")
 async def get_tenants_public(company_id: str):
