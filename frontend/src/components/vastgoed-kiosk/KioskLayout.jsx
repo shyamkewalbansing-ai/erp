@@ -121,7 +121,9 @@ export default function KioskLayout() {
         
         if (alreadyVerified) {
           setPinVerified(true);
-          setStep(screen === 'dashboard' ? 'admin' : 'select');
+          // When superadmin impersonates, always jump directly to admin dashboard
+          const isImpersonating = sessionStorage.getItem('sa_impersonating') === '1';
+          setStep(isImpersonating || screen === 'dashboard' ? 'admin' : 'select');
           return;
         }
         

@@ -3,10 +3,11 @@
 ## Sprint 25 (19 april 2026) — Superadmin: Impersonate + Delete
 
 ### Geïmplementeerd:
-- **Inloggen als bedrijf** knop (indigo LogIn icoon) per bedrijf in Superadmin dashboard — genereert een company token, slaat op in localStorage, navigeert direct naar `/vastgoed/{company_id}` met PIN al geverifieerd
+- **Inloggen als bedrijf** knop (indigo LogIn icoon) per bedrijf in Superadmin dashboard — genereert een company token, slaat op in localStorage, navigeert direct naar het admin dashboard van dat bedrijf (skipt kiosk/select stap)
+- **Impersonatie Banner** (oranje) bovenin admin dashboard: "🛡️ U bent ingelogd als [Bedrijf] via Superadmin — ← Terug naar Superadmin" — klikbaar om netjes terug te keren (wist company token + flags)
 - **Verwijderen** knop (rood Trash2 icoon) per bedrijf met dubbele bevestiging (gebruiker moet bedrijfsnaam exact overtypen) — cascade verwijdert across 19 gerelateerde collections
 - Backend endpoints: `POST /superadmin/companies/{id}/impersonate`, `DELETE /superadmin/companies/{id}`
-- Gewijzigd: `superadmin.py`, `SuperAdminDashboard.jsx`
+- Gewijzigd: `superadmin.py`, `SuperAdminDashboard.jsx`, `KioskLayout.jsx` (skip naar admin bij impersonation), `KioskAdminDashboard.jsx` (banner component)
 
 ## Sprint 24 (19 april 2026) — Web Push Notifications
 

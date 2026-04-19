@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Building2, Users, Home, ArrowLeft, Loader2, Settings, ExternalLink,
   Copy, Check, Receipt, Zap, LogIn, Landmark, Briefcase, Wallet, Wifi,
-  AlertTriangle, MapPin
+  AlertTriangle, MapPin, Shield
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -206,6 +206,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
 
   return (
     <div className="fixed inset-0 flex flex-col bg-slate-100 z-50" style={{ overflow: 'hidden' }}>
+      <ImpersonationBanner />
       {/* Header - compact on mobile */}
       <header className="bg-white border-b border-slate-200 py-2 sm:py-4 px-3 sm:px-4 lg:px-8 shadow-sm flex-shrink-0 z-20">
         <div className="w-full flex items-center justify-between">
@@ -463,5 +464,42 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
         </div>
       )}
     </div>
+  );
+}
+
+function ImpersonationBanner() {
+  const navigate = useNavigate();
+  const isImpersonating = typeof window !== 'undefined' && sessionStorage.getItem('sa_impersonating') === '1';
+  if (!isImpersonating) return null;
+  const companyName = sessionStorage.getItem('sa_impersonating_company') || 'dit bedrijf';
+
+  const handleReturn = () => {
+    // Clean up impersonation state and company token so the superadmin can
+    // return to the superadmin dashboard without residue.
+    try {
+      localStorage.removeItem('kiosk_token');
+      const cid = sessionStorage.getItem('sa_impersonating_company_id');
+      if (cid) sessionStorage.removeItem(`kiosk_pin_verified_${cid}`);
+      sessionStorage.removeItem('sa_impersonating');
+      sessionStorage.removeItem('sa_impersonating_company');
+      sessionStorage.removeItem('sa_impersonating_company_id');
+    } catch (e) { /* noop */ }
+    navigate('/vastgoed/superadmin');
+  };
+
+  return (
+    <button
+      onClick={handleReturn}
+      data-testid="impersonation-banner"
+      className="w-full bg-amber-500 hover:bg-amber-600 text-white px-3 py-2 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2 flex-shrink-0 transition z-30"
+      title="Klik om terug te keren naar Superadmin"
+    >
+      <Shield className="w-4 h-4 flex-shrink-0" />
+      <span className="truncate">
+        U bent ingelogd als <strong className="font-bold">{companyName}</strong> via Superadmin
+      </span>
+      <span className="hidden sm:inline font-bold underline">← Terug naar Superadmin</span>
+      <span className="sm:hidden font-bold underline">← Terug</span>
+    </button>
   );
 }

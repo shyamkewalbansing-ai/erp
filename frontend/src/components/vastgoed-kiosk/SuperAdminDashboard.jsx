@@ -82,6 +82,10 @@ export default function SuperAdminDashboard() {
       // Store regular company token + mark session as PIN-verified so kiosk skips PIN
       localStorage.setItem('kiosk_token', res.data.token);
       sessionStorage.setItem(`kiosk_pin_verified_${res.data.company_id}`, 'true');
+      // Mark session as superadmin impersonation so the admin dashboard shows a banner
+      sessionStorage.setItem('sa_impersonating', '1');
+      sessionStorage.setItem('sa_impersonating_company', res.data.name);
+      sessionStorage.setItem('sa_impersonating_company_id', res.data.company_id);
       // Go straight to the company admin dashboard
       navigate(`/vastgoed/${res.data.company_id}`);
     } catch (err) {
