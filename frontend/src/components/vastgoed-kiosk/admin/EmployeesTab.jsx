@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, Pencil, Trash2, DollarSign, Loader2, Banknote, Briefcase, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Plus, Pencil, Trash2, Loader2, Briefcase, CheckCircle, XCircle } from 'lucide-react';
 import { API, axios } from './utils';
 import FreelancerPayments from './FreelancerPayments';
 import Loonstroken from './Loonstroken';
@@ -15,9 +15,6 @@ function EmployeesTab({ token, formatSRD }) {
   const [telefoon, setTelefoon] = useState('');
   const [email, setEmail] = useState('');
   const [saving, setSaving] = useState(false);
-  const [paying, setPaying] = useState(null);
-  const [payModal, setPayModal] = useState(null);
-  const [payResult, setPayResult] = useState(null);
   const [role, setRole] = useState('kiosk_medewerker');
   const [pin, setPin] = useState('');
 
@@ -72,25 +69,6 @@ function EmployeesTab({ token, formatSRD }) {
       await axios.delete(`${API}/admin/employees/${emp.employee_id}`, { headers: { Authorization: `Bearer ${token}` } });
       loadEmployees();
     } catch { alert('Verwijderen mislukt'); }
-  };
-
-  const handlePay = async (emp) => {
-    setPayModal({ employee: emp, amount: emp.maandloon?.toString() || '0' });
-  };
-
-  const executePay = async () => {
-    const emp = payModal.employee;
-    const payAmount = parseFloat(payModal.amount);
-    if (!payAmount || payAmount <= 0) return;
-    setPaying(emp.employee_id);
-    try {
-      await axios.post(`${API}/admin/employees/${emp.employee_id}/pay`, { amount: payAmount }, { headers: { Authorization: `Bearer ${token}` } });
-      loadEmployees();
-      setPayResult({ success: true, message: `Loon uitbetaald: SRD ${payAmount.toFixed(2)} aan ${emp.name}` });
-    } catch {
-      setPayResult({ success: false, message: 'Uitbetaling mislukt' });
-    }
-    setPaying(null);
   };
 
   const activeEmps = employees.filter(e => e.status === 'active');
@@ -231,15 +209,6 @@ function EmployeesTab({ token, formatSRD }) {
                     <td className="p-4 text-right font-bold text-slate-900">{formatSRD(emp.total_paid || 0)}</td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button
-                          onClick={() => handlePay(emp)}
-                          disabled={paying === emp.employee_id || !emp.maandloon}
-                          className="text-green-500 hover:text-green-700 p-1.5 rounded hover:bg-green-50 disabled:opacity-50"
-                          title="Loon uitbetalen"
-                          data-testid={`pay-emp-${emp.employee_id}`}
-                        >
-                          {paying === emp.employee_id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Banknote className="w-4 h-4" />}
-                        </button>
                         <button onClick={() => openEdit(emp)} className="text-slate-400 hover:text-orange-500 p-1" title="Bewerken">
                           <Pencil className="w-4 h-4" />
                         </button>
@@ -280,7 +249,6 @@ function EmployeesTab({ token, formatSRD }) {
                     <div className="flex justify-between"><span className="text-slate-400">Betaald</span><span className="font-bold text-slate-700">{formatSRD(emp.total_paid || 0)}</span></div>
                   </div>
                   <div className="flex items-center justify-end gap-0.5 pt-2 border-t border-slate-50">
-                    <button onClick={() => handlePay(emp)} className="text-green-500 hover:text-green-700 p-1.5"><Banknote className="w-4 h-4" /></button>
                     <button onClick={() => openEdit(emp)} className="text-slate-400 hover:text-orange-500 p-1.5"><Pencil className="w-4 h-4" /></button>
                     <button onClick={() => handleDelete(emp)} className="text-slate-400 hover:text-red-500 p-1.5"><Trash2 className="w-4 h-4" /></button>
                   </div>
