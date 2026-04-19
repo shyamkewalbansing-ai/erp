@@ -221,7 +221,13 @@ export default function KioskLayout() {
           <KioskPinEntry
             companyId={companyId}
             companyName={companyName}
-            onSuccess={() => { setPinVerified(true); goTo(startScreen === 'dashboard' ? 'admin' : 'select'); }}
+            onSuccess={(info = {}) => {
+              setPinVerified(true);
+              // Kiosk medewerker can NEVER go to admin dashboard
+              const isKioskMedewerker = info.role === 'kiosk_medewerker';
+              const targetStep = (!isKioskMedewerker && !info.isEmployee && startScreen === 'dashboard') ? 'admin' : 'select';
+              goTo(targetStep);
+            }}
             onEmployeeLogin={(emp) => setKioskEmployee(emp)}
             onBack={() => navigate('/vastgoed')}
           />
