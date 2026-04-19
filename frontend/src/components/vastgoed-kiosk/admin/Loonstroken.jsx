@@ -2,10 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { FileText, Plus, Trash2, Printer, Loader2, X, MessageCircle, Send, Wallet } from 'lucide-react';
 import { API, axios } from './utils';
 
-function Loonstroken({ token, formatSRD, employees, onChange }) {
+function Loonstroken({ token, formatSRD, employees, onChange, prefillRequest, onPrefillConsumed }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [initialValues, setInitialValues] = useState(null);
   const [preview, setPreview] = useState(null);
   const [previewHtml, setPreviewHtml] = useState('');
   const [previewLoading, setPreviewLoading] = useState(false);
@@ -21,6 +22,14 @@ function Loonstroken({ token, formatSRD, employees, onChange }) {
   }, [token]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    if (prefillRequest) {
+      setInitialValues(prefillRequest);
+      setShowModal(true);
+      if (onPrefillConsumed) onPrefillConsumed();
+    }
+  }, [prefillRequest, onPrefillConsumed]);
 
   useEffect(() => {
     if (!preview) { setPreviewHtml(''); return; }
@@ -83,7 +92,7 @@ function Loonstroken({ token, formatSRD, employees, onChange }) {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-slate-500">Totaal netto: <span className="font-bold text-slate-700">{formatSRD(total)}</span></span>
-          <button onClick={() => setShowModal(true)} data-testid="new-loonstrook-btn"
+          <button onClick={() => { setInitialValues(null); setShowModal(true); }} data-testid="new-loonstrook-btn"
             className="flex items-center gap-2 px-3 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600">
             <Plus className="w-4 h-4" /> Nieuwe Loonstrook
           </button>
@@ -166,9 +175,11 @@ function Loonstroken({ token, formatSRD, employees, onChange }) {
       {showModal && (
         <LoonstrookModal
           token={token} employees={employees}
-          onClose={() => setShowModal(false)}
+          initialValues={initialValues}
+          onClose={() => { setShowModal(false); setInitialValues(null); }}
           onCreated={(created) => {
             setShowModal(false);
+            setInitialValues(null);
             load();
             if (onChange) onChange();
             setPreview({ loonstrook_id: created.loonstrook_id, employee_name: created.employee_name, netto_loon: created.netto_loon, strook_nummer: created.strook_nummer });
@@ -219,9 +230,10 @@ function Loonstroken({ token, formatSRD, employees, onChange }) {
   );
 }
 
-function LoonstrookModal({ token, employees, onClose, onCreated }) {
-  const [employeeId, setEmployeeId] = useState('');
+function LoonstrookModal({ token, employees, onClose, onCreated, initialValues }) {
+  const [employeeId, setEmployeeId] = useState(initialValues?.employeeId || '');
   const [period, setPeriod] = useState(() => {
+    if (initialValues?.period) return initialValues.period;
     const m = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
     const d = new Date();
     return `${m[d.getMonth()]} ${d.getFullYear()}`;
@@ -234,7 +246,7 @@ function LoonstrookModal({ token, employees, onClose, onCreated }) {
   const [dagen, setDagen] = useState('');
   const [uren, setUren] = useState('');
   const [method, setMethod] = useState('bank');
-  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState(() => initialValues?.date || new Date().toISOString().slice(0, 10));
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
 

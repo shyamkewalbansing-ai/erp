@@ -19,6 +19,23 @@ function EmployeesTab({ token, formatSRD }) {
   const [role, setRole] = useState('kiosk_medewerker');
   const [pin, setPin] = useState('');
   const [payrollRefreshKey, setPayrollRefreshKey] = useState(0);
+  const [loonstrookPrefill, setLoonstrookPrefill] = useState(null);
+
+  const handleRequestPayslip = (emp, year, month) => {
+    const NL_MONTHS = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+    const period = `${NL_MONTHS[month]} ${year}`;
+    // Use 25th of the selected month as default payment date (or today if current month)
+    const now = new Date();
+    const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
+    const d = isCurrentMonth ? now : new Date(year, month, 25);
+    const date = d.toISOString().slice(0, 10);
+    setLoonstrookPrefill({ employeeId: emp.employee_id, period, date, _ts: Date.now() });
+    // Scroll to loonstroken section
+    setTimeout(() => {
+      const el = document.querySelector('[data-testid="new-loonstrook-btn"]');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+  };
 
   const loadEmployees = async () => {
     try {
@@ -263,10 +280,17 @@ function EmployeesTab({ token, formatSRD }) {
       </div>
 
       {/* Payroll Kalender */}
-      <PayrollCalendar token={token} employees={employees} formatSRD={formatSRD} refreshKey={payrollRefreshKey} />
+      <PayrollCalendar token={token} employees={employees} formatSRD={formatSRD} refreshKey={payrollRefreshKey} onRequestPayslip={handleRequestPayslip} />
 
       {/* Loonstroken sectie */}
-      <Loonstroken token={token} formatSRD={formatSRD} employees={employees} onChange={() => { loadEmployees(); setPayrollRefreshKey(k => k + 1); }} />
+      <Loonstroken
+        token={token}
+        formatSRD={formatSRD}
+        employees={employees}
+        prefillRequest={loonstrookPrefill}
+        onPrefillConsumed={() => setLoonstrookPrefill(null)}
+        onChange={() => { loadEmployees(); setPayrollRefreshKey(k => k + 1); }}
+      />
 
       {/* Losse Uitbetalingen sectie */}
       <FreelancerPayments token={token} formatSRD={formatSRD} employees={employees} onChange={loadEmployees} />

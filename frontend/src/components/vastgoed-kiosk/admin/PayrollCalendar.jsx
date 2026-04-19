@@ -18,7 +18,7 @@ function parsePeriodLabel(label) {
   return null;
 }
 
-function PayrollCalendar({ token, employees, formatSRD, refreshKey }) {
+function PayrollCalendar({ token, employees, formatSRD, refreshKey, onRequestPayslip }) {
   const [loonstroken, setLoonstroken] = useState([]);
   const [loading, setLoading] = useState(true);
   const [monthsToShow, setMonthsToShow] = useState(6);
@@ -165,10 +165,18 @@ function PayrollCalendar({ token, employees, formatSRD, refreshKey }) {
                             )}
                           </div>
                         ) : (
-                          <div className="bg-red-50 border border-red-100 rounded-lg py-1.5 px-1" title="Niet uitbetaald">
-                            <Circle className="w-4 h-4 text-red-400 mx-auto mb-0.5" />
-                            <div className="text-[10px] font-medium text-red-400 leading-tight">—</div>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => onRequestPayslip && onRequestPayslip(emp, m.year, m.month)}
+                            className="w-full bg-red-50 hover:bg-orange-50 hover:border-orange-300 border border-red-100 rounded-lg py-1.5 px-1 transition group cursor-pointer"
+                            title={`Klik om loonstrook aan te maken voor ${NL_MONTHS_FULL[m.month]} ${m.year}`}
+                            data-testid={`payroll-create-${emp.employee_id}-${key}`}
+                          >
+                            <Circle className="w-4 h-4 text-red-400 group-hover:text-orange-500 mx-auto mb-0.5" />
+                            <div className="text-[10px] font-medium text-red-400 group-hover:text-orange-600 leading-tight">
+                              + Betalen
+                            </div>
+                          </button>
                         )}
                       </td>
                     );
@@ -189,7 +197,7 @@ function PayrollCalendar({ token, employees, formatSRD, refreshKey }) {
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded bg-red-50 border border-red-100" />
-          <span>Nog niet uitbetaald</span>
+          <span>Nog niet uitbetaald — klik om loonstrook aan te maken</span>
         </div>
       </div>
     </div>
