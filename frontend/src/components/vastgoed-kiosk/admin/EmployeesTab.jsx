@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Plus, Pencil, Trash2, Loader2, Briefcase, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Plus, Pencil, Trash2, Loader2, Briefcase, Banknote, DollarSign } from 'lucide-react';
 import { API, axios } from './utils';
 import FreelancerPayments from './FreelancerPayments';
 import Loonstroken from './Loonstroken';
@@ -258,8 +258,6 @@ function EmployeesTab({ token, formatSRD }) {
           </div>
           </>
         )}
-
-      {/* Loon Uitbetalen Modal */}
       </div>
 
       {/* Loonstroken sectie */}
@@ -267,69 +265,6 @@ function EmployeesTab({ token, formatSRD }) {
 
       {/* Losse Uitbetalingen sectie */}
       <FreelancerPayments token={token} formatSRD={formatSRD} employees={employees} onChange={loadEmployees} />
-
-      {payModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => { if (!paying) { setPayModal(null); setPayResult(null); } }}>
-          <div className="bg-white rounded-2xl w-full max-w-md mx-4 p-6" onClick={e => e.stopPropagation()}>
-            {payResult ? (
-              <div className="text-center">
-                <div className={`w-14 h-14 rounded-full mx-auto mb-4 flex items-center justify-center ${payResult.success ? 'bg-green-100' : 'bg-red-100'}`}>
-                  {payResult.success ? <CheckCircle className="w-7 h-7 text-green-600" /> : <XCircle className="w-7 h-7 text-red-600" />}
-                </div>
-                <h3 className={`text-lg font-bold mb-2 ${payResult.success ? 'text-green-700' : 'text-red-700'}`}>
-                  {payResult.success ? 'Uitbetaald!' : 'Mislukt'}
-                </h3>
-                <p className="text-sm text-slate-600 mb-4">{payResult.message}</p>
-                <button onClick={() => { setPayModal(null); setPayResult(null); }} className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-medium">
-                  Sluiten
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-green-100 flex items-center justify-center">
-                    <Banknote className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900">Loon Uitbetalen</h3>
-                    <p className="text-sm text-slate-500">Dit wordt afgeschreven van de kas</p>
-                  </div>
-                </div>
-
-                <div className="bg-slate-50 rounded-xl p-4 mb-4 space-y-2">
-                  <p className="text-sm text-slate-600"><span className="font-bold">Werknemer:</span> {payModal.employee.name}</p>
-                  <p className="text-sm text-slate-600"><span className="font-bold">Functie:</span> {payModal.employee.functie || '-'}</p>
-                  <p className="text-sm text-slate-600"><span className="font-bold">Maandloon:</span> SRD {payModal.employee.maandloon?.toFixed(2)}</p>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Uit te betalen bedrag (SRD)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0.01"
-                    value={payModal.amount}
-                    onChange={e => setPayModal({ ...payModal, amount: e.target.value })}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl text-lg font-bold text-slate-900 focus:border-green-500 focus:outline-none"
-                    data-testid="pay-amount-input"
-                    autoFocus
-                  />
-                  <p className="text-xs text-slate-400 mt-1">Dit bedrag wordt afgeschreven van de kas</p>
-                </div>
-
-                <div className="flex gap-3">
-                  <button onClick={() => { setPayModal(null); setPayResult(null); }} disabled={!!paying} className="flex-1 py-2.5 border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50">
-                    Annuleren
-                  </button>
-                  <button onClick={executePay} disabled={!!paying} className="flex-1 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-xl text-sm font-bold disabled:opacity-50">
-                    {paying ? 'Bezig...' : 'Uitbetalen'}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -1,5 +1,12 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 23 (19 april 2026)
+
+### Geïmplementeerd:
+- Cleanup redundante "Loon Uitbetalen" modal uit `EmployeesTab.jsx` (vervangen door Loonstroken-flow)
+- Ongebruikte imports verwijderd (`CheckCircle`, `XCircle`), `Banknote`/`DollarSign` behouden voor summary cards
+- Werknemers tab rendert schoon zonder crashes, getest via screenshot
+
 ## Sprint 22 (19 april 2026)
 
 ### Geïmplementeerd:
