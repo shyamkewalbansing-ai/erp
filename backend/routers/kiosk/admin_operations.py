@@ -1148,3 +1148,158 @@ async def pay_employee(employee_id: str, body: dict = None, company: dict = Depe
 
 
 
+
+
+# ============ FREELANCER PAYMENTS ============
+@router.post("/admin/freelancer-payments")
+async def create_freelancer_payment(data: FreelancerPaymentCreate, company: dict = Depends(get_current_company)):
+    """Register a payment to a freelancer/contractor (losse werker/aannemer) and generate a receipt"""
+    company_id = company["company_id"]
+    emp = await db.kiosk_employees.find_one({"employee_id": data.employee_id, "company_id": company_id})
+    if not emp:
+        raise HTTPException(status_code=404, detail="Werker niet gevonden")
+    if data.amount <= 0:
+        raise HTTPException(status_code=400, detail="Bedrag moet positief zijn")
+
+    now = datetime.now(timezone.utc)
+    payment_date = now
+    if data.payment_date:
+        try:
+            payment_date = datetime.fromisoformat(data.payment_date).replace(tzinfo=timezone.utc)
+        except Exception:
+            pass
+
+    # Generate receipt number
+    year = payment_date.year
+    counter_key = f"freelancer_{company_id}_{year}"
+    last = await db.kiosk_counters.find_one({"key": counter_key})
+    next_num = (last.get("value", 0) if last else 0) + 1
+    await db.kiosk_counters.update_one({"key": counter_key}, {"$set": {"value": next_num}}, upsert=True)
+    kwitantie_nummer = f"FR{year}-{next_num:05d}"
+
+    payment_id = generate_uuid()
+    entry = {
+        "payment_id": payment_id,
+        "company_id": company_id,
+        "employee_id": data.employee_id,
+        "employee_name": emp["name"],
+        "functie": emp.get("functie", ""),
+        "employee_type": emp.get("employee_type", "los"),
+        "amount": data.amount,
+        "description": (data.description or "").strip() or "Uitbetaling",
+        "payment_method": data.payment_method,
+        "payment_date": payment_date,
+        "kwitantie_nummer": kwitantie_nummer,
+        "processed_by": data.processed_by or company.get("name", "Beheerder"),
+        "processed_by_role": data.processed_by_role or "beheerder",
+        "created_at": now
+    }
+    await db.kiosk_freelancer_payments.insert_one(entry)
+
+    # Also register in kas as expense (category: salary/freelancer)
+    try:
+        await db.kiosk_kas.insert_one({
+            "entry_id": generate_uuid(),
+            "company_id": company_id,
+            "entry_type": "expense",
+            "amount": data.amount,
+            "description": f"Uitbetaling {emp['name']}: {entry['description']}",
+            "category": "freelancer",
+            "reference_id": payment_id,
+            "created_at": payment_date
+        })
+    except Exception:
+        pass
+
+    return {
+        "payment_id": payment_id,
+        "kwitantie_nummer": kwitantie_nummer,
+        "employee_name": emp["name"],
+        "amount": data.amount,
+        "created_at": now.isoformat()
+    }
+
+
+@router.get("/admin/freelancer-payments")
+async def list_freelancer_payments(company: dict = Depends(get_current_company), employee_id: Optional[str] = None):
+    """List all freelancer payments, optionally filtered by employee"""
+    query = {"company_id": company["company_id"]}
+    if employee_id:
+        query["employee_id"] = employee_id
+    payments = await db.kiosk_freelancer_payments.find(query, {"_id": 0}).sort("created_at", -1).to_list(2000)
+    return payments
+
+
+@router.delete("/admin/freelancer-payments/{payment_id}")
+async def delete_freelancer_payment(payment_id: str, company: dict = Depends(get_current_company)):
+    """Delete a freelancer payment and its kas entry"""
+    result = await db.kiosk_freelancer_payments.delete_one({
+        "payment_id": payment_id,
+        "company_id": company["company_id"]
+    })
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    await db.kiosk_kas.delete_many({"company_id": company["company_id"], "reference_id": payment_id})
+    return {"message": "Betaling verwijderd"}
+
+
+@router.get("/admin/freelancer-payments/{payment_id}/receipt")
+async def get_freelancer_receipt(payment_id: str, company: dict = Depends(get_current_company)):
+    """Return HTML receipt for a freelancer payment (for printing)"""
+    p = await db.kiosk_freelancer_payments.find_one({"payment_id": payment_id, "company_id": company["company_id"]}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    stamp_name = company.get("stamp_company_name") or company.get("name", "")
+    stamp_address = company.get("stamp_address", "")
+    stamp_phone = company.get("stamp_phone", "")
+    date_fmt = p["payment_date"].strftime("%d-%m-%Y") if isinstance(p.get("payment_date"), datetime) else str(p.get("payment_date", ""))
+    method_label = {"cash": "Contant", "bank": "Bank overboeking"}.get(p.get("payment_method", "cash"), "Contant")
+    html = f"""<!DOCTYPE html><html lang='nl'><head><meta charset='UTF-8'>
+<title>Kwitantie {p['kwitantie_nummer']}</title>
+<style>
+@page {{ size: A5; margin: 0; }}
+body {{ font-family: 'Courier New', monospace; margin: 0; padding: 20px; color: #000; }}
+.receipt {{ max-width: 480px; margin: 0 auto; border: 2px solid #000; padding: 20px; }}
+.header {{ text-align: center; border-bottom: 2px dashed #000; padding-bottom: 10px; margin-bottom: 12px; }}
+.header h1 {{ margin: 0; font-size: 18px; letter-spacing: 2px; }}
+.header .sub {{ font-size: 11px; color: #333; }}
+.title {{ text-align: center; font-size: 14px; font-weight: bold; margin: 10px 0; letter-spacing: 2px; background: #000; color: #fff; padding: 4px; }}
+.row {{ display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dotted #888; font-size: 12px; }}
+.row span:first-child {{ color: #555; }}
+.row span:last-child {{ font-weight: bold; }}
+.amount-box {{ background: #f5f5f5; border: 2px solid #000; padding: 10px; margin: 12px 0; text-align: center; }}
+.amount-box .lbl {{ font-size: 10px; color: #666; }}
+.amount-box .val {{ font-size: 22px; font-weight: bold; }}
+.desc {{ margin: 10px 0; padding: 8px; background: #f9f9f9; border-left: 3px solid #000; font-size: 11px; }}
+.footer {{ text-align: center; font-size: 10px; color: #666; margin-top: 12px; border-top: 2px dashed #000; padding-top: 10px; }}
+.sig-line {{ margin-top: 20px; text-align: center; font-size: 10px; }}
+.sig-line .line {{ border-top: 1px solid #000; margin: 28px 20px 4px; }}
+</style></head><body>
+<div class='receipt'>
+  <div class='header'>
+    <h1>{stamp_name}</h1>
+    <div class='sub'>{stamp_address}</div>
+    <div class='sub'>{stamp_phone}</div>
+  </div>
+  <div class='title'>UITBETALINGS KWITANTIE</div>
+  <div class='row'><span>Kwitantie nr.</span><span>{p['kwitantie_nummer']}</span></div>
+  <div class='row'><span>Datum</span><span>{date_fmt}</span></div>
+  <div class='row'><span>Ontvanger</span><span>{p['employee_name']}</span></div>
+  {('<div class="row"><span>Functie</span><span>' + p.get('functie','') + '</span></div>') if p.get('functie') else ''}
+  <div class='row'><span>Betaalmethode</span><span>{method_label}</span></div>
+  <div class='row'><span>Verwerkt door</span><span>{p.get('processed_by','')}</span></div>
+  <div class='amount-box'>
+    <div class='lbl'>BEDRAG</div>
+    <div class='val'>SRD {p['amount']:,.2f}</div>
+  </div>
+  <div class='desc'><strong>Omschrijving:</strong><br>{p.get('description','')}</div>
+  <div class='sig-line'>
+    <div class='line'></div>
+    Handtekening ontvanger
+  </div>
+  <div class='footer'>Bedankt &mdash; {stamp_name}</div>
+</div>
+<script>window.onload = () => window.print();</script>
+</body></html>"""
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html)

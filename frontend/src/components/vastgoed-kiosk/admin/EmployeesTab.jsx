@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Users, Plus, Pencil, Trash2, DollarSign, Loader2, Banknote, Briefcase, CheckCircle, XCircle } from 'lucide-react';
 import { API, axios } from './utils';
+import FreelancerPayments from './FreelancerPayments';
 
 function EmployeesTab({ token, formatSRD }) {
   const [employees, setEmployees] = useState([]);
@@ -306,6 +307,10 @@ function EmployeesTab({ token, formatSRD }) {
 
       {/* Loon Uitbetalen Modal */}
       </div>
+
+      {/* Losse Uitbetalingen sectie */}
+      <FreelancerPayments token={token} formatSRD={formatSRD} employees={employees} onChange={loadEmployees} />
+
       {payModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => { if (!paying) { setPayModal(null); setPayResult(null); } }}>
           <div className="bg-white rounded-2xl w-full max-w-md mx-4 p-6" onClick={e => e.stopPropagation()}>

@@ -42,6 +42,7 @@ __all__ = [
     "LocationCreate", "LocationUpdate",
     "TenantCreate", "TenantUpdate", "PaymentCreate",
     "CashEntryCreate", "EmployeeCreate", "EmployeeUpdate",
+    "FreelancerPaymentCreate",
     "LeaseCreate", "LeaseUpdate",
     "LoanCreate", "LoanUpdate", "LoanPaymentCreate",
     "InternetPlanCreate", "InternetPlanUpdate",
@@ -526,6 +527,15 @@ class EmployeeUpdate(BaseModel):
     employee_type: Optional[str] = None
     pin: Optional[str] = None
     signature: Optional[str] = None  # base64 signature image
+
+class FreelancerPaymentCreate(BaseModel):
+    employee_id: str
+    amount: float
+    description: Optional[str] = None
+    payment_method: str = "cash"  # cash | bank
+    payment_date: Optional[str] = None  # YYYY-MM-DD, defaults to today
+    processed_by: Optional[str] = None
+    processed_by_role: Optional[str] = None
 
 class LeaseCreate(BaseModel):
     tenant_id: str

@@ -185,6 +185,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                 <th className="text-left p-4 text-sm font-medium text-slate-500">Appt</th>
                 <th className="text-left p-4 text-sm font-medium text-slate-500">Type</th>
                 <th className="text-left p-4 text-sm font-medium text-slate-500">Periode</th>
+                <th className="text-left p-4 text-sm font-medium text-slate-500">Ontvangen door</th>
                 <th className="text-right p-4 text-sm font-medium text-slate-500">Bedrag</th>
                 <th className="text-right p-4 text-sm font-medium text-slate-500">Openstaand</th>
                 <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
@@ -210,6 +211,16 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                   </td>
                   <td className="p-4 text-sm text-slate-600">
                     {p.covered_months?.length > 0 ? p.covered_months.join(', ') : '-'}
+                  </td>
+                  <td className="p-4 text-sm">
+                    {p.processed_by ? (
+                      <div className="flex flex-col">
+                        <span className="text-slate-700 font-medium">{p.processed_by}</span>
+                        {p.approved_by && p.approved_by !== p.processed_by && (
+                          <span className="text-[10px] text-slate-400">gk: {p.approved_by}</span>
+                        )}
+                      </div>
+                    ) : <span className="text-slate-300">—</span>}
                   </td>
                   <td className="p-4 text-right font-bold text-slate-800">{formatSRD(p.amount)}</td>
                   <td className="p-4 text-right">
@@ -270,7 +281,15 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                 {p.status === 'rejected' && <span className="px-1.5 py-0.5 bg-red-100 text-red-600 rounded text-[10px] font-bold">AFGEWEZEN</span>}
               </div>
               {p.covered_months?.length > 0 && (
-                <p className="text-xs text-slate-500 mb-1.5">Periode: {p.covered_months.join(', ')}</p>
+                <p className="text-xs text-slate-500 mb-1">Periode: {p.covered_months.join(', ')}</p>
+              )}
+              {p.processed_by && (
+                <p className="text-xs text-slate-500 mb-1.5">
+                  Ontvangen door: <span className="text-slate-700 font-semibold">{p.processed_by}</span>
+                  {p.approved_by && p.approved_by !== p.processed_by && (
+                    <span className="text-slate-400"> · gk: {p.approved_by}</span>
+                  )}
+                </p>
               )}
               <div className="flex items-center justify-between pt-1.5 border-t border-slate-50">
                 <span className="text-xs">
