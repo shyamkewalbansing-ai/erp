@@ -161,7 +161,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                 ) : payments.length === 0 ? (
                   <div className="text-center" style={{ padding: '4vh 0' }}><p className="kiosk-subtitle text-slate-400">Geen betalingen gevonden</p></div>
                 ) : (
-                  <div>{payments.map((p, i) => { const date = p.created_at ? new Date(p.created_at) : null; const dateStr = date ? date.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : ''; const periode = p.covered_months?.length > 0 ? p.covered_months.join(', ') : ''; return (<div key={p.payment_id || i} className="kiosk-card-row flex items-center justify-between"><div className="flex items-center gap-3 min-w-0"><CheckCircle style={{ width: '2vh', height: '2vh' }} className="text-green-500 flex-shrink-0" /><div className="min-w-0"><div className="flex items-center gap-2 flex-wrap"><span className="kiosk-body font-bold text-slate-900">{formatSRD(p.amount)}</span><span className="kiosk-small px-2 py-0.5 rounded bg-orange-100 text-orange-600 font-semibold">{TYPE_LABELS[p.payment_type] || p.payment_type}</span></div><p className="kiosk-small text-slate-400">{dateStr} · {p.kwitantie_nummer || ''}</p>{periode && <p className="kiosk-small text-slate-500 font-medium">Periode: {periode}</p>}</div></div></div>); })}</div>
+                  <div>{payments.map((p, i) => { const date = p.created_at ? new Date(p.created_at) : null; const dateStr = date ? date.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : ''; const periode = p.covered_months?.length > 0 ? p.covered_months.join(', ') : ''; const medewerker = p.approved_by || p.processed_by || ''; return (<div key={p.payment_id || i} className="kiosk-card-row flex items-center justify-between"><div className="flex items-center gap-3 min-w-0"><CheckCircle style={{ width: '2vh', height: '2vh' }} className="text-green-500 flex-shrink-0" /><div className="min-w-0"><div className="flex items-center gap-2 flex-wrap"><span className="kiosk-body font-bold text-slate-900">{formatSRD(p.amount)}</span><span className="kiosk-small px-2 py-0.5 rounded bg-orange-100 text-orange-600 font-semibold">{TYPE_LABELS[p.payment_type] || p.payment_type}</span></div><p className="kiosk-small text-slate-400">{dateStr} · {p.kwitantie_nummer || ''}</p>{periode && <p className="kiosk-small text-slate-500 font-medium">Periode: {periode}</p>}{medewerker && <p className="kiosk-small text-slate-500 font-medium">Verwerkt door: <span className="text-slate-700 font-semibold">{medewerker}</span></p>}</div></div></div>); })}</div>
                 )}
               </div>
               <div style={{ padding: 'clamp(8px, 1.5vh, 16px) clamp(12px, 1.5vw, 24px)', borderTop: '1px solid #f1f5f9' }}>
@@ -297,6 +297,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                     const date = p.created_at ? new Date(p.created_at) : null;
                     const dateStr = date ? date.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
                     const periode = p.covered_months?.length > 0 ? p.covered_months.join(', ') : '';
+                    const medewerker = p.approved_by || p.processed_by || '';
                     return (
                       <div key={p.payment_id || i} className="kiosk-card-row flex items-center justify-between" data-testid={`history-item-${i}`}>
                         <div className="flex items-center gap-3 min-w-0">
@@ -309,6 +310,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                             </div>
                             <p className="kiosk-small text-slate-400">{dateStr} · {p.kwitantie_nummer || ''}</p>
                             {periode && <p className="kiosk-small text-slate-500 font-medium">Periode: {periode}</p>}
+                            {medewerker && <p className="kiosk-small text-slate-500 font-medium">Verwerkt door: <span className="text-slate-700 font-semibold">{medewerker}</span></p>}
                           </div>
                         </div>
                       </div>
