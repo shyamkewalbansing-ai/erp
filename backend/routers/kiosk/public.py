@@ -79,7 +79,12 @@ async def verify_kiosk_pin(company_id: str, data: KioskPinVerify):
         JWT_SECRET, algorithm="HS256"
     )
     
-    return {"valid": True, "message": "PIN correct", "token": token}
+    return {
+        "valid": True,
+        "message": "PIN correct",
+        "token": token,
+        "company_name": company.get("name", "Beheerder"),
+    }
 
 
 @router.post("/public/{company_id}/set-pin")

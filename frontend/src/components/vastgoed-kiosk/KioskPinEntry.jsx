@@ -39,8 +39,17 @@ export default function KioskPinEntry({ companyId, companyName, onSuccess, onBac
       const response = await axios.post(`${API}/public/${companyId}/verify-pin`, { pin: pinCode });
       sessionStorage.setItem(`kiosk_pin_verified_${companyId}`, 'true');
       if (response.data.token) localStorage.setItem('kiosk_token', response.data.token);
+      // Treat company-PIN login as a Beheerder-level session so payments are auto-approved
+      if (onEmployeeLogin) {
+        onEmployeeLogin({
+          name: response.data.company_name || 'Beheerder',
+          role: 'beheerder',
+          employee_id: null,
+          via: 'company_pin',
+        });
+      }
       setLoading(false);
-      onSuccess({ isEmployee: false });
+      onSuccess({ isEmployee: false, role: 'beheerder' });
       return;
     } catch { /* fall through to employee PIN */ }
 

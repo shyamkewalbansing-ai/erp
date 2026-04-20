@@ -121,6 +121,15 @@ export default function KioskLayout() {
         
         if (alreadyVerified) {
           setPinVerified(true);
+          // Persist/restore a default beheerder-level employee for auto-approval on payments
+          const savedEmp = sessionStorage.getItem(`kiosk_employee_${companyId}`);
+          if (savedEmp) {
+            try { setKioskEmployee(JSON.parse(savedEmp)); } catch { /* noop */ }
+          } else {
+            const defaultBeheerder = { name: compRes.data?.name || 'Beheerder', role: 'beheerder', employee_id: null, via: 'company_pin' };
+            setKioskEmployee(defaultBeheerder);
+            try { sessionStorage.setItem(`kiosk_employee_${companyId}`, JSON.stringify(defaultBeheerder)); } catch { /* noop */ }
+          }
           // When superadmin impersonates, always jump directly to admin dashboard
           const isImpersonating = sessionStorage.getItem('sa_impersonating') === '1';
           setStep(isImpersonating || screen === 'dashboard' ? 'admin' : 'select');
@@ -230,7 +239,10 @@ export default function KioskLayout() {
               const targetStep = (!isKioskMedewerker && !info.isEmployee && startScreen === 'dashboard') ? 'admin' : 'select';
               goTo(targetStep);
             }}
-            onEmployeeLogin={(emp) => setKioskEmployee(emp)}
+            onEmployeeLogin={(emp) => {
+              setKioskEmployee(emp);
+              try { sessionStorage.setItem(`kiosk_employee_${companyId}`, JSON.stringify(emp)); } catch { /* noop */ }
+            }}
             onBack={() => navigate('/vastgoed')}
           />
         );
@@ -279,14 +291,17 @@ export default function KioskLayout() {
             onLock={() => {
               localStorage.removeItem('kiosk_token');
               Object.keys(sessionStorage).forEach(key => {
-                if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
+                if (key.startsWith('kiosk_pin_verified_') || key.startsWith('kiosk_employee_')) sessionStorage.removeItem(key);
               });
               setPinVerified(false);
               setKioskEmployee(null);
               goTo('pin');
             }}
             kioskEmployee={kioskEmployee}
-            onEmployeeLogin={(emp) => setKioskEmployee(emp)}
+            onEmployeeLogin={(emp) => {
+              setKioskEmployee(emp);
+              try { sessionStorage.setItem(`kiosk_employee_${companyId}`, JSON.stringify(emp)); } catch { /* noop */ }
+            }}
           />
         );
       case 'overview':

@@ -1,5 +1,26 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 30 (20 april 2026) — Beheerder auto-approve in Kiosk
+
+### Probleem:
+Wanneer een beheerder via de Kiosk met Company PIN (5678) inlogde, werden betalingen als `pending` gemarkeerd. Beheerders moesten hun eigen Kwitanties goedkeuren.
+
+### Opgelost:
+- **Backend** (`public.py`): `/verify-pin` endpoint returnt nu ook `company_name`
+- **Frontend** (`KioskPinEntry.jsx`): bij Company PIN succes wordt een synthetisch `kioskEmployee = {name: company_name, role: 'beheerder', via: 'company_pin'}` doorgegeven
+- **Frontend** (`KioskLayout.jsx`): `kioskEmployee` wordt gepersisteerd in sessionStorage (`kiosk_employee_{company_id}`) zodat rol behouden blijft bij page refresh; wordt geladen uit sessionStorage als PIN al eerder is geverifieerd
+- Bij "Lock" (uitloggen) worden beide session keys (`kiosk_pin_verified_*` + `kiosk_employee_*`) gewist
+
+### Effect:
+- **Company PIN login → rol beheerder** → alle Kiosk betalingen direct `approved`, `processed_by` = company naam, `approved_by` = zelf, factuur direct WhatsApp verstuurd
+- **Employee PIN met rol beheerder** → zelfde auto-approve flow, `processed_by` = werknemer naam
+- **Employee PIN met rol kiosk_medewerker / boekhouder** → status blijft `pending`, moet beheerder goedkeuren (ongewijzigd)
+
+### Tested end-to-end:
+- Company PIN 5678 → sessionStorage `{"name":"KEWALBANSING","role":"beheerder","via":"company_pin"}` ✅
+- Header toont "KEWALBANSING · Beheerder" badge ✅
+- Kiosk payment met role=beheerder → DB `status=approved`, `processed_by`/`approved_by` = "Shyam Kewalbansing" ✅
+
 ## Sprint 29 (20 april 2026) — Mope Webhook
 
 ### Geïmplementeerd:
