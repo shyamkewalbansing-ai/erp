@@ -1,5 +1,19 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 41 (20 april 2026) — "Alle" filter verwijderd uit Bank/Kas
+
+### Verzoek:
+"Alle" optie weghalen in "Toon valuta:" — gebruiker wil altijd per-valuta view, geen gemengde weergave.
+
+### Frontend (`KasTab.jsx`):
+- **"Alle" knop verwijderd** uit currency filter chips
+- Saldi-grid is vereenvoudigd: altijd 3-kolom (Inkomsten/Uitgaven/Saldo) voor de geselecteerde valuta — geen multi-section meer
+- Default blijft primaire valuta van de actieve account
+
+### Tested:
+- Screenshot: Multi-Currency Kas toont alleen SRD · $USD · €EUR filter chips (geen Alle), saldi per gekozen valuta ✅
+- Lint clean ✅
+
 ## Sprint 40 (20 april 2026) — Wisseltransactie visualisatie + default currency filter
 
 ### Verzoek:

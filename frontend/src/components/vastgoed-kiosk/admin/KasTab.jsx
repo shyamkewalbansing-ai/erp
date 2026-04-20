@@ -643,10 +643,6 @@ function KasTab({ token, tenants }) {
           {accountCurrencies.length > 1 && (
             <div className="flex items-center gap-2 flex-wrap" data-testid="currency-filter">
               <span className="text-xs text-slate-400 font-medium">Toon valuta:</span>
-              <button onClick={() => setActiveCurrencyFilter(null)} data-testid="currency-filter-all"
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${!activeCurrencyFilter ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
-                Alle
-              </button>
               {accountCurrencies.map(c => (
                 <button key={c} onClick={() => setActiveCurrencyFilter(c)} data-testid={`currency-filter-${c}`}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${activeCurrencyFilter === c ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
@@ -656,20 +652,13 @@ function KasTab({ token, tenants }) {
             </div>
           )}
 
-          {/* Kas Samenvatting - per currency */}
-          <div className={`grid gap-4 ${accountCurrencies.length > 1 && !activeCurrencyFilter ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
-            {(activeCurrencyFilter ? [activeCurrencyFilter] : accountCurrencies).map(cur => {
+          {/* Kas Samenvatting - per currency (always single currency now) */}
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+            {(() => {
+              const cur = activeCurrencyFilter || accountCurrencies[0];
               const t = totalsByCurrency[cur] || { total_income: 0, total_expense: 0, balance: 0 };
               return (
-                <div key={cur} className={accountCurrencies.length > 1 && !activeCurrencyFilter ? 'grid grid-cols-1 md:grid-cols-3 gap-4' : 'contents'}>
-                  {accountCurrencies.length > 1 && !activeCurrencyFilter && (
-                    <div className="md:col-span-3 -mb-2">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase text-slate-500">
-                        <span className={`w-2 h-2 rounded-full ${cur === 'SRD' ? 'bg-orange-400' : cur === 'USD' ? 'bg-green-400' : 'bg-blue-400'}`} />
-                        {cur}
-                      </span>
-                    </div>
-                  )}
+                <>
                   <div className="bg-white rounded-xl border border-green-200 p-6">
                     <div className="flex items-center gap-3 mb-2">
                       <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
@@ -697,9 +686,9 @@ function KasTab({ token, tenants }) {
                     </div>
                     <p className="text-2xl font-bold text-slate-900" data-testid={`kas-balance-${cur}`}>{formatMoney(t.balance, cur)}</p>
                   </div>
-                </div>
+                </>
               );
-            })}
+            })()}
           </div>
 
           {/* Boekingen Tabel */}
