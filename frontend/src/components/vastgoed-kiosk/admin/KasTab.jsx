@@ -2,10 +2,15 @@ import { useState, useEffect, useCallback } from 'react';
 import { Trash2, Loader2, Landmark, TrendingUp, TrendingDown, PieChart, Plus, Pencil, Check, X, PlayCircle, Users, ArrowLeftRight, RefreshCw, Repeat } from 'lucide-react';
 import { API, axios, formatSRD } from './utils';
 
-const CURRENCY_SYMBOLS = { SRD: 'SRD', EUR: '€', USD: '$' };
+const CURRENCY_SYMBOLS = { EUR: '€', USD: '$' };
+function currencyLabel(c) {
+  const sym = CURRENCY_SYMBOLS[c];
+  return sym ? `${sym} ${c}` : c;
+}
 function formatMoney(amount, currency = 'SRD') {
   const num = Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return `${CURRENCY_SYMBOLS[currency] || currency} ${num}`;
+  const sym = CURRENCY_SYMBOLS[currency] || currency;
+  return `${sym} ${num}`;
 }
 
 function KasTab({ token, tenants }) {
@@ -447,7 +452,7 @@ function KasTab({ token, tenants }) {
                       <button key={c} type="button" onClick={() => toggleNewCurrency(c)} data-testid={`new-kas-currency-${c}`}
                         className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition flex items-center justify-center gap-1.5 ${selected ? 'bg-orange-500 text-white border-orange-500 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'}`}>
                         {selected && <Check className="w-3.5 h-3.5" />}
-                        {CURRENCY_SYMBOLS[c]} {c}
+                        {currencyLabel(c)}
                       </button>
                     );
                   })}
@@ -508,7 +513,7 @@ function KasTab({ token, tenants }) {
                       <label className="block text-[11px] font-medium text-slate-500 mb-1">Valuta</label>
                       <select value={exFromCur} onChange={e => setExFromCur(e.target.value)} data-testid="ex-from-currency"
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-semibold bg-white">
-                        {exFromCurs.map(c => <option key={c} value={c}>{CURRENCY_SYMBOLS[c]} {c}</option>)}
+                        {exFromCurs.map(c => <option key={c} value={c}>{currencyLabel(c)}</option>)}
                       </select>
                     </div>
                   </div>
@@ -553,7 +558,7 @@ function KasTab({ token, tenants }) {
                       <label className="block text-[11px] font-medium text-slate-500 mb-1">Valuta</label>
                       <select value={exToCur} onChange={e => setExToCur(e.target.value)} data-testid="ex-to-currency"
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-semibold bg-white">
-                        {exToCurs.map(c => <option key={c} value={c}>{CURRENCY_SYMBOLS[c]} {c}</option>)}
+                        {exToCurs.map(c => <option key={c} value={c}>{currencyLabel(c)}</option>)}
                       </select>
                     </div>
                   </div>
@@ -561,9 +566,9 @@ function KasTab({ token, tenants }) {
                     <p className="text-[11px] font-medium text-slate-500 mb-1">U ontvangt ongeveer</p>
                     <div className="px-3 py-2.5 bg-white border-2 border-indigo-200 rounded-lg text-lg font-mono font-black text-indigo-600 min-h-[48px] flex items-center" data-testid="ex-preview">
                       {exLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : exPreview ? (
-                        <span>{CURRENCY_SYMBOLS[exToCur]} {Number(exPreview.result).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+                        <span>{formatMoney(exPreview.result, exToCur)}</span>
                       ) : exFromCur === exToCur && exAmount ? (
-                        <span>{CURRENCY_SYMBOLS[exToCur]} {Number(parseFloat(exAmount) || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        <span>{formatMoney(parseFloat(exAmount) || 0, exToCur)}</span>
                       ) : <span className="text-slate-300 text-sm font-sans">Vul bedrag in...</span>}
                     </div>
                     {exPreview && (
@@ -613,12 +618,12 @@ function KasTab({ token, tenants }) {
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div className="p-3 bg-white rounded-lg border border-slate-200">
                       <p className="text-[11px] text-slate-400 font-semibold">AFGESCHREVEN</p>
-                      <p className="font-bold text-slate-900 text-base">{CURRENCY_SYMBOLS[exResult.from.currency]} {Number(exResult.from.amount).toLocaleString('nl-NL', { minimumFractionDigits: 2 })}</p>
+                      <p className="font-bold text-slate-900 text-base">{formatMoney(exResult.from.amount, exResult.from.currency)}</p>
                       <p className="text-[11px] text-slate-500 mt-0.5">{exResult.from.account_name}</p>
                     </div>
                     <div className="p-3 bg-white rounded-lg border-2 border-emerald-300">
                       <p className="text-[11px] text-emerald-500 font-semibold">BIJGESCHREVEN</p>
-                      <p className="font-black text-emerald-600 text-base">{CURRENCY_SYMBOLS[exResult.to.currency]} {Number(exResult.to.amount).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</p>
+                      <p className="font-black text-emerald-600 text-base">{formatMoney(exResult.to.amount, exResult.to.currency)}</p>
                       <p className="text-[11px] text-slate-500 mt-0.5">{exResult.to.account_name}</p>
                     </div>
                   </div>
@@ -642,16 +647,12 @@ function KasTab({ token, tenants }) {
           {/* Currency filter (only for multi-currency accounts) */}
           {accountCurrencies.length > 1 && (
             <div className="flex items-center gap-2 flex-wrap" data-testid="currency-filter">
-              {accountCurrencies.map(c => {
-                const sym = CURRENCY_SYMBOLS[c];
-                const label = sym === c ? c : `${sym} ${c}`;
-                return (
-                  <button key={c} onClick={() => setActiveCurrencyFilter(c)} data-testid={`currency-filter-${c}`}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${activeCurrencyFilter === c ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
-                    {label}
-                  </button>
-                );
-              })}
+              {accountCurrencies.map(c => (
+                <button key={c} onClick={() => setActiveCurrencyFilter(c)} data-testid={`currency-filter-${c}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${activeCurrencyFilter === c ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
+                  {currencyLabel(c)}
+                </button>
+              ))}
             </div>
           )}
 
@@ -719,7 +720,7 @@ function KasTab({ token, tenants }) {
                       <label className="block text-xs font-medium text-slate-600 mb-1">Valuta</label>
                       <select value={entryCurrency} onChange={e => setEntryCurrency(e.target.value)} data-testid="kas-entry-currency"
                         className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-semibold bg-white">
-                        {accountCurrencies.map(c => <option key={c} value={c}>{CURRENCY_SYMBOLS[c]} {c}</option>)}
+                        {accountCurrencies.map(c => <option key={c} value={c}>{currencyLabel(c)}</option>)}
                       </select>
                     </div>
                   )}
@@ -811,7 +812,7 @@ function KasTab({ token, tenants }) {
                           </div>
                           {e.exchange_id && e.exchange_counterparty_currency && e.exchange_counterparty_amount != null && (
                             <div className="text-[10px] text-slate-400 mt-0.5 font-normal">
-                              {e.exchange_direction === 'in' ? 'van' : 'naar'} {CURRENCY_SYMBOLS[e.exchange_counterparty_currency] || e.exchange_counterparty_currency} {Number(e.exchange_counterparty_amount).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                              {e.exchange_direction === 'in' ? 'van' : 'naar'} {formatMoney(e.exchange_counterparty_amount, e.exchange_counterparty_currency)}
                             </div>
                           )}
                         </td>

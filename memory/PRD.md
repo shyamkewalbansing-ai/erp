@@ -1,5 +1,23 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 42 (20 april 2026) — Filter polishing
+
+### Verzoek:
+1. "Toon valuta:" label weghalen
+2. "SRD SRD" dubbele weergave fixen
+
+### Oplossing (`KasTab.jsx`):
+- Label "Toon valuta:" verwijderd uit filter chip sectie
+- `CURRENCY_SYMBOLS` verkleind naar alleen `{EUR: '€', USD: '$'}` (geen SRD entry meer)
+- Nieuwe helper `currencyLabel(c)`: toont `${symbol} ${code}` alleen als er een aparte symbol bestaat, anders gewoon `code` → **SRD** blijft "SRD", **USD** wordt "$ USD", **EUR** wordt "€ EUR"
+- `formatMoney(amount, currency)` gebruikt nu ook deze logica → "SRD 3.750" i.p.v. "SRD SRD 3.750"
+- Alle plekken die direct `{CURRENCY_SYMBOLS[c]} {c}` hadden vervangen door `currencyLabel(c)` of `formatMoney()` (filter chips, entry-form dropdown, wissel-modal selects + preview + result, entry tabel subtext)
+
+### Tested:
+- Screenshot: chips tonen "SRD / $ USD / € EUR" zonder "Toon valuta:" label ✅
+- Saldi-cards tonen "SRD 0,00" correct ✅
+- Lint clean ✅
+
 ## Sprint 41 (20 april 2026) — "Alle" filter verwijderd uit Bank/Kas
 
 ### Verzoek:
