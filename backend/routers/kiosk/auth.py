@@ -1,5 +1,33 @@
 from .base import *
 
+# Default SaaS subscription price for new companies (SRD per month)
+DEFAULT_MONTHLY_PRICE = 3000.00
+TRIAL_DAYS = 14
+
+
+async def _create_initial_invoice(company_id: str, company_name: str, amount: float, now: datetime):
+    """Create the first invoice for a newly registered company (due in TRIAL_DAYS)."""
+    try:
+        period = now.strftime("%Y-%m")
+        invoice_id = generate_uuid()
+        due_date = now + timedelta(days=TRIAL_DAYS)
+        await db.kiosk_subscription_invoices.insert_one({
+            "invoice_id": invoice_id,
+            "company_id": company_id,
+            "company_name": company_name,
+            "period": period,
+            "amount": amount,
+            "status": "unpaid",
+            "due_date": due_date,
+            "paid_at": None,
+            "payment_proof_url": None,
+            "marked_paid_by": None,
+            "notes": "Eerste maand - Registratie",
+            "created_at": now,
+        })
+    except Exception:
+        pass
+
 # ============== AUTH ENDPOINTS ==============
 
 @router.post("/auth/register")
@@ -16,6 +44,7 @@ async def register_company(data: CompanyRegister):
     if existing_id:
         raise HTTPException(status_code=400, detail=f"Bedrijfsnaam '{data.name}' is al in gebruik")
     now = datetime.now(timezone.utc)
+    trial_ends = now + timedelta(days=TRIAL_DAYS)
     
     company = {
         "company_id": company_id,
@@ -32,11 +61,18 @@ async def register_company(data: CompanyRegister):
         "stamp_phone": data.telefoon or "",
         "stamp_whatsapp": "",
         "status": "active",
+        # SaaS subscription fields
+        "subscription_status": "trial",  # trial | active | overdue | lifetime
+        "subscription_plan": "pro",
+        "monthly_price": DEFAULT_MONTHLY_PRICE,
+        "trial_ends_at": trial_ends,
+        "lifetime": False,
         "created_at": now,
         "updated_at": now
     }
     
     await db.kiosk_companies.insert_one(company)
+    await _create_initial_invoice(company_id, data.name, DEFAULT_MONTHLY_PRICE, now)
     
     token = create_token(company_id)
     
@@ -44,7 +80,9 @@ async def register_company(data: CompanyRegister):
         "company_id": company_id,
         "name": data.name,
         "email": data.email,
-        "token": token
+        "token": token,
+        "trial_ends_at": trial_ends.isoformat(),
+        "monthly_price": DEFAULT_MONTHLY_PRICE,
     }
 
 @router.post("/auth/login")

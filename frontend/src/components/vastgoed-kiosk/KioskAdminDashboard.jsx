@@ -207,6 +207,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   return (
     <div className="fixed inset-0 flex flex-col bg-slate-100 z-50" style={{ overflow: 'hidden' }}>
       <ImpersonationBanner />
+      <SubscriptionBanner token={token} />
       {/* Header - compact on mobile */}
       <header className="bg-white border-b border-slate-200 py-2 sm:py-4 px-3 sm:px-4 lg:px-8 shadow-sm flex-shrink-0 z-20">
         <div className="w-full flex items-center justify-between">
@@ -463,6 +464,67 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function SubscriptionBanner({ token }) {
+  const [sub, setSub] = useState(null);
+  const [dismissed, setDismissed] = useState(() => sessionStorage.getItem('sub_banner_dismissed') === '1');
+
+  useEffect(() => {
+    if (!token || dismissed) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
+        const r = await axios.get(`${API}/admin/subscription`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!cancelled) setSub(r.data);
+      } catch { /* noop */ }
+    })();
+    return () => { cancelled = true; };
+  }, [token, dismissed]);
+
+  if (!sub || sub.lifetime || dismissed) return null;
+  const status = sub.subscription_status;
+  if (status === 'active' || status === 'lifetime') return null;
+
+  let message = '';
+  let style = 'bg-blue-500 hover:bg-blue-600';
+  if (status === 'trial' && sub.days_left_trial !== null) {
+    if (sub.days_left_trial <= 3) {
+      message = `⏰ Uw proefperiode eindigt over ${sub.days_left_trial} dag(en). Maak SRD ${sub.monthly_price.toLocaleString('nl-NL')} over om door te gaan.`;
+      style = 'bg-amber-500 hover:bg-amber-600';
+    } else {
+      message = `✨ Proefperiode actief — nog ${sub.days_left_trial} dagen. Vergeet niet op tijd SRD ${sub.monthly_price.toLocaleString('nl-NL')} over te maken.`;
+    }
+  } else if (status === 'overdue') {
+    message = `⚠️ Uw abonnement is ACHTERSTALLIG. Maak SRD ${sub.monthly_price.toLocaleString('nl-NL')} over om uw account volledig actief te houden.`;
+    style = 'bg-red-500 hover:bg-red-600';
+  } else {
+    return null;
+  }
+
+  const handleDismiss = (e) => {
+    e.stopPropagation();
+    sessionStorage.setItem('sub_banner_dismissed', '1');
+    setDismissed(true);
+  };
+
+  const bd = sub.bank_details || {};
+  const hasBank = bd.bank_name || bd.account_number;
+
+  return (
+    <div
+      className={`w-full ${style} text-white px-3 py-2 text-xs sm:text-sm font-semibold flex items-center justify-center gap-3 flex-shrink-0 transition z-20`}
+      data-testid="subscription-banner"
+    >
+      <span className="truncate flex-1 text-center">{message}
+        {hasBank && <span className="hidden md:inline ml-2 font-normal opacity-90">Bank: {bd.bank_name} · {bd.account_number}</span>}
+      </span>
+      <button onClick={handleDismiss} className="text-white/80 hover:text-white text-xs underline flex-shrink-0" data-testid="dismiss-sub-banner">
+        Verberg
+      </button>
     </div>
   );
 }

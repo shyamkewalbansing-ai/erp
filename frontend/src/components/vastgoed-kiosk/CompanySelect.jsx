@@ -74,7 +74,8 @@ export default function KioskLanding() {
 
 function KioskLoginScreen({ onSuccess }) {
   const navigate = useNavigate();
-  const [view, setView] = useState('main'); // main, password, register, superadmin
+  const [view, setView] = useState('main'); // main, password, register, register_confirm, superadmin
+  const [bankDetails, setBankDetails] = useState(null);
   const [showPinModal, setShowPinModal] = useState(false);
 
   // Shared form state
@@ -103,6 +104,26 @@ function KioskLoginScreen({ onSuccess }) {
 
   const handleRegister = async (e) => {
     if (e) e.preventDefault();
+    // Step 1: just validate basic fields and show confirmation with bank details
+    if (!name || !email || !password) {
+      setError('Vul alle verplichte velden in');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Wachtwoord moet minimaal 8 tekens zijn');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      const res = await axios.get(`${API}/public/subscription/bank-details`);
+      setBankDetails(res.data || {});
+    } catch { setBankDetails({}); }
+    setLoading(false);
+    setView('register_confirm');
+  };
+
+  const handleConfirmRegister = async () => {
     setLoading(true);
     setError('');
     try {
@@ -115,6 +136,7 @@ function KioskLoginScreen({ onSuccess }) {
       if (typeof detail === 'string') setError(detail);
       else if (Array.isArray(detail)) setError(detail.map(d => d.msg || d.message || JSON.stringify(d)).join(', '));
       else setError('Registratie mislukt');
+      setView('register');
     } finally { setLoading(false); }
   };
 
@@ -443,6 +465,97 @@ function KioskLoginScreen({ onSuccess }) {
       </div>
     );
   }
+
+  // ============ REGISTER CONFIRM (bank info) ============
+  if (view === 'register_confirm') {
+    return (
+      <div className="min-h-screen bg-orange-500 flex flex-col" style={{ fontFamily: 'Outfit, sans-serif' }}>
+        <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 bg-orange-600/20 backdrop-blur-sm border-b border-white/20">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white flex items-center justify-center shadow-lg">
+              <Lock className="w-6 h-6 text-orange-500" />
+            </div>
+            <div>
+              <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">Bevestig Registratie</h2>
+              <p className="text-xs sm:text-sm text-orange-100">Stap 2 van 2</p>
+            </div>
+          </div>
+          <button
+            onClick={() => { setError(''); setView('register'); }}
+            className="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white transition"
+            title="Terug"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 flex items-center justify-center">
+          <div className="w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl">
+            <h3 className="text-2xl font-extrabold text-slate-900 mb-1">Bijna klaar, {name}!</h3>
+            <p className="text-sm text-slate-500 mb-5">
+              U krijgt een <strong>14-daagse proefperiode</strong>. Om uw account actief te houden, maak binnen die periode het volgende bedrag over:
+            </p>
+
+            <div className="bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl p-6 text-white mb-5 shadow-lg">
+              <p className="text-sm text-orange-100">Maandelijks abonnement Pro</p>
+              <p className="text-4xl font-extrabold tracking-tight mt-1">SRD 3.000,00</p>
+              <p className="text-xs text-orange-100 mt-2">per maand via bankoverschrijving</p>
+            </div>
+
+            <div className="bg-slate-50 border-2 border-slate-200 rounded-2xl p-4 sm:p-5 mb-5">
+              <h4 className="font-bold text-slate-900 text-sm mb-3">Bankgegevens</h4>
+              {(bankDetails && (bankDetails.bank_name || bankDetails.account_number)) ? (
+                <div className="space-y-2 text-sm">
+                  {bankDetails.bank_name && <div className="flex justify-between"><span className="text-slate-500">Bank:</span><span className="font-semibold text-slate-900">{bankDetails.bank_name}</span></div>}
+                  {bankDetails.account_holder && <div className="flex justify-between"><span className="text-slate-500">Ten name van:</span><span className="font-semibold text-slate-900">{bankDetails.account_holder}</span></div>}
+                  {bankDetails.account_number && <div className="flex justify-between"><span className="text-slate-500">Rekening:</span><span className="font-mono font-semibold text-slate-900">{bankDetails.account_number}</span></div>}
+                  {bankDetails.swift && <div className="flex justify-between"><span className="text-slate-500">SWIFT:</span><span className="font-mono font-semibold text-slate-900">{bankDetails.swift}</span></div>}
+                  {bankDetails.reference_hint && <div className="pt-2 border-t border-slate-200 mt-2"><p className="text-xs text-slate-500">Omschrijving:</p><p className="text-xs text-slate-700 mt-1">{bankDetails.reference_hint}</p></div>}
+                </div>
+              ) : (
+                <p className="text-sm text-amber-600 bg-amber-50 p-3 rounded-lg">
+                  ⚠️ Bankgegevens zijn nog niet ingesteld door de superadmin. Neem contact op na registratie.
+                </p>
+              )}
+              <p className="text-xs text-slate-500 mt-3 border-t border-slate-200 pt-3">
+                Vermeld bij overschrijving uw bedrijfsnaam: <strong>{name}</strong> zodat wij uw betaling kunnen koppelen.
+              </p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-5 text-xs text-blue-800">
+              <p className="font-semibold mb-1">Belangrijk:</p>
+              <ul className="list-disc ml-5 space-y-0.5">
+                <li>14 dagen proef: u kunt meteen inloggen en alles testen</li>
+                <li>Na betaling wordt uw account op 'Actief' gezet door de beheerder</li>
+                <li>Zonder betaling krijgt u na 14 dagen waarschuwingen, maar blijft inloggen mogelijk</li>
+              </ul>
+            </div>
+
+            {error && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl p-3 mb-4">{error}</div>}
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => setView('register')}
+                className="flex-1 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold transition"
+                data-testid="register-back-btn"
+              >
+                Terug
+              </button>
+              <button
+                onClick={handleConfirmRegister}
+                disabled={loading}
+                data-testid="register-confirm-btn"
+                className="flex-1 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold transition shadow-lg disabled:opacity-50"
+              >
+                {loading ? 'Bezig...' : 'Account aanmaken & 14 dagen proef starten'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   // ============ SUPERADMIN ============
   if (view === 'superadmin') {

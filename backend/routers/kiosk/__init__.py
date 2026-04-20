@@ -29,6 +29,8 @@ except Exception as _push_err:  # pragma: no cover
         f"Run `pip install -r backend/requirements.txt` on the server."
     )
 
+from . import subscription  # noqa: F401
+
 # Re-export for server.py
 from .scheduler import _kiosk_daily_scheduler
 

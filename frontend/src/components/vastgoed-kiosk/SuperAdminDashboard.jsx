@@ -51,10 +51,68 @@ export default function SuperAdminDashboard() {
 
   const loadPayments = async () => {
     try {
-      const res = await axios.get(`${API}/superadmin/payments`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get(`${API}/superadmin/invoices`, { headers: { Authorization: `Bearer ${token}` } });
       setPayments(res.data);
       setPaymentsLoaded(true);
     } catch { /* skip */ }
+  };
+
+  const handleMarkInvoicePaid = async (invoiceId) => {
+    if (!window.confirm('Deze factuur markeren als BETAALD?')) return;
+    try {
+      await axios.post(`${API}/superadmin/invoices/${invoiceId}/mark-paid`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      loadPayments();
+      loadData();
+    } catch { alert('Markeren mislukt'); }
+  };
+
+  const handleMarkInvoiceUnpaid = async (invoiceId) => {
+    if (!window.confirm('Deze factuur terugzetten naar ONBETAALD?')) return;
+    try {
+      await axios.post(`${API}/superadmin/invoices/${invoiceId}/mark-unpaid`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      loadPayments();
+      loadData();
+    } catch { alert('Wijzigen mislukt'); }
+  };
+
+  const handleDeleteInvoice = async (invoice) => {
+    if (!window.confirm(`Factuur ${invoice.period} voor ${invoice.company_name} verwijderen?`)) return;
+    try {
+      await axios.delete(`${API}/superadmin/invoices/${invoice.invoice_id}`, { headers: { Authorization: `Bearer ${token}` } });
+      loadPayments();
+      loadData();
+    } catch { alert('Verwijderen mislukt'); }
+  };
+
+  const handleEditBankDetails = async () => {
+    try {
+      const cur = await axios.get(`${API.replace('/superadmin','')}/public/subscription/bank-details`);
+      const d = cur.data || {};
+      const bank_name = window.prompt('Bank naam:', d.bank_name || '');
+      if (bank_name === null) return;
+      const account_holder = window.prompt('Ten name van:', d.account_holder || '');
+      if (account_holder === null) return;
+      const account_number = window.prompt('Rekeningnummer:', d.account_number || '');
+      if (account_number === null) return;
+      const swift = window.prompt('SWIFT/BIC (optioneel):', d.swift || '');
+      if (swift === null) return;
+      const reference_hint = window.prompt('Omschrijving-hint voor huurders:', d.reference_hint || 'Vermeld uw bedrijfsnaam als omschrijving');
+      if (reference_hint === null) return;
+      await axios.post(`${API}/superadmin/subscription/bank-details`,
+        { bank_name, account_holder, account_number, swift, reference_hint },
+        { headers: { Authorization: `Bearer ${token}` } });
+      alert('Bankgegevens opgeslagen');
+    } catch { alert('Opslaan mislukt'); }
+  };
+
+  const handleGenerateMonthly = async () => {
+    if (!window.confirm('Maandelijkse facturen genereren voor alle bedrijven (zonder lifetime)?')) return;
+    try {
+      const res = await axios.post(`${API}/superadmin/subscription/generate-monthly`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      alert(`${res.data.created} nieuwe facturen aangemaakt voor ${res.data.period}`);
+      loadPayments();
+      loadData();
+    } catch { alert('Genereren mislukt'); }
   };
 
   const handleToggleStatus = async (companyId) => {
@@ -69,6 +127,50 @@ export default function SuperAdminDashboard() {
       await axios.put(`${API}/superadmin/companies/${companyId}/subscription`, {}, { headers: { Authorization: `Bearer ${token}` } });
       loadData();
     } catch { alert('Abonnement wijzigen mislukt'); }
+  };
+
+  const handleToggleLifetime = async (company) => {
+    const newVal = !company.lifetime;
+    const msg = newVal
+      ? `"${company.name}" LIFETIME Pro toekennen?\n\nDit bedrijf hoeft nooit meer te betalen en krijgt geen maandelijkse facturen meer.`
+      : `Lifetime voor "${company.name}" intrekken?\n\nVanaf nu krijgt het bedrijf weer maandelijkse facturen.`;
+    if (!window.confirm(msg)) return;
+    try {
+      await axios.post(`${API}/superadmin/companies/${company.company_id}/lifetime`,
+        { lifetime: newVal },
+        { headers: { Authorization: `Bearer ${token}` } });
+      loadData();
+    } catch { alert('Lifetime wijzigen mislukt'); }
+  };
+
+  const handleEditPrice = async (company) => {
+    const raw = window.prompt(`Nieuwe maandelijkse prijs voor ${company.name} (SRD):`, String(company.monthly_price || 3000));
+    if (raw === null) return;
+    const price = parseFloat(raw);
+    if (isNaN(price) || price < 0) { alert('Ongeldig bedrag'); return; }
+    try {
+      await axios.put(`${API}/superadmin/companies/${company.company_id}/price`,
+        { monthly_price: price },
+        { headers: { Authorization: `Bearer ${token}` } });
+      loadData();
+    } catch { alert('Prijs wijzigen mislukt'); }
+  };
+
+  const handleAddInvoice = async (company) => {
+    const period = window.prompt(`Handmatige factuur voor ${company.name}\n\nPeriode (YYYY-MM):`, new Date().toISOString().slice(0, 7));
+    if (!period) return;
+    const amtRaw = window.prompt(`Bedrag (SRD):`, String(company.monthly_price || 3000));
+    if (!amtRaw) return;
+    const amount = parseFloat(amtRaw);
+    if (isNaN(amount)) { alert('Ongeldig bedrag'); return; }
+    try {
+      await axios.post(`${API}/superadmin/invoices`,
+        { company_id: company.company_id, period, amount },
+        { headers: { Authorization: `Bearer ${token}` } });
+      if (activeTab === 'payments') loadPayments();
+      loadData();
+      alert('Factuur toegevoegd');
+    } catch { alert('Factuur aanmaken mislukt'); }
   };
 
   const handleImpersonate = async (company) => {
@@ -135,7 +237,7 @@ export default function SuperAdminDashboard() {
 
   const TABS = [
     { id: 'companies', label: 'Bedrijven', icon: Building2 },
-    { id: 'payments', label: 'Betalingen', icon: CreditCard },
+    { id: 'payments', label: 'Abonnement Facturen', icon: CreditCard },
   ];
 
   if (loading) {
@@ -268,71 +370,98 @@ export default function SuperAdminDashboard() {
                   <thead className="bg-slate-50">
                     <tr>
                       <th className="text-left p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Bedrijf</th>
-                      <th className="text-center p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                      <th className="text-center p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Plan</th>
-                      <th className="text-right p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Huurders</th>
-                      <th className="text-right p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Appt.</th>
-                      <th className="text-right p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Betalingen</th>
-                      <th className="text-right p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Huuromzet</th>
+                      <th className="text-center p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Abonnement</th>
+                      <th className="text-right p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Prijs / mnd</th>
+                      <th className="text-center p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Betaalde fact.</th>
+                      <th className="text-center p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Open</th>
                       <th className="text-center p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Acties</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredCompanies.map(c => (
+                    {filteredCompanies.map(c => {
+                      const subStatus = c.subscription_status || 'trial';
+                      const statusStyle = {
+                        lifetime: 'bg-purple-50 text-purple-700 border-purple-200',
+                        active: 'bg-green-50 text-green-700 border-green-200',
+                        trial: 'bg-blue-50 text-blue-700 border-blue-200',
+                        overdue: 'bg-red-50 text-red-700 border-red-200',
+                      }[subStatus] || 'bg-slate-50 text-slate-600 border-slate-200';
+                      const statusLabel = {
+                        lifetime: 'LIFETIME',
+                        active: 'Actief',
+                        trial: 'Proef',
+                        overdue: 'Achterstallig',
+                      }[subStatus] || subStatus;
+                      const trialEnds = c.trial_ends_at ? new Date(c.trial_ends_at) : null;
+                      const trialText = trialEnds && !c.lifetime ? trialEnds.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : null;
+                      return (
                       <tr key={c.company_id} className="border-t border-slate-100 hover:bg-slate-50 transition">
                         <td className="p-4">
                           <p className="font-bold text-slate-900 text-sm">{c.name}</p>
                           <p className="text-xs text-slate-400">{c.email}</p>
                           {c.telefoon && <p className="text-xs text-slate-400">{c.telefoon}</p>}
+                          {trialText && <p className="text-[11px] text-blue-500 mt-1">Proef t/m: {trialText}</p>}
                         </td>
                         <td className="p-4 text-center">
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
-                            c.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
-                          }`}>
-                            {c.status === 'active' ? <Power className="w-3 h-3" /> : <PowerOff className="w-3 h-3" />}
-                            {c.status === 'active' ? 'Actief' : 'Inactief'}
-                          </span>
-                        </td>
-                        <td className="p-4 text-center">
-                          {c.subscription === 'pro' ? (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-red-50 text-red-600">
-                              <Crown className="w-3 h-3" /> PRO
+                          <div className="flex flex-col items-center gap-1">
+                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${statusStyle}`}>
+                              {c.lifetime && <Crown className="w-3 h-3" />}
+                              {statusLabel}
                             </span>
-                          ) : (
-                            <span className="text-xs text-slate-400">Gratis</span>
-                          )}
+                            <span className={`text-[10px] font-medium ${c.status === 'active' ? 'text-green-600' : 'text-red-500'}`}>
+                              {c.status === 'active' ? 'Login actief' : 'Login geblokkeerd'}
+                            </span>
+                          </div>
                         </td>
-                        <td className="p-4 text-right font-medium text-slate-700 text-sm">{c.tenant_count}</td>
-                        <td className="p-4 text-right font-medium text-slate-700 text-sm">{c.apartment_count}</td>
-                        <td className="p-4 text-right font-medium text-slate-700 text-sm">{c.payment_count}</td>
-                        <td className="p-4 text-right font-bold text-sm text-slate-900">{formatSRD(c.revenue)}</td>
+                        <td className="p-4 text-right">
+                          <button
+                            onClick={() => handleEditPrice(c)}
+                            data-testid={`edit-price-${c.company_id}`}
+                            className="font-bold text-slate-900 text-sm hover:text-red-600 hover:underline"
+                            title="Prijs wijzigen"
+                          >
+                            {formatSRD(c.monthly_price || 3000)}
+                          </button>
+                        </td>
+                        <td className="p-4 text-center">
+                          <span className="inline-flex items-center px-2 py-1 rounded-md bg-green-50 text-green-700 text-xs font-bold">{c.paid_invoices || 0}</span>
+                        </td>
+                        <td className="p-4 text-center">
+                          <span className={`inline-flex items-center px-2 py-1 rounded-md text-xs font-bold ${c.unpaid_invoices > 0 ? 'bg-red-50 text-red-600' : 'bg-slate-50 text-slate-400'}`}>{c.unpaid_invoices || 0}</span>
+                        </td>
                         <td className="p-4">
-                          <div className="flex items-center justify-center gap-2">
+                          <div className="flex items-center justify-center gap-2 flex-wrap">
                             {/* Toggle Status */}
                             <button
                               onClick={() => handleToggleStatus(c.company_id)}
                               data-testid={`toggle-status-${c.company_id}`}
-                              className={`p-1.5 rounded-lg transition text-xs font-semibold ${
-                                c.status === 'active'
-                                  ? 'text-red-500 hover:bg-red-50'
-                                  : 'text-green-600 hover:bg-green-50'
+                              className={`p-1.5 rounded-lg transition ${
+                                c.status === 'active' ? 'text-red-500 hover:bg-red-50' : 'text-green-600 hover:bg-green-50'
                               }`}
-                              title={c.status === 'active' ? 'Deactiveren' : 'Activeren'}
+                              title={c.status === 'active' ? 'Login blokkeren' : 'Login activeren'}
                             >
                               {c.status === 'active' ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
                             </button>
-                            {/* Toggle PRO */}
+                            {/* Toggle Lifetime */}
                             <button
-                              onClick={() => handleToggleSubscription(c.company_id)}
-                              data-testid={`toggle-sub-${c.company_id}`}
-                              className={`px-2 py-1 rounded-lg text-xs font-bold transition ${
-                                c.subscription === 'pro'
-                                  ? 'bg-red-50 text-red-600 hover:bg-red-100'
-                                  : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                              onClick={() => handleToggleLifetime(c)}
+                              data-testid={`toggle-lifetime-${c.company_id}`}
+                              className={`px-2 py-1 rounded-lg text-xs font-bold transition flex items-center gap-1 ${
+                                c.lifetime ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
                               }`}
-                              title={c.subscription === 'pro' ? 'Downgrade naar Gratis' : 'Upgrade naar PRO'}
+                              title={c.lifetime ? 'Lifetime uitzetten' : 'Lifetime toekennen'}
                             >
-                              {c.subscription === 'pro' ? 'PRO uit' : 'PRO aan'}
+                              <Crown className="w-3 h-3" />
+                              {c.lifetime ? 'Lifetime' : 'Geen LT'}
+                            </button>
+                            {/* Add invoice */}
+                            <button
+                              onClick={() => handleAddInvoice(c)}
+                              data-testid={`add-invoice-${c.company_id}`}
+                              className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50"
+                              title="Handmatige factuur toevoegen"
+                            >
+                              <CreditCard className="w-5 h-5" />
                             </button>
                             {/* Login as company */}
                             <button
@@ -355,7 +484,7 @@ export default function SuperAdminDashboard() {
                           </div>
                         </td>
                       </tr>
-                    ))}
+                    );})}
                   </tbody>
                 </table>
               </div>
@@ -369,53 +498,116 @@ export default function SuperAdminDashboard() {
         {/* Payments Tab */}
         {activeTab === 'payments' && (
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="p-4 border-b border-slate-200 flex items-center justify-between">
-              <h2 className="font-semibold text-slate-900">Alle Huurbetalingen</h2>
-              <button onClick={loadPayments} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
-                <RefreshCw className="w-4 h-4 text-slate-500" />
-              </button>
+            <div className="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 className="font-semibold text-slate-900">Abonnement Facturen</h2>
+                <p className="text-xs text-slate-400 mt-0.5">Maandelijkse SaaS betalingen van bedrijven (bankoverschrijving)</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleEditBankDetails}
+                  data-testid="edit-bank-details-btn"
+                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold"
+                  title="Bankgegevens wijzigen (getoond bij registratie)"
+                >
+                  Bankgegevens
+                </button>
+                <button
+                  onClick={handleGenerateMonthly}
+                  data-testid="generate-monthly-btn"
+                  className="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-xs font-semibold"
+                  title="Genereer maandelijkse facturen voor alle bedrijven"
+                >
+                  + Maand genereren
+                </button>
+                <button onClick={loadPayments} className="p-2 bg-slate-100 hover:bg-slate-200 rounded-lg transition">
+                  <RefreshCw className="w-4 h-4 text-slate-500" />
+                </button>
+              </div>
             </div>
             {!paymentsLoaded ? (
               <div className="p-12 text-center">
                 <Loader2 className="w-8 h-8 animate-spin text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-400">Betalingen laden...</p>
+                <p className="text-slate-400">Facturen laden...</p>
               </div>
             ) : payments.length === 0 ? (
-              <div className="p-12 text-center text-slate-400">Geen betalingen gevonden</div>
+              <div className="p-12 text-center text-slate-400">Nog geen facturen</div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-slate-50">
                     <tr>
                       <th className="text-left p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Bedrijf</th>
-                      <th className="text-left p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Huurder</th>
-                      <th className="text-left p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Appt.</th>
-                      <th className="text-left p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Periode</th>
                       <th className="text-right p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Bedrag</th>
-                      <th className="text-left p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Datum</th>
+                      <th className="text-center p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Vervaldatum</th>
+                      <th className="text-left p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Betaald op</th>
+                      <th className="text-center p-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Acties</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {payments.map((p, i) => (
-                      <tr key={p.payment_id || i} className="border-t border-slate-100 hover:bg-slate-50">
-                        <td className="p-4 text-sm text-slate-600">{p.company_name || '-'}</td>
-                        <td className="p-4 text-sm font-bold text-slate-900">{p.tenant_name}</td>
-                        <td className="p-4 text-sm text-slate-600">{p.apartment_number}</td>
-                        <td className="p-4">
-                          <span className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                            p.payment_type === 'rent' ? 'bg-blue-50 text-blue-600' :
-                            p.payment_type === 'fine' ? 'bg-red-50 text-red-600' :
-                            'bg-slate-100 text-slate-600'
-                          }`}>
-                            {p.payment_type === 'rent' ? 'Huur' : p.payment_type === 'fine' ? 'Boete' : p.payment_type}
-                          </span>
-                        </td>
-                        <td className="p-4 text-right text-sm font-bold text-slate-900">{formatSRD(p.amount)}</td>
-                        <td className="p-4 text-sm text-slate-500">
-                          {p.created_at ? new Date(p.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
-                        </td>
-                      </tr>
-                    ))}
+                    {payments.map((inv) => {
+                      const statusLabel = {
+                        paid: 'Betaald', unpaid: 'Onbetaald', pending_review: 'Wacht op review'
+                      }[inv.status] || inv.status;
+                      const statusColor = {
+                        paid: 'bg-green-50 text-green-700 border-green-200',
+                        unpaid: inv.is_overdue ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200',
+                        pending_review: 'bg-blue-50 text-blue-700 border-blue-200',
+                      }[inv.status] || 'bg-slate-50 text-slate-600 border-slate-200';
+                      return (
+                        <tr key={inv.invoice_id} className="border-t border-slate-100 hover:bg-slate-50">
+                          <td className="p-4">
+                            <p className="text-sm font-bold text-slate-900">{inv.company_name}</p>
+                            <p className="text-xs text-slate-400">{inv.company_id}</p>
+                          </td>
+                          <td className="p-4 text-sm font-semibold text-slate-700">{inv.period}</td>
+                          <td className="p-4 text-right text-sm font-bold text-slate-900">{formatSRD(inv.amount)}</td>
+                          <td className="p-4 text-center">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold border ${statusColor}`}>
+                              {statusLabel}
+                              {inv.is_overdue && ` (+${inv.days_overdue}d)`}
+                            </span>
+                          </td>
+                          <td className="p-4 text-xs text-slate-500">
+                            {inv.due_date ? new Date(inv.due_date).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                          </td>
+                          <td className="p-4 text-xs text-slate-500">
+                            {inv.paid_at ? new Date(inv.paid_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center justify-center gap-2">
+                              {inv.status !== 'paid' ? (
+                                <button
+                                  onClick={() => handleMarkInvoicePaid(inv.invoice_id)}
+                                  data-testid={`mark-paid-${inv.invoice_id}`}
+                                  className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md text-xs font-semibold"
+                                >
+                                  ✓ Betaald
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleMarkInvoiceUnpaid(inv.invoice_id)}
+                                  data-testid={`mark-unpaid-${inv.invoice_id}`}
+                                  className="px-3 py-1 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-md text-xs font-semibold"
+                                >
+                                  ↶ Onbetaald
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDeleteInvoice(inv)}
+                                data-testid={`delete-invoice-${inv.invoice_id}`}
+                                className="p-1.5 rounded-lg text-red-500 hover:bg-red-50"
+                                title="Verwijderen"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

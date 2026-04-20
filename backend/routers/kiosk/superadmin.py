@@ -74,23 +74,24 @@ async def superadmin_companies(admin=Depends(get_superadmin)):
         cid = c["company_id"]
         tenant_count = await db.kiosk_tenants.count_documents({"company_id": cid})
         apt_count = await db.kiosk_apartments.count_documents({"company_id": cid})
-        payment_count = await db.kiosk_payments.count_documents({"company_id": cid})
-        pipeline = [{"$match": {"company_id": cid, "status": "completed"}}, {"$group": {"_id": None, "total": {"$sum": "$amount"}}}]
-        agg = await db.kiosk_payments.aggregate(pipeline).to_list(1)
-        revenue = agg[0]["total"] if agg else 0
+        # Count paid subscription invoices for this company
+        paid_invoices = await db.kiosk_subscription_invoices.count_documents({"company_id": cid, "status": "paid"})
+        unpaid_invoices = await db.kiosk_subscription_invoices.count_documents({"company_id": cid, "status": {"$in": ["unpaid", "pending_review"]}})
         result.append({
             "company_id": cid,
             "name": c.get("name", ""),
             "email": c.get("email", ""),
             "telefoon": c.get("telefoon", ""),
             "status": c.get("status", "active"),
-            "subscription_status": c.get("subscription_status", "active"),
-            "monthly_price": c.get("monthly_price", 0),
-            "subscription_notes": c.get("subscription_notes", ""),
+            "subscription_status": c.get("subscription_status", "trial"),
+            "subscription_plan": c.get("subscription_plan", "pro"),
+            "monthly_price": c.get("monthly_price", 3000),
+            "lifetime": bool(c.get("lifetime")),
+            "trial_ends_at": c.get("trial_ends_at"),
+            "paid_invoices": paid_invoices,
+            "unpaid_invoices": unpaid_invoices,
             "tenant_count": tenant_count,
             "apartment_count": apt_count,
-            "payment_count": payment_count,
-            "revenue": revenue,
             "created_at": c.get("created_at")
         })
     return result

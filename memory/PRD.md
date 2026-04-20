@@ -1,5 +1,30 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 26 (20 april 2026) — SaaS Subscription Management
+
+### Geïmplementeerd (Superadmin refactor):
+- **Nieuwe collection** `kiosk_subscription_invoices` + `kiosk_saas_config` (bank_details)
+- **Backend** (`subscription.py`): DEFAULT_MONTHLY_PRICE=3000, TRIAL_DAYS=14
+  - `GET/POST/DELETE /superadmin/invoices` (filter op status/company)
+  - `POST /superadmin/invoices/{id}/mark-paid` + `mark-unpaid`
+  - `POST /superadmin/companies/{id}/lifetime` (toggle)
+  - `PUT /superadmin/companies/{id}/price` (prijs override per bedrijf)
+  - `POST /superadmin/subscription/generate-monthly` (cron/handmatig)
+  - `POST /superadmin/subscription/bank-details`
+  - `GET /public/subscription/bank-details` (voor registratie scherm)
+  - `GET /admin/subscription` (eigen status + facturen)
+  - `POST /admin/subscription/invoices/{id}/upload-proof`
+- **Register flow** (`auth.py`): zet `subscription_status=trial`, `trial_ends_at=+14d`, `monthly_price=3000`, maakt automatisch eerste factuur aan
+- **Superadmin Dashboard refactor**:
+  - Bedrijven tabel: Huurders/Appt/Betalingen/Huuromzet kolommen VERWIJDERD. Nieuwe kolommen: Abonnement (Actief/Proef/Achterstallig/Lifetime), Prijs/mnd (klikbaar om te wijzigen), Betaalde fact., Open facturen
+  - Acties: status toggle, Lifetime toggle (Crown icoon), handmatige factuur +, Inloggen-als, Verwijderen
+  - "Abonnement Facturen" tab (voorheen "Alle Huurbetalingen"): toont SaaS facturen met Mark Paid / Unpaid / Delete
+  - "Bankgegevens" knop + "Maand genereren" knop
+- **Registratie 2-staps flow** (`CompanySelect.jsx`):
+  1. Stap 1: formulier invullen (naam, email, wachtwoord, tel)
+  2. Stap 2: bevestigingsscherm met SRD 3.000 groot display, bankgegevens, proef-info → "Account aanmaken & 14 dagen proef starten"
+- **Company Dashboard banner** (`KioskAdminDashboard.jsx`): `SubscriptionBanner` toont proef-dagen / achterstallig waarschuwing met bankgegevens (dismiss-baar per sessie)
+
 ## Sprint 25 (19 april 2026) — Superadmin: Impersonate + Delete
 
 ### Geïmplementeerd:
