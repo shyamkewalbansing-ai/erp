@@ -148,3 +148,5 @@ zopfli==0.4.1
 py-vapid==1.9.4
 pywebpush==2.3.0
 http-ece==1.2.1
+pillow==12.1.0
+qrcode==8.2

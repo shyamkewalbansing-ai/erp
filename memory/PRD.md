@@ -1,5 +1,20 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 31 (20 april 2026) — QR Code op Kwitantie
+
+### Geïmplementeerd:
+- **Backend** (`admin.py`): `qrcode[pil]` library toegevoegd, QR code server-side gegenereerd als base64 PNG ingebed in HTML
+- Nieuwe **publieke endpoint** `GET /public/receipt/{payment_id}` — zonder auth, alleen approved/completed payments, UUID is niet te raden
+- Refactored `_render_receipt_html()` — gedeeld tussen `/admin/.../receipt` (token required) en `/public/receipt/...` (public, read-only)
+- QR code linkt naar `{APP_URL}/api/kiosk/public/receipt/{payment_id}`
+- Visuele design: 80x80px QR rechts onderaan, gestippelde bovenlijn, labels "Scan om te verifiëren" + "Online kwitantie authentiek"
+
+### Tested:
+- Admin receipt bevat QR block (6 matches) + PNG data URL ✅
+- Public receipt werkt zonder auth → 200 OK, 9175 bytes ✅
+- Onbekende payment_id → 404 ✅
+- Screenshot toont perfect combinatie: BEHEERDER badge + stempel + QR code op 1 kwitantie ✅
+
 ## Sprint 30 (20 april 2026) — Beheerder auto-approve in Kiosk
 
 ### Probleem:

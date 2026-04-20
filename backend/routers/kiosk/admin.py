@@ -3,6 +3,9 @@ from .base import *
 import asyncio
 import socket
 import ssl
+import io as _io
+import os as _os
+import base64 as _b64
 import dns.resolver
 
 # ============== CUSTOM DOMAIN ==============
@@ -881,7 +884,40 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint
     payment = await db.kiosk_payments.find_one({"payment_id": payment_id, "company_id": company_id})
     if not payment:
         raise HTTPException(status_code=404, detail="Betaling niet gevonden")
-    
+    return await _render_receipt_html(payment, company_id, noprint=bool(noprint))
+
+
+@router.get("/public/receipt/{payment_id}")
+async def public_receipt(payment_id: str):
+    """Publicly accessible receipt view (for QR code scanning). 
+    Payment_id is a UUID, non-guessable. Only shows approved payments."""
+    payment = await db.kiosk_payments.find_one({"payment_id": payment_id})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Kwitantie niet gevonden")
+    if payment.get("status") not in ("approved", "completed"):
+        raise HTTPException(status_code=404, detail="Kwitantie niet beschikbaar")
+    return await _render_receipt_html(payment, payment["company_id"], noprint=True, public_view=True)
+
+
+async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = False, public_view: bool = False):
+    """Render the kwitantie HTML. Shared between /admin/.../receipt and /public/receipt/..."""
+
+    # Build public QR URL (authentic kwitantie link) for this payment
+    app_url = _os.environ.get("APP_URL", "https://facturatie.sr").rstrip("/")
+    qr_url = f"{app_url}/api/kiosk/public/receipt/{payment['payment_id']}"
+    qr_data_url = ""
+    try:
+        import qrcode as _qrcode
+        qr = _qrcode.QRCode(version=None, error_correction=_qrcode.constants.ERROR_CORRECT_M, box_size=4, border=2)
+        qr.add_data(qr_url)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="black", back_color="white")
+        buf = _io.BytesIO()
+        img.save(buf, format="PNG")
+        qr_data_url = "data:image/png;base64," + _b64.b64encode(buf.getvalue()).decode("ascii")
+    except Exception:
+        qr_data_url = ""
+
     comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
     
     # Use stamp settings from Instellingen, fallback to company name
@@ -1039,6 +1075,18 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint
   <img src="{approval_signature}" alt="Handtekening" />
 </div>'''
 
+    # QR code block (verifieerbare online kwitantie)
+    qr_block = ""
+    if qr_data_url:
+        qr_block = f'''
+<div class="qr-block">
+  <img src="{qr_data_url}" alt="QR Kwitantie" class="qr-img" />
+  <div class="qr-label">
+    <p class="qr-title">Scan om te verifiëren</p>
+    <p class="qr-hint">Online kwitantie authentiek</p>
+  </div>
+</div>'''
+
     html = f"""<!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -1180,6 +1228,34 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint
     text-align: center;
     line-height: 1.2;
   }}
+  .qr-block {{
+    margin-top: 10px;
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    border-top: 1px dashed #000;
+  }}
+  .qr-block .qr-img {{
+    width: 80px;
+    height: 80px;
+    display: block;
+  }}
+  .qr-block .qr-label {{
+    text-align: right;
+    font-size: 7pt;
+    line-height: 1.3;
+  }}
+  .qr-block .qr-title {{
+    font-weight: bold;
+    font-size: 8pt;
+    color: #000;
+  }}
+  .qr-block .qr-hint {{
+    color: #333;
+    font-style: italic;
+  }}
   .print-bar {{
     position: fixed;
     top: 0; left: 0; right: 0;
@@ -1261,6 +1337,8 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint
   </div>
   {signature_html}
 </div>
+
+{qr_block}
 
 <div class="footer">
   {stamp_name} &bull; {stamp_address} &bull; {kwitantie_nummer}
