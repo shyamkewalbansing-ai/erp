@@ -264,6 +264,13 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
           <Bell className="w-4 h-4" /> Push
         </button>
         <button
+          onClick={() => setSettingsSubTab('subscription')}
+          data-testid="settings-subtab-subscription"
+          className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap flex-shrink-0 ${settingsSubTab === 'subscription' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+        >
+          <Crown className="w-4 h-4" /> Abonnement
+        </button>
+        <button
           onClick={() => setSettingsSubTab('domain')}
           data-testid="settings-subtab-domain"
           className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap flex-shrink-0 ${settingsSubTab === 'domain' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
@@ -276,6 +283,8 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
         <MessagesTab token={token} />
       ) : settingsSubTab === 'push' ? (
         <PushNotificationsSettings token={token} />
+      ) : settingsSubTab === 'subscription' ? (
+        <SubscriptionTab company={company} token={token} />
       ) : settingsSubTab === 'domain' ? (
         <DomainSettings company={company} token={token} onRefresh={onRefresh} />
       ) : (
@@ -997,8 +1006,6 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
 
       {/* Email SMTP Section */}
       <SmtpSettings company={company} token={token} onRefresh={onRefresh} />
-      {/* Abonnement Section */}
-      <SubscriptionTab company={company} />
       </>
       )}
     </div>
@@ -2964,43 +2971,144 @@ function SmtpSettings({ company, token, onRefresh }) {
   );
 }
 
-function SubscriptionTab({ company }) {
+function SubscriptionTab({ company, token }) {
+  const [sub, setSub] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const r = await axios.get(`${API}/admin/subscription`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!cancelled) setSub(r.data);
+      } catch { /* noop */ }
+      if (!cancelled) setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [token]);
+
+  if (loading) {
+    return <div className="bg-white rounded-xl border border-slate-200 p-12 text-center"><div className="text-slate-400">Laden...</div></div>;
+  }
+  if (!sub) {
+    return <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-500">Abonnement informatie kon niet worden geladen.</div>;
+  }
+
+  const isLifetime = sub.lifetime;
+  const status = sub.subscription_status || 'trial';
+  const statusMeta = {
+    lifetime: { label: 'LIFETIME PRO', color: 'from-purple-500 to-purple-600', text: 'U heeft levenslang Pro toegang. Geen verdere betalingen nodig.' },
+    active: { label: 'Pro Actief', color: 'from-green-500 to-green-600', text: 'Uw abonnement is actief. Dank voor uw betaling!' },
+    trial: { label: `Proef · nog ${sub.days_left_trial ?? 0} dagen`, color: 'from-blue-500 to-blue-600', text: 'U bent in de 14-daagse proefperiode.' },
+    overdue: { label: 'Achterstallig', color: 'from-red-500 to-red-600', text: 'Uw betaling is overschreden. Maak het openstaande bedrag over om uw abonnement te verlengen.' },
+  }[status] || { label: status, color: 'from-slate-500 to-slate-600', text: '' };
+
+  const bd = sub.bank_details || {};
+  const hasBank = bd.bank_name || bd.account_number;
+  const invoices = sub.invoices || [];
+  const openInvoices = invoices.filter(i => i.status !== 'paid');
+
+  const formatSRD = (v) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'SRD', minimumFractionDigits: 2 }).format(v || 0);
+
   return (
-    <div className="bg-white rounded-xl border border-slate-200 p-8 text-center">
-      <div className="w-20 h-20 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-6">
-        <Crown className="w-10 h-10 text-orange-500" />
-      </div>
-      <h2 className="text-2xl font-bold text-slate-900 mb-2">Gratis Plan</h2>
-      <p className="text-slate-500 mb-8">U gebruikt momenteel het gratis plan van Appartement Kiosk</p>
-      
-      <div className="bg-slate-50 rounded-xl p-6 max-w-md mx-auto mb-8">
-        <h4 className="font-semibold text-slate-900 mb-4">Inbegrepen:</h4>
-        <ul className="text-left space-y-2 text-slate-600">
-          <li className="flex items-center gap-2">
-            <Check className="w-4 h-4 text-green-500" />
-            Onbeperkt appartementen
-          </li>
-          <li className="flex items-center gap-2">
-            <Check className="w-4 h-4 text-green-500" />
-            Onbeperkt huurders
-          </li>
-          <li className="flex items-center gap-2">
-            <Check className="w-4 h-4 text-green-500" />
-            Kiosk voor betalingen
-          </li>
-          <li className="flex items-center gap-2">
-            <Check className="w-4 h-4 text-green-500" />
-            Kwitanties genereren
-          </li>
-          <li className="flex items-center gap-2">
-            <Check className="w-4 h-4 text-green-500" />
-            Stroombrekers beheer
-          </li>
-        </ul>
+    <div className="space-y-4">
+      {/* Hero status card */}
+      <div className={`rounded-2xl p-6 text-white bg-gradient-to-br ${statusMeta.color} shadow-lg`}>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Crown className="w-6 h-6" />
+              <span className="text-xs font-bold uppercase tracking-widest opacity-80">{statusMeta.label}</span>
+            </div>
+            <p className="text-sm opacity-90 max-w-md">{statusMeta.text}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs opacity-80">Maandelijks</p>
+            <p className="text-3xl font-extrabold">{isLifetime ? 'GRATIS' : formatSRD(sub.monthly_price)}</p>
+            {!isLifetime && <p className="text-xs opacity-80">per maand</p>}
+          </div>
+        </div>
+        {sub.trial_ends_at && !isLifetime && (
+          <div className="mt-4 pt-4 border-t border-white/20 text-xs opacity-90">
+            Proefperiode eindigt: {new Date(sub.trial_ends_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'long', year: 'numeric' })}
+          </div>
+        )}
       </div>
 
-      <p className="text-sm text-slate-400">
-        Bedrijfs-ID: {company?.company_id}
+      {/* Bank details */}
+      {!isLifetime && (
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <h3 className="font-bold text-slate-900 mb-1">Bankgegevens voor betaling</h3>
+          <p className="text-xs text-slate-500 mb-4">Maak het bedrag over via bankoverschrijving. Vermeld uw bedrijfsnaam als omschrijving.</p>
+          {hasBank ? (
+            <div className="space-y-2 text-sm bg-slate-50 rounded-lg p-4">
+              {bd.bank_name && <div className="flex justify-between border-b border-slate-100 pb-2"><span className="text-slate-500">Bank</span><span className="font-semibold text-slate-900">{bd.bank_name}</span></div>}
+              {bd.account_holder && <div className="flex justify-between border-b border-slate-100 pb-2"><span className="text-slate-500">Ten name van</span><span className="font-semibold text-slate-900">{bd.account_holder}</span></div>}
+              {bd.account_number && <div className="flex justify-between border-b border-slate-100 pb-2"><span className="text-slate-500">Rekening</span><span className="font-mono font-semibold text-slate-900">{bd.account_number}</span></div>}
+              {bd.swift && <div className="flex justify-between border-b border-slate-100 pb-2"><span className="text-slate-500">SWIFT</span><span className="font-mono font-semibold text-slate-900">{bd.swift}</span></div>}
+              <div className="flex justify-between"><span className="text-slate-500">Omschrijving</span><span className="font-semibold text-slate-900">{sub.name || company?.name}</span></div>
+              {bd.reference_hint && <p className="text-xs text-slate-500 pt-2 border-t border-slate-200 mt-2">{bd.reference_hint}</p>}
+            </div>
+          ) : (
+            <p className="text-sm bg-amber-50 border border-amber-200 text-amber-800 rounded-lg p-4">
+              De bankgegevens zijn nog niet ingesteld. Neem contact op met de beheerder van Facturatie.sr.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Invoices */}
+      <div className="bg-white rounded-xl border border-slate-200">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-slate-900">Uw facturen</h3>
+            <p className="text-xs text-slate-500">{invoices.length} in totaal · {openInvoices.length} openstaand</p>
+          </div>
+        </div>
+        {invoices.length === 0 ? (
+          <div className="p-8 text-center text-slate-400 text-sm">Geen facturen beschikbaar.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="text-left p-3 text-xs font-semibold text-slate-500 uppercase">Periode</th>
+                  <th className="text-right p-3 text-xs font-semibold text-slate-500 uppercase">Bedrag</th>
+                  <th className="text-center p-3 text-xs font-semibold text-slate-500 uppercase">Status</th>
+                  <th className="text-left p-3 text-xs font-semibold text-slate-500 uppercase">Vervaldatum</th>
+                  <th className="text-left p-3 text-xs font-semibold text-slate-500 uppercase">Betaald op</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoices.map(inv => {
+                  const statusLabel = { paid: 'Betaald', unpaid: 'Onbetaald', pending_review: 'Wacht op review' }[inv.status] || inv.status;
+                  const statusColor = {
+                    paid: 'bg-green-50 text-green-700',
+                    unpaid: inv.is_overdue ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700',
+                    pending_review: 'bg-blue-50 text-blue-700',
+                  }[inv.status] || 'bg-slate-50 text-slate-600';
+                  return (
+                    <tr key={inv.invoice_id} className="border-t border-slate-100">
+                      <td className="p-3 font-semibold text-slate-800">{inv.period}</td>
+                      <td className="p-3 text-right font-bold text-slate-900">{formatSRD(inv.amount)}</td>
+                      <td className="p-3 text-center">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${statusColor}`}>
+                          {statusLabel}{inv.is_overdue && ` (+${inv.days_overdue}d)`}
+                        </span>
+                      </td>
+                      <td className="p-3 text-xs text-slate-500">{inv.due_date ? new Date(inv.due_date).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
+                      <td className="p-3 text-xs text-slate-500">{inv.paid_at ? new Date(inv.paid_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <p className="text-xs text-center text-slate-400 pt-2">
+        Bedrijfs-ID: <span className="font-mono">{company?.company_id}</span>
       </p>
     </div>
   );

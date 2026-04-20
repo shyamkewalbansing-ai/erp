@@ -2,8 +2,7 @@
 
 ## Sprint 26 (20 april 2026) — SaaS Subscription Management
 
-### Geïmplementeerd (Superadmin refactor):
-- **Nieuwe collection** `kiosk_subscription_invoices` + `kiosk_saas_config` (bank_details)
+### Geïmplementeerd (Superadmin refactor):- **Nieuwe collection** `kiosk_subscription_invoices` + `kiosk_saas_config` (bank_details)
 - **Backend** (`subscription.py`): DEFAULT_MONTHLY_PRICE=3000, TRIAL_DAYS=14
   - `GET/POST/DELETE /superadmin/invoices` (filter op status/company)
   - `POST /superadmin/invoices/{id}/mark-paid` + `mark-unpaid`
@@ -24,6 +23,7 @@
   1. Stap 1: formulier invullen (naam, email, wachtwoord, tel)
   2. Stap 2: bevestigingsscherm met SRD 3.000 groot display, bankgegevens, proef-info → "Account aanmaken & 14 dagen proef starten"
 - **Company Dashboard banner** (`KioskAdminDashboard.jsx`): `SubscriptionBanner` toont proef-dagen / achterstallig waarschuwing met bankgegevens (dismiss-baar per sessie)
+- **Instellingen → Abonnement sub-tab** (`SettingsTab.jsx`): vervangt oude "Gratis Plan" met echte gekoppelde data — hero kaart met status (Lifetime/Actief/Proef/Achterstallig) + maandbedrag, bankgegevens block, volledige facturen tabel met per/bedrag/status/vervaldatum/betaaldatum
 
 ## Sprint 25 (19 april 2026) — Superadmin: Impersonate + Delete
 
