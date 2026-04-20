@@ -642,13 +642,16 @@ function KasTab({ token, tenants }) {
           {/* Currency filter (only for multi-currency accounts) */}
           {accountCurrencies.length > 1 && (
             <div className="flex items-center gap-2 flex-wrap" data-testid="currency-filter">
-              <span className="text-xs text-slate-400 font-medium">Toon valuta:</span>
-              {accountCurrencies.map(c => (
-                <button key={c} onClick={() => setActiveCurrencyFilter(c)} data-testid={`currency-filter-${c}`}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${activeCurrencyFilter === c ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
-                  {CURRENCY_SYMBOLS[c]} {c}
-                </button>
-              ))}
+              {accountCurrencies.map(c => {
+                const sym = CURRENCY_SYMBOLS[c];
+                const label = sym === c ? c : `${sym} ${c}`;
+                return (
+                  <button key={c} onClick={() => setActiveCurrencyFilter(c)} data-testid={`currency-filter-${c}`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${activeCurrencyFilter === c ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
+                    {label}
+                  </button>
+                );
+              })}
             </div>
           )}
 
