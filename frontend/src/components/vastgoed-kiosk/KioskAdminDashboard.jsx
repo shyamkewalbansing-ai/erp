@@ -25,8 +25,17 @@ import AddRentModal from './admin/AddRentModal';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
-export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthenticated = false, onBack, onLock, kioskEmployee }) {
+export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthenticated = false, onBack, onLock, kioskEmployee: kioskEmployeeProp }) {
   const navigate = useNavigate();
+  // Fallback to localStorage for direct /vastgoed/admin access via PIN keypad
+  const kioskEmployee = kioskEmployeeProp || (() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem('kiosk_employee_session') || 'null');
+      if (!raw) return null;
+      // Normalize: backend uses employee_name, component expects 'name'
+      return { ...raw, name: raw.name || raw.employee_name };
+    } catch { return null; }
+  })();
   const [loading, setLoading] = useState(true);
   const [company, setCompany] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -68,6 +77,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
       onLock();
     } else {
       localStorage.removeItem('kiosk_token');
+      localStorage.removeItem('kiosk_employee_session');
       Object.keys(sessionStorage).forEach(key => {
         if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
       });

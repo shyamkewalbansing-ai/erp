@@ -39,7 +39,7 @@ export default function KioskLanding() {
     const token = localStorage.getItem('kiosk_token');
     if (token) {
       axios.get(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(res => { setCompany(res.data); setIsLoggedIn(true); navigate(`/vastgoed/${res.data.company_id}`); })
+        .then(res => { setCompany(res.data); setIsLoggedIn(true); navigate('/vastgoed/admin'); })
         .catch(() => localStorage.removeItem('kiosk_token'))
         .finally(() => setLoading(false));
     } else { setLoading(false); }
@@ -66,9 +66,152 @@ export default function KioskLanding() {
       onSuccess={(data) => {
         setCompany(data);
         setIsLoggedIn(true);
-        navigate(`/vastgoed/${data.company_id}`);
+        // Persist employee session for admin RBAC if PIN was an employee PIN
+        if (data.employee_id) {
+          localStorage.setItem('kiosk_employee_session', JSON.stringify({
+            employee_id: data.employee_id,
+            employee_name: data.employee_name,
+            role: data.role,
+            company_id: data.company_id,
+          }));
+        } else {
+          localStorage.removeItem('kiosk_employee_session');
+        }
+        navigate(`/vastgoed/admin`);
       }}
     />
+  );
+}
+
+// ============ PIN LANDING SCREEN — direct keypad op /vastgoed ============
+function PinLandingScreen({ onSuccess, onPassword, onRegister, onSuperadmin }) {
+  const [pin, setPin] = useState(['', '', '', '']);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const verifyPin = async (pinCode) => {
+    setLoading(true); setError('');
+    try {
+      const res = await axios.post(`${API}/auth/pin`, { pin: pinCode });
+      localStorage.setItem('kiosk_token', res.data.token);
+      sessionStorage.setItem(`kiosk_pin_verified_${res.data.company_id}`, 'true');
+      onSuccess(res.data);
+    } catch {
+      setError('Ongeldige PIN code');
+      setPin(['', '', '', '']);
+    } finally { setLoading(false); }
+  };
+
+  const handleKey = (key) => {
+    if (loading) return;
+    setError('');
+    if (key === 'DEL') {
+      for (let i = 3; i >= 0; i--) {
+        if (pin[i]) { const np = [...pin]; np[i] = ''; setPin(np); return; }
+      }
+      return;
+    }
+    for (let i = 0; i < 4; i++) {
+      if (!pin[i]) {
+        const np = [...pin]; np[i] = key; setPin(np);
+        if (i === 3) verifyPin(np.join(''));
+        return;
+      }
+    }
+  };
+
+  return (
+    <div className="h-screen bg-orange-500 flex flex-col overflow-hidden" style={{ fontFamily: 'Outfit, sans-serif' }}>
+      <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 bg-orange-600/20 backdrop-blur-sm border-b border-white/20">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white flex items-center justify-center shadow-lg">
+            <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-orange-600" />
+          </div>
+          <div>
+            <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">Appartement Kiosk</h1>
+            <p className="text-[11px] sm:text-xs text-white/80 font-medium">Beheer & Kiosk toegang</p>
+          </div>
+        </div>
+        <KioskClock />
+      </div>
+
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 overflow-auto">
+        <div className="bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] w-full max-w-md p-6 sm:p-10" data-testid="landing-pin-card">
+          <div className="text-center mb-5 sm:mb-7">
+            <div className="w-16 h-16 rounded-2xl bg-[#FF5C00] flex items-center justify-center mx-auto mb-3 shadow-lg shadow-orange-500/30">
+              <Lock className="w-9 h-9 text-white" />
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">PIN Code</h2>
+            <p className="text-sm text-slate-400 mt-1">Beheerder of medewerker PIN</p>
+          </div>
+
+          {error && (
+            <div className="mb-4 p-2.5 bg-red-50 border border-red-200 text-red-600 rounded-xl text-center text-sm font-medium" data-testid="landing-pin-error">
+              {error}
+            </div>
+          )}
+
+          <div className="flex justify-center gap-3 sm:gap-4 mb-6">
+            {pin.map((digit, i) => (
+              <div
+                key={i}
+                data-testid={`landing-pin-input-${i}`}
+                className={`text-center font-bold rounded-xl border-2 transition-all w-14 h-16 sm:w-16 sm:h-18 text-2xl flex items-center justify-center ${
+                  error ? 'border-red-400 bg-red-50 text-red-600'
+                    : digit ? 'border-[#FF5C00] bg-orange-50 text-[#FF5C00]'
+                    : 'border-slate-200 bg-[#F9FAFB] text-slate-300'
+                }`}
+              >
+                {digit ? '●' : ''}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 sm:gap-3 max-w-[320px] mx-auto">
+            {['1','2','3','4','5','6','7','8','9','_e','0','DEL'].map((k) => (
+              k === '_e' ? <div key="e" /> : (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => handleKey(k)}
+                  disabled={loading}
+                  data-testid={`landing-keypad-${k}`}
+                  className={`h-14 sm:h-16 text-xl sm:text-2xl font-bold rounded-xl transition-all active:scale-90 disabled:opacity-50 flex items-center justify-center ${
+                    k === 'DEL'
+                      ? 'bg-red-50 text-red-500 hover:bg-red-100 border border-red-200'
+                      : 'bg-[#F4F5F7] text-slate-800 hover:bg-orange-50 hover:text-orange-600 border border-slate-200'
+                  }`}
+                >
+                  {k === 'DEL' ? <Delete className="w-5 h-5" /> : k}
+                </button>
+              )
+            ))}
+          </div>
+
+          {loading && (
+            <div className="flex items-center justify-center gap-2 mt-5 text-slate-400">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm font-medium">Verifiëren...</span>
+            </div>
+          )}
+
+          {/* Bottom links */}
+          <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-center gap-4 flex-wrap text-xs font-medium">
+            <button onClick={onPassword} data-testid="landing-password-btn" className="flex items-center gap-1 text-slate-500 hover:text-orange-500 transition">
+              <KeyRound className="w-3.5 h-3.5" /> Wachtwoord
+            </button>
+            <span className="text-slate-200">•</span>
+            <button onClick={onRegister} data-testid="landing-register-btn" className="flex items-center gap-1 text-slate-500 hover:text-orange-500 transition">
+              <UserPlus className="w-3.5 h-3.5" /> Nieuw account
+            </button>
+            <span className="text-slate-200">•</span>
+            <button onClick={onSuperadmin} data-testid="landing-superadmin-btn" className="flex items-center gap-1 text-slate-400 hover:text-red-500 transition">
+              <Shield className="w-3.5 h-3.5" /> Superadmin
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -159,89 +302,9 @@ function KioskLoginScreen({ onSuccess }) {
     setError(''); setShowPassword(false);
   };
 
-  // ============ MAIN KIOSK SCREEN ============
+  // ============ MAIN KIOSK SCREEN — DIRECT PIN KEYPAD ============
   if (view === 'main') {
-    return (
-      <div className="h-screen bg-orange-500 flex flex-col overflow-hidden" style={{ fontFamily: 'Outfit, sans-serif' }}>
-        {/* Top Bar */}
-        <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 bg-orange-600/20 backdrop-blur-sm border-b border-white/20">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white flex items-center justify-center shadow-lg">
-              <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-orange-600" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">Appartement Kiosk</h1>
-              <p className="text-[11px] sm:text-xs text-white/80 font-medium">Huurbetalingen Suriname</p>
-            </div>
-          </div>
-          <KioskClock />
-        </div>
-
-        {/* Main Content - Centered Card */}
-        <div className="flex-1 flex items-center justify-center p-4 sm:p-6">
-          <div className="bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] w-full max-w-2xl p-8 sm:p-10 md:p-14" data-testid="kiosk-login-card">
-            {/* Welcome */}
-            <div className="text-center mb-8 sm:mb-10">
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900 tracking-tight mb-2 sm:mb-3">
-                Welkom
-              </h2>
-              <p className="text-base sm:text-lg text-slate-400 font-medium">Kies een inlogmethode</p>
-            </div>
-
-            {/* Login Method Buttons */}
-            <div className="space-y-4 mb-8">
-              {/* PIN Login - Primary */}
-              <button
-                onClick={() => setShowPinModal(true)}
-                data-testid="kiosk-pin-login-btn"
-                className="w-full h-20 md:h-24 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-4 text-xl md:text-2xl font-semibold transition-all active:scale-[0.97]"
-              >
-                <Lock className="w-7 h-7 md:w-8 md:h-8" />
-                Inloggen met PIN code
-              </button>
-
-              {/* Password button */}
-              <button
-                onClick={() => { resetForm(); setView('password'); }}
-                data-testid="kiosk-password-login-btn"
-                className="h-20 w-full bg-white text-slate-800 border-2 border-slate-200 hover:border-orange-500 hover:bg-orange-50 rounded-2xl flex items-center justify-center gap-3 text-lg md:text-xl font-semibold transition-all active:scale-[0.97]"
-              >
-                <KeyRound className="w-6 h-6 md:w-7 md:h-7 text-orange-500" />
-                Wachtwoord
-              </button>
-            </div>
-
-            {/* Bottom Links */}
-            <div className="flex items-center justify-between pt-6 border-t border-slate-100">
-              <button
-                onClick={() => { resetForm(); setView('register'); }}
-                data-testid="switch-to-register"
-                className="flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-orange-500 transition"
-              >
-                <UserPlus className="w-4 h-4" />
-                Nieuw account
-              </button>
-              <button
-                onClick={() => { resetForm(); setView('superadmin'); }}
-                data-testid="switch-to-superadmin"
-                className="flex items-center gap-2 text-xs font-medium text-slate-300 hover:text-red-500 transition"
-              >
-                <Shield className="w-3.5 h-3.5" />
-                Superadmin
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* PIN Modal */}
-        {showPinModal && (
-          <PinModal
-            onSuccess={onSuccess}
-            onClose={() => setShowPinModal(false)}
-          />
-        )}
-      </div>
-    );
+    return <PinLandingScreen onSuccess={onSuccess} onPassword={() => { resetForm(); setView('password'); }} onRegister={() => { resetForm(); setView('register'); }} onSuperadmin={() => { resetForm(); setView('superadmin'); }} />;
   }
 
   // ============ PASSWORD LOGIN ============

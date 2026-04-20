@@ -1,5 +1,31 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 43 (20 april 2026) — /vastgoed direct PIN keypad + medewerker PIN login
+
+### Verzoek:
+1. `/vastgoed` landing moet direct een PIN keypad tonen (gelijk aan Kiosk PIN entry) zonder popup of "Welkom/Kies inlogmethode" tussenscherm
+2. Niet alleen beheerder maar ook medewerkers moeten kunnen inloggen op `/vastgoed` via hun PIN
+
+### Backend (`auth.py`):
+- **`POST /auth/pin`** uitgebreid: eerst matchen op `kiosk_companies.kiosk_pin` (beheerder), als geen match → zoeken in `kiosk_employees.pin` met status=active
+- Response bevat nu `role` (beheerder/boekhouder/kiosk_medewerker), `employee_id`, `employee_name` naast token
+- Wrong PIN → 401 "Ongeldige PIN code"
+
+### Frontend:
+- **Nieuwe `PinLandingScreen` component** in `CompanySelect.jsx` — oranje scherm met Lock-icon, "PIN Code" titel, "Beheerder of medewerker PIN" ondertitel, 4 PIN-dots + 0-9 keypad + DEL
+- Oude landing screen met "Welkom / Kies inlogmethode / PIN modal popup" volledig vervangen
+- Na succesvolle PIN: `localStorage.setItem('kiosk_employee_session', {employee_id, employee_name, role, company_id})` alleen als employee PIN gebruikt; navigeert naar `/vastgoed/admin`
+- Footer links: Wachtwoord · Nieuw account · Superadmin (kleiner, onder de keypad)
+- **`KioskAdminDashboard.jsx`** leest `kiosk_employee_session` uit localStorage als fallback (voor direct `/vastgoed/admin` access) en normaliseert `employee_name` → `name` veld
+- Logout ruimt ook `kiosk_employee_session` op
+
+### Tested end-to-end:
+- curl: Company PIN 5678 → role=beheerder, employee_id=null ✅
+- curl: Employee PIN 9876 → role=boekhouder, employee_id + employee_name gevuld ✅
+- curl: Wrong PIN → 401 ✅
+- Screenshot: `/vastgoed` toont oranje PIN keypad landing (Lock-icon + PIN Code + Beheerder of medewerker PIN) ✅
+- Screenshot: na PIN 9876 login → admin dashboard KEWALBANSING met header "Bharat Kewalbansing · Boekhouder" ✅
+
 ## Sprint 42 (20 april 2026) — Filter polishing
 
 ### Verzoek:

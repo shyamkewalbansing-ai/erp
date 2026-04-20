@@ -109,18 +109,36 @@ async def login_company(data: CompanyLogin):
 
 @router.post("/auth/pin")
 async def login_with_pin(data: KioskPinVerify):
-    """Login to company account using 4-digit PIN code"""
+    """Login using 4-digit PIN — accepts both company Kiosk PIN (beheerder) and employee PIN."""
+    # First: try company Kiosk PIN (beheerder/owner)
     company = await db.kiosk_companies.find_one({"kiosk_pin": data.pin, "status": "active"})
-    if not company:
+    if company:
+        token = create_token(company["company_id"])
+        return {
+            "company_id": company["company_id"],
+            "name": company["name"],
+            "email": company.get("email", ""),
+            "role": "beheerder",
+            "employee_id": None,
+            "employee_name": company["name"],
+            "token": token,
+        }
+    # Second: try employee PIN across all active companies
+    emp = await db.kiosk_employees.find_one({"pin": data.pin, "status": "active"})
+    if not emp:
         raise HTTPException(status_code=401, detail="Ongeldige PIN code")
-    
+    company = await db.kiosk_companies.find_one({"company_id": emp["company_id"], "status": "active"})
+    if not company:
+        raise HTTPException(status_code=401, detail="Bedrijf niet actief")
     token = create_token(company["company_id"])
-    
     return {
         "company_id": company["company_id"],
         "name": company["name"],
         "email": company.get("email", ""),
-        "token": token
+        "role": emp.get("role", "kiosk_medewerker"),
+        "employee_id": emp.get("employee_id"),
+        "employee_name": emp.get("name", ""),
+        "token": token,
     }
 
 @router.get("/auth/me")
