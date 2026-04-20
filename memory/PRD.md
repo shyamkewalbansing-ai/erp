@@ -1,5 +1,24 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 32 (20 april 2026) — Kiosk Receipt UX: pending vs approved styling
+
+### Probleem:
+De `KioskReceipt` en `ReceiptTicket` maakten in de "show" phase hardcoded gebruik van groene success styling ("Betaling geslaagd!" + groene check) ongeacht de payment status. Voor een boekhouder/medewerker (non-beheerder) flow met `status: pending` zag de UI er nog steeds uit als succesvol, terwijl de betaling nog op goedkeuring wacht. Ook toonde de bon een misleidende "OPENSTAAND NA BETALING" label met pre-payment saldi.
+
+### Opgelost:
+- **`KioskReceipt.jsx`** — Show phase: amber Clock icon + "Betaling ontvangen" + subtitle "Wacht op goedkeuring beheerder" voor pending; groene CheckCircle + "Betaling geslaagd!" voor approved/beheerder
+- **`KioskReceipt.jsx`** — Done phase: amber themed card ("Wacht op goedkeuring" titel, "Bedrag (in afwachting)" + Status row) voor pending; groene themed card met saldo breakdown + Totaal openstaand bar voor approved
+- **`KioskReceipt.jsx`** — Header: "Betaling ingediend" (pending) vs "Betaling voltooid" (approved)
+- **`ReceiptTicket.jsx`** — Voegt "*** WACHT OP GOEDKEURING ***" gele banner toe bovenaan de bon bij pending
+- **`ReceiptTicket.jsx`** — "OPENSTAAND (HUIDIG)" label i.p.v. "OPENSTAAND NA BETALING" bij pending (via `hasRemainingData = !isPending && ...`)
+- **`ReceiptTicket.jsx`** — Bij pending toont de bon "*** SALDO WORDT BIJGEWERKT NA GOEDKEURING ***" i.p.v. het saldo-overzicht of "*** VOLLEDIG VOLDAAN ***"
+
+### Tested end-to-end:
+- Company PIN 5678 (beheerder) → backend returnt `status: approved` + bijgewerkte `remaining_*` → frontend toont groen "Betaling geslaagd!" + correct "Openstaande huur SRD 0,00" ✅
+- Employee PIN 1234 (boekhouder) → backend returnt `status: pending` + pre-payment `remaining_*` → frontend toont amber Clock + "Wacht op goedkeuring" + "*** WACHT OP GOEDKEURING ***" banner op bon ✅
+- Beide flows verified via live screenshots ✅
+- Lint clean: KioskReceipt.jsx + ReceiptTicket.jsx ✅
+
 ## Sprint 31 (20 april 2026) — QR Code op Kwitantie
 
 ### Geïmplementeerd:

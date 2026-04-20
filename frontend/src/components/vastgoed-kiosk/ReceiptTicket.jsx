@@ -24,6 +24,7 @@ const METHOD_LABELS = {
 export default function ReceiptTicket({ payment, tenant, preview = false, stampData = null }) {
   if (!payment) return null;
 
+  const isPending = payment.status === 'pending';
   const date = new Date(payment.created_at);
   const dateStr = date.toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const timeStr = date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
@@ -47,7 +48,7 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
   const remainingService = payment.remaining_service ?? (tenant?.service_costs || 0);
   const remainingFines = payment.remaining_fines ?? (tenant?.fines || 0);
   const remainingInternet = payment.remaining_internet ?? (tenant?.internet_outstanding || 0);
-  const hasRemainingData = payment.remaining_rent !== null && payment.remaining_rent !== undefined;
+  const hasRemainingData = !isPending && payment.remaining_rent !== null && payment.remaining_rent !== undefined;
   const totalRemaining = (remainingRent || 0) + (remainingService || 0) + (remainingFines || 0) + (remainingInternet || 0);
 
   const font = "'Courier New', 'Courier', monospace";
@@ -108,6 +109,16 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
       {/* ====== KWITANTIE HEADER BAR ====== */}
       {sectionBar('KWITANTIE')}
 
+      {isPending && (
+        <div style={{
+          border: '2px dashed #d97706', background: '#fef3c7', color: '#92400e',
+          padding: '6px 8px', margin: '6px 0', textAlign: 'center',
+          fontFamily: font, fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px'
+        }}>
+          *** WACHT OP GOEDKEURING ***
+        </div>
+      )}
+
       <div style={{ padding: '0 2px' }}>
         {row('Bonnr.', kwNr, true, '12px')}
         {row('Datum', `${dateStr}  ${timeStr}`, false, '11px')}
@@ -159,7 +170,11 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
       {/* ====== OPENSTAAND SALDO ====== */}
       {dashedLine()}
       <div style={{ padding: '0 2px' }}>
-        {totalRemaining > 0 ? (
+        {isPending ? (
+          <div style={{ textAlign: 'center', fontSize: '11px', fontWeight: 'bold', padding: '4px 0', color: '#92400e' }}>
+            *** SALDO WORDT BIJGEWERKT NA GOEDKEURING ***
+          </div>
+        ) : totalRemaining > 0 ? (
           <>
             <div style={{ fontSize: '10px', color: '#555', marginBottom: '4px', textTransform: 'uppercase' }}>Openstaand{!hasRemainingData ? ' (huidig)' : ' na betaling'}:</div>
             {remainingRent > 0 && row('  Huur', formatSRD(remainingRent).replace('SRD ', ''), false, '11px')}

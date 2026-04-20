@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { CheckCircle, Home } from 'lucide-react';
+import { CheckCircle, Home, Clock } from 'lucide-react';
 import ReceiptTicket from './ReceiptTicket';
 import axios from 'axios';
 
@@ -198,7 +198,7 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
       {phase !== 'done' ? (
         <>
           <div className="flex items-center justify-center flex-shrink-0" style={{ height: '6vh' }}>
-            <span className="kiosk-subtitle text-white font-bold">Betaling voltooid</span>
+            <span className="kiosk-subtitle text-white font-bold">{isPending ? 'Betaling ingediend' : 'Betaling voltooid'}</span>
           </div>
 
           <div className="flex-1 flex flex-col items-center min-h-0 overflow-hidden" style={{ paddingBottom: '1.5vh' }}>
@@ -207,17 +207,26 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
                 animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',
                 width: 'clamp(48px, 7vh, 72px)', height: 'clamp(48px, 7vh, 72px)',
                 borderRadius: '50%', marginBottom: 'clamp(6px, 1vh, 12px)',
-                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                background: isPending ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, #22c55e, #16a34a)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center'
               }}>
-                <CheckCircle style={{ width: '3.5vh', height: '3.5vh' }} className="text-white" strokeWidth={2.5} />
+                {isPending ? (
+                  <Clock style={{ width: '3.5vh', height: '3.5vh' }} className="text-white" strokeWidth={2.5} />
+                ) : (
+                  <CheckCircle style={{ width: '3.5vh', height: '3.5vh' }} className="text-white" strokeWidth={2.5} />
+                )}
               </div>
               <h1 className="text-white font-black" style={{ fontSize: 'clamp(18px, 2.8vh, 30px)', marginBottom: '0.3vh' }}>
-                Betaling geslaagd!
+                {isPending ? 'Betaling ontvangen' : 'Betaling geslaagd!'}
               </h1>
               <p className="text-white/70 font-medium" style={{ fontSize: 'clamp(13px, 1.6vh, 18px)' }}>
                 {formatSRD(payment.amount)} - {kwNr}
               </p>
+              {isPending && (
+                <p className="text-white/80 font-semibold" style={{ fontSize: 'clamp(12px, 1.4vh, 16px)', marginTop: '0.4vh' }}>
+                  Wacht op goedkeuring beheerder
+                </p>
+              )}
               {phase === 'ejecting' && (
                 <div className="flex items-center gap-2" style={{ marginTop: '0.8vh' }}>
                   <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
@@ -241,7 +250,7 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
       ) : (
         <>
           <div className="flex items-center justify-center flex-shrink-0" style={{ height: '6vh' }}>
-            <span className="kiosk-subtitle text-white font-bold">Betaling voltooid</span>
+            <span className="kiosk-subtitle text-white font-bold">{isPending ? 'Betaling ingediend' : 'Betaling voltooid'}</span>
           </div>
 
           <div className="flex-1 flex items-center justify-center min-h-0" style={{ paddingBottom: '1.5vh' }}>
@@ -250,58 +259,71 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
               padding: 'clamp(20px, 3vh, 40px) clamp(24px, 3vw, 48px)',
               animation: 'fadeUp 0.5s ease-out forwards'
             }}>
-              <div className="rounded-full bg-emerald-50 flex items-center justify-center" style={{
+              <div className="rounded-full flex items-center justify-center" style={{
                 width: 'clamp(56px, 8vh, 84px)', height: 'clamp(56px, 8vh, 84px)',
-                border: '3px solid #bbf7d0', marginBottom: 'clamp(8px, 1.5vh, 16px)',
+                background: isPending ? '#fef3c7' : '#ecfdf5',
+                border: isPending ? '3px solid #fde68a' : '3px solid #bbf7d0',
+                marginBottom: 'clamp(8px, 1.5vh, 16px)',
                 animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.2s forwards', opacity: 0
               }}>
-                <CheckCircle style={{ width: '4vh', height: '4vh' }} className="text-emerald-500" />
+                {isPending ? (
+                  <Clock style={{ width: '4vh', height: '4vh' }} className="text-amber-500" />
+                ) : (
+                  <CheckCircle style={{ width: '4vh', height: '4vh' }} className="text-emerald-500" />
+                )}
               </div>
 
-              <h2 className="font-black text-emerald-500 tracking-tight" style={{
+              <h2 className={`font-black tracking-tight ${isPending ? 'text-amber-600' : 'text-emerald-500'}`} style={{
                 fontSize: 'clamp(22px, 3.5vh, 38px)', marginBottom: '0.3vh',
                 animation: 'fadeUp 0.4s ease-out 0.35s forwards', opacity: 0
-              }}>{isPending ? 'Betaling ontvangen (wacht op goedkeuring)' : (allPaid ? 'Alles betaald!' : 'Betaling geslaagd!')}</h2>
+              }}>{isPending ? 'Wacht op goedkeuring' : (allPaid ? 'Alles betaald!' : 'Betaling geslaagd!')}</h2>
 
               <p className="text-slate-400 font-medium" style={{
                 fontSize: 'clamp(12px, 1.5vh, 16px)', marginBottom: 'clamp(12px, 2vh, 24px)',
                 animation: 'fadeUp 0.4s ease-out 0.45s forwards', opacity: 0
-              }}>{payment.tenant_name || tenant?.name || ''} - Appt. {payment.apartment_number || ''}</p>
+              }}>{isPending ? 'Uw betaling wordt verwerkt door de beheerder' : `${payment.tenant_name || tenant?.name || ''} - Appt. ${payment.apartment_number || ''}`}</p>
 
               <div style={{
                 width: '100%', marginBottom: 'clamp(12px, 2vh, 24px)',
                 animation: 'fadeUp 0.4s ease-out 0.55s forwards', opacity: 0
               }}>
                 <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #f1f5f9' }}>
-                  {[
+                  {(isPending ? [
+                    { label: 'Bedrag (in afwachting)', value: formatSRD(payment.amount), bold: true, pending: true },
+                    { label: 'Kwitantie', value: kwNr },
+                    { label: 'Betaalwijze', value: METHOD_LABELS[payment.payment_method] || 'Contant' },
+                    { label: 'Status', value: 'In afwachting van goedkeuring', pending: true },
+                  ] : [
                     { label: 'Betaald bedrag', value: formatSRD(payment.amount), bold: true },
                     { label: 'Kwitantie', value: kwNr },
                     { label: 'Betaalwijze', value: METHOD_LABELS[payment.payment_method] || 'Contant' },
                     { label: 'Openstaande huur', value: formatSRD(remainingRent), green: remainingRent <= 0 },
                     { label: 'Servicekosten', value: formatSRD(remainingService), green: remainingService <= 0 },
                     { label: 'Boetes', value: formatSRD(remainingFines), green: remainingFines <= 0 },
-                  ].map((row, i) => (
+                  ]).map((row, i) => (
                     <div key={i} className="flex items-center justify-between" style={{
                       padding: 'clamp(8px, 1.2vh, 14px) clamp(14px, 1.8vw, 24px)',
                       background: i % 2 === 0 ? '#f8fafc' : 'white'
                     }}>
                       <span className="text-slate-500" style={{ fontSize: 'clamp(12px, 1.5vh, 16px)' }}>{row.label}</span>
-                      <span className={`font-bold ${row.green ? 'text-emerald-500' : row.bold ? 'text-slate-900' : 'text-slate-700'}`}
+                      <span className={`font-bold ${row.pending ? 'text-amber-600' : row.green ? 'text-emerald-500' : row.bold ? 'text-slate-900' : 'text-slate-700'}`}
                         style={{ fontSize: 'clamp(13px, 1.6vh, 17px)' }}>{row.value}</span>
                     </div>
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between rounded-b-xl" style={{
-                  background: '#0f172a', padding: 'clamp(10px, 1.8vh, 20px) clamp(14px, 1.8vw, 24px)',
-                  marginTop: '-1px'
-                }}>
-                  <span className="text-slate-400 font-medium" style={{ fontSize: 'clamp(12px, 1.5vh, 16px)' }}>Totaal openstaand</span>
-                  <span className="text-white font-black" style={{
-                    fontSize: 'clamp(18px, 2.8vh, 28px)',
-                    fontFamily: "'JetBrains Mono', monospace", fontStyle: 'italic'
-                  }}>{formatSRD(totalRemaining)}</span>
-                </div>
+                {!isPending && (
+                  <div className="flex items-center justify-between rounded-b-xl" style={{
+                    background: '#0f172a', padding: 'clamp(10px, 1.8vh, 20px) clamp(14px, 1.8vw, 24px)',
+                    marginTop: '-1px'
+                  }}>
+                    <span className="text-slate-400 font-medium" style={{ fontSize: 'clamp(12px, 1.5vh, 16px)' }}>Totaal openstaand</span>
+                    <span className="text-white font-black" style={{
+                      fontSize: 'clamp(18px, 2.8vh, 28px)',
+                      fontFamily: "'JetBrains Mono', monospace", fontStyle: 'italic'
+                    }}>{formatSRD(totalRemaining)}</span>
+                  </div>
+                )}
               </div>
 
               <button onClick={onDone} data-testid="receipt-done-btn"
