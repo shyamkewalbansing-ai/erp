@@ -42,6 +42,7 @@ __all__ = [
     "LocationCreate", "LocationUpdate",
     "TenantCreate", "TenantUpdate", "PaymentCreate",
     "CashEntryCreate", "EmployeeCreate", "EmployeeUpdate",
+    "KasAccountCreate", "KasAccountUpdate",
     "FreelancerPaymentCreate", "LoonstrookCreate",
     "_build_a4_receipt_html",
     "LeaseCreate", "LeaseUpdate",
@@ -505,6 +506,16 @@ class CashEntryCreate(BaseModel):
     related_tenant_id: Optional[str] = None
     related_employee_id: Optional[str] = None
     payment_id: Optional[str] = None
+    account_id: Optional[str] = None  # NEW: multi-account support
+
+class KasAccountCreate(BaseModel):
+    name: str
+    currency: str = "SRD"  # SRD | EUR | USD
+    description: Optional[str] = None
+
+class KasAccountUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
 
 class EmployeeCreate(BaseModel):
     name: str

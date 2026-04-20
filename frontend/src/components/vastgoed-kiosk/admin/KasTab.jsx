@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Trash2, Loader2, Landmark, TrendingUp, TrendingDown, PieChart, Plus, Pencil, Check, X, PlayCircle, Users } from 'lucide-react';
+import { Trash2, Loader2, Landmark, TrendingUp, TrendingDown, PieChart, Plus, Pencil, Check, X, PlayCircle, Users, ArrowLeftRight, RefreshCw } from 'lucide-react';
 import { API, axios, formatSRD } from './utils';
+
+const CURRENCY_SYMBOLS = { SRD: 'SRD', EUR: '€', USD: '$' };
+function formatMoney(amount, currency = 'SRD') {
+  const num = Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return `${CURRENCY_SYMBOLS[currency] || currency} ${num}`;
+}
 
 function KasTab({ token, tenants }) {
   const [entries, setEntries] = useState([]);
@@ -14,8 +20,25 @@ function KasTab({ token, tenants }) {
   const [relatedTenant, setRelatedTenant] = useState('');
   const [saving, setSaving] = useState(false);
 
+  // Multi-account state
+  const [accounts, setAccounts] = useState([]);
+  const [activeAccountId, setActiveAccountId] = useState(null);
+  const [showNewAccount, setShowNewAccount] = useState(false);
+  const [newAccName, setNewAccName] = useState('');
+  const [newAccCurrency, setNewAccCurrency] = useState('SRD');
+  const [newAccDesc, setNewAccDesc] = useState('');
+
+  // Exchange rates
+  const [rates, setRates] = useState(null);
+  const [loadingRates, setLoadingRates] = useState(false);
+  const [convAmount, setConvAmount] = useState('100');
+  const [convFrom, setConvFrom] = useState('USD');
+  const [convTo, setConvTo] = useState('SRD');
+  const [convResult, setConvResult] = useState(null);
+  const [converting, setConverting] = useState(false);
+
   // Verdeling state
-  const [activeView, setActiveView] = useState('kas'); // 'kas' or 'verdeling'
+  const [activeView, setActiveView] = useState('kas'); // 'kas' | 'verdeling' | 'koers'
   const [holders, setHolders] = useState([]);
   const [overzicht, setOverzicht] = useState(null);
   const [loadingVerdeling, setLoadingVerdeling] = useState(false);
@@ -30,14 +53,84 @@ function KasTab({ token, tenants }) {
   const [executing, setExecuting] = useState(false);
 
   const headers = { Authorization: `Bearer ${token}` };
+  const activeAccount = accounts.find(a => a.account_id === activeAccountId) || accounts[0] || null;
+  const activeCurrency = activeAccount?.currency || 'SRD';
 
-  const loadKas = async () => {
+  const loadAccounts = useCallback(async () => {
     try {
-      const resp = await axios.get(`${API}/admin/kas`, { headers });
+      const resp = await axios.get(`${API}/admin/kas-accounts`, { headers });
+      setAccounts(resp.data || []);
+      if (!activeAccountId && resp.data?.length) {
+        setActiveAccountId(resp.data[0].account_id);
+      }
+    } catch { /* skip */ }
+  }, [token, activeAccountId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadKas = useCallback(async (accountId) => {
+    const accId = accountId || activeAccountId;
+    if (!accId) return;
+    try {
+      const resp = await axios.get(`${API}/admin/kas`, { headers, params: { account_id: accId } });
       setEntries(resp.data.entries || []);
       setTotals({ total_income: resp.data.total_income, total_expense: resp.data.total_expense, balance: resp.data.balance });
     } catch { /* skip */ }
     setLoading(false);
+  }, [token, activeAccountId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadRates = useCallback(async () => {
+    setLoadingRates(true);
+    try {
+      const resp = await axios.get(`${API}/admin/exchange-rates`, { headers });
+      setRates(resp.data);
+    } catch { /* skip */ }
+    setLoadingRates(false);
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleCreateAccount = async (e) => {
+    e.preventDefault();
+    if (!newAccName.trim()) return;
+    setSaving(true);
+    try {
+      const resp = await axios.post(`${API}/admin/kas-accounts`, {
+        name: newAccName.trim(), currency: newAccCurrency, description: newAccDesc.trim() || null,
+      }, { headers });
+      setShowNewAccount(false);
+      setNewAccName(''); setNewAccDesc(''); setNewAccCurrency('SRD');
+      await loadAccounts();
+      setActiveAccountId(resp.data.account_id);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Aanmaken mislukt');
+    }
+    setSaving(false);
+  };
+
+  const handleDeleteAccount = async (id) => {
+    const acc = accounts.find(a => a.account_id === id);
+    if (!acc) return;
+    if (acc.is_default) return alert('De hoofdkas kan niet verwijderd worden');
+    if (!window.confirm(`Bank/Kas "${acc.name}" verwijderen?`)) return;
+    try {
+      await axios.delete(`${API}/admin/kas-accounts/${id}`, { headers });
+      await loadAccounts();
+      setActiveAccountId(accounts.find(a => a.is_default)?.account_id);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Verwijderen mislukt');
+    }
+  };
+
+  const handleConvert = async () => {
+    const amt = parseFloat(convAmount);
+    if (!amt || amt <= 0) return;
+    setConverting(true);
+    try {
+      const resp = await axios.post(`${API}/admin/exchange-rates/convert`, {
+        amount: amt, from: convFrom, to: convTo,
+      }, { headers });
+      setConvResult(resp.data);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Conversie mislukt');
+    }
+    setConverting(false);
   };
 
   const loadVerdeling = useCallback(async () => {
@@ -53,8 +146,10 @@ function KasTab({ token, tenants }) {
     setLoadingVerdeling(false);
   }, [token]);
 
-  useEffect(() => { loadKas(); }, []);
+  useEffect(() => { loadAccounts(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (activeAccountId) loadKas(activeAccountId); }, [activeAccountId, loadKas]);
   useEffect(() => { if (activeView === 'verdeling') loadVerdeling(); }, [activeView, loadVerdeling]);
+  useEffect(() => { if (activeView === 'koers' && !rates) loadRates(); }, [activeView, rates, loadRates]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -66,11 +161,13 @@ function KasTab({ token, tenants }) {
         amount: parseFloat(amount),
         description,
         category,
-        related_tenant_id: relatedTenant || null
+        related_tenant_id: relatedTenant || null,
+        account_id: activeAccountId,
       }, { headers });
       setShowForm(false);
       setAmount(''); setDescription(''); setCategory(''); setRelatedTenant('');
-      loadKas();
+      loadKas(activeAccountId);
+      loadAccounts();
     } catch { alert('Boeking mislukt'); }
     setSaving(false);
   };
@@ -79,7 +176,8 @@ function KasTab({ token, tenants }) {
     if (!window.confirm('Boeking verwijderen?')) return;
     try {
       await axios.delete(`${API}/admin/kas/${entryId}`, { headers });
-      loadKas();
+      loadKas(activeAccountId);
+      loadAccounts();
     } catch { alert('Verwijderen mislukt'); }
   };
 
@@ -133,7 +231,7 @@ function KasTab({ token, tenants }) {
       setShowConfirmVerdeling(false);
       setVerdelingNotitie('');
       // Refresh both kas and verdeling data
-      loadKas();
+      loadKas(activeAccountId);
       loadVerdeling();
       alert(resp.data.message);
     } catch (err) {
@@ -150,7 +248,7 @@ function KasTab({ token, tenants }) {
   return (
     <div className="space-y-6">
       {/* Tab Switcher */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         <button
           onClick={() => setActiveView('kas')}
           data-testid="kas-view-btn"
@@ -165,7 +263,86 @@ function KasTab({ token, tenants }) {
         >
           <PieChart className="w-4 h-4" /> Verdeling
         </button>
+        <button
+          onClick={() => setActiveView('koers')}
+          data-testid="koers-view-btn"
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${activeView === 'koers' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:border-orange-300'}`}
+        >
+          <ArrowLeftRight className="w-4 h-4" /> Koers Berekenen
+        </button>
       </div>
+
+      {/* Account selector (only in Kas view) */}
+      {activeView === 'kas' && (
+        <div className="bg-white rounded-xl border border-slate-200 p-3 flex gap-2 flex-wrap items-center">
+          {accounts.map(a => (
+            <button
+              key={a.account_id}
+              onClick={() => setActiveAccountId(a.account_id)}
+              data-testid={`kas-account-${a.account_id}`}
+              className={`group relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                a.account_id === activeAccountId
+                  ? 'bg-slate-900 text-white shadow'
+                  : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${a.currency === 'SRD' ? 'bg-orange-400' : a.currency === 'USD' ? 'bg-green-400' : 'bg-blue-400'}`} />
+              {a.name}
+              <span className={`text-[10px] font-mono ${a.account_id === activeAccountId ? 'text-white/70' : 'text-slate-400'}`}>{a.currency}</span>
+              {!a.is_default && a.account_id === activeAccountId && (
+                <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" onClick={(ev) => { ev.stopPropagation(); handleDeleteAccount(a.account_id); }} />
+              )}
+            </button>
+          ))}
+          <button
+            onClick={() => setShowNewAccount(true)}
+            data-testid="add-kas-account-btn"
+            className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium bg-orange-50 text-orange-600 hover:bg-orange-100 border border-dashed border-orange-300 transition"
+          >
+            <Plus className="w-4 h-4" /> Nieuw Bank/Kas
+          </button>
+        </div>
+      )}
+
+      {/* New account modal */}
+      {showNewAccount && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowNewAccount(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Nieuw Bank/Kas toevoegen</h3>
+            <form onSubmit={handleCreateAccount} className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Naam</label>
+                <input value={newAccName} onChange={e => setNewAccName(e.target.value)} data-testid="new-kas-name"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Bijv. Reserve kas EUR" required />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Valuta</label>
+                <div className="flex gap-2">
+                  {['SRD', 'EUR', 'USD'].map(c => (
+                    <button key={c} type="button" onClick={() => setNewAccCurrency(c)} data-testid={`new-kas-currency-${c}`}
+                      className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition ${newAccCurrency === c ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'}`}>
+                      {CURRENCY_SYMBOLS[c]} {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Omschrijving (optioneel)</label>
+                <input value={newAccDesc} onChange={e => setNewAccDesc(e.target.value)} data-testid="new-kas-desc"
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Bijv. Voor overige uitgaven buiten huur" />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button type="submit" disabled={saving} data-testid="new-kas-submit"
+                  className="flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 disabled:opacity-50">
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Aanmaken'}
+                </button>
+                <button type="button" onClick={() => setShowNewAccount(false)}
+                  className="px-4 py-2.5 bg-slate-200 text-slate-600 rounded-lg text-sm">Annuleer</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {activeView === 'kas' ? (
         <>
@@ -176,9 +353,9 @@ function KasTab({ token, tenants }) {
                 <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
                   <TrendingUp className="w-5 h-5 text-green-600" />
                 </div>
-                <p className="text-sm text-slate-500">Huurinkomsten</p>
+                <p className="text-sm text-slate-500">{activeAccount?.is_default ? 'Huurinkomsten' : 'Inkomsten'}</p>
               </div>
-              <p className="text-2xl font-bold text-slate-900" data-testid="kas-income">{formatSRD(totals.total_income)}</p>
+              <p className="text-2xl font-bold text-slate-900" data-testid="kas-income">{formatMoney(totals.total_income, activeCurrency)}</p>
             </div>
             <div className="bg-white rounded-xl border border-red-200 p-6">
               <div className="flex items-center gap-3 mb-2">
@@ -187,16 +364,16 @@ function KasTab({ token, tenants }) {
                 </div>
                 <p className="text-sm text-slate-500">Totale Uitgaven</p>
               </div>
-              <p className="text-2xl font-bold text-red-600" data-testid="kas-expense">{formatSRD(totals.total_expense)}</p>
+              <p className="text-2xl font-bold text-red-600" data-testid="kas-expense">{formatMoney(totals.total_expense, activeCurrency)}</p>
             </div>
             <div className="bg-white rounded-xl border border-orange-200 p-6">
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
                   <Landmark className="w-5 h-5 text-orange-600" />
                 </div>
-                <p className="text-sm text-slate-500">Kassaldo</p>
+                <p className="text-sm text-slate-500">Saldo — {activeAccount?.name}</p>
               </div>
-              <p className="text-2xl font-bold text-slate-900" data-testid="kas-balance">{formatSRD(totals.balance)}</p>
+              <p className="text-2xl font-bold text-slate-900" data-testid="kas-balance">{formatMoney(totals.balance, activeCurrency)}</p>
             </div>
           </div>
 
@@ -218,7 +395,7 @@ function KasTab({ token, tenants }) {
               <form onSubmit={handleSubmit} className="p-4 border-b border-slate-200 bg-slate-50">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
                   <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Bedrag (SRD)</label>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Bedrag ({activeCurrency})</label>
                     <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="0.00" required data-testid="kas-amount-input" />
                   </div>
                   <div>
@@ -279,7 +456,7 @@ function KasTab({ token, tenants }) {
                           <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs capitalize">{e.category}</span>
                         </td>
                         <td className={`p-4 text-right font-bold ${e.entry_type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                          {e.entry_type === 'income' ? '+' : '-'} {formatSRD(e.amount)}
+                          {e.entry_type === 'income' ? '+' : '-'} {formatMoney(e.amount, activeCurrency)}
                         </td>
                         <td className="p-4 text-right">
                           <button onClick={() => handleDelete(e.entry_id)} className="text-slate-400 hover:text-red-500 p-1" title="Verwijderen">
@@ -294,7 +471,7 @@ function KasTab({ token, tenants }) {
             )}
           </div>
         </>
-      ) : (
+      ) : activeView === 'verdeling' ? (
         /* ========== VERDELING VIEW ========== */
         loadingVerdeling ? (
           <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-orange-500" /></div>
@@ -571,6 +748,113 @@ function KasTab({ token, tenants }) {
             )}
           </div>
         )
+      ) : (
+        /* ========== KOERS BEREKENEN VIEW ========== */
+        <div className="space-y-6">
+          {/* Rates header */}
+          <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center flex-wrap gap-2">
+              <div>
+                <h2 className="font-semibold text-slate-900 flex items-center gap-2">
+                  <ArrowLeftRight className="w-4 h-4 text-orange-500" /> Wisselkoersen
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Live van <a href="https://www.cme.sr/" target="_blank" rel="noreferrer" className="underline hover:text-orange-500">cme.sr</a>
+                  {rates?.as_of && <span className="ml-2">• bijgewerkt {rates.as_of}</span>}
+                  {rates?.cached && <span className="ml-2 text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">gecached</span>}
+                </p>
+              </div>
+              <button onClick={loadRates} disabled={loadingRates} data-testid="reload-rates-btn"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 disabled:opacity-50">
+                <RefreshCw className={`w-3.5 h-3.5 ${loadingRates ? 'animate-spin' : ''}`} /> Vernieuwen
+              </button>
+            </div>
+            {!rates ? (
+              <div className="p-12 text-center text-slate-400 flex items-center justify-center gap-2"><Loader2 className="w-5 h-5 animate-spin" /> Koersen laden...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-0 divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                <div className="p-6">
+                  <p className="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-3">CME Koopt (u verkoopt aan CME)</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-500 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[10px] font-bold">$</span>1 USD</span>
+                      <span className="font-mono font-bold text-slate-900" data-testid="rate-usd-buy">SRD {rates.USD_buy?.toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-500 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">€</span>1 EUR</span>
+                      <span className="font-mono font-bold text-slate-900" data-testid="rate-eur-buy">SRD {rates.EUR_buy?.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <p className="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-3">CME Verkoopt (u koopt bij CME)</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-500 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[10px] font-bold">$</span>1 USD</span>
+                      <span className="font-mono font-bold text-slate-900" data-testid="rate-usd-sell">SRD {rates.USD_sell?.toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-500 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">€</span>1 EUR</span>
+                      <span className="font-mono font-bold text-slate-900" data-testid="rate-eur-sell">SRD {rates.EUR_sell?.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Converter */}
+          <div className="bg-white rounded-xl border border-slate-200 p-6">
+            <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2"><ArrowLeftRight className="w-4 h-4 text-orange-500" /> Koers Berekenen</h3>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+              <div className="md:col-span-2">
+                <label className="block text-xs font-medium text-slate-600 mb-1">Bedrag</label>
+                <input type="number" step="0.01" value={convAmount} onChange={e => setConvAmount(e.target.value)} data-testid="conv-amount"
+                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-lg font-mono" placeholder="0.00" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Van</label>
+                <select value={convFrom} onChange={e => setConvFrom(e.target.value)} data-testid="conv-from"
+                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold bg-white">
+                  <option value="SRD">SRD — Surinaamse Dollar</option>
+                  <option value="USD">USD — Amerikaanse Dollar</option>
+                  <option value="EUR">EUR — Euro</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Naar</label>
+                <div className="flex gap-1">
+                  <select value={convTo} onChange={e => setConvTo(e.target.value)} data-testid="conv-to"
+                    className="flex-1 px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold bg-white">
+                    <option value="SRD">SRD</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                  </select>
+                  <button type="button" onClick={() => { const t = convFrom; setConvFrom(convTo); setConvTo(t); setConvResult(null); }} data-testid="conv-swap"
+                    title="Wissel van/naar" className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200">
+                    <ArrowLeftRight className="w-4 h-4 text-slate-600" />
+                  </button>
+                </div>
+              </div>
+            </div>
+            <button onClick={handleConvert} disabled={converting || !convAmount} data-testid="conv-calculate"
+              className="mt-4 w-full md:w-auto px-6 py-2.5 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 disabled:opacity-50 flex items-center gap-2 justify-center">
+              {converting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowLeftRight className="w-4 h-4" />} Bereken
+            </button>
+
+            {convResult && (
+              <div className="mt-5 p-5 rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-50/40" data-testid="conv-result">
+                <p className="text-xs uppercase tracking-wider text-emerald-600 font-bold mb-2">Resultaat</p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <span className="font-mono font-bold text-slate-500 text-lg">{Number(convResult.amount).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {convResult.from}</span>
+                  <ArrowLeftRight className="w-5 h-5 text-emerald-500" />
+                  <span className="font-mono font-black text-emerald-600 text-2xl">{Number(convResult.result).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} {convResult.to}</span>
+                </div>
+                <p className="text-xs text-slate-400 mt-3">Koers: 1 {convResult.from} = {Number(convResult.rate).toLocaleString('nl-NL', { minimumFractionDigits: 4, maximumFractionDigits: 6 })} {convResult.to}</p>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

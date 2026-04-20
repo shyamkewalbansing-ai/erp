@@ -727,28 +727,40 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
 # ============== BANK/KAS ENDPOINTS ==============
 
 @router.get("/admin/kas")
-async def list_kas_entries(company: dict = Depends(get_current_company)):
-    """List all cash register entries - expenses only. Income comes from payments."""
+async def list_kas_entries(
+    account_id: Optional[str] = None,
+    company: dict = Depends(get_current_company),
+):
+    """List all cash register entries for a specific account (or default if none)."""
     company_id = company["company_id"]
-    
-    # All kas entries (income, expense, salary)
-    entries = await db.kiosk_kas.find({"company_id": company_id}).sort("created_at", -1).to_list(1000)
-    
-    # Total income from rent payments (kiosk_payments) - ONLY approved
-    payments = await db.kiosk_payments.find({
-        "company_id": company_id,
-        "status": {"$in": ["approved", None]}
-    }).to_list(10000)
-    payment_income = sum(p.get("amount", 0) for p in payments if p.get("status", "approved") != "pending" and p.get("status") != "rejected")
-    
+
+    # Ensure default account exists, then resolve target account
+    from .kas_accounts import _resolve_account
+    acc = await _resolve_account(company_id, account_id)
+    target_account_id = acc["account_id"]
+
+    # All kas entries (income, expense, salary) for this account
+    entries = await db.kiosk_kas.find({
+        "company_id": company_id, "account_id": target_account_id
+    }).sort("created_at", -1).to_list(1000)
+
+    # Total income from rent payments only counts for the default (main) account
+    payment_income = 0
+    if acc.get("is_default"):
+        payments = await db.kiosk_payments.find({
+            "company_id": company_id,
+            "status": {"$in": ["approved", None]}
+        }).to_list(10000)
+        payment_income = sum(p.get("amount", 0) for p in payments if p.get("status", "approved") != "pending" and p.get("status") != "rejected")
+
     # Manual income from kas entries
     manual_income = sum(e.get("amount", 0) for e in entries if e.get("entry_type") == "income")
     total_income = payment_income + manual_income
-    
+
     # Total expense = sum of all kas entries (expenses + salaries)
     total_expense = sum(e.get("amount", 0) for e in entries if e.get("entry_type") in ("expense", "salary"))
     balance = total_income - total_expense
-    
+
     result_entries = []
     for e in entries:
         result_entries.append({
@@ -762,12 +774,15 @@ async def list_kas_entries(company: dict = Depends(get_current_company)):
             "payment_id": e.get("payment_id", ""),
             "created_at": e.get("created_at")
         })
-    
+
     return {
         "entries": result_entries,
         "total_income": total_income,
         "total_expense": total_expense,
-        "balance": balance
+        "balance": balance,
+        "account_id": target_account_id,
+        "account_name": acc.get("name"),
+        "currency": acc.get("currency", "SRD"),
     }
 
 @router.post("/admin/kas")
@@ -775,10 +790,15 @@ async def create_kas_entry(data: CashEntryCreate, company: dict = Depends(get_cu
     """Create a cash register entry"""
     entry_id = generate_uuid()
     now = datetime.now(timezone.utc)
-    
+
+    # Resolve account (default if not provided)
+    from .kas_accounts import _resolve_account
+    acc = await _resolve_account(company["company_id"], data.account_id)
+
     entry = {
         "entry_id": entry_id,
         "company_id": company["company_id"],
+        "account_id": acc["account_id"],
         "entry_type": data.entry_type,
         "amount": data.amount,
         "description": data.description,

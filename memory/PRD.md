@@ -1,5 +1,36 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 36 (20 april 2026) — Multi-account Bank/Kas + multi-currency + CME koers
+
+### Context:
+Gebruiker wilde een tweede Bank/Kas om uitgaven en inkomsten buiten de huurders te beheren, met ondersteuning voor SRD/EUR/USD, en een koersberekenaar gekoppeld aan https://www.cme.sr/.
+
+### Backend (`kas_accounts.py` nieuw + `admin_operations.py` aangepast):
+- **Collectie `kiosk_kas_accounts`**: auto-creatie van "Hoofdkas" SRD bij eerste toegang, stamp bestaande kas-entries met main account_id (migratie-veilig)
+- **Endpoints**:
+  - `GET /admin/kas-accounts` — lijst met balances per account (Hoofdkas telt huurinkomsten mee, andere accounts alleen hun eigen boekingen)
+  - `POST /admin/kas-accounts` — naam + valuta (SRD/EUR/USD) + beschrijving, met duplicate-name guard
+  - `PUT /admin/kas-accounts/{id}` — hernoem + beschrijving aanpassen
+  - `DELETE /admin/kas-accounts/{id}` — alleen toegestaan als niet default én geen boekingen
+- **`GET /admin/kas?account_id=X`** filtert entries per account, en gebruikt `_resolve_account()` als fallback
+- **`POST /admin/kas`** accepteert optioneel `account_id` in de body (default: Hoofdkas)
+- **`GET /admin/exchange-rates`**: fetch live via `/Home/GetTodaysExchangeRates` van cme.sr (JSON endpoint), gecached 60min met stale-fallback bij netwerkfout
+- **`POST /admin/exchange-rates/convert`**: body `{amount, from, to}` → gebruikt CME Sell voor SRD→foreign en CME Buy voor foreign→SRD, cross-rates via SRD
+
+### Frontend (`KasTab.jsx`):
+- 3 sub-tabs toegevoegd: Bank/Kas · Verdeling · **Koers Berekenen**
+- Account-chips rij met valuta-kleurcode (SRD=oranje, USD=groen, EUR=blauw), **Nieuw Bank/Kas** knop met modal (naam + valuta-picker + omschrijving)
+- Saldo-card toont naam van de actieve account, alle bedragen in de valuta van de account (SRD/$/€)
+- Inkomsten/Uitgave Registreren knoppen boeken in de actieve account (met `account_id`)
+- Koers-tab: CME koopt/verkoopt rates voor USD + EUR, "Bijgewerkt op" timestamp, Vernieuwen-knop; converter met amount + van/naar dropdown + swap-knop + groen resultaatkaart met koers
+
+### Tested end-to-end:
+- curl: `POST /admin/kas-accounts` 3 accounts (SRD Hoofdkas auto, EUR Reserve, USD cash), `PUT` rename ok, `DELETE` guard op hoofdkas + accounts met boekingen werkt ✅
+- curl: `GET /admin/exchange-rates` retourneert live CME rates (USD_buy=37.50, USD_sell=37.75, EUR_buy=43.30, EUR_sell=44.15 als of 20-Apr-2026 10:25 AM) ✅
+- curl: `POST /convert` 100 USD → 3750 SRD, 1000 SRD → 22.65 EUR, 100 EUR → 114.70 USD (cross via SRD) ✅
+- Screenshot Bank/Kas: 3 account-chips (Hoofdkas SRD gemarkeerd, Reserve kas EUR, US Dollar Kas) + Nieuw knop + saldo "Saldo — Hoofdkas SRD 3.332,53" ✅
+- Screenshot Koers Berekenen: live rates + converter + vernieuwen knop ✅
+
 ## Sprint 35 (20 april 2026) — Extra Push-notificatie triggers
 
 ### Geïmplementeerd:

@@ -10,6 +10,7 @@ from . import public
 from . import admin
 from . import loans
 from . import admin_operations
+from . import kas_accounts  # noqa: F401
 from . import devices
 from . import messaging
 from . import superadmin
