@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Trash2, Loader2, Landmark, TrendingUp, TrendingDown, PieChart, Plus, Pencil, Check, X, PlayCircle, Users, ArrowLeftRight, RefreshCw } from 'lucide-react';
+import { Trash2, Loader2, Landmark, TrendingUp, TrendingDown, PieChart, Plus, Pencil, Check, X, PlayCircle, Users, ArrowLeftRight, RefreshCw, Repeat } from 'lucide-react';
 import { API, axios, formatSRD } from './utils';
 
 const CURRENCY_SYMBOLS = { SRD: 'SRD', EUR: '€', USD: '$' };
@@ -30,6 +30,18 @@ function KasTab({ token, tenants }) {
   const [newAccCurrencies, setNewAccCurrencies] = useState(['SRD']);
   const [newAccDesc, setNewAccDesc] = useState('');
   const [entryCurrency, setEntryCurrency] = useState('SRD');
+
+  // Exchange state
+  const [showExchange, setShowExchange] = useState(false);
+  const [exFromAccId, setExFromAccId] = useState(null);
+  const [exFromCur, setExFromCur] = useState('SRD');
+  const [exAmount, setExAmount] = useState('');
+  const [exToAccId, setExToAccId] = useState(null);
+  const [exToCur, setExToCur] = useState('SRD');
+  const [exPreview, setExPreview] = useState(null);
+  const [exLoading, setExLoading] = useState(false);
+  const [exSaving, setExSaving] = useState(false);
+  const [exResult, setExResult] = useState(null);
 
   // Exchange rates
   const [rates, setRates] = useState(null);
@@ -145,6 +157,68 @@ function KasTab({ token, tenants }) {
     }
     setConverting(false);
   };
+
+  // Exchange helpers
+  const openExchange = () => {
+    const first = activeAccount || accounts[0];
+    const defaultCur = first?.currencies?.[0] || first?.currency || 'SRD';
+    setExFromAccId(first?.account_id || null);
+    setExFromCur(defaultCur);
+    // Find any other account or the same account's other currency
+    const other = accounts.find(a => a.account_id !== first?.account_id) || first;
+    const otherCurs = other?.currencies || [other?.currency || 'SRD'];
+    const otherCur = otherCurs.find(c => c !== defaultCur) || otherCurs[0];
+    setExToAccId(other?.account_id || null);
+    setExToCur(otherCur);
+    setExAmount('');
+    setExPreview(null);
+    setExResult(null);
+    setShowExchange(true);
+  };
+
+  // Live preview of conversion
+  useEffect(() => {
+    if (!showExchange) return;
+    const amt = parseFloat(exAmount);
+    if (!amt || amt <= 0 || exFromCur === exToCur) { setExPreview(null); return; }
+    let canceled = false;
+    setExLoading(true);
+    (async () => {
+      try {
+        const resp = await axios.post(`${API}/admin/exchange-rates/convert`, { amount: amt, from: exFromCur, to: exToCur }, { headers });
+        if (!canceled) setExPreview(resp.data);
+      } catch { if (!canceled) setExPreview(null); }
+      if (!canceled) setExLoading(false);
+    })();
+    return () => { canceled = true; };
+  }, [exAmount, exFromCur, exToCur, showExchange]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleExchangeSubmit = async (e) => {
+    e.preventDefault();
+    const amt = parseFloat(exAmount);
+    if (!amt || amt <= 0 || !exFromAccId || !exToAccId) return;
+    if (exFromAccId === exToAccId && exFromCur === exToCur) {
+      alert('Bron en doel zijn identiek'); return;
+    }
+    setExSaving(true);
+    try {
+      const resp = await axios.post(`${API}/admin/kas/exchange`, {
+        from_account_id: exFromAccId, from_currency: exFromCur, from_amount: amt,
+        to_account_id: exToAccId, to_currency: exToCur,
+      }, { headers });
+      setExResult(resp.data);
+      await loadAccounts();
+      loadKas(activeAccountId, activeCurrencyFilter);
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Wisselen mislukt');
+    }
+    setExSaving(false);
+  };
+
+  const exFromAcc = accounts.find(a => a.account_id === exFromAccId);
+  const exToAcc = accounts.find(a => a.account_id === exToAccId);
+  const exFromCurs = exFromAcc?.currencies || (exFromAcc?.currency ? [exFromAcc.currency] : ['SRD']);
+  const exToCurs = exToAcc?.currencies || (exToAcc?.currency ? [exToAcc.currency] : ['SRD']);
 
   const loadVerdeling = useCallback(async () => {
     setLoadingVerdeling(true);
@@ -378,6 +452,149 @@ function KasTab({ token, tenants }) {
         </div>
       )}
 
+      {/* Exchange / Wisselen modal */}
+      {showExchange && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => !exSaving && setShowExchange(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-xl p-6" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center">
+                <Repeat className="w-5 h-5 text-indigo-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Valuta wisselen</h3>
+                <p className="text-xs text-slate-400">Gebruikt CME dagkoers (live van cme.sr)</p>
+              </div>
+            </div>
+
+            {!exResult ? (
+              <form onSubmit={handleExchangeSubmit} className="space-y-4">
+                {/* Van */}
+                <div className="p-4 rounded-xl border-2 border-slate-100 bg-slate-50/50">
+                  <p className="text-xs uppercase tracking-wider text-slate-400 font-bold mb-3">Van (bron)</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-500 mb-1">Bank/Kas</label>
+                      <select value={exFromAccId || ''} onChange={e => {
+                        const acc = accounts.find(a => a.account_id === e.target.value);
+                        setExFromAccId(e.target.value);
+                        const curs = acc?.currencies || [acc?.currency || 'SRD'];
+                        if (!curs.includes(exFromCur)) setExFromCur(curs[0]);
+                      }} data-testid="ex-from-account"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
+                        {accounts.map(a => <option key={a.account_id} value={a.account_id}>{a.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-500 mb-1">Valuta</label>
+                      <select value={exFromCur} onChange={e => setExFromCur(e.target.value)} data-testid="ex-from-currency"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-semibold bg-white">
+                        {exFromCurs.map(c => <option key={c} value={c}>{CURRENCY_SYMBOLS[c]} {c}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <label className="block text-[11px] font-medium text-slate-500 mb-1">Bedrag te wisselen</label>
+                    <input type="number" step="0.01" value={exAmount} onChange={e => setExAmount(e.target.value)} data-testid="ex-amount"
+                      placeholder="0.00" required autoFocus
+                      className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-lg font-mono font-bold" />
+                  </div>
+                </div>
+
+                {/* Swap arrow */}
+                <div className="flex items-center justify-center -my-2 relative z-10">
+                  <button type="button" onClick={() => {
+                    // swap accounts + currencies
+                    const aId = exFromAccId, aCur = exFromCur;
+                    setExFromAccId(exToAccId); setExFromCur(exToCur);
+                    setExToAccId(aId); setExToCur(aCur);
+                  }} data-testid="ex-swap"
+                    className="w-10 h-10 rounded-full bg-white border-2 border-slate-200 hover:border-indigo-400 flex items-center justify-center shadow transition">
+                    <ArrowLeftRight className="w-4 h-4 text-slate-600 rotate-90" />
+                  </button>
+                </div>
+
+                {/* Naar */}
+                <div className="p-4 rounded-xl border-2 border-indigo-100 bg-indigo-50/30">
+                  <p className="text-xs uppercase tracking-wider text-indigo-600 font-bold mb-3">Naar (doel)</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-500 mb-1">Bank/Kas</label>
+                      <select value={exToAccId || ''} onChange={e => {
+                        const acc = accounts.find(a => a.account_id === e.target.value);
+                        setExToAccId(e.target.value);
+                        const curs = acc?.currencies || [acc?.currency || 'SRD'];
+                        if (!curs.includes(exToCur)) setExToCur(curs[0]);
+                      }} data-testid="ex-to-account"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white">
+                        {accounts.map(a => <option key={a.account_id} value={a.account_id}>{a.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-500 mb-1">Valuta</label>
+                      <select value={exToCur} onChange={e => setExToCur(e.target.value)} data-testid="ex-to-currency"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-semibold bg-white">
+                        {exToCurs.map(c => <option key={c} value={c}>{CURRENCY_SYMBOLS[c]} {c}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="mt-3">
+                    <p className="text-[11px] font-medium text-slate-500 mb-1">U ontvangt ongeveer</p>
+                    <div className="px-3 py-2.5 bg-white border-2 border-indigo-200 rounded-lg text-lg font-mono font-black text-indigo-600 min-h-[48px] flex items-center" data-testid="ex-preview">
+                      {exLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : exPreview ? (
+                        <span>{CURRENCY_SYMBOLS[exToCur]} {Number(exPreview.result).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</span>
+                      ) : exFromCur === exToCur && exAmount ? (
+                        <span>{CURRENCY_SYMBOLS[exToCur]} {Number(parseFloat(exAmount) || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                      ) : <span className="text-slate-300 text-sm font-sans">Vul bedrag in...</span>}
+                    </div>
+                    {exPreview && (
+                      <p className="text-[11px] text-slate-400 mt-1.5">
+                        Koers: 1 {exFromCur} = {Number(exPreview.rate).toLocaleString('nl-NL', { minimumFractionDigits: 4, maximumFractionDigits: 6 })} {exToCur}
+                        {exPreview.as_of && <span className="ml-1.5">• {exPreview.as_of}</span>}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-1">
+                  <button type="submit" disabled={exSaving || !exAmount || (!exPreview && exFromCur !== exToCur)} data-testid="ex-submit"
+                    className="flex-1 px-4 py-3 bg-indigo-500 text-white rounded-xl text-sm font-bold hover:bg-indigo-600 disabled:opacity-50 flex items-center justify-center gap-2">
+                    {exSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Repeat className="w-4 h-4" /> Wisseltransactie uitvoeren</>}
+                  </button>
+                  <button type="button" onClick={() => setShowExchange(false)} disabled={exSaving}
+                    className="px-5 py-3 bg-slate-100 text-slate-600 rounded-xl text-sm hover:bg-slate-200">Annuleer</button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-4" data-testid="ex-result">
+                <div className="p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-emerald-50/40 border-2 border-emerald-200">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                    <p className="text-sm font-bold text-emerald-700">Wisseltransactie geslaagd</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="p-3 bg-white rounded-lg border border-slate-200">
+                      <p className="text-[11px] text-slate-400 font-semibold">AFGESCHREVEN</p>
+                      <p className="font-bold text-slate-900 text-base">{CURRENCY_SYMBOLS[exResult.from.currency]} {Number(exResult.from.amount).toLocaleString('nl-NL', { minimumFractionDigits: 2 })}</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">{exResult.from.account_name}</p>
+                    </div>
+                    <div className="p-3 bg-white rounded-lg border-2 border-emerald-300">
+                      <p className="text-[11px] text-emerald-500 font-semibold">BIJGESCHREVEN</p>
+                      <p className="font-black text-emerald-600 text-base">{CURRENCY_SYMBOLS[exResult.to.currency]} {Number(exResult.to.amount).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">{exResult.to.account_name}</p>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-slate-500 mt-3">Koers: 1 {exResult.from.currency} = {Number(exResult.rate).toLocaleString('nl-NL', { minimumFractionDigits: 4, maximumFractionDigits: 6 })} {exResult.to.currency} • {exResult.as_of}</p>
+                </div>
+                <button onClick={() => setShowExchange(false)} data-testid="ex-close"
+                  className="w-full py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200">Sluiten</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {activeView === 'kas' ? (
         <>
           {/* Currency filter (only for multi-currency accounts) */}
@@ -447,12 +664,15 @@ function KasTab({ token, tenants }) {
           <div className="bg-white rounded-xl border border-slate-200">
             <div className="p-4 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3">
               <h2 className="font-semibold text-slate-900">Boekingen Overzicht</h2>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <button onClick={() => { setFormType('income'); setShowForm(true); }} className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600" data-testid="add-income-btn">
                   <TrendingUp className="w-4 h-4" /> Inkomsten Registreren
                 </button>
                 <button onClick={() => { setFormType('expense'); setShowForm(true); }} className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600" data-testid="add-expense-btn">
                   <TrendingDown className="w-4 h-4" /> Uitgave Registreren
+                </button>
+                <button onClick={openExchange} className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm hover:bg-indigo-600" data-testid="open-exchange-btn">
+                  <Repeat className="w-4 h-4" /> Wisselen
                 </button>
               </div>
             </div>

@@ -253,23 +253,11 @@ async def get_exchange_rates(company: dict = Depends(get_current_company)):
     return await _fetch_cme_rates()
 
 
-@router.post("/admin/exchange-rates/convert")
-async def convert_currency(payload: dict, company: dict = Depends(get_current_company)):
-    """Convert between SRD/USD/EUR using CME.sr cash rates.
-    Body: { amount: number, from: 'SRD'|'USD'|'EUR', to: 'SRD'|'USD'|'EUR', rate_type?: 'buy'|'sell' }
-    For SRD->foreign we use SELL rate (bank sells foreign). For foreign->SRD we use BUY rate.
-    """
-    amount = float(payload.get("amount", 0) or 0)
-    cur_from = (payload.get("from") or "SRD").upper()
-    cur_to = (payload.get("to") or "SRD").upper()
-    if cur_from not in CURRENCIES or cur_to not in CURRENCIES:
-        raise HTTPException(status_code=400, detail="Ongeldige valuta")
-    if amount < 0:
-        raise HTTPException(status_code=400, detail="Bedrag mag niet negatief zijn")
+async def _compute_conversion(cur_from: str, cur_to: str, amount: float) -> dict:
+    """Shared FX conversion helper. Returns {result, rate, rates, as_of}."""
     rates = await _fetch_cme_rates()
     if cur_from == cur_to:
-        return {"amount": amount, "from": cur_from, "to": cur_to, "result": amount, "rate": 1, "source": CME_URL, "as_of": rates.get("as_of")}
-
+        return {"result": amount, "rate": 1, "rates": rates, "as_of": rates.get("as_of")}
     usd_buy = rates.get("USD_buy") or 0
     usd_sell = rates.get("USD_sell") or 0
     eur_buy = rates.get("EUR_buy") or 0
@@ -277,31 +265,167 @@ async def convert_currency(payload: dict, company: dict = Depends(get_current_co
     if usd_buy == 0 or eur_buy == 0:
         raise HTTPException(status_code=503, detail="Koersen tijdelijk niet beschikbaar")
 
-    def srd_to_foreign(amt: float, cur: str) -> float:
-        rate = usd_sell if cur == "USD" else eur_sell
-        return amt / rate if rate else 0
-
-    def foreign_to_srd(amt: float, cur: str) -> float:
-        rate = usd_buy if cur == "USD" else eur_buy
-        return amt * rate
-
-    # Direct conversions
     if cur_from == "SRD":
-        result = srd_to_foreign(amount, cur_to)
         rate = usd_sell if cur_to == "USD" else eur_sell
+        result = amount / rate if rate else 0
     elif cur_to == "SRD":
-        result = foreign_to_srd(amount, cur_from)
         rate = usd_buy if cur_from == "USD" else eur_buy
+        result = amount * rate
     else:
-        # Foreign -> Foreign: via SRD (buy from user, sell to user)
-        srd_amt = foreign_to_srd(amount, cur_from)
-        result = srd_to_foreign(srd_amt, cur_to)
         buy = usd_buy if cur_from == "USD" else eur_buy
         sell = usd_sell if cur_to == "USD" else eur_sell
+        srd_amt = amount * buy
+        result = srd_amt / sell if sell else 0
         rate = buy / sell if sell else 0
+    return {"result": round(result, 4), "rate": round(rate, 6), "rates": rates, "as_of": rates.get("as_of")}
 
+
+@router.post("/admin/exchange-rates/convert")
+async def convert_currency(payload: dict, company: dict = Depends(get_current_company)):
+    """Convert between SRD/USD/EUR using CME.sr cash rates."""
+    amount = float(payload.get("amount", 0) or 0)
+    cur_from = (payload.get("from") or "SRD").upper()
+    cur_to = (payload.get("to") or "SRD").upper()
+    if cur_from not in CURRENCIES or cur_to not in CURRENCIES:
+        raise HTTPException(status_code=400, detail="Ongeldige valuta")
+    if amount < 0:
+        raise HTTPException(status_code=400, detail="Bedrag mag niet negatief zijn")
+    conv = await _compute_conversion(cur_from, cur_to, amount)
+    rates = conv["rates"]
     return {
         "amount": amount, "from": cur_from, "to": cur_to,
-        "result": round(result, 4), "rate": round(rate, 6),
+        "result": conv["result"], "rate": conv["rate"],
         "source": CME_URL, "as_of": rates.get("as_of"), "cached": rates.get("cached", False)
+    }
+
+
+@router.post("/admin/kas/exchange")
+async def exchange_between_kas(payload: dict, company: dict = Depends(get_current_company)):
+    """Wissel bedrag tussen kassen/valuta met CME dagkoers.
+    Body: {
+      from_account_id, from_currency, from_amount,
+      to_account_id, to_currency,
+      custom_rate? (optional), description? (optional)
+    }
+    Maakt 2 gekoppelde boekingen: uitgave in bron + inkomst in doel, met shared exchange_id.
+    """
+    company_id = company["company_id"]
+    from_account_id = payload.get("from_account_id")
+    from_currency = (payload.get("from_currency") or "").upper()
+    from_amount = float(payload.get("from_amount", 0) or 0)
+    to_account_id = payload.get("to_account_id")
+    to_currency = (payload.get("to_currency") or "").upper()
+    custom_rate = payload.get("custom_rate")
+    description = (payload.get("description") or "").strip()
+
+    if not from_account_id or not to_account_id:
+        raise HTTPException(status_code=400, detail="Bron en doel kas verplicht")
+    if from_currency not in CURRENCIES or to_currency not in CURRENCIES:
+        raise HTTPException(status_code=400, detail="Ongeldige valuta")
+    if from_amount <= 0:
+        raise HTTPException(status_code=400, detail="Bedrag moet positief zijn")
+
+    from_acc = await db.kiosk_kas_accounts.find_one({"account_id": from_account_id, "company_id": company_id})
+    to_acc = await db.kiosk_kas_accounts.find_one({"account_id": to_account_id, "company_id": company_id})
+    if not from_acc:
+        raise HTTPException(status_code=404, detail="Bron kas niet gevonden")
+    if not to_acc:
+        raise HTTPException(status_code=404, detail="Doel kas niet gevonden")
+
+    from_allowed = from_acc.get("currencies") or [from_acc.get("currency", "SRD")]
+    to_allowed = to_acc.get("currencies") or [to_acc.get("currency", "SRD")]
+    if from_currency not in from_allowed:
+        raise HTTPException(status_code=400, detail=f"{from_currency} is niet toegestaan in bron kas '{from_acc['name']}'")
+    if to_currency not in to_allowed:
+        raise HTTPException(status_code=400, detail=f"{to_currency} is niet toegestaan in doel kas '{to_acc['name']}'")
+
+    if from_account_id == to_account_id and from_currency == to_currency:
+        raise HTTPException(status_code=400, detail="Bron en doel zijn identiek")
+
+    # Compute conversion
+    if custom_rate and float(custom_rate) > 0:
+        # Apply user-provided rate: result = amount * rate (for SRD-based: rate is from_currency-per-to_currency)
+        # To keep semantics consistent: custom_rate = to_amount / from_amount (i.e. 1 unit from_currency = X unit to_currency)
+        rate = float(custom_rate)
+        to_amount = round(from_amount * rate, 4)
+        rates_info = {"as_of": "Handmatig", "source": "custom"}
+    else:
+        conv = await _compute_conversion(from_currency, to_currency, from_amount)
+        to_amount = conv["result"]
+        rate = conv["rate"]
+        rates_info = {"as_of": conv.get("as_of"), "source": CME_URL}
+
+    now = datetime.now(timezone.utc)
+    exchange_id = generate_uuid()
+    desc_default = f"Wissel {from_currency} → {to_currency}"
+    final_desc = description or desc_default
+
+    # Create outflow entry (from account) — as expense
+    out_id = generate_uuid()
+    out_entry = {
+        "entry_id": out_id,
+        "company_id": company_id,
+        "account_id": from_account_id,
+        "entry_type": "expense",
+        "amount": from_amount,
+        "currency": from_currency,
+        "description": f"{final_desc} → {to_acc['name']} ({to_currency} {to_amount:,.2f})",
+        "category": "wissel",
+        "related_tenant_id": "", "related_tenant_name": "",
+        "related_employee_id": "", "related_employee_name": "",
+        "payment_id": "",
+        "exchange_id": exchange_id,
+        "exchange_direction": "out",
+        "exchange_rate": rate,
+        "exchange_counterparty_account_id": to_account_id,
+        "exchange_counterparty_currency": to_currency,
+        "exchange_counterparty_amount": to_amount,
+        "created_at": now,
+    }
+    # Create inflow entry (to account) — as income
+    in_id = generate_uuid()
+    in_entry = {
+        "entry_id": in_id,
+        "company_id": company_id,
+        "account_id": to_account_id,
+        "entry_type": "income",
+        "amount": to_amount,
+        "currency": to_currency,
+        "description": f"{final_desc} ← {from_acc['name']} ({from_currency} {from_amount:,.2f})",
+        "category": "wissel",
+        "related_tenant_id": "", "related_tenant_name": "",
+        "related_employee_id": "", "related_employee_name": "",
+        "payment_id": "",
+        "exchange_id": exchange_id,
+        "exchange_direction": "in",
+        "exchange_rate": rate,
+        "exchange_counterparty_account_id": from_account_id,
+        "exchange_counterparty_currency": from_currency,
+        "exchange_counterparty_amount": from_amount,
+        "created_at": now,
+    }
+    await db.kiosk_kas.insert_many([out_entry, in_entry])
+
+    # Push notification
+    try:
+        from .push import send_push_to_company
+        import asyncio as _asyncio
+        _asyncio.create_task(send_push_to_company(
+            company_id,
+            title="Valuta gewisseld",
+            body=f"{from_currency} {from_amount:,.2f} → {to_currency} {to_amount:,.2f} • {from_acc['name']} → {to_acc['name']}",
+            url="/vastgoed",
+            tag=f"exchange-{exchange_id}",
+        ))
+    except Exception:
+        pass
+
+    return {
+        "exchange_id": exchange_id,
+        "from": {"account_id": from_account_id, "account_name": from_acc["name"], "currency": from_currency, "amount": from_amount, "entry_id": out_id},
+        "to": {"account_id": to_account_id, "account_name": to_acc["name"], "currency": to_currency, "amount": to_amount, "entry_id": in_id},
+        "rate": rate,
+        "as_of": rates_info.get("as_of"),
+        "source": rates_info.get("source"),
+        "message": "Wisseltransactie geslaagd",
     }

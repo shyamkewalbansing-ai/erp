@@ -1,5 +1,39 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 38 (20 april 2026) — Valuta wisselen tussen kassen (CME dagkoers)
+
+### Context:
+Gebruiker wilde dat vreemde valuta (USD/EUR) in een kas gewisseld kunnen worden naar SRD via de dagkoers, en vice versa (SRD → EUR/USD), waarbij het systeem automatisch beide saldi bijwerkt met gekoppelde boekingen.
+
+### Backend (`kas_accounts.py`):
+- **`_compute_conversion()`** helper extracted uit convert endpoint (herbruikbaar)
+- **Nieuw endpoint `POST /admin/kas/exchange`** — body: `{from_account_id, from_currency, from_amount, to_account_id, to_currency}`:
+  - Valideert beide accounts + currencies toegestaan
+  - Blokkeert identieke from/to
+  - Haalt CME dagkoers op via `_compute_conversion` (Buy 37.50 voor USD→SRD, Sell 44.15 voor SRD→EUR, cross via SRD voor USD↔EUR)
+  - Maakt 2 linked entries: `expense` in bron (afschrijving) + `income` in doel (bijschrijving) met shared `exchange_id`, `exchange_rate`, `exchange_direction`, en counterparty references in de kas-documenten
+  - Categorie "wissel", omschrijving auto-gegenereerd "Wissel USD → SRD → Multi-Currency Kas (SRD 7.500)"
+  - Verstuurt Web Push "Valuta gewisseld: USD 200 → SRD 7500 • Multi → Hoofdkas"
+  - Retourneert `{exchange_id, from:{...}, to:{...}, rate, as_of, source}`
+
+### Frontend (`KasTab.jsx`):
+- Nieuwe **paarse "Wisselen" knop** naast "Inkomsten/Uitgave Registreren"
+- **Modal "Valuta wisselen"**: 2 secties (Van/Naar) met bank-picker + valuta-picker + bedrag-input
+- **Live preview**: "U ontvangt ongeveer: SRD 7.500,00" update automatisch bij elke wijziging (gebruikt `/admin/exchange-rates/convert`), toont koers + CME datum
+- **Swap-knop** tussen bron/doel om richting om te draaien
+- **Auto-filter valuta's**: wanneer andere account gekozen wordt, past valuta-dropdown zich aan de toegestane valuta's van die account
+- **Resultaatkaart**: groene check + "Afgeschreven/Bijgeschreven" kolommen + gebruikte koers + "Sluiten" knop
+
+### Tested end-to-end:
+- curl: $100 USD → SRD 3.750 (Buy 37.50) ✅
+- curl: SRD 10.000 → €226.50 (Sell 44.15) ✅
+- curl: $50 → €42.47 (cross USD→EUR rate 0.849) ✅
+- curl: Verboden valuta in bron (USD naar Hoofdkas SRD) → 400 ✅
+- Screenshot preview: $200 USD → SRD 7.500 live preview correct ✅
+- Screenshot resultaat: gekoppelde boekingen aangemaakt, Multi USD balance $500 → $300, Hoofdkas SRD saldo automatisch bijgewerkt ✅
+- Push notificatie "Valuta gewisseld" triggered ✅
+- Lint clean ✅
+
 ## Sprint 37 (20 april 2026) — Multi-currency per Bank/Kas account
 
 ### Context:
