@@ -997,8 +997,22 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint
     # Build processed/approved info
     processed_by = payment.get("processed_by", "")
     approved_by = payment.get("approved_by", "")
+    processed_by_role = payment.get("processed_by_role", "")
     approval_signature = payment.get("approval_signature", "")
-    
+
+    role_labels = {
+        "beheerder": "Beheerder",
+        "boekhouder": "Boekhouder",
+        "kiosk_medewerker": "Kiosk Medewerker",
+    }
+    role_label = role_labels.get(processed_by_role, "")
+    role_colors = {
+        "beheerder": "#f97316",       # orange-500
+        "boekhouder": "#6366f1",       # indigo-500
+        "kiosk_medewerker": "#64748b", # slate-500
+    }
+    role_color = role_colors.get(processed_by_role, "#64748b")
+
     process_html = ""
     # Hide generic "Kiosk" label (legacy default value)
     show_processed = processed_by and processed_by.strip().lower() != "kiosk"
@@ -1006,7 +1020,13 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint
     if show_processed or show_approved:
         process_html = '<table class="details-table" style="margin-top:8px;">'
         if show_processed:
-            process_html += f'<tr><td>Ontvangen door</td><td>{processed_by}</td></tr>'
+            role_badge = (
+                f'<span style="display:inline-block;margin-left:8px;padding:1px 8px;'
+                f'border:1px solid {role_color};color:{role_color};border-radius:10px;'
+                f'font-size:10px;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase;">'
+                f'{role_label}</span>'
+            ) if role_label else ""
+            process_html += f'<tr><td>Ontvangen door</td><td>{processed_by}{role_badge}</td></tr>'
         if show_approved:
             process_html += f'<tr><td>Goedgekeurd door</td><td>{approved_by}</td></tr>'
         process_html += '</table>'
