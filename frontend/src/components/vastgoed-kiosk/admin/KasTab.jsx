@@ -42,6 +42,8 @@ function KasTab({ token, tenants }) {
   const [exLoading, setExLoading] = useState(false);
   const [exSaving, setExSaving] = useState(false);
   const [exResult, setExResult] = useState(null);
+  const [exUseCustomRate, setExUseCustomRate] = useState(false);
+  const [exCustomRate, setExCustomRate] = useState('');
 
   // Exchange rates
   const [rates, setRates] = useState(null);
@@ -173,14 +175,22 @@ function KasTab({ token, tenants }) {
     setExAmount('');
     setExPreview(null);
     setExResult(null);
+    setExUseCustomRate(false);
+    setExCustomRate('');
     setShowExchange(true);
   };
 
-  // Live preview of conversion
+  // Live preview: use custom rate if set, else CME
   useEffect(() => {
     if (!showExchange) return;
     const amt = parseFloat(exAmount);
     if (!amt || amt <= 0 || exFromCur === exToCur) { setExPreview(null); return; }
+    if (exUseCustomRate) {
+      const r = parseFloat(exCustomRate);
+      if (!r || r <= 0) { setExPreview(null); return; }
+      setExPreview({ amount: amt, from: exFromCur, to: exToCur, rate: r, result: amt * r, as_of: 'Handmatig', source: 'custom' });
+      return;
+    }
     let canceled = false;
     setExLoading(true);
     (async () => {
@@ -191,7 +201,7 @@ function KasTab({ token, tenants }) {
       if (!canceled) setExLoading(false);
     })();
     return () => { canceled = true; };
-  }, [exAmount, exFromCur, exToCur, showExchange]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [exAmount, exFromCur, exToCur, showExchange, exUseCustomRate, exCustomRate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleExchangeSubmit = async (e) => {
     e.preventDefault();
@@ -200,12 +210,18 @@ function KasTab({ token, tenants }) {
     if (exFromAccId === exToAccId && exFromCur === exToCur) {
       alert('Bron en doel zijn identiek'); return;
     }
+    const customRate = exUseCustomRate ? parseFloat(exCustomRate) : null;
+    if (exUseCustomRate && (!customRate || customRate <= 0)) {
+      alert('Vul een geldige koers in'); return;
+    }
     setExSaving(true);
     try {
-      const resp = await axios.post(`${API}/admin/kas/exchange`, {
+      const payload = {
         from_account_id: exFromAccId, from_currency: exFromCur, from_amount: amt,
         to_account_id: exToAccId, to_currency: exToCur,
-      }, { headers });
+      };
+      if (customRate) payload.custom_rate = customRate;
+      const resp = await axios.post(`${API}/admin/kas/exchange`, payload, { headers });
       setExResult(resp.data);
       await loadAccounts();
       loadKas(activeAccountId, activeCurrencyFilter);
@@ -549,11 +565,28 @@ function KasTab({ token, tenants }) {
                     {exPreview && (
                       <p className="text-[11px] text-slate-400 mt-1.5">
                         Koers: 1 {exFromCur} = {Number(exPreview.rate).toLocaleString('nl-NL', { minimumFractionDigits: 4, maximumFractionDigits: 6 })} {exToCur}
-                        {exPreview.as_of && <span className="ml-1.5">• {exPreview.as_of}</span>}
+                        {exPreview.source === 'custom' && <span className="ml-1.5 px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[10px] font-bold">HANDMATIG</span>}
+                        {exPreview.as_of && exPreview.source !== 'custom' && <span className="ml-1.5">• {exPreview.as_of}</span>}
                       </p>
                     )}
                   </div>
                 </div>
+
+                {/* Eigen koers toggle */}
+                <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none" data-testid="ex-custom-rate-toggle">
+                  <input type="checkbox" checked={exUseCustomRate} onChange={e => { setExUseCustomRate(e.target.checked); if (!e.target.checked) setExCustomRate(''); }}
+                    className="w-4 h-4 rounded border-slate-300 text-indigo-500 focus:ring-indigo-400" />
+                  <span>Eigen koers gebruiken <span className="text-slate-400 text-xs">(bv. afwijkende bankkoers)</span></span>
+                </label>
+                {exUseCustomRate && (
+                  <div className="flex items-center gap-2 pl-6 -mt-2" data-testid="ex-custom-rate-row">
+                    <span className="text-xs text-slate-500 whitespace-nowrap">1 {exFromCur} =</span>
+                    <input type="number" step="0.0001" value={exCustomRate} onChange={e => setExCustomRate(e.target.value)} data-testid="ex-custom-rate-input"
+                      placeholder="0.0000" autoFocus
+                      className="flex-1 px-3 py-2 border border-indigo-300 bg-indigo-50/50 rounded-lg text-sm font-mono font-bold focus:border-indigo-500 outline-none" />
+                    <span className="text-xs font-bold text-slate-700 whitespace-nowrap">{exToCur}</span>
+                  </div>
+                )}
 
                 <div className="flex gap-2 pt-1">
                   <button type="submit" disabled={exSaving || !exAmount || (!exPreview && exFromCur !== exToCur)} data-testid="ex-submit"
@@ -585,7 +618,12 @@ function KasTab({ token, tenants }) {
                       <p className="text-[11px] text-slate-500 mt-0.5">{exResult.to.account_name}</p>
                     </div>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-3">Koers: 1 {exResult.from.currency} = {Number(exResult.rate).toLocaleString('nl-NL', { minimumFractionDigits: 4, maximumFractionDigits: 6 })} {exResult.to.currency} • {exResult.as_of}</p>
+                  <p className="text-[11px] text-slate-500 mt-3">Koers: 1 {exResult.from.currency} = {Number(exResult.rate).toLocaleString('nl-NL', { minimumFractionDigits: 4, maximumFractionDigits: 6 })} {exResult.to.currency}
+                    {exResult.source === 'custom'
+                      ? <span className="ml-1.5 px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[10px] font-bold">HANDMATIG</span>
+                      : <span> • {exResult.as_of}</span>
+                    }
+                  </p>
                 </div>
                 <button onClick={() => setShowExchange(false)} data-testid="ex-close"
                   className="w-full py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-bold hover:bg-slate-200">Sluiten</button>

@@ -1,5 +1,28 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 39 (20 april 2026) — Wisselen met handmatige koers
+
+### Context:
+Vervolg op Sprint 38 — backend ondersteunde al `custom_rate` field maar frontend gebruikte het nog niet. Nu kan de gebruiker voor wisseltransacties een eigen koers invoeren wanneer de bank (DSB, Finabank, Hakrinbank) een afwijkende rate hanteert.
+
+### Frontend (`KasTab.jsx`):
+- Nieuwe state: `exUseCustomRate`, `exCustomRate`
+- **Checkbox toggle** "Eigen koers gebruiken (bv. afwijkende bankkoers)" onder Van/Naar secties
+- Wanneer aangevinkt: toont **"1 USD = [input] SRD"** rate-input veld (indigo gehighlight)
+- **Live preview** schakelt automatisch: bij custom rate wordt `amount * rate` berekend, bij uit wordt CME `/convert` endpoint aangeroepen
+- Preview label: toont **"HANDMATIG"** indigo badge i.p.v. CME timestamp wanneer custom rate gebruikt
+- Submit stuurt `custom_rate` in de payload naar backend
+- Resultaatkaart toont ook de **HANDMATIG** badge bij custom exchange
+
+### Backend (bestaand):
+- `POST /admin/kas/exchange` accepteerde reeds `custom_rate` en respondeert met `source: "custom"` i.p.v. CME URL
+
+### Tested end-to-end:
+- Screenshot preview: $100 × 38 = SRD 3.800 met HANDMATIG badge ✅
+- Screenshot resultaat: afgeschreven $100 → bijgeschreven SRD 3.800, koers "1 USD = 38,0000 SRD HANDMATIG" ✅
+- Saldi direct bijgewerkt ✅
+- Lint clean ✅
+
 ## Sprint 38 (20 april 2026) — Valuta wisselen tussen kassen (CME dagkoers)
 
 ### Context:
