@@ -2974,18 +2974,52 @@ function SmtpSettings({ company, token, onRefresh }) {
 function SubscriptionTab({ company, token }) {
   const [sub, setSub] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const r = await axios.get(`${API}/admin/subscription`, { headers: { Authorization: `Bearer ${token}` } });
-        if (!cancelled) setSub(r.data);
-      } catch { /* noop */ }
-      if (!cancelled) setLoading(false);
-    })();
-    return () => { cancelled = true; };
-  }, [token]);
+  const load = async () => {
+    try {
+      const r = await axios.get(`${API}/admin/subscription`, { headers: { Authorization: `Bearer ${token}` } });
+      setSub(r.data);
+    } catch { /* noop */ }
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [token]);
+
+  const formatSRD = (v) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'SRD', minimumFractionDigits: 2 }).format(v || 0);
+
+  const handleInitiate = async (invoiceId, method) => {
+    const labels = { mope: 'Mope', uni5pay: 'Uni5Pay', bank_transfer: 'Bankoverschrijving' };
+    if (!window.confirm(`Betaling via ${labels[method]} starten?\n\nDe factuur krijgt status "Wacht op review" totdat de superadmin uw betaling bevestigt.`)) return;
+    setBusy(`${invoiceId}:${method}`);
+    try {
+      const r = await axios.post(`${API}/admin/subscription/invoices/${invoiceId}/initiate-payment`,
+        { method }, { headers: { Authorization: `Bearer ${token}` } });
+      alert(r.data.message || 'Betaling gestart');
+      await load();
+    } catch (e) { alert('Mislukt: ' + (e.response?.data?.detail || e.message)); }
+    setBusy(null);
+  };
+
+  const handleUploadProof = async (invoiceId, file) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('Bestand te groot (max 5MB)'); return; }
+    setBusy(`${invoiceId}:upload`);
+    try {
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+      await axios.post(`${API}/admin/subscription/invoices/${invoiceId}/upload-proof`,
+        { payment_proof_url: dataUrl, notes: 'Betaalbewijs geüpload' },
+        { headers: { Authorization: `Bearer ${token}` } });
+      alert('Betaalbewijs succesvol geüpload. Superadmin zal uw betaling controleren.');
+      await load();
+    } catch (e) { alert('Upload mislukt: ' + (e.response?.data?.detail || e.message)); }
+    setBusy(null);
+  };
 
   if (loading) {
     return <div className="bg-white rounded-xl border border-slate-200 p-12 text-center"><div className="text-slate-400">Laden...</div></div>;
@@ -3004,11 +3038,10 @@ function SubscriptionTab({ company, token }) {
   }[status] || { label: status, color: 'from-slate-500 to-slate-600', text: '' };
 
   const bd = sub.bank_details || {};
+  const pm = sub.payment_methods || { bank_transfer_enabled: true };
   const hasBank = bd.bank_name || bd.account_number;
   const invoices = sub.invoices || [];
   const openInvoices = invoices.filter(i => i.status !== 'paid');
-
-  const formatSRD = (v) => new Intl.NumberFormat('nl-NL', { style: 'currency', currency: 'SRD', minimumFractionDigits: 2 }).format(v || 0);
 
   return (
     <div className="space-y-4">
@@ -3036,7 +3069,7 @@ function SubscriptionTab({ company, token }) {
       </div>
 
       {/* Bank details */}
-      {!isLifetime && (
+      {!isLifetime && pm.bank_transfer_enabled && (
         <div className="bg-white rounded-xl border border-slate-200 p-5">
           <h3 className="font-bold text-slate-900 mb-1">Bankgegevens voor betaling</h3>
           <p className="text-xs text-slate-500 mb-4">Maak het bedrag over via bankoverschrijving. Vermeld uw bedrijfsnaam als omschrijving.</p>
@@ -3057,6 +3090,31 @@ function SubscriptionTab({ company, token }) {
         </div>
       )}
 
+      {/* Alternative payment methods */}
+      {!isLifetime && (pm.mope_enabled || pm.uni5pay_enabled) && (
+        <div className="bg-white rounded-xl border border-slate-200 p-5">
+          <h3 className="font-bold text-slate-900 mb-1">Alternatieve betaalmethoden</h3>
+          <p className="text-xs text-slate-500 mb-4">U kunt ook via onderstaande mobiele betaaldiensten betalen.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {pm.mope_enabled && (
+              <div className="bg-gradient-to-br from-orange-500 to-pink-500 rounded-xl p-4 text-white">
+                <p className="font-bold text-lg">Mope</p>
+                {pm.mope_merchant_name && <p className="text-xs opacity-90 mt-1">Merchant: {pm.mope_merchant_name}</p>}
+                {pm.mope_merchant_id && <p className="text-xs font-mono opacity-90">ID: {pm.mope_merchant_id}</p>}
+                {pm.mope_phone && <p className="text-xs opacity-90">Tel: {pm.mope_phone}</p>}
+              </div>
+            )}
+            {pm.uni5pay_enabled && (
+              <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl p-4 text-white">
+                <p className="font-bold text-lg">Uni5Pay</p>
+                {pm.uni5pay_merchant_name && <p className="text-xs opacity-90 mt-1">Merchant: {pm.uni5pay_merchant_name}</p>}
+                {pm.uni5pay_merchant_id && <p className="text-xs font-mono opacity-90">ID: {pm.uni5pay_merchant_id}</p>}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Invoices */}
       <div className="bg-white rounded-xl border border-slate-200">
         <div className="p-4 border-b border-slate-200 flex items-center justify-between">
@@ -3068,41 +3126,85 @@ function SubscriptionTab({ company, token }) {
         {invoices.length === 0 ? (
           <div className="p-8 text-center text-slate-400 text-sm">Geen facturen beschikbaar.</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="text-left p-3 text-xs font-semibold text-slate-500 uppercase">Periode</th>
-                  <th className="text-right p-3 text-xs font-semibold text-slate-500 uppercase">Bedrag</th>
-                  <th className="text-center p-3 text-xs font-semibold text-slate-500 uppercase">Status</th>
-                  <th className="text-left p-3 text-xs font-semibold text-slate-500 uppercase">Vervaldatum</th>
-                  <th className="text-left p-3 text-xs font-semibold text-slate-500 uppercase">Betaald op</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoices.map(inv => {
-                  const statusLabel = { paid: 'Betaald', unpaid: 'Onbetaald', pending_review: 'Wacht op review' }[inv.status] || inv.status;
-                  const statusColor = {
-                    paid: 'bg-green-50 text-green-700',
-                    unpaid: inv.is_overdue ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700',
-                    pending_review: 'bg-blue-50 text-blue-700',
-                  }[inv.status] || 'bg-slate-50 text-slate-600';
-                  return (
-                    <tr key={inv.invoice_id} className="border-t border-slate-100">
-                      <td className="p-3 font-semibold text-slate-800">{inv.period}</td>
-                      <td className="p-3 text-right font-bold text-slate-900">{formatSRD(inv.amount)}</td>
-                      <td className="p-3 text-center">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${statusColor}`}>
-                          {statusLabel}{inv.is_overdue && ` (+${inv.days_overdue}d)`}
-                        </span>
-                      </td>
-                      <td className="p-3 text-xs text-slate-500">{inv.due_date ? new Date(inv.due_date).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
-                      <td className="p-3 text-xs text-slate-500">{inv.paid_at ? new Date(inv.paid_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="divide-y divide-slate-100">
+            {invoices.map(inv => {
+              const statusLabel = { paid: 'Betaald', unpaid: 'Onbetaald', pending_review: 'Wacht op review' }[inv.status] || inv.status;
+              const statusColor = {
+                paid: 'bg-green-50 text-green-700 border-green-200',
+                unpaid: inv.is_overdue ? 'bg-red-50 text-red-700 border-red-200' : 'bg-amber-50 text-amber-700 border-amber-200',
+                pending_review: 'bg-blue-50 text-blue-700 border-blue-200',
+              }[inv.status] || 'bg-slate-50 text-slate-600 border-slate-200';
+              const canPay = inv.status !== 'paid';
+              return (
+                <div key={inv.invoice_id} className="p-4" data-testid={`inv-row-${inv.invoice_id}`}>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex-1 min-w-[180px]">
+                      <p className="font-bold text-slate-900">{inv.period}</p>
+                      <p className="text-xs text-slate-500">Vervalt: {inv.due_date ? new Date(inv.due_date).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
+                        {inv.paid_at && ` · Betaald: ${new Date(inv.paid_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' })}`}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-extrabold text-slate-900">{formatSRD(inv.amount)}</p>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border ${statusColor}`}>
+                        {statusLabel}{inv.is_overdue && ` (+${inv.days_overdue}d)`}
+                      </span>
+                    </div>
+                  </div>
+                  {inv.payment_method && (
+                    <p className="text-xs text-slate-400 mt-2">Betaalmethode: <span className="font-semibold">{inv.payment_method}</span></p>
+                  )}
+                  {inv.payment_proof_url && (
+                    <a href={inv.payment_proof_url} target="_blank" rel="noreferrer" className="inline-block text-xs text-indigo-600 hover:underline mt-1" data-testid={`proof-link-${inv.invoice_id}`}>
+                      📎 Betaalbewijs bekijken
+                    </a>
+                  )}
+
+                  {canPay && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {pm.bank_transfer_enabled && (
+                        <button
+                          onClick={() => handleInitiate(inv.invoice_id, 'bank_transfer')}
+                          disabled={busy !== null}
+                          data-testid={`pay-bank-${inv.invoice_id}`}
+                          className="px-3 py-1.5 text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg disabled:opacity-50"
+                        >
+                          🏦 Bank gestart
+                        </button>
+                      )}
+                      {pm.mope_enabled && (
+                        <button
+                          onClick={() => handleInitiate(inv.invoice_id, 'mope')}
+                          disabled={busy !== null}
+                          data-testid={`pay-mope-${inv.invoice_id}`}
+                          className="px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-orange-500 to-pink-500 hover:opacity-90 text-white rounded-lg disabled:opacity-50"
+                        >
+                          Betaal via Mope
+                        </button>
+                      )}
+                      {pm.uni5pay_enabled && (
+                        <button
+                          onClick={() => handleInitiate(inv.invoice_id, 'uni5pay')}
+                          disabled={busy !== null}
+                          data-testid={`pay-uni5pay-${inv.invoice_id}`}
+                          className="px-3 py-1.5 text-xs font-semibold bg-gradient-to-r from-blue-500 to-indigo-600 hover:opacity-90 text-white rounded-lg disabled:opacity-50"
+                        >
+                          Betaal via Uni5Pay
+                        </button>
+                      )}
+                      <label className="px-3 py-1.5 text-xs font-semibold bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg cursor-pointer inline-flex items-center gap-1">
+                        <input type="file" accept="image/*,application/pdf" className="hidden"
+                          onChange={e => { const f = e.target.files?.[0]; if (f) handleUploadProof(inv.invoice_id, f); e.target.value=''; }}
+                          data-testid={`upload-proof-${inv.invoice_id}`}
+                          disabled={busy !== null}
+                        />
+                        📎 Betaalbewijs uploaden
+                      </label>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </div>

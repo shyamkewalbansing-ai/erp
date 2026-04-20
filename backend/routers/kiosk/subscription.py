@@ -42,6 +42,22 @@ class ProofUpload(BaseModel):
     notes: Optional[str] = None
 
 
+class PaymentMethodInitiate(BaseModel):
+    method: str  # "mope" | "uni5pay" | "bank_transfer"
+    notes: Optional[str] = None
+
+
+class PaymentMethodsConfig(BaseModel):
+    bank_transfer_enabled: bool = True
+    mope_enabled: bool = False
+    mope_merchant_id: Optional[str] = None
+    mope_merchant_name: Optional[str] = None
+    mope_phone: Optional[str] = None
+    uni5pay_enabled: bool = False
+    uni5pay_merchant_id: Optional[str] = None
+    uni5pay_merchant_name: Optional[str] = None
+
+
 # ============== SUPERADMIN INVOICE ENDPOINTS ==============
 @router.get("/superadmin/invoices")
 async def sa_list_invoices(admin=Depends(get_superadmin), status: Optional[str] = None, company_id: Optional[str] = None):
@@ -184,6 +200,28 @@ async def sa_update_bank_details(data: dict, admin=Depends(get_superadmin)):
     return {"saved": True}
 
 
+@router.post("/superadmin/subscription/payment-methods")
+async def sa_update_payment_methods(data: PaymentMethodsConfig, admin=Depends(get_superadmin)):
+    """Configure which payment methods companies can use: bank / mope / uni5pay."""
+    await db.kiosk_saas_config.update_one(
+        {"key": "payment_methods"},
+        {"$set": {"key": "payment_methods", "value": data.dict(), "updated_at": datetime.now(timezone.utc)}},
+        upsert=True,
+    )
+    return {"saved": True}
+
+
+@router.get("/public/subscription/payment-methods")
+async def get_payment_methods_public():
+    """Public: which payment methods are enabled + their public merchant info."""
+    doc = await db.kiosk_saas_config.find_one({"key": "payment_methods"}, {"_id": 0, "value": 1})
+    return (doc or {}).get("value", {
+        "bank_transfer_enabled": True,
+        "mope_enabled": False,
+        "uni5pay_enabled": False,
+    })
+
+
 @router.get("/public/subscription/bank-details")
 async def get_bank_details_public():
     """Public endpoint: new registrants need to see where to pay."""
@@ -224,8 +262,9 @@ async def company_subscription(company: dict = Depends(get_current_company)):
             delta = (te - now).total_seconds() / 86400.0
             days_left_trial = max(0, int(delta))
 
-    # Get bank details
+    # Get bank details + payment methods
     bd = await db.kiosk_saas_config.find_one({"key": "bank_details"}, {"_id": 0, "value": 1})
+    pm = await db.kiosk_saas_config.find_one({"key": "payment_methods"}, {"_id": 0, "value": 1})
 
     return {
         "company_id": company_id,
@@ -237,7 +276,35 @@ async def company_subscription(company: dict = Depends(get_current_company)):
         "days_left_trial": days_left_trial,
         "invoices": invoices,
         "bank_details": (bd or {}).get("value", {}),
+        "payment_methods": (pm or {}).get("value", {"bank_transfer_enabled": True, "mope_enabled": False, "uni5pay_enabled": False}),
     }
+
+
+@router.post("/admin/subscription/invoices/{invoice_id}/initiate-payment")
+async def initiate_subscription_payment(invoice_id: str, data: PaymentMethodInitiate, company: dict = Depends(get_current_company)):
+    """Company initiates payment via Mope/Uni5Pay/bank_transfer. Marks as pending_review."""
+    inv = await db.kiosk_subscription_invoices.find_one({
+        "invoice_id": invoice_id, "company_id": company["company_id"]
+    })
+    if not inv:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    if inv.get("status") == "paid":
+        raise HTTPException(status_code=400, detail="Deze factuur is al betaald")
+
+    method = data.method
+    method_label = {
+        "mope": "Mope", "uni5pay": "Uni5Pay", "bank_transfer": "Bankoverschrijving"
+    }.get(method, method)
+    now = datetime.now(timezone.utc)
+    upd = {
+        "status": "pending_review",
+        "payment_method": method,
+        "payment_initiated_at": now,
+        "notes": (inv.get("notes", "") + f" | Betaling gestart via {method_label}"
+                  + (f" - {data.notes}" if data.notes else "")).strip(" |"),
+    }
+    await db.kiosk_subscription_invoices.update_one({"invoice_id": invoice_id}, {"$set": upd})
+    return {"initiated": True, "method": method, "message": f"Betaling via {method_label} gestart. Superadmin zal uw betaling verifiëren."}
 
 
 @router.post("/admin/subscription/invoices/{invoice_id}/upload-proof")

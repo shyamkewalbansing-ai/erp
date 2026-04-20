@@ -84,6 +84,38 @@ export default function SuperAdminDashboard() {
     } catch { alert('Verwijderen mislukt'); }
   };
 
+  const handleEditPaymentMethods = async () => {
+    try {
+      const cur = await axios.get(`${API.replace('/superadmin','')}/public/subscription/payment-methods`);
+      const d = cur.data || {};
+      const bankOn = window.confirm(`Bankoverschrijving ${d.bank_transfer_enabled ? 'AAN' : 'UIT'}. Klik OK voor AAN, Cancel voor UIT.`);
+      const mopeOn = window.confirm(`Mope betaling ${d.mope_enabled ? 'AAN' : 'UIT'}. Klik OK voor AAN, Cancel voor UIT.`);
+      let mopeData = {};
+      if (mopeOn) {
+        const mope_merchant_id = window.prompt('Mope Merchant ID:', d.mope_merchant_id || '');
+        if (mope_merchant_id === null) return;
+        const mope_merchant_name = window.prompt('Mope Merchant naam:', d.mope_merchant_name || '');
+        if (mope_merchant_name === null) return;
+        const mope_phone = window.prompt('Mope Telefoonnummer:', d.mope_phone || '');
+        if (mope_phone === null) return;
+        mopeData = { mope_merchant_id, mope_merchant_name, mope_phone };
+      }
+      const uniOn = window.confirm(`Uni5Pay betaling ${d.uni5pay_enabled ? 'AAN' : 'UIT'}. Klik OK voor AAN, Cancel voor UIT.`);
+      let uniData = {};
+      if (uniOn) {
+        const uni5pay_merchant_id = window.prompt('Uni5Pay Merchant ID:', d.uni5pay_merchant_id || '');
+        if (uni5pay_merchant_id === null) return;
+        const uni5pay_merchant_name = window.prompt('Uni5Pay Merchant naam:', d.uni5pay_merchant_name || '');
+        if (uni5pay_merchant_name === null) return;
+        uniData = { uni5pay_merchant_id, uni5pay_merchant_name };
+      }
+      await axios.post(`${API}/superadmin/subscription/payment-methods`,
+        { bank_transfer_enabled: bankOn, mope_enabled: mopeOn, ...mopeData, uni5pay_enabled: uniOn, ...uniData },
+        { headers: { Authorization: `Bearer ${token}` } });
+      alert('Betaalmethoden opgeslagen');
+    } catch { alert('Opslaan mislukt'); }
+  };
+
   const handleEditBankDetails = async () => {
     try {
       const cur = await axios.get(`${API.replace('/superadmin','')}/public/subscription/bank-details`);
@@ -513,6 +545,14 @@ export default function SuperAdminDashboard() {
                   Bankgegevens
                 </button>
                 <button
+                  onClick={handleEditPaymentMethods}
+                  data-testid="edit-payment-methods-btn"
+                  className="px-3 py-2 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-lg text-xs font-semibold"
+                  title="Mope/Uni5Pay betaalmethoden configureren"
+                >
+                  Betaalmethoden
+                </button>
+                <button
                   onClick={handleGenerateMonthly}
                   data-testid="generate-monthly-btn"
                   className="px-3 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg text-xs font-semibold"
@@ -561,6 +601,12 @@ export default function SuperAdminDashboard() {
                           <td className="p-4">
                             <p className="text-sm font-bold text-slate-900">{inv.company_name}</p>
                             <p className="text-xs text-slate-400">{inv.company_id}</p>
+                            {inv.payment_method && <p className="text-[11px] text-purple-600 mt-1">via {inv.payment_method}</p>}
+                            {inv.payment_proof_url && (
+                              <a href={inv.payment_proof_url} target="_blank" rel="noreferrer" className="text-[11px] text-indigo-600 hover:underline">
+                                📎 Betaalbewijs
+                              </a>
+                            )}
                           </td>
                           <td className="p-4 text-sm font-semibold text-slate-700">{inv.period}</td>
                           <td className="p-4 text-right text-sm font-bold text-slate-900">{formatSRD(inv.amount)}</td>

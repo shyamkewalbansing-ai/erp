@@ -1,5 +1,17 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 27 (20 april 2026) — Betaalbewijs upload + Mope/Uni5Pay
+
+### Geïmplementeerd:
+- **Betaalbewijs upload** per openstaande factuur in `Instellingen → Abonnement`: file picker (image/PDF, max 5MB) → base64 → `POST /admin/subscription/invoices/{id}/upload-proof` → status wordt `pending_review`
+- **Mope + Uni5Pay** als alternatieve SaaS betaalmethoden:
+  - Superadmin config: `POST /superadmin/subscription/payment-methods` (mope_merchant_id, mope_phone, uni5pay_merchant_id, enable/disable per methode)
+  - Company: `POST /admin/subscription/invoices/{id}/initiate-payment` met method=mope|uni5pay|bank_transfer → marks pending_review
+  - Per open factuur 4 knoppen: 🏦 Bank gestart / Betaal via Mope (oranje) / Betaal via Uni5Pay (blauw) / 📎 Betaalbewijs uploaden
+- **Alternatieve betaalmethoden kaart** in Abonnement tab toont Mope/Uni5Pay merchant info met gradient kleuren
+- **Superadmin Abonnement Facturen** toont nu per factuur: betaalmethode label + clickable 📎 Betaalbewijs link
+- **"Betaalmethoden" knop** naast "Bankgegevens" in superadmin Facturen tab voor configuratie
+
 ## Sprint 26 (20 april 2026) — SaaS Subscription Management
 
 ### Geïmplementeerd (Superadmin refactor):- **Nieuwe collection** `kiosk_subscription_invoices` + `kiosk_saas_config` (bank_details)
