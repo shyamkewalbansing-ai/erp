@@ -5,6 +5,65 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 /* ========================================
+   MOBILE APP-FRIENDLY BASE (prevents iOS input zoom + touch optimizations)
+   ======================================== */
+html {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+}
+
+@media (max-width: 767px) {
+    /* Prevents iOS Safari from zooming in on input focus (needs min 16px) */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="search"],
+    input[type="url"],
+    input[type="date"],
+    input[type="datetime-local"],
+    input[type="time"],
+    input:not([type]),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    /* Modals that use flex items-center become top-aligned on small screens so they don't center off-screen when tall */
+    .fixed.inset-0.z-50.flex.items-center {
+        align-items: flex-start !important;
+        padding-top: 1rem !important;
+        padding-bottom: 1rem !important;
+        overflow-y: auto !important;
+    }
+    /* Cap inner card max-height and enable internal scroll */
+    .fixed.inset-0.z-50 > div[class*="max-w-"] {
+        max-height: calc(100vh - 2rem);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Slightly larger touch targets on mobile */
+    button, a[role="button"], [role="button"] {
+        min-height: 40px;
+    }
+}
+
+/* Smooth scrolling + app-like font rendering */
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Prevent overscroll bounce flash on iOS */
+html, body {
+    overscroll-behavior-y: none;
+}
+
+
+/* ========================================
    ROOT VARIABLES
    ======================================== */
 :root {

@@ -1,5 +1,29 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 44 (20 april 2026) — Mobile app-friendly admin dashboard
+
+### Verzoek:
+Op telefoon (beheerder-app):
+- Popup forms passen niet goed, opslaan/sluiten knoppen onbereikbaar
+- Zoom-in bij tappen op input velden (iOS Safari)
+- Moet voelen als een echte app
+
+### Oplossing (`App.css` globale mobile CSS toegevoegd):
+- **`font-size: 16px !important`** op alle text/email/password/number/select/textarea inputs onder 767px breedte → voorkomt automatische zoom-in op iOS bij input focus
+- **Modals top-aligned** onder 767px: `align-items: flex-start` + `padding-top: 1rem` zodat lange modals bovenaan starten i.p.v. off-screen gecentreerd
+- **Modal inner cards** krijgen `max-height: calc(100vh - 2rem)` + `overflow-y: auto` + `-webkit-overflow-scrolling: touch` → lange modals (bv. Nieuw Bank/Kas, Wissel) scrollbaar binnen zichzelf, Opslaan/Annuleer knoppen altijd bereikbaar
+- **`min-height: 40px`** op alle buttons op mobile → betere touch-targets
+- `-webkit-font-smoothing: antialiased` + `overscroll-behavior-y: none` op html/body → app-achtige font rendering en geen bounce-flash op iOS
+
+### Geen viewport/meta wijzigingen:
+- Meta viewport had al `user-scalable` aangelaten (accessibility-vriendelijk), dus de 16px CSS-fix is de juiste manier om zoom-bij-focus te voorkomen zonder accessibility te breken
+- PWA meta tags bestonden al (`apple-mobile-web-app-capable`, `theme-color`)
+
+### Tested:
+- Screenshot 390×844 (iPhone 14 Pro viewport) → admin dashboard rendert correct met horizontale tab-scroll ✅
+- Modal "Nieuw Bank/Kas" opent correct, past binnen scherm, knoppen bereikbaar ✅
+- TestMobile invoeren in input → geen zoom-in + modal blijft zichtbaar ✅
+
 ## Sprint 43 (20 april 2026) — /vastgoed direct PIN keypad + medewerker PIN login
 
 ### Verzoek:
