@@ -1,5 +1,24 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 34 (20 april 2026) — Auto-reprint definitieve bon na Beheerder approval
+
+### Context:
+Na de "Eén-klik goedkeuren met PIN" (Sprint 33) bleef de huurder met een pending bon ("WACHT OP GOEDKEURING") achter. In gemengde teams zou het handig zijn om automatisch een tweede, definitieve bon te printen na approval zodat de huurder een up-to-date versie meekrijgt.
+
+### Geïmplementeerd:
+- **`ReceiptTicket.jsx`**: Groene "✓ GOEDGEKEURD DOOR {NAAM}" banner toegevoegd als `payment.status === 'approved' && payment.approved_by` (vervangt de gele WACHT OP GOEDKEURING banner)
+- **`ReceiptTicket.jsx`**: QR-code (via `qrcode.react`) toegevoegd onderaan de bon voor approved betalingen, linkt naar `{APP_URL}/api/kiosk/public/receipt/{payment_id}` met label "Scan om te verifiëren / Online kwitantie authentiek"
+- **`KioskReceipt.jsx`** — `silentPrint(p?)` accepteert nu optioneel een payment-override en includeert `status`, `approved_by`, `reprint` flags in de thermal-print-server payload
+- **`KioskReceipt.jsx`** — `handleApprovePin` roept na succes `silentPrint(updatedPayment)` aan + speelt `playPaperFeedSound()` + toont een groene floating toast "✓ Definitieve bon wordt geprint..." gedurende 4.5s
+- **`KioskReceipt.jsx`** — Countdown wordt uitgebreid naar 20s na approval (i.p.v. 5s) zodat de huurder voldoende tijd heeft om de nieuwe bon + saldo te zien
+
+### Tested end-to-end:
+- Pending payment SRD 500 Boetes via PIN 1234 → pending bon met WACHT OP GOEDKEURING banner ✅
+- Done phase → "Wacht op goedkeuring" amber UI ✅
+- Klik Goedkeuren met Beheerder PIN → voer 5678 in → UI switcht naar groen "Betaling geslaagd!" + Boetes SRD 0 + saldo bijgewerkt + groene "✓ Definitieve bon wordt geprint..." toast + countdown terug naar 20 ✅
+- Hidden print-receipt DOM rendert approved ReceiptTicket met GOEDGEKEURD banner + QR-code ✅
+- Lint clean ✅
+
 ## Sprint 33 (20 april 2026) — Eén-klik Beheerder goedkeuring op Kiosk bon
 
 ### Context:

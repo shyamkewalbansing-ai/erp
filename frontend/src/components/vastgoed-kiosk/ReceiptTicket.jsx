@@ -1,6 +1,10 @@
+import { QRCodeSVG } from 'qrcode.react';
+
 function formatSRD(amount) {
   return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
+
+const APP_URL = (process.env.REACT_APP_BACKEND_URL || '').replace(/\/$/, '');
 
 const TYPE_LABELS = {
   rent: 'Huurbetaling',
@@ -25,6 +29,7 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
   if (!payment) return null;
 
   const isPending = payment.status === 'pending';
+  const receiptUrl = !isPending && payment.payment_id ? `${APP_URL}/api/kiosk/public/receipt/${payment.payment_id}` : null;
   const date = new Date(payment.created_at);
   const dateStr = date.toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' });
   const timeStr = date.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
@@ -116,6 +121,16 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
           fontFamily: font, fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px'
         }}>
           *** WACHT OP GOEDKEURING ***
+        </div>
+      )}
+
+      {!isPending && payment.approved_by && (
+        <div style={{
+          border: '2px solid #059669', background: '#d1fae5', color: '#064e3b',
+          padding: '6px 8px', margin: '6px 0', textAlign: 'center',
+          fontFamily: font, fontSize: '11px', fontWeight: 'bold', letterSpacing: '0.5px'
+        }}>
+          ✓ GOEDGEKEURD DOOR {String(payment.approved_by).toUpperCase()}
         </div>
       )}
 
@@ -226,6 +241,22 @@ export default function ReceiptTicket({ payment, tenant, preview = false, stampD
             {stampData.stamp_company_name}
           </div>
         </div>
+      )}
+
+      {/* QR code (only for approved payments) */}
+      {receiptUrl && (
+        <>
+          {dashedLine()}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '6px 0 4px' }}>
+            <div style={{ background: '#fff', padding: '2px', border: '1px solid #ddd' }}>
+              <QRCodeSVG value={receiptUrl} size={64} level="M" includeMargin={false} bgColor="#ffffff" fgColor="#000000" />
+            </div>
+            <div style={{ fontSize: '9px', color: '#555', lineHeight: 1.4, textAlign: 'left', maxWidth: '140px' }}>
+              <div style={{ fontWeight: 'bold', color: '#065f46' }}>Scan om te verifiëren</div>
+              <div>Online kwitantie authentiek</div>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Zigzag tear edge at bottom */}

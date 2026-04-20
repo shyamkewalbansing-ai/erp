@@ -142,22 +142,30 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
 
   const kwNr = currentPayment?.kwitantie_nummer || currentPayment?.receipt_number || '';
 
+  const [reprintToast, setReprintToast] = useState(false);
+
   const handleApprovePin = async (pinCode) => {
     setApproving(true); setApproveError('');
     try {
       const res = await axios.post(`${API}/public/${companyId}/payments/${currentPayment.payment_id}/approve-with-pin`, { pin: pinCode });
-      setCurrentPayment(p => ({
-        ...p,
+      const updated = {
+        ...currentPayment,
         status: 'approved',
         approved_by: res.data.approved_by,
         remaining_rent: res.data.remaining_rent,
         remaining_service: res.data.remaining_service,
         remaining_fines: res.data.remaining_fines,
         remaining_internet: res.data.remaining_internet,
-      }));
+      };
+      setCurrentPayment(updated);
       setShowPinModal(false);
       setPinDigits(['', '', '', '']);
-      setCountdown(5);
+      setCountdown(20); // extend countdown so user can read the new state
+      // Reprint definitieve bon + paper feed sound
+      setReprintToast(true);
+      playPaperFeedSound(3500);
+      silentPrint(updated);
+      setTimeout(() => setReprintToast(false), 4500);
     } catch (err) {
       setApproveError(err.response?.data?.detail || 'Goedkeuring mislukt');
       setPinDigits(['', '', '', '']);
@@ -181,32 +189,36 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
     if (idx === 3 && np.every(d => d !== '')) handleApprovePin(np.join(''));
   };
 
-  const silentPrint = useCallback(async () => {
-    if (!payment) return;
+  const silentPrint = useCallback(async (p) => {
+    const pmt = p || payment;
+    if (!pmt) return;
     try {
       const hc = await fetch(`${PRINT_SERVER_URL}/health`, { method: 'GET', mode: 'cors' }).catch(() => null);
       if (hc?.ok) {
-        const rem = (payment.remaining_rent || 0) + (payment.remaining_service || 0) + (payment.remaining_fines || 0);
+        const rem = (pmt.remaining_rent || 0) + (pmt.remaining_service || 0) + (pmt.remaining_fines || 0);
         await fetch(`${PRINT_SERVER_URL}/print`, {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             company_name: stampData?.stamp_company_name || 'Vastgoed Beheer',
             address: stampData?.stamp_address || '', phone: stampData?.stamp_phone || '',
-            receipt_number: kwNr,
-            date: new Date(payment.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-            time: new Date(payment.created_at).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
-            tenant_name: payment.tenant_name || tenant?.name || '',
-            apartment: `${payment.apartment_number || tenant?.apartment_number || ''} / ${payment.tenant_code || tenant?.tenant_code || ''}`,
-            payment_type: TYPE_LABELS[payment.payment_type] || payment.payment_type,
-            amount: Number(payment.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            total: Number(payment.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-            payment_method: METHOD_LABELS[payment.payment_method] || payment.payment_method || 'Contant',
-            remaining_total: Number(rem).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            receipt_number: pmt.kwitantie_nummer || pmt.receipt_number || '',
+            date: new Date(pmt.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+            time: new Date(pmt.created_at).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }),
+            tenant_name: pmt.tenant_name || tenant?.name || '',
+            apartment: `${pmt.apartment_number || tenant?.apartment_number || ''} / ${pmt.tenant_code || tenant?.tenant_code || ''}`,
+            payment_type: TYPE_LABELS[pmt.payment_type] || pmt.payment_type,
+            amount: Number(pmt.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            total: Number(pmt.amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            payment_method: METHOD_LABELS[pmt.payment_method] || pmt.payment_method || 'Contant',
+            remaining_total: Number(rem).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+            status: pmt.status || 'pending',
+            approved_by: pmt.approved_by || '',
+            reprint: Boolean(p),
           })
         });
       }
     } catch {}
-  }, [payment, tenant, stampData, kwNr]);
+  }, [payment, tenant, stampData]);
 
   if (!currentPayment) return null;
 
@@ -425,6 +437,15 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
       <div className="print-receipt-content" style={{ display: 'none' }}>
         <ReceiptTicket payment={currentPayment} tenant={tenant} preview={false} stampData={stampData} />
       </div>
+
+      {reprintToast && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-white rounded-xl shadow-2xl flex items-center gap-2.5 px-5 py-3"
+          data-testid="reprint-toast"
+          style={{ animation: 'fadeUp 0.3s ease-out forwards' }}>
+          <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+          <span className="font-bold text-sm">✓ Definitieve bon wordt geprint...</span>
+        </div>
+      )}
 
       {showPinModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" style={{ padding: '4vh 4vw' }}
