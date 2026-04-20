@@ -1,5 +1,18 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 29 (20 april 2026) — Mope Webhook
+
+### Geïmplementeerd:
+- `POST /public/subscription/mope-webhook` — server-to-server endpoint voor Mope
+- 3-way invoice matching: primair via `payment_gateway_id`, fallback via `order_id` prefix (`SAAS-{invoice_id[:8]}`)
+- **Alleen** markeert paid bij status in `[paid, completed, success]` — andere statussen (failed, expired, canceled) worden genegeerd
+- Altijd 200 response (voorkomt retry-loops van Mope)
+- Triggert Web Push notificatie naar alle staff devices: "✅ Abonnement betaald (Mope)"
+- `webhook_url` wordt automatisch meegestuurd bij checkout (`{APP_URL}/api/kiosk/public/subscription/mope-webhook`)
+- Logger schrijft alle webhook events naar `kiosk.subscription` logger
+
+**Tested** (curl): 4 scenarios — unknown ID, gateway_id match, order_id fallback, failed status ✅
+
 ## Sprint 28 (20 april 2026) — Echte Mope/Uni5Pay Gateway voor SaaS
 
 ### Geïmplementeerd:

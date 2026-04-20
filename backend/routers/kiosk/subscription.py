@@ -10,7 +10,13 @@ from .base import (
     datetime, timezone, timedelta,
     db, generate_uuid, get_current_company,
 )
+from fastapi import Request as _Request
 from .superadmin import get_superadmin
+
+import asyncio
+import logging
+
+logger = logging.getLogger("kiosk.subscription")
 
 DEFAULT_MONTHLY_PRICE = 3000.00
 TRIAL_DAYS = 14
@@ -373,6 +379,7 @@ async def mope_checkout_saas(invoice_id: str, company: dict = Depends(get_curren
     amount_cents = int(round(inv["amount"] * 100))
     app_url = _os.environ.get("APP_URL", "https://facturatie.sr")
     redirect_url = f"{app_url}/vastgoed/{company['company_id']}?saas_mope_done=1&invoice={invoice_id}"
+    webhook_url = f"{app_url}/api/kiosk/public/subscription/mope-webhook"
 
     # Mock mode: api key starts with mock_
     if api_key.startswith("mock_"):
@@ -407,6 +414,7 @@ async def mope_checkout_saas(invoice_id: str, company: dict = Depends(get_curren
                     "order_id": order_id,
                     "currency": "SRD",
                     "redirect_url": redirect_url,
+                    "webhook_url": webhook_url,
                 },
             )
             if resp.status_code not in (200, 201):
@@ -531,6 +539,70 @@ async def uni5pay_status_saas(invoice_id: str, payment_id: str, company: dict = 
         )
         await _recompute_company_status(company["company_id"])
     return {"status": status_val, "invoice_status": "paid" if status_val in ("paid", "completed", "success") else inv.get("status", "unpaid")}
+
+
+# ============== MOPE WEBHOOK (public, server-to-server) ==============
+@router.post("/public/subscription/mope-webhook")
+async def mope_webhook(request: _Request):
+    """Mope server-to-server webhook. Mope calls this URL after payment state change.
+    We look up the invoice by payment_id (stored as payment_gateway_id) OR by the order_id
+    pattern SAAS-{invoice_id[:8]}. If status = paid/completed/success, auto-mark the invoice.
+    Always returns 200 so Mope does not retry forever.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+
+    # Mope payload typically contains: id, status, order_id, amount, ...
+    payment_id = body.get("id") or body.get("payment_id") or body.get("payment_request_id")
+    status_val = (body.get("status") or "").lower()
+    order_id = body.get("order_id") or ""
+
+    logger.info(f"[mope-webhook] payment_id={payment_id} status={status_val} order_id={order_id}")
+
+    # Find invoice: prefer gateway_id match, fallback to order_id prefix match
+    inv = None
+    if payment_id:
+        inv = await db.kiosk_subscription_invoices.find_one({"payment_gateway_id": payment_id})
+    if not inv and order_id and order_id.startswith("SAAS-"):
+        prefix = order_id[len("SAAS-"):][:8]
+        # Find invoice whose invoice_id starts with this prefix
+        inv = await db.kiosk_subscription_invoices.find_one({
+            "invoice_id": {"$regex": f"^{prefix}"}
+        })
+
+    if not inv:
+        logger.warning(f"[mope-webhook] No matching SaaS invoice for id={payment_id} order={order_id}")
+        return {"received": True, "matched": False}
+
+    if status_val in ("paid", "completed", "success") and inv.get("status") != "paid":
+        await db.kiosk_subscription_invoices.update_one(
+            {"invoice_id": inv["invoice_id"]},
+            {"$set": {
+                "status": "paid",
+                "paid_at": datetime.now(timezone.utc),
+                "marked_paid_by": "mope-webhook",
+                "payment_method": "mope",
+                "payment_gateway_id": payment_id or inv.get("payment_gateway_id"),
+            }}
+        )
+        await _recompute_company_status(inv["company_id"])
+        logger.info(f"[mope-webhook] Invoice {inv['invoice_id']} auto-marked paid via webhook")
+        # Try to fire a staff push
+        try:
+            from .push import send_push_to_company
+            asyncio.create_task(send_push_to_company(
+                inv["company_id"],
+                title="✅ Abonnement betaald (Mope)",
+                body=f"Factuur {inv.get('period','')} · SRD {inv.get('amount',0):,.2f} is via Mope betaald.",
+                url="/vastgoed",
+                tag=f"saas-paid-{inv['invoice_id']}",
+            ))
+        except Exception:
+            pass
+
+    return {"received": True, "matched": True, "invoice_id": inv["invoice_id"]}
 
 
 # ============== INTERNAL ==============
