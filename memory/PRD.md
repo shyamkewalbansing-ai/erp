@@ -1,5 +1,26 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 35 (20 april 2026) — Extra Push-notificatie triggers
+
+### Geïmplementeerd:
+Op verzoek extra Web Push triggers toegevoegd bovenop de bestaande notificaties (Kiosk-pending/approved, boetes):
+
+- **Inkomsten geregistreerd** — `POST /admin/kas` met `entry_type=income` → push "Inkomsten geregistreerd • SRD {bedrag} • {omschrijving}"
+- **Uitgave geregistreerd** — `POST /admin/kas` met `entry_type=expense` → push "Uitgave geregistreerd • SRD {bedrag} • {omschrijving}"
+- **Salaris uitbetaald** — `POST /admin/kas` met `entry_type=salary` of `POST /admin/employees/{id}/pay` → push "Salaris uitbetaald • {naam} • SRD {bedrag} • {maand}"
+- **Loonstrook aangemaakt** — `POST /admin/loonstroken` → push "Loonstrook aangemaakt • {naam} • Netto SRD {netto} • {periode} • {strook_nr}"
+- **Losse uitbetaling** — `POST /admin/freelancer-payments` → push "Losse uitbetaling • {naam} ({functie}) • SRD {bedrag} • {kwitantie}"
+- **Achterstand huurders (dagelijkse samenvatting)** — in `scheduler.py` rent-reminder loop: op `billing_day` (vandaag) óf `reminder_day` (3 dagen ervoor) wordt een samenvatting-push gestuurd met totaal aantal huurders met achterstand + totaal openstaand bedrag ("Vervaldatum vandaag" / "Vervaldatum over 3 dagen")
+
+### Frontend:
+- `PushNotificationsSettings.jsx` info-box uitgebreid met alle 10 push-triggers zodat gebruikers zien welke meldingen binnenkomen
+
+### Tested:
+- Alle 5 endpoints via curl: kas income/expense/salary (200 OK), freelancer payment (200 OK), loonstrook (200 OK), pay employee (200 OK) ✅
+- Geen push-errors in backend logs ✅
+- `send_push_to_company` handelt 0 subscriptions correct af (no-op) zonder exceptions ✅
+- Screenshot van Push-settings info-box toont alle 10 meldingen in de admin UI ✅
+
 ## Sprint 34 (20 april 2026) — Auto-reprint definitieve bon na Beheerder approval
 
 ### Context:

@@ -41,7 +41,26 @@ async def _run_daily_notifications():
                     "status": "active",
                     "outstanding_rent": {"$gt": 0}
                 }).to_list(1000)
-                
+
+                # Push notification summary: huurders achterstand
+                try:
+                    if tenants_with_debt:
+                        from .push import send_push_to_company
+                        total_achterstand = sum(
+                            (t.get("outstanding_rent", 0) + t.get("fines", 0) + t.get("service_costs", 0))
+                            for t in tenants_with_debt
+                        )
+                        label = "Vervaldatum vandaag" if today == billing_day else "Vervaldatum over 3 dagen"
+                        await send_push_to_company(
+                            company_id,
+                            title="Achterstand huurders",
+                            body=f"{len(tenants_with_debt)} huurder(s) • Totaal SRD {total_achterstand:,.2f} • {label}",
+                            url="/vastgoed",
+                            tag=f"overdue-summary-{now.strftime('%Y%m%d')}",
+                        )
+                except Exception:
+                    pass
+
                 for t in tenants_with_debt:
                     t_phone = t.get("phone") or t.get("telefoon", "")
                     if not t_phone:

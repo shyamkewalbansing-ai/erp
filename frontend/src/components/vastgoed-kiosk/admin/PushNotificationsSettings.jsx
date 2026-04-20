@@ -247,6 +247,12 @@ function PushNotificationsSettings({ token, currentUser }) {
           <li>Nieuwe kwitantie wacht op goedkeuring (door Boekhouder/Kiosk Medewerker)</li>
           <li>Kwitantie goedgekeurd door Beheerder</li>
           <li>Boetes toegepast voor achterstallige huur</li>
+          <li>Achterstand van huurders (dagelijkse samenvatting rond vervaldatum)</li>
+          <li>Inkomsten geregistreerd in de kas</li>
+          <li>Uitgave geregistreerd in de kas</li>
+          <li>Salaris uitbetaald aan werknemers</li>
+          <li>Loonstrook aangemaakt voor werknemer</li>
+          <li>Losse uitbetalingen (freelancers / aannemers)</li>
         </ul>
         <p className="mt-2 text-slate-500">Tip: installeer de PWA op uw telefoon of desktop voor meldingen — ook als de app gesloten is.</p>
       </div>

@@ -802,6 +802,29 @@ async def create_kas_entry(data: CashEntryCreate, company: dict = Depends(get_cu
             entry["related_employee_name"] = emp.get("name", "")
     
     await db.kiosk_kas.insert_one(entry)
+
+    # === Web Push notification for income/expense entries ===
+    try:
+        from .push import send_push_to_company
+        if data.entry_type == "income":
+            push_title = "Inkomsten geregistreerd"
+            push_body = f"SRD {data.amount:,.2f} • {data.description or entry.get('category', 'Inkomsten')}"
+            push_tag = f"kas-income-{entry_id}"
+        elif data.entry_type in ("expense", "salary"):
+            label = "Salaris uitbetaald" if data.entry_type == "salary" else "Uitgave geregistreerd"
+            push_title = label
+            push_body = f"SRD {data.amount:,.2f} • {data.description or entry.get('category', 'Uitgave')}"
+            push_tag = f"kas-{data.entry_type}-{entry_id}"
+        else:
+            push_title = None
+        if push_title:
+            asyncio.create_task(send_push_to_company(
+                company["company_id"], title=push_title, body=push_body,
+                url="/vastgoed", tag=push_tag
+            ))
+    except Exception:
+        pass
+
     return {"entry_id": entry_id, "message": "Kas boeking aangemaakt"}
 
 @router.delete("/admin/kas/{entry_id}")
@@ -1165,7 +1188,20 @@ async def pay_employee(employee_id: str, body: dict = None, company: dict = Depe
             )
     except Exception:
         pass  # Notificatie mag hoofdflow niet breken
-    
+
+    # === Web Push: Salaris uitbetaald ===
+    try:
+        from .push import send_push_to_company
+        asyncio.create_task(send_push_to_company(
+            company["company_id"],
+            title="Salaris uitbetaald",
+            body=f"{emp['name']} • SRD {amount:,.2f} • {month_label}",
+            url="/vastgoed",
+            tag=f"salary-{entry_id}",
+        ))
+    except Exception:
+        pass
+
     return {"entry_id": entry_id, "amount": amount, "message": f"Loon uitbetaald: SRD {amount:.2f}"}
 
 
@@ -1243,6 +1279,19 @@ async def create_freelancer_payment(data: FreelancerPaymentCreate, company: dict
             "kwitantie_nummer": kwitantie_nummer,
             "created_at": payment_date
         })
+    except Exception:
+        pass
+
+    # === Web Push: Losse uitbetaling ===
+    try:
+        from .push import send_push_to_company
+        asyncio.create_task(send_push_to_company(
+            company_id,
+            title="Losse uitbetaling",
+            body=f"{name}{' (' + functie + ')' if functie else ''} • SRD {data.amount:,.2f} • {kwitantie_nummer}",
+            url="/vastgoed",
+            tag=f"freelancer-{payment_id}",
+        ))
     except Exception:
         pass
 
@@ -1421,6 +1470,19 @@ async def create_loonstrook(data: LoonstrookCreate, company: dict = Depends(get_
             "kwitantie_nummer": strook_nummer,
             "created_at": payment_date
         })
+    except Exception:
+        pass
+
+    # === Web Push: Loonstrook aangemaakt ===
+    try:
+        from .push import send_push_to_company
+        asyncio.create_task(send_push_to_company(
+            company_id,
+            title="Loonstrook aangemaakt",
+            body=f"{emp['name']} • Netto SRD {netto_loon:,.2f} • {data.period_label} • {strook_nummer}",
+            url="/vastgoed",
+            tag=f"loonstrook-{loon_id}",
+        ))
     except Exception:
         pass
 
