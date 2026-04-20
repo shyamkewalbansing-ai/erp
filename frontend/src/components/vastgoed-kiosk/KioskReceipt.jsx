@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { CheckCircle, Home, Clock } from 'lucide-react';
+import { CheckCircle, Home, Clock, Lock, Delete } from 'lucide-react';
 import ReceiptTicket from './ReceiptTicket';
 import axios from 'axios';
 
@@ -102,8 +102,15 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
   const [countdown, setCountdown] = useState(5);
   const [stampData, setStampData] = useState(null);
   const [phase, setPhase] = useState('show');
+  const [currentPayment, setCurrentPayment] = useState(payment);
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [pinDigits, setPinDigits] = useState(['', '', '', '']);
+  const [approving, setApproving] = useState(false);
+  const [approveError, setApproveError] = useState('');
   const timerRef = useRef(null);
   const hasPrintedRef = useRef(false);
+
+  useEffect(() => { setCurrentPayment(payment); }, [payment]);
 
   useEffect(() => {
     if (companyId) axios.get(`${API}/public/${companyId}/company/stamp`).then(r => setStampData(r.data)).catch(() => {});
@@ -126,13 +133,53 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
     if (!payment) return;
     const startDelay = setTimeout(() => {
       timerRef.current = setInterval(() => {
+        if (showPinModal) return; // pause countdown while PIN modal is open
         setCountdown(p => { if (p <= 1) { clearInterval(timerRef.current); onDone(); return 0; } return p - 1; });
       }, 1000);
     }, 6800);
     return () => { clearTimeout(startDelay); clearInterval(timerRef.current); };
-  }, [payment, onDone]);
+  }, [payment, onDone, showPinModal]);
 
-  const kwNr = payment?.kwitantie_nummer || payment?.receipt_number || '';
+  const kwNr = currentPayment?.kwitantie_nummer || currentPayment?.receipt_number || '';
+
+  const handleApprovePin = async (pinCode) => {
+    setApproving(true); setApproveError('');
+    try {
+      const res = await axios.post(`${API}/public/${companyId}/payments/${currentPayment.payment_id}/approve-with-pin`, { pin: pinCode });
+      setCurrentPayment(p => ({
+        ...p,
+        status: 'approved',
+        approved_by: res.data.approved_by,
+        remaining_rent: res.data.remaining_rent,
+        remaining_service: res.data.remaining_service,
+        remaining_fines: res.data.remaining_fines,
+        remaining_internet: res.data.remaining_internet,
+      }));
+      setShowPinModal(false);
+      setPinDigits(['', '', '', '']);
+      setCountdown(5);
+    } catch (err) {
+      setApproveError(err.response?.data?.detail || 'Goedkeuring mislukt');
+      setPinDigits(['', '', '', '']);
+    } finally {
+      setApproving(false);
+    }
+  };
+
+  const handlePinKey = (key) => {
+    if (approving) return;
+    if (key === 'DEL') {
+      for (let i = 3; i >= 0; i--) {
+        if (pinDigits[i]) { const np = [...pinDigits]; np[i] = ''; setPinDigits(np); return; }
+      }
+      return;
+    }
+    setApproveError('');
+    const idx = pinDigits.findIndex(d => d === '');
+    if (idx === -1) return;
+    const np = [...pinDigits]; np[idx] = key; setPinDigits(np);
+    if (idx === 3 && np.every(d => d !== '')) handleApprovePin(np.join(''));
+  };
 
   const silentPrint = useCallback(async () => {
     if (!payment) return;
@@ -161,13 +208,13 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
     } catch {}
   }, [payment, tenant, stampData, kwNr]);
 
-  if (!payment) return null;
+  if (!currentPayment) return null;
 
-  const remainingRent = payment.remaining_rent ?? 0;
-  const remainingService = payment.remaining_service ?? 0;
-  const remainingFines = payment.remaining_fines ?? 0;
+  const remainingRent = currentPayment.remaining_rent ?? 0;
+  const remainingService = currentPayment.remaining_service ?? 0;
+  const remainingFines = currentPayment.remaining_fines ?? 0;
   const totalRemaining = remainingRent + remainingService + remainingFines;
-  const isPending = payment.status === 'pending';
+  const isPending = currentPayment.status === 'pending';
   const allPaid = !isPending && totalRemaining <= 0;
 
   return (
@@ -220,7 +267,7 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
                 {isPending ? 'Betaling ontvangen' : 'Betaling geslaagd!'}
               </h1>
               <p className="text-white/70 font-medium" style={{ fontSize: 'clamp(13px, 1.6vh, 18px)' }}>
-                {formatSRD(payment.amount)} - {kwNr}
+                {formatSRD(currentPayment.amount)} - {kwNr}
               </p>
               {isPending && (
                 <p className="text-white/80 font-semibold" style={{ fontSize: 'clamp(12px, 1.4vh, 16px)', marginTop: '0.4vh' }}>
@@ -240,7 +287,7 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
                 data-testid="receipt-paper"
                 style={{ display: 'flex', justifyContent: 'center' }}>
                 <div className="bg-white rounded-t-lg shadow-2xl" style={{ overflow: 'hidden' }}>
-                  <ReceiptTicket payment={payment} tenant={tenant} preview={true} stampData={stampData} />
+                  <ReceiptTicket payment={currentPayment} tenant={tenant} preview={true} stampData={stampData} />
                 </div>
               </div>
             </div>
@@ -281,7 +328,7 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
               <p className="text-slate-400 font-medium" style={{
                 fontSize: 'clamp(12px, 1.5vh, 16px)', marginBottom: 'clamp(12px, 2vh, 24px)',
                 animation: 'fadeUp 0.4s ease-out 0.45s forwards', opacity: 0
-              }}>{isPending ? 'Uw betaling wordt verwerkt door de beheerder' : `${payment.tenant_name || tenant?.name || ''} - Appt. ${payment.apartment_number || ''}`}</p>
+              }}>{isPending ? 'Uw betaling wordt verwerkt door de beheerder' : `${currentPayment.tenant_name || tenant?.name || ''} - Appt. ${currentPayment.apartment_number || ''}`}</p>
 
               <div style={{
                 width: '100%', marginBottom: 'clamp(12px, 2vh, 24px)',
@@ -289,14 +336,14 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
               }}>
                 <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #f1f5f9' }}>
                   {(isPending ? [
-                    { label: 'Bedrag (in afwachting)', value: formatSRD(payment.amount), bold: true, pending: true },
+                    { label: 'Bedrag (in afwachting)', value: formatSRD(currentPayment.amount), bold: true, pending: true },
                     { label: 'Kwitantie', value: kwNr },
-                    { label: 'Betaalwijze', value: METHOD_LABELS[payment.payment_method] || 'Contant' },
+                    { label: 'Betaalwijze', value: METHOD_LABELS[currentPayment.payment_method] || 'Contant' },
                     { label: 'Status', value: 'In afwachting van goedkeuring', pending: true },
                   ] : [
-                    { label: 'Betaald bedrag', value: formatSRD(payment.amount), bold: true },
+                    { label: 'Betaald bedrag', value: formatSRD(currentPayment.amount), bold: true },
                     { label: 'Kwitantie', value: kwNr },
-                    { label: 'Betaalwijze', value: METHOD_LABELS[payment.payment_method] || 'Contant' },
+                    { label: 'Betaalwijze', value: METHOD_LABELS[currentPayment.payment_method] || 'Contant' },
                     { label: 'Openstaande huur', value: formatSRD(remainingRent), green: remainingRent <= 0 },
                     { label: 'Servicekosten', value: formatSRD(remainingService), green: remainingService <= 0 },
                     { label: 'Boetes', value: formatSRD(remainingFines), green: remainingFines <= 0 },
@@ -325,6 +372,21 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
                   </div>
                 )}
               </div>
+
+              {isPending && (
+                <button onClick={() => setShowPinModal(true)} data-testid="approve-with-pin-btn"
+                  className="rounded-2xl text-white font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
+                  style={{
+                    width: 'clamp(200px, 20vw, 320px)', padding: 'clamp(12px, 2vh, 24px)',
+                    fontSize: 'clamp(15px, 2vh, 20px)',
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    boxShadow: '0 8px 30px -8px rgba(217,119,6,0.5)',
+                    animation: 'fadeUp 0.4s ease-out 0.6s forwards', opacity: 0,
+                    marginBottom: 'clamp(8px, 1vh, 12px)'
+                  }}>
+                  <Lock style={{ width: '2vh', height: '2vh' }} /> Goedkeuren met Beheerder PIN
+                </button>
+              )}
 
               <button onClick={onDone} data-testid="receipt-done-btn"
                 className="rounded-2xl text-white font-bold flex items-center justify-center gap-2 transition-transform active:scale-95 cursor-pointer"
@@ -361,8 +423,63 @@ export default function KioskReceipt({ payment, tenant, companyId, onDone }) {
       )}
 
       <div className="print-receipt-content" style={{ display: 'none' }}>
-        <ReceiptTicket payment={payment} tenant={tenant} preview={false} stampData={stampData} />
+        <ReceiptTicket payment={currentPayment} tenant={tenant} preview={false} stampData={stampData} />
       </div>
+
+      {showPinModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" style={{ padding: '4vh 4vw' }}
+          data-testid="approve-pin-modal"
+          onClick={() => { if (!approving) { setShowPinModal(false); setApproveError(''); setPinDigits(['','','','']); } }}>
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm" style={{ padding: 'clamp(20px, 3vh, 32px)' }}
+            onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="rounded-xl bg-amber-100 flex items-center justify-center" style={{ width: '2.8rem', height: '2.8rem' }}>
+                <Lock className="w-5 h-5 text-amber-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900" style={{ fontSize: 'clamp(15px, 2vh, 18px)' }}>Beheerder PIN</h3>
+                <p className="text-xs text-slate-400">Goedkeuren van {formatSRD(currentPayment.amount)}</p>
+              </div>
+            </div>
+
+            <div className="flex justify-center gap-2.5 mb-3">
+              {pinDigits.map((d, i) => (
+                <div key={i} data-testid={`approve-pin-dot-${i}`}
+                  className={`text-center font-bold rounded-xl border-2 transition-all flex items-center justify-center ${
+                    approveError ? 'border-red-400 bg-red-50' : d ? 'border-amber-500 bg-amber-50' : 'border-slate-200 bg-slate-50'
+                  }`}
+                  style={{ width: '3rem', height: '3.5rem', fontSize: '1.3rem' }}>
+                  {d ? '●' : ''}
+                </div>
+              ))}
+            </div>
+
+            {approveError && <p className="text-sm text-red-500 text-center font-semibold mb-2" data-testid="approve-pin-error">{approveError}</p>}
+            {approving && <p className="text-xs text-slate-400 text-center animate-pulse mb-2">Goedkeuren...</p>}
+
+            <div className="grid grid-cols-3 gap-2">
+              {['1','2','3','4','5','6','7','8','9','_e','0','DEL'].map(k => (
+                k === '_e' ? <div key={k} /> : (
+                  <button key={k} onClick={() => handlePinKey(k)} disabled={approving}
+                    data-testid={`approve-pin-key-${k}`}
+                    className={`font-bold rounded-xl transition active:scale-95 disabled:opacity-50 flex items-center justify-center h-12 text-lg ${
+                      k === 'DEL' ? 'bg-slate-100 text-red-500 hover:bg-red-50'
+                      : 'bg-slate-50 text-slate-900 hover:bg-amber-50 hover:text-amber-600 border border-slate-100'
+                    }`}>
+                    {k === 'DEL' ? <Delete className="w-5 h-5" /> : k}
+                  </button>
+                )
+              ))}
+            </div>
+
+            <button onClick={() => { setShowPinModal(false); setApproveError(''); setPinDigits(['','','','']); }}
+              disabled={approving} data-testid="approve-pin-cancel"
+              className="w-full mt-3 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm transition disabled:opacity-50">
+              Annuleren
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

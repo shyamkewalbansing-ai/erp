@@ -1,5 +1,25 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 33 (20 april 2026) — Eén-klik Beheerder goedkeuring op Kiosk bon
+
+### Context:
+In gemengde teams ontvangt een medewerker/boekhouder contant geld via de Kiosk, maar de betaling is pending tot een Beheerder goedkeurt. Voorheen moest de beheerder naar het admin dashboard. Nu kan hij direct naast de Kiosk staan en met zijn PIN goedkeuren.
+
+### Geïmplementeerd:
+- **Backend** (`public.py`): Nieuw publiek endpoint `POST /public/{company_id}/payments/{payment_id}/approve-with-pin` dat de company Kiosk PIN óf een employee PIN met `role=beheerder` accepteert. Verifieert PIN, past tenant balances aan, markeert payment als `approved`, stuurt WhatsApp bevestiging + Web Push.
+- **Frontend** (`KioskReceipt.jsx`): Amber "Goedkeuren met Beheerder PIN" knop verschijnt in de `done` phase als `status=pending`. Opent een modal met Lock icon, keypad en live validatie. Countdown pauzeert zolang de modal open is.
+- **Frontend** (`KioskReceipt.jsx`): `currentPayment` state houdt de huidige status lokaal vast; na succesvolle approve switcht de UI direct van amber/"Wacht op goedkeuring" naar groen/"Alles betaald!" of "Betaling geslaagd!" met bijgewerkte `remaining_*` saldi, zonder page reload of nieuwe payment call.
+
+### Security:
+- Only company Kiosk PIN or employee PIN with role `beheerder` accepted; role `boekhouder` / `kiosk_medewerker` krijgt `401 Ongeldige beheerder PIN`.
+- Payment must be pending (already approved → `400 Betaling is al goedgekeurd`).
+
+### Tested end-to-end:
+- curl: Wrong PIN → 401 ✅; boekhouder PIN 1234 → 401 ✅; company PIN 5678 → 200 approved ✅; replay approve → 400 ✅
+- Screenshot: Boekhouder betaalt Boetes SRD 725 → pending UI → klikt "Goedkeuren met Beheerder PIN" → typt 0000 → "Ongeldige beheerder PIN" in rood → typt 5678 → UI switcht naar groen "Alles betaald!" met SRD 0,00 op alle categorieën ✅
+- MongoDB: payment `status=approved`, `approved_by=KEWALBANSING`, `approved_at` gezet ✅
+- Lint clean ✅
+
 ## Sprint 32 (20 april 2026) — Kiosk Receipt UX: pending vs approved styling
 
 ### Probleem:
