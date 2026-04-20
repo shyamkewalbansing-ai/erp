@@ -22,6 +22,7 @@ import InternetTab from './admin/InternetTab';
 import ApartmentModal from './admin/ApartmentModal';
 import TenantModal from './admin/TenantModal';
 import AddRentModal from './admin/AddRentModal';
+import PWAInstallPrompt from './PWAInstallPrompt';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
@@ -218,6 +219,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     <div className="fixed inset-0 flex flex-col bg-slate-100 z-50" style={{ overflow: 'hidden' }}>
       <ImpersonationBanner />
       <SubscriptionBanner token={token} />
+      <PWAInstallPrompt />
       {/* Header - compact on mobile */}
       <header className="bg-white border-b border-slate-200 py-2 sm:py-4 px-3 sm:px-4 lg:px-8 shadow-sm flex-shrink-0 z-20">
         <div className="w-full flex items-center justify-between">

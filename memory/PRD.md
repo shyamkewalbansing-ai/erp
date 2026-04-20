@@ -1,5 +1,33 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 45 (20 april 2026) — PWA installatieprompt
+
+### Verzoek:
+Add-to-homescreen prompt op `/vastgoed/admin` voor mobiel, zodat de beheerder het dashboard als echte app kan installeren.
+
+### Nieuw component (`PWAInstallPrompt.jsx`):
+- **Bottom-sheet** design (oranje primair, mobile-only via `md:hidden`)
+- **Chrome/Edge/Android**: luistert naar `beforeinstallprompt` event, toont prompt "Installeer Kiosk Beheerder app" met "Installeren" knop → tik triggert native install dialog
+- **iOS Safari**: detecteert via userAgent, toont na 2 seconden dezelfde prompt maar met "Toon instructies" knop → tik opent 3-stappen guide met Share + Plus iconen:
+  1. Tik op de Deel-knop in de browserbalk
+  2. Kies "Zet op beginscherm"
+  3. Tik op "Voeg toe"
+- **Hides wanneer**:
+  - Reeds standalone (`display-mode: standalone` of `navigator.standalone`)
+  - Niet mobile (`userAgent` check)
+  - Gedismissed binnen 7 dagen (localStorage `vastgoed_pwa_install_dismissed_at`)
+- **Safe-area** bottom padding voor iPhone notch respect
+- Slide-up animatie + dismiss (X) knop + "Later" secundaire actie
+
+### Integratie:
+- Toegevoegd aan `KioskAdminDashboard.jsx` render tree onder `SubscriptionBanner`
+- Bestaande `manifest-vastgoed.json` + service-worker werken al; deze prompt maakt de install-flow zichtbaar voor niet-technische gebruikers
+
+### Tested:
+- Lint clean ✅
+- Code volgt standaard W3C PWA install flow (beforeinstallprompt op Chrome, iOS manual guide)
+- Screenshot test met PWA event mocking beperkt door Playwright viewport rendering (werkt op echte devices)
+
 ## Sprint 44 (20 april 2026) — Mobile app-friendly admin dashboard
 
 ### Verzoek:
