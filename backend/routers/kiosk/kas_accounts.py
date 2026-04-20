@@ -17,6 +17,11 @@ async def _ensure_default_account(company_id: str) -> dict:
     """Auto-create 'Hoofdkas' SRD for companies without any kas account."""
     existing = await db.kiosk_kas_accounts.find_one({"company_id": company_id, "is_default": True})
     if existing:
+        # Backfill currencies field for legacy accounts
+        if not existing.get("currencies"):
+            currencies = [existing.get("currency", "SRD")]
+            await db.kiosk_kas_accounts.update_one({"account_id": existing["account_id"]}, {"$set": {"currencies": currencies}})
+            existing["currencies"] = currencies
         return existing
     acc_id = generate_uuid()
     doc = {
@@ -24,12 +29,12 @@ async def _ensure_default_account(company_id: str) -> dict:
         "company_id": company_id,
         "name": "Hoofdkas",
         "currency": "SRD",
+        "currencies": ["SRD"],
         "description": "Standaard bank/kas voor huurinkomsten",
         "is_default": True,
         "created_at": datetime.now(timezone.utc),
     }
     await db.kiosk_kas_accounts.insert_one(doc)
-    # Stamp all existing kas entries without account_id to main account
     await db.kiosk_kas.update_many(
         {"company_id": company_id, "$or": [{"account_id": {"$exists": False}}, {"account_id": ""}, {"account_id": None}]},
         {"$set": {"account_id": acc_id}},
@@ -42,8 +47,31 @@ async def _resolve_account(company_id: str, account_id: Optional[str]) -> dict:
     if account_id:
         acc = await db.kiosk_kas_accounts.find_one({"account_id": account_id, "company_id": company_id})
         if acc:
+            if not acc.get("currencies"):
+                currencies = [acc.get("currency", "SRD")]
+                await db.kiosk_kas_accounts.update_one({"account_id": acc["account_id"]}, {"$set": {"currencies": currencies}})
+                acc["currencies"] = currencies
             return acc
     return await _ensure_default_account(company_id)
+
+
+def _resolve_currencies(data_currencies, data_currency) -> list:
+    """Normalize currency input into a validated list."""
+    currencies = []
+    if isinstance(data_currencies, list) and data_currencies:
+        currencies = [c.upper() for c in data_currencies if isinstance(c, str)]
+    elif data_currency:
+        currencies = [data_currency.upper()]
+    if not currencies:
+        currencies = ["SRD"]
+    # dedupe + validate
+    seen = []
+    for c in currencies:
+        if c in CURRENCIES and c not in seen:
+            seen.append(c)
+    if not seen:
+        raise HTTPException(status_code=400, detail=f"Kies ten minste één geldige valuta uit: {', '.join(sorted(CURRENCIES))}")
+    return seen
 
 
 @router.get("/admin/kas-accounts")
@@ -53,26 +81,40 @@ async def list_kas_accounts(company: dict = Depends(get_current_company)):
     accounts = await db.kiosk_kas_accounts.find({"company_id": company_id}).sort("created_at", 1).to_list(100)
     result = []
     for a in accounts:
-        # Compute balance per account
-        # Income = manual kas income + approved rent payments (only for default SRD account)
+        currencies = a.get("currencies") or [a.get("currency", "SRD")]
+        # Backfill currencies if missing
+        if not a.get("currencies"):
+            await db.kiosk_kas_accounts.update_one({"account_id": a["account_id"]}, {"$set": {"currencies": currencies}})
+        # Compute balance per currency
         kas_entries = await db.kiosk_kas.find({"company_id": company_id, "account_id": a["account_id"]}).to_list(5000)
-        manual_income = sum(e.get("amount", 0) for e in kas_entries if e.get("entry_type") == "income")
-        total_expense = sum(e.get("amount", 0) for e in kas_entries if e.get("entry_type") in ("expense", "salary"))
-        payment_income = 0
-        if a.get("is_default"):
+        balances = {c: {"total_income": 0.0, "total_expense": 0.0, "balance": 0.0} for c in currencies}
+        for e in kas_entries:
+            cur = (e.get("currency") or currencies[0]).upper()
+            if cur not in balances:
+                balances[cur] = {"total_income": 0.0, "total_expense": 0.0, "balance": 0.0}
+            if e.get("entry_type") == "income":
+                balances[cur]["total_income"] += e.get("amount", 0)
+            elif e.get("entry_type") in ("expense", "salary"):
+                balances[cur]["total_expense"] += e.get("amount", 0)
+        # Hoofdkas: payment income counts in SRD only
+        if a.get("is_default") and "SRD" in balances:
             payments = await db.kiosk_payments.find({"company_id": company_id, "status": {"$in": ["approved", None]}}).to_list(10000)
             payment_income = sum(p.get("amount", 0) for p in payments if p.get("status", "approved") != "pending" and p.get("status") != "rejected")
-        total_income = manual_income + payment_income
-        balance = total_income - total_expense
+            balances["SRD"]["total_income"] += payment_income
+        for cur in balances:
+            balances[cur]["balance"] = balances[cur]["total_income"] - balances[cur]["total_expense"]
+        primary = currencies[0]
         result.append({
             "account_id": a["account_id"],
             "name": a["name"],
-            "currency": a.get("currency", "SRD"),
+            "currency": primary,  # legacy field: first currency
+            "currencies": currencies,
             "description": a.get("description", ""),
             "is_default": a.get("is_default", False),
-            "total_income": total_income,
-            "total_expense": total_expense,
-            "balance": balance,
+            "balances": balances,
+            "total_income": balances[primary]["total_income"],
+            "total_expense": balances[primary]["total_expense"],
+            "balance": balances[primary]["balance"],
             "created_at": a.get("created_at"),
         })
     return result
@@ -81,9 +123,7 @@ async def list_kas_accounts(company: dict = Depends(get_current_company)):
 @router.post("/admin/kas-accounts")
 async def create_kas_account(data: KasAccountCreate, company: dict = Depends(get_current_company)):
     company_id = company["company_id"]
-    currency = (data.currency or "SRD").upper()
-    if currency not in CURRENCIES:
-        raise HTTPException(status_code=400, detail=f"Ongeldige valuta. Kies uit: {', '.join(sorted(CURRENCIES))}")
+    currencies = _resolve_currencies(data.currencies, data.currency)
     name = (data.name or "").strip()
     if not name:
         raise HTTPException(status_code=400, detail="Naam verplicht")
@@ -96,13 +136,14 @@ async def create_kas_account(data: KasAccountCreate, company: dict = Depends(get
         "account_id": acc_id,
         "company_id": company_id,
         "name": name,
-        "currency": currency,
+        "currency": currencies[0],  # legacy primary
+        "currencies": currencies,
         "description": data.description or "",
         "is_default": False,
         "created_at": datetime.now(timezone.utc),
     }
     await db.kiosk_kas_accounts.insert_one(doc)
-    return {"account_id": acc_id, "message": "Bank/Kas aangemaakt"}
+    return {"account_id": acc_id, "currencies": currencies, "message": "Bank/Kas aangemaakt"}
 
 
 @router.put("/admin/kas-accounts/{account_id}")
@@ -122,6 +163,23 @@ async def update_kas_account(account_id: str, data: KasAccountUpdate, company: d
         updates["name"] = new_name
     if data.description is not None:
         updates["description"] = data.description
+    if data.currencies is not None:
+        new_currencies = _resolve_currencies(data.currencies, None)
+        # Guard: cannot remove a currency that already has entries
+        existing_currencies = acc.get("currencies") or [acc.get("currency", "SRD")]
+        removed = [c for c in existing_currencies if c not in new_currencies]
+        if removed:
+            for c in removed:
+                cnt = await db.kiosk_kas.count_documents({"company_id": company_id, "account_id": account_id, "currency": c})
+                if cnt > 0:
+                    raise HTTPException(status_code=400, detail=f"Kan {c} niet verwijderen: {cnt} boekingen aanwezig")
+            # Also check default currency entries when old default currency is being removed
+            if acc.get("currency") in removed:
+                cnt = await db.kiosk_kas.count_documents({"company_id": company_id, "account_id": account_id, "$or": [{"currency": {"$exists": False}}, {"currency": acc.get("currency")}]})
+                if cnt > 0:
+                    raise HTTPException(status_code=400, detail=f"Kan {acc.get('currency')} niet verwijderen: {cnt} boekingen aanwezig")
+        updates["currencies"] = new_currencies
+        updates["currency"] = new_currencies[0]
     if updates:
         await db.kiosk_kas_accounts.update_one({"account_id": account_id}, {"$set": updates})
     return {"message": "Bank/Kas bijgewerkt"}

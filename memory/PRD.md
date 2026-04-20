@@ -1,5 +1,38 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 37 (20 april 2026) — Multi-currency per Bank/Kas account
+
+### Context:
+Vervolg op Sprint 36 (multi-account Bank/Kas). Gebruiker wilde dat één account meerdere valuta's tegelijk kan bevatten (bv. Kantoorkas met SRD + EUR + USD) in plaats van één valuta per account.
+
+### Backend (`kas_accounts.py` + `admin_operations.py` + `base.py`):
+- **`KasAccountCreate` / `KasAccountUpdate`**: nieuw veld `currencies: List[str]` (multi-select), legacy `currency` blijft werken
+- **Account-doc krijgt `currencies: [...]`** naast legacy `currency` (auto-backfill bij eerste read via `_ensure_default_account` / `_resolve_account`)
+- **`CashEntryCreate`** accepteert `currency` per boeking (default: account's primaire valuta)
+- **`POST /admin/kas`** valideert dat entry-currency in account's allowed currencies zit (`"{cur} is niet toegestaan voor deze kas"`)
+- **`GET /admin/kas?account_id=X&currency=Y`**: optionele currency filter, response geeft `totals_by_currency` dict én `currencies` array terug
+- **`GET /admin/kas-accounts`**: elke account krijgt `balances: {SRD: {income, expense, balance}, USD: {...}, EUR: {...}}`
+- **`PUT /admin/kas-accounts/{id}`** met `currencies`: guard dat valuta met bestaande boekingen niet verwijderd kan worden
+- **Push notification**: toont nu correcte valuta-symbol in body (SRD/USD/EUR i.p.v. altijd "SRD")
+
+### Frontend (`KasTab.jsx`):
+- **Nieuw Bank/Kas modal**: valuta-picker is nu multi-select (checkbox-style toggle buttons met Check-icoon), min. 1 valuta verplicht
+- **Account chips**: tonen stacked valuta-dots + lijst labels "SRD · USD · EUR"
+- **Currency filter chips** verschijnen alleen bij multi-currency accounts: "Alle / SRD / USD / EUR" (zwart=actief)
+- **Saldi-grid**: bij "Alle" filter + multi-currency toont het per-valuta section-header + 3-kolom grid (Inkomsten/Uitgaven/Saldo), anders klassiek 3-kolom grid voor de gefilterde valuta
+- **Entry form**: currency dropdown verschijnt als eerste kolom bij multi-currency accounts, bedrag-label past zich aan ("Bedrag (USD)")
+- **Entry tabel**: toont valuta-symbol per regel ($ / € / SRD)
+
+### Tested end-to-end:
+- curl: create account `{currencies:["SRD","USD","EUR"]}` → 200 ✅
+- curl: add USD entry → 200 ✅, add EUR entry → 200 ✅, add XYZ entry → 400 "niet toegestaan voor deze kas" ✅
+- curl: `GET /admin/kas?account_id=X` retourneert `totals_by_currency` met per-cur balances ✅
+- Screenshot 1: Multi-Currency Kas met filter "Alle" toont 3 secties (SRD 0/USD 500/EUR -200) ✅
+- Screenshot 2: Nieuwe "Kantoorkas" created met 3 valuta, zichtbaar in chips ✅
+- Screenshot 3: Nieuw-modal met checkboxes voor SRD + EUR + USD + help tekst ✅
+- Screenshot 4: Filter USD toont alleen USD saldo + USD entry ✅
+- Lint clean ✅
+
 ## Sprint 36 (20 april 2026) — Multi-account Bank/Kas + multi-currency + CME koers
 
 ### Context:

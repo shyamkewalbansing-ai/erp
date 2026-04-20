@@ -23,10 +23,13 @@ function KasTab({ token, tenants }) {
   // Multi-account state
   const [accounts, setAccounts] = useState([]);
   const [activeAccountId, setActiveAccountId] = useState(null);
+  const [activeCurrencyFilter, setActiveCurrencyFilter] = useState(null); // null = all
+  const [totalsByCurrency, setTotalsByCurrency] = useState({});
   const [showNewAccount, setShowNewAccount] = useState(false);
   const [newAccName, setNewAccName] = useState('');
-  const [newAccCurrency, setNewAccCurrency] = useState('SRD');
+  const [newAccCurrencies, setNewAccCurrencies] = useState(['SRD']);
   const [newAccDesc, setNewAccDesc] = useState('');
+  const [entryCurrency, setEntryCurrency] = useState('SRD');
 
   // Exchange rates
   const [rates, setRates] = useState(null);
@@ -54,7 +57,8 @@ function KasTab({ token, tenants }) {
 
   const headers = { Authorization: `Bearer ${token}` };
   const activeAccount = accounts.find(a => a.account_id === activeAccountId) || accounts[0] || null;
-  const activeCurrency = activeAccount?.currency || 'SRD';
+  const accountCurrencies = activeAccount?.currencies || [activeAccount?.currency || 'SRD'];
+  const activeCurrency = activeCurrencyFilter || accountCurrencies[0] || 'SRD';
 
   const loadAccounts = useCallback(async () => {
     try {
@@ -66,13 +70,16 @@ function KasTab({ token, tenants }) {
     } catch { /* skip */ }
   }, [token, activeAccountId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const loadKas = useCallback(async (accountId) => {
+  const loadKas = useCallback(async (accountId, curFilter) => {
     const accId = accountId || activeAccountId;
     if (!accId) return;
     try {
-      const resp = await axios.get(`${API}/admin/kas`, { headers, params: { account_id: accId } });
+      const params = { account_id: accId };
+      if (curFilter) params.currency = curFilter;
+      const resp = await axios.get(`${API}/admin/kas`, { headers, params });
       setEntries(resp.data.entries || []);
       setTotals({ total_income: resp.data.total_income, total_expense: resp.data.total_expense, balance: resp.data.balance });
+      setTotalsByCurrency(resp.data.totals_by_currency || {});
     } catch { /* skip */ }
     setLoading(false);
   }, [token, activeAccountId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -88,20 +95,26 @@ function KasTab({ token, tenants }) {
 
   const handleCreateAccount = async (e) => {
     e.preventDefault();
-    if (!newAccName.trim()) return;
+    if (!newAccName.trim() || newAccCurrencies.length === 0) return;
     setSaving(true);
     try {
       const resp = await axios.post(`${API}/admin/kas-accounts`, {
-        name: newAccName.trim(), currency: newAccCurrency, description: newAccDesc.trim() || null,
+        name: newAccName.trim(),
+        currencies: newAccCurrencies,
+        description: newAccDesc.trim() || null,
       }, { headers });
       setShowNewAccount(false);
-      setNewAccName(''); setNewAccDesc(''); setNewAccCurrency('SRD');
+      setNewAccName(''); setNewAccDesc(''); setNewAccCurrencies(['SRD']);
       await loadAccounts();
       setActiveAccountId(resp.data.account_id);
     } catch (err) {
       alert(err.response?.data?.detail || 'Aanmaken mislukt');
     }
     setSaving(false);
+  };
+
+  const toggleNewCurrency = (c) => {
+    setNewAccCurrencies(prev => prev.includes(c) ? prev.filter(x => x !== c) : [...prev, c]);
   };
 
   const handleDeleteAccount = async (id) => {
@@ -147,9 +160,18 @@ function KasTab({ token, tenants }) {
   }, [token]);
 
   useEffect(() => { loadAccounts(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { if (activeAccountId) loadKas(activeAccountId); }, [activeAccountId, loadKas]);
+  useEffect(() => { if (activeAccountId) loadKas(activeAccountId, activeCurrencyFilter); }, [activeAccountId, activeCurrencyFilter, loadKas]);
+  // Reset currency filter when switching account
+  useEffect(() => { setActiveCurrencyFilter(null); }, [activeAccountId]);
   useEffect(() => { if (activeView === 'verdeling') loadVerdeling(); }, [activeView, loadVerdeling]);
   useEffect(() => { if (activeView === 'koers' && !rates) loadRates(); }, [activeView, rates, loadRates]);
+
+  // Sync entry currency with active account/filter
+  useEffect(() => {
+    if (accountCurrencies.length === 0) return;
+    const preferred = activeCurrencyFilter && accountCurrencies.includes(activeCurrencyFilter) ? activeCurrencyFilter : accountCurrencies[0];
+    setEntryCurrency(preferred);
+  }, [activeAccountId, activeCurrencyFilter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -163,12 +185,13 @@ function KasTab({ token, tenants }) {
         category,
         related_tenant_id: relatedTenant || null,
         account_id: activeAccountId,
+        currency: entryCurrency,
       }, { headers });
       setShowForm(false);
       setAmount(''); setDescription(''); setCategory(''); setRelatedTenant('');
-      loadKas(activeAccountId);
+      loadKas(activeAccountId, activeCurrencyFilter);
       loadAccounts();
-    } catch { alert('Boeking mislukt'); }
+    } catch (err) { alert(err.response?.data?.detail || 'Boeking mislukt'); }
     setSaving(false);
   };
 
@@ -176,7 +199,7 @@ function KasTab({ token, tenants }) {
     if (!window.confirm('Boeking verwijderen?')) return;
     try {
       await axios.delete(`${API}/admin/kas/${entryId}`, { headers });
-      loadKas(activeAccountId);
+      loadKas(activeAccountId, activeCurrencyFilter);
       loadAccounts();
     } catch { alert('Verwijderen mislukt'); }
   };
@@ -275,25 +298,31 @@ function KasTab({ token, tenants }) {
       {/* Account selector (only in Kas view) */}
       {activeView === 'kas' && (
         <div className="bg-white rounded-xl border border-slate-200 p-3 flex gap-2 flex-wrap items-center">
-          {accounts.map(a => (
-            <button
-              key={a.account_id}
-              onClick={() => setActiveAccountId(a.account_id)}
-              data-testid={`kas-account-${a.account_id}`}
-              className={`group relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                a.account_id === activeAccountId
-                  ? 'bg-slate-900 text-white shadow'
-                  : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
-              }`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${a.currency === 'SRD' ? 'bg-orange-400' : a.currency === 'USD' ? 'bg-green-400' : 'bg-blue-400'}`} />
-              {a.name}
-              <span className={`text-[10px] font-mono ${a.account_id === activeAccountId ? 'text-white/70' : 'text-slate-400'}`}>{a.currency}</span>
-              {!a.is_default && a.account_id === activeAccountId && (
-                <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" onClick={(ev) => { ev.stopPropagation(); handleDeleteAccount(a.account_id); }} />
-              )}
-            </button>
-          ))}
+          {accounts.map(a => {
+            const curs = a.currencies || [a.currency || 'SRD'];
+            const isActive = a.account_id === activeAccountId;
+            return (
+              <button
+                key={a.account_id}
+                onClick={() => setActiveAccountId(a.account_id)}
+                data-testid={`kas-account-${a.account_id}`}
+                className={`group relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  isActive ? 'bg-slate-900 text-white shadow' : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                <div className="flex -space-x-1">
+                  {curs.map(c => (
+                    <span key={c} className={`inline-block w-1.5 h-1.5 rounded-full ${c === 'SRD' ? 'bg-orange-400' : c === 'USD' ? 'bg-green-400' : 'bg-blue-400'}`} />
+                  ))}
+                </div>
+                {a.name}
+                <span className={`text-[10px] font-mono ${isActive ? 'text-white/70' : 'text-slate-400'}`}>{curs.join(' · ')}</span>
+                {!a.is_default && isActive && (
+                  <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" onClick={(ev) => { ev.stopPropagation(); handleDeleteAccount(a.account_id); }} />
+                )}
+              </button>
+            );
+          })}
           <button
             onClick={() => setShowNewAccount(true)}
             data-testid="add-kas-account-btn"
@@ -313,18 +342,23 @@ function KasTab({ token, tenants }) {
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Naam</label>
                 <input value={newAccName} onChange={e => setNewAccName(e.target.value)} data-testid="new-kas-name"
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Bijv. Reserve kas EUR" required />
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Bijv. Reserve kas" required />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Valuta</label>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Valuta (meerdere mogelijk)</label>
                 <div className="flex gap-2">
-                  {['SRD', 'EUR', 'USD'].map(c => (
-                    <button key={c} type="button" onClick={() => setNewAccCurrency(c)} data-testid={`new-kas-currency-${c}`}
-                      className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition ${newAccCurrency === c ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'}`}>
-                      {CURRENCY_SYMBOLS[c]} {c}
-                    </button>
-                  ))}
+                  {['SRD', 'EUR', 'USD'].map(c => {
+                    const selected = newAccCurrencies.includes(c);
+                    return (
+                      <button key={c} type="button" onClick={() => toggleNewCurrency(c)} data-testid={`new-kas-currency-${c}`}
+                        className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition flex items-center justify-center gap-1.5 ${selected ? 'bg-orange-500 text-white border-orange-500 shadow-sm' : 'bg-white text-slate-600 border-slate-200 hover:border-orange-300'}`}>
+                        {selected && <Check className="w-3.5 h-3.5" />}
+                        {CURRENCY_SYMBOLS[c]} {c}
+                      </button>
+                    );
+                  })}
                 </div>
+                <p className="text-[11px] text-slate-400 mt-1.5">Selecteer één of meerdere valuta. Voor elke valuta wordt een apart saldo bijgehouden.</p>
               </div>
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Omschrijving (optioneel)</label>
@@ -332,7 +366,7 @@ function KasTab({ token, tenants }) {
                   className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="Bijv. Voor overige uitgaven buiten huur" />
               </div>
               <div className="flex gap-2 pt-2">
-                <button type="submit" disabled={saving} data-testid="new-kas-submit"
+                <button type="submit" disabled={saving || newAccCurrencies.length === 0} data-testid="new-kas-submit"
                   className="flex-1 px-4 py-2.5 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 disabled:opacity-50">
                   {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Aanmaken'}
                 </button>
@@ -346,35 +380,67 @@ function KasTab({ token, tenants }) {
 
       {activeView === 'kas' ? (
         <>
-          {/* Kas Samenvatting */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl border border-green-200 p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-green-600" />
-                </div>
-                <p className="text-sm text-slate-500">{activeAccount?.is_default ? 'Huurinkomsten' : 'Inkomsten'}</p>
-              </div>
-              <p className="text-2xl font-bold text-slate-900" data-testid="kas-income">{formatMoney(totals.total_income, activeCurrency)}</p>
+          {/* Currency filter (only for multi-currency accounts) */}
+          {accountCurrencies.length > 1 && (
+            <div className="flex items-center gap-2 flex-wrap" data-testid="currency-filter">
+              <span className="text-xs text-slate-400 font-medium">Toon valuta:</span>
+              <button onClick={() => setActiveCurrencyFilter(null)} data-testid="currency-filter-all"
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${!activeCurrencyFilter ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
+                Alle
+              </button>
+              {accountCurrencies.map(c => (
+                <button key={c} onClick={() => setActiveCurrencyFilter(c)} data-testid={`currency-filter-${c}`}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${activeCurrencyFilter === c ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
+                  {CURRENCY_SYMBOLS[c]} {c}
+                </button>
+              ))}
             </div>
-            <div className="bg-white rounded-xl border border-red-200 p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                  <TrendingDown className="w-5 h-5 text-red-600" />
+          )}
+
+          {/* Kas Samenvatting - per currency */}
+          <div className={`grid gap-4 ${accountCurrencies.length > 1 && !activeCurrencyFilter ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-3'}`}>
+            {(activeCurrencyFilter ? [activeCurrencyFilter] : accountCurrencies).map(cur => {
+              const t = totalsByCurrency[cur] || { total_income: 0, total_expense: 0, balance: 0 };
+              return (
+                <div key={cur} className={accountCurrencies.length > 1 && !activeCurrencyFilter ? 'grid grid-cols-1 md:grid-cols-3 gap-4' : 'contents'}>
+                  {accountCurrencies.length > 1 && !activeCurrencyFilter && (
+                    <div className="md:col-span-3 -mb-2">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase text-slate-500">
+                        <span className={`w-2 h-2 rounded-full ${cur === 'SRD' ? 'bg-orange-400' : cur === 'USD' ? 'bg-green-400' : 'bg-blue-400'}`} />
+                        {cur}
+                      </span>
+                    </div>
+                  )}
+                  <div className="bg-white rounded-xl border border-green-200 p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+                        <TrendingUp className="w-5 h-5 text-green-600" />
+                      </div>
+                      <p className="text-sm text-slate-500">{activeAccount?.is_default ? 'Huurinkomsten' : 'Inkomsten'}</p>
+                    </div>
+                    <p className="text-2xl font-bold text-slate-900" data-testid={`kas-income-${cur}`}>{formatMoney(t.total_income, cur)}</p>
+                  </div>
+                  <div className="bg-white rounded-xl border border-red-200 p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                        <TrendingDown className="w-5 h-5 text-red-600" />
+                      </div>
+                      <p className="text-sm text-slate-500">Totale Uitgaven</p>
+                    </div>
+                    <p className="text-2xl font-bold text-red-600" data-testid={`kas-expense-${cur}`}>{formatMoney(t.total_expense, cur)}</p>
+                  </div>
+                  <div className="bg-white rounded-xl border border-orange-200 p-6">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                        <Landmark className="w-5 h-5 text-orange-600" />
+                      </div>
+                      <p className="text-sm text-slate-500">Saldo — {activeAccount?.name}</p>
+                    </div>
+                    <p className="text-2xl font-bold text-slate-900" data-testid={`kas-balance-${cur}`}>{formatMoney(t.balance, cur)}</p>
+                  </div>
                 </div>
-                <p className="text-sm text-slate-500">Totale Uitgaven</p>
-              </div>
-              <p className="text-2xl font-bold text-red-600" data-testid="kas-expense">{formatMoney(totals.total_expense, activeCurrency)}</p>
-            </div>
-            <div className="bg-white rounded-xl border border-orange-200 p-6">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                  <Landmark className="w-5 h-5 text-orange-600" />
-                </div>
-                <p className="text-sm text-slate-500">Saldo — {activeAccount?.name}</p>
-              </div>
-              <p className="text-2xl font-bold text-slate-900" data-testid="kas-balance">{formatMoney(totals.balance, activeCurrency)}</p>
-            </div>
+              );
+            })}
           </div>
 
           {/* Boekingen Tabel */}
@@ -393,9 +459,18 @@ function KasTab({ token, tenants }) {
 
             {showForm && (
               <form onSubmit={handleSubmit} className="p-4 border-b border-slate-200 bg-slate-50">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                <div className={`grid grid-cols-1 ${accountCurrencies.length > 1 ? 'md:grid-cols-5' : 'md:grid-cols-4'} gap-3 items-end`}>
+                  {accountCurrencies.length > 1 && (
+                    <div>
+                      <label className="block text-xs font-medium text-slate-600 mb-1">Valuta</label>
+                      <select value={entryCurrency} onChange={e => setEntryCurrency(e.target.value)} data-testid="kas-entry-currency"
+                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-semibold bg-white">
+                        {accountCurrencies.map(c => <option key={c} value={c}>{CURRENCY_SYMBOLS[c]} {c}</option>)}
+                      </select>
+                    </div>
+                  )}
                   <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">Bedrag ({activeCurrency})</label>
+                    <label className="block text-xs font-medium text-slate-600 mb-1">Bedrag ({entryCurrency})</label>
                     <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="0.00" required data-testid="kas-amount-input" />
                   </div>
                   <div>
@@ -456,7 +531,7 @@ function KasTab({ token, tenants }) {
                           <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs capitalize">{e.category}</span>
                         </td>
                         <td className={`p-4 text-right font-bold ${e.entry_type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                          {e.entry_type === 'income' ? '+' : '-'} {formatMoney(e.amount, activeCurrency)}
+                          {e.entry_type === 'income' ? '+' : '-'} {formatMoney(e.amount, e.currency || activeCurrency)}
                         </td>
                         <td className="p-4 text-right">
                           <button onClick={() => handleDelete(e.entry_id)} className="text-slate-400 hover:text-red-500 p-1" title="Verwijderen">

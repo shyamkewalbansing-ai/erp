@@ -729,37 +729,54 @@ async def generate_lease_document(lease_id: str, token: Optional[str] = None):
 @router.get("/admin/kas")
 async def list_kas_entries(
     account_id: Optional[str] = None,
+    currency: Optional[str] = None,
     company: dict = Depends(get_current_company),
 ):
-    """List all cash register entries for a specific account (or default if none)."""
+    """List all cash register entries for a specific account, optionally filtered by currency."""
     company_id = company["company_id"]
 
-    # Ensure default account exists, then resolve target account
     from .kas_accounts import _resolve_account
     acc = await _resolve_account(company_id, account_id)
     target_account_id = acc["account_id"]
+    account_currencies = acc.get("currencies") or [acc.get("currency", "SRD")]
 
-    # All kas entries (income, expense, salary) for this account
-    entries = await db.kiosk_kas.find({
-        "company_id": company_id, "account_id": target_account_id
-    }).sort("created_at", -1).to_list(1000)
+    # All kas entries for this account
+    query = {"company_id": company_id, "account_id": target_account_id}
+    if currency:
+        cur_upper = currency.upper()
+        query["$or"] = [
+            {"currency": cur_upper},
+            {"currency": {"$exists": False}} if cur_upper == account_currencies[0] else {"_always_no_match_": True},
+        ]
+    entries = await db.kiosk_kas.find(query).sort("created_at", -1).to_list(1000)
 
-    # Total income from rent payments only counts for the default (main) account
-    payment_income = 0
-    if acc.get("is_default"):
-        payments = await db.kiosk_payments.find({
-            "company_id": company_id,
-            "status": {"$in": ["approved", None]}
-        }).to_list(10000)
+    # Group totals per currency
+    totals_by_currency = {c: {"total_income": 0.0, "total_expense": 0.0, "balance": 0.0} for c in account_currencies}
+    for e in entries:
+        cur = (e.get("currency") or account_currencies[0]).upper()
+        if cur not in totals_by_currency:
+            totals_by_currency[cur] = {"total_income": 0.0, "total_expense": 0.0, "balance": 0.0}
+        if e.get("entry_type") == "income":
+            totals_by_currency[cur]["total_income"] += e.get("amount", 0)
+        elif e.get("entry_type") in ("expense", "salary"):
+            totals_by_currency[cur]["total_expense"] += e.get("amount", 0)
+
+    # Hoofdkas: add payment income to SRD bucket
+    if acc.get("is_default") and "SRD" in totals_by_currency and not currency:
+        payments = await db.kiosk_payments.find({"company_id": company_id, "status": {"$in": ["approved", None]}}).to_list(10000)
         payment_income = sum(p.get("amount", 0) for p in payments if p.get("status", "approved") != "pending" and p.get("status") != "rejected")
+        totals_by_currency["SRD"]["total_income"] += payment_income
+    elif acc.get("is_default") and currency and currency.upper() == "SRD":
+        payments = await db.kiosk_payments.find({"company_id": company_id, "status": {"$in": ["approved", None]}}).to_list(10000)
+        payment_income = sum(p.get("amount", 0) for p in payments if p.get("status", "approved") != "pending" and p.get("status") != "rejected")
+        totals_by_currency["SRD"]["total_income"] += payment_income
 
-    # Manual income from kas entries
-    manual_income = sum(e.get("amount", 0) for e in entries if e.get("entry_type") == "income")
-    total_income = payment_income + manual_income
+    for cur in totals_by_currency:
+        totals_by_currency[cur]["balance"] = totals_by_currency[cur]["total_income"] - totals_by_currency[cur]["total_expense"]
 
-    # Total expense = sum of all kas entries (expenses + salaries)
-    total_expense = sum(e.get("amount", 0) for e in entries if e.get("entry_type") in ("expense", "salary"))
-    balance = total_income - total_expense
+    primary = account_currencies[0]
+    active = (currency.upper() if currency else primary)
+    active_totals = totals_by_currency.get(active, {"total_income": 0, "total_expense": 0, "balance": 0})
 
     result_entries = []
     for e in entries:
@@ -767,6 +784,7 @@ async def list_kas_entries(
             "entry_id": e["entry_id"],
             "entry_type": e["entry_type"],
             "amount": e["amount"],
+            "currency": (e.get("currency") or primary).upper(),
             "description": e["description"],
             "category": e.get("category", ""),
             "related_tenant_name": e.get("related_tenant_name", ""),
@@ -777,12 +795,14 @@ async def list_kas_entries(
 
     return {
         "entries": result_entries,
-        "total_income": total_income,
-        "total_expense": total_expense,
-        "balance": balance,
+        "total_income": active_totals["total_income"],
+        "total_expense": active_totals["total_expense"],
+        "balance": active_totals["balance"],
+        "totals_by_currency": totals_by_currency,
         "account_id": target_account_id,
         "account_name": acc.get("name"),
-        "currency": acc.get("currency", "SRD"),
+        "currency": active,
+        "currencies": account_currencies,
     }
 
 @router.post("/admin/kas")
@@ -794,6 +814,12 @@ async def create_kas_entry(data: CashEntryCreate, company: dict = Depends(get_cu
     # Resolve account (default if not provided)
     from .kas_accounts import _resolve_account
     acc = await _resolve_account(company["company_id"], data.account_id)
+    account_currencies = acc.get("currencies") or [acc.get("currency", "SRD")]
+
+    # Resolve currency: use provided, fallback to account's primary, validate is allowed for this account
+    entry_currency = (data.currency or account_currencies[0]).upper()
+    if entry_currency not in account_currencies:
+        raise HTTPException(status_code=400, detail=f"{entry_currency} is niet toegestaan voor deze kas. Toegestane valuta: {', '.join(account_currencies)}")
 
     entry = {
         "entry_id": entry_id,
@@ -801,6 +827,7 @@ async def create_kas_entry(data: CashEntryCreate, company: dict = Depends(get_cu
         "account_id": acc["account_id"],
         "entry_type": data.entry_type,
         "amount": data.amount,
+        "currency": entry_currency,
         "description": data.description,
         "category": data.category or ("rent" if data.entry_type == "income" else "other"),
         "related_tenant_id": data.related_tenant_id or "",
@@ -826,14 +853,15 @@ async def create_kas_entry(data: CashEntryCreate, company: dict = Depends(get_cu
     # === Web Push notification for income/expense entries ===
     try:
         from .push import send_push_to_company
+        cur_label = entry_currency if entry_currency != "SRD" else "SRD"
         if data.entry_type == "income":
             push_title = "Inkomsten geregistreerd"
-            push_body = f"SRD {data.amount:,.2f} • {data.description or entry.get('category', 'Inkomsten')}"
+            push_body = f"{cur_label} {data.amount:,.2f} • {data.description or entry.get('category', 'Inkomsten')}"
             push_tag = f"kas-income-{entry_id}"
         elif data.entry_type in ("expense", "salary"):
             label = "Salaris uitbetaald" if data.entry_type == "salary" else "Uitgave geregistreerd"
             push_title = label
-            push_body = f"SRD {data.amount:,.2f} • {data.description or entry.get('category', 'Uitgave')}"
+            push_body = f"{cur_label} {data.amount:,.2f} • {data.description or entry.get('category', 'Uitgave')}"
             push_tag = f"kas-{data.entry_type}-{entry_id}"
         else:
             push_title = None

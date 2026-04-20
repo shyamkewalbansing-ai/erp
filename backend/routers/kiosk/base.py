@@ -506,16 +506,19 @@ class CashEntryCreate(BaseModel):
     related_tenant_id: Optional[str] = None
     related_employee_id: Optional[str] = None
     payment_id: Optional[str] = None
-    account_id: Optional[str] = None  # NEW: multi-account support
+    account_id: Optional[str] = None  # multi-account support
+    currency: Optional[str] = None    # NEW: per-entry currency (defaults to account's first currency)
 
 class KasAccountCreate(BaseModel):
     name: str
-    currency: str = "SRD"  # SRD | EUR | USD
+    currency: Optional[str] = "SRD"  # legacy single currency, still supported
+    currencies: Optional[List[str]] = None  # new multi-currency support
     description: Optional[str] = None
 
 class KasAccountUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+    currencies: Optional[List[str]] = None
 
 class EmployeeCreate(BaseModel):
     name: str
