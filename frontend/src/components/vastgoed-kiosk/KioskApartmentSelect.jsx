@@ -74,12 +74,6 @@ export default function KioskApartmentSelect({ onSelect, companyId, onAdmin, onL
           <span className="text-xs sm:text-sm">Uit</span>
         </button>
       )}
-      {kioskEmployee && (
-        <button onClick={() => onEmployeeLogin && onEmployeeLogin(null)} className="flex items-center gap-1.5 font-bold transition hover:opacity-90 rounded-lg px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm bg-green-500 text-white" data-testid="kiosk-employee-badge" title="Klik om uit te loggen">
-          <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span>{kioskEmployee.name.split(' ')[0]}</span>
-        </button>
-      )}
       {onAdmin && kioskEmployee?.role !== 'kiosk_medewerker' && (
         <button onClick={onAdmin} className="flex items-center gap-1.5 text-orange-600 font-bold transition hover:opacity-90 bg-white rounded-lg px-3 py-1.5 sm:px-4 sm:py-2" data-testid="kiosk-admin-btn">
           <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 00-2 2v.18a2 2 0 01-1 1.73l-.43.25a2 2 0 01-2 0l-.15-.08a2 2 0 00-2.73.73l-.22.38a2 2 0 00.73 2.73l.15.1a2 2 0 011 1.72v.51a2 2 0 01-1 1.74l-.15.09a2 2 0 00-.73 2.73l.22.38a2 2 0 002.73.73l.15-.08a2 2 0 012 0l.43.25a2 2 0 011 1.73V20a2 2 0 002 2h.44a2 2 0 002-2v-.18a2 2 0 011-1.73l.43-.25a2 2 0 012 0l.15.08a2 2 0 002.73-.73l.22-.39a2 2 0 00-.73-2.73l-.15-.08a2 2 0 01-1-1.74v-.5a2 2 0 011-1.74l.15-.09a2 2 0 00.73-2.73l-.22-.38a2 2 0 00-2.73-.73l-.15.08a2 2 0 01-2 0l-.43-.25a2 2 0 01-1-1.73V4a2 2 0 00-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -97,7 +91,7 @@ export default function KioskApartmentSelect({ onSelect, companyId, onAdmin, onL
           {headerButtons}
           <span className="text-sm sm:text-base font-semibold text-white">
             Kies een locatie
-            {kioskEmployee && <span className="ml-2 text-xs bg-white/20 px-2 py-0.5 rounded-full">{kioskEmployee.name} · {roleLabel}</span>}
+            {kioskEmployee && <span className="ml-2 text-xs bg-white/20 px-2 py-0.5 rounded-full">{roleLabel}</span>}
           </span>
           <div className="w-16" />
         </div>
@@ -162,7 +156,7 @@ export default function KioskApartmentSelect({ onSelect, companyId, onAdmin, onL
         </div>
         <span className="text-sm sm:text-base font-semibold text-white">
           {currentLocation ? `${currentLocation.name} · Kies uw appartement` : 'Kies uw appartement'}
-          {kioskEmployee && <span className="ml-2 text-xs bg-white/20 px-2 py-0.5 rounded-full">{kioskEmployee.name} · {roleLabel}</span>}
+          {kioskEmployee && <span className="ml-2 text-xs bg-white/20 px-2 py-0.5 rounded-full">{roleLabel}</span>}
         </span>
         <div className="w-16" />
       </div>
