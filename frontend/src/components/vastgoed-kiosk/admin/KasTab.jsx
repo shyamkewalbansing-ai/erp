@@ -251,8 +251,12 @@ function KasTab({ token, tenants }) {
 
   useEffect(() => { loadAccounts(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (activeAccountId) loadKas(activeAccountId, activeCurrencyFilter); }, [activeAccountId, activeCurrencyFilter, loadKas]);
-  // Reset currency filter when switching account
-  useEffect(() => { setActiveCurrencyFilter(null); }, [activeAccountId]);
+  // Reset currency filter to primary when switching account
+  useEffect(() => {
+    const acc = accounts.find(a => a.account_id === activeAccountId);
+    const curs = acc?.currencies || (acc?.currency ? [acc.currency] : ['SRD']);
+    setActiveCurrencyFilter(curs[0] || null);
+  }, [activeAccountId, accounts]);
   useEffect(() => { if (activeView === 'verdeling') loadVerdeling(); }, [activeView, loadVerdeling]);
   useEffect(() => { if (activeView === 'koers' && !rates) loadRates(); }, [activeView, rates, loadRates]);
 
@@ -776,20 +780,48 @@ function KasTab({ token, tenants }) {
                           {e.created_at ? new Date(e.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
                         </td>
                         <td className="p-4">
-                          {e.entry_type === 'income' && <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">Inkomst</span>}
-                          {e.entry_type === 'expense' && <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-semibold">Uitgave</span>}
-                          {e.entry_type === 'salary' && <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-semibold">Loon</span>}
+                          {e.exchange_id ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 text-indigo-700 rounded text-xs font-semibold" title="Wisseltransactie">
+                              <Repeat className="w-3 h-3" /> Wissel
+                            </span>
+                          ) : (
+                            <>
+                              {e.entry_type === 'income' && <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs font-semibold">Inkomst</span>}
+                              {e.entry_type === 'expense' && <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs font-semibold">Uitgave</span>}
+                              {e.entry_type === 'salary' && <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-semibold">Loon</span>}
+                            </>
+                          )}
                         </td>
                         <td className="p-4 text-sm text-slate-900">
                           {e.description}
                           {e.related_tenant_name && <span className="text-xs text-slate-400 ml-2">({e.related_tenant_name})</span>}
                           {e.related_employee_name && <span className="text-xs text-slate-400 ml-2">({e.related_employee_name})</span>}
+                          {e.exchange_id && e.exchange_counterparty_account_id && (
+                            <button
+                              onClick={() => {
+                                setActiveAccountId(e.exchange_counterparty_account_id);
+                                setActiveCurrencyFilter(e.exchange_counterparty_currency || null);
+                              }}
+                              data-testid={`exchange-jump-${e.entry_id}`}
+                              title="Ga naar tegenboeking"
+                              className="ml-2 inline-flex items-center gap-1 text-[11px] text-indigo-500 hover:text-indigo-700 font-semibold underline decoration-dotted">
+                              <ArrowLeftRight className="w-3 h-3" /> bekijk tegenboeking
+                            </button>
+                          )}
                         </td>
                         <td className="p-4">
                           <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded text-xs capitalize">{e.category}</span>
                         </td>
-                        <td className={`p-4 text-right font-bold ${e.entry_type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
-                          {e.entry_type === 'income' ? '+' : '-'} {formatMoney(e.amount, e.currency || activeCurrency)}
+                        <td className={`p-4 text-right font-bold ${e.exchange_id ? (e.exchange_direction === 'in' ? 'text-indigo-600' : 'text-indigo-400') : e.entry_type === 'income' ? 'text-green-600' : 'text-red-600'}`}>
+                          <div className="flex items-center justify-end gap-1.5">
+                            {e.exchange_id && <Repeat className="w-3.5 h-3.5 text-indigo-500" />}
+                            <span>{e.entry_type === 'income' ? '+' : '-'} {formatMoney(e.amount, e.currency || activeCurrency)}</span>
+                          </div>
+                          {e.exchange_id && e.exchange_counterparty_currency && e.exchange_counterparty_amount != null && (
+                            <div className="text-[10px] text-slate-400 mt-0.5 font-normal">
+                              {e.exchange_direction === 'in' ? 'van' : 'naar'} {CURRENCY_SYMBOLS[e.exchange_counterparty_currency] || e.exchange_counterparty_currency} {Number(e.exchange_counterparty_amount).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
+                            </div>
+                          )}
                         </td>
                         <td className="p-4 text-right">
                           <button onClick={() => handleDelete(e.entry_id)} className="text-slate-400 hover:text-red-500 p-1" title="Verwijderen">

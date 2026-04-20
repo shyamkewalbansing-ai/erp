@@ -1,5 +1,26 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 40 (20 april 2026) — Wisseltransactie visualisatie + default currency filter
+
+### Verzoek:
+1. Markeer wisseltransacties in Boekingen Overzicht met paars Repeat-icoon + link naar tegenboeking
+2. "Toon valuta: Alle" moet niet de default zijn — primaire valuta van de account moet default zijn
+
+### Backend (`admin_operations.py`):
+- `GET /admin/kas` retourneert nu ook per entry: `exchange_id`, `exchange_direction`, `exchange_rate`, `exchange_counterparty_account_id`, `exchange_counterparty_currency`, `exchange_counterparty_amount`
+
+### Frontend (`KasTab.jsx`):
+- **Type-kolom**: als `e.exchange_id` → paars "Wissel" badge met Repeat-icoon, anders klassieke Inkomst/Uitgave/Loon badge
+- **Omschrijving-kolom**: voor wissels een extra "bekijk tegenboeking" knop (ArrowLeftRight icon, paars onderstreept dotted) die bij klik `setActiveAccountId(counterparty_account_id)` + `setActiveCurrencyFilter(counterparty_currency)` zet — 1 klik navigatie naar de pendant-boeking in de tegen-kas/valuta
+- **Bedrag-kolom**: paarse Repeat-icoon vóór bedrag + indigo tekstkleur voor wissels (in=donker, out=licht) + subtekst "naar SRD 3.800,00" / "van € 42,47"
+- **Default currency filter**: switch van `null` (Alle) naar `accountCurrencies[0]` (primaire valuta) bij elke account-switch — `Alle` blijft als opt-in beschikbaar
+
+### Tested end-to-end:
+- Screenshot Multi-Currency Kas → default filter = SRD ✅
+- Screenshot USD filter → alle 4 wissels zichtbaar met Wissel-badge + bekijk-tegenboeking link + Repeat-icoon in bedrag + "naar SRD/EUR X" subtext ✅
+- Klikken op "bekijk tegenboeking" navigeert correct naar Hoofdkas → SRD ✅ (verified via navigatie)
+- Lint clean ✅
+
 ## Sprint 39 (20 april 2026) — Wisselen met handmatige koers
 
 ### Context:

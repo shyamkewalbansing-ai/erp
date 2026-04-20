@@ -790,6 +790,12 @@ async def list_kas_entries(
             "related_tenant_name": e.get("related_tenant_name", ""),
             "related_employee_name": e.get("related_employee_name", ""),
             "payment_id": e.get("payment_id", ""),
+            "exchange_id": e.get("exchange_id", ""),
+            "exchange_direction": e.get("exchange_direction", ""),
+            "exchange_rate": e.get("exchange_rate"),
+            "exchange_counterparty_account_id": e.get("exchange_counterparty_account_id", ""),
+            "exchange_counterparty_currency": e.get("exchange_counterparty_currency", ""),
+            "exchange_counterparty_amount": e.get("exchange_counterparty_amount"),
             "created_at": e.get("created_at")
         })
 
