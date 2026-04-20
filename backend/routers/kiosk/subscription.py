@@ -50,6 +50,7 @@ class PaymentMethodInitiate(BaseModel):
 class PaymentMethodsConfig(BaseModel):
     bank_transfer_enabled: bool = True
     mope_enabled: bool = False
+    mope_api_key: Optional[str] = None
     mope_merchant_id: Optional[str] = None
     mope_merchant_name: Optional[str] = None
     mope_phone: Optional[str] = None
@@ -200,6 +201,13 @@ async def sa_update_bank_details(data: dict, admin=Depends(get_superadmin)):
     return {"saved": True}
 
 
+@router.get("/superadmin/subscription/payment-methods")
+async def sa_get_payment_methods(admin=Depends(get_superadmin)):
+    """Return full payment-methods config including api keys. Superadmin only."""
+    doc = await db.kiosk_saas_config.find_one({"key": "payment_methods"}, {"_id": 0, "value": 1})
+    return (doc or {}).get("value", {})
+
+
 @router.post("/superadmin/subscription/payment-methods")
 async def sa_update_payment_methods(data: PaymentMethodsConfig, admin=Depends(get_superadmin)):
     """Configure which payment methods companies can use: bank / mope / uni5pay."""
@@ -213,13 +221,16 @@ async def sa_update_payment_methods(data: PaymentMethodsConfig, admin=Depends(ge
 
 @router.get("/public/subscription/payment-methods")
 async def get_payment_methods_public():
-    """Public: which payment methods are enabled + their public merchant info."""
+    """Public: which payment methods are enabled + their public merchant info. Strips api keys."""
     doc = await db.kiosk_saas_config.find_one({"key": "payment_methods"}, {"_id": 0, "value": 1})
-    return (doc or {}).get("value", {
+    val = (doc or {}).get("value", {
         "bank_transfer_enabled": True,
         "mope_enabled": False,
         "uni5pay_enabled": False,
     })
+    # Never expose the raw api key publicly
+    val.pop("mope_api_key", None)
+    return val
 
 
 @router.get("/public/subscription/bank-details")
@@ -265,6 +276,9 @@ async def company_subscription(company: dict = Depends(get_current_company)):
     # Get bank details + payment methods
     bd = await db.kiosk_saas_config.find_one({"key": "bank_details"}, {"_id": 0, "value": 1})
     pm = await db.kiosk_saas_config.find_one({"key": "payment_methods"}, {"_id": 0, "value": 1})
+    pm_val = (pm or {}).get("value", {"bank_transfer_enabled": True, "mope_enabled": False, "uni5pay_enabled": False})
+    pm_val = dict(pm_val)
+    pm_val.pop("mope_api_key", None)  # never expose raw api key to company frontend
 
     return {
         "company_id": company_id,
@@ -276,7 +290,7 @@ async def company_subscription(company: dict = Depends(get_current_company)):
         "days_left_trial": days_left_trial,
         "invoices": invoices,
         "bank_details": (bd or {}).get("value", {}),
-        "payment_methods": (pm or {}).get("value", {"bank_transfer_enabled": True, "mope_enabled": False, "uni5pay_enabled": False}),
+        "payment_methods": pm_val,
     }
 
 
@@ -324,6 +338,199 @@ async def upload_payment_proof(invoice_id: str, data: ProofUpload, company: dict
         }}
     )
     return {"uploaded": True}
+
+
+# ============== MOPE SaaS CHECKOUT ==============
+import os as _os
+import uuid as _uuid
+import httpx as _httpx
+
+
+async def _get_saas_payment_config():
+    doc = await db.kiosk_saas_config.find_one({"key": "payment_methods"}, {"_id": 0, "value": 1})
+    return (doc or {}).get("value", {}) or {}
+
+
+@router.post("/admin/subscription/invoices/{invoice_id}/mope-checkout")
+async def mope_checkout_saas(invoice_id: str, company: dict = Depends(get_current_company)):
+    """Create a Mope payment request for a SaaS subscription invoice."""
+    inv = await db.kiosk_subscription_invoices.find_one({
+        "invoice_id": invoice_id, "company_id": company["company_id"]
+    })
+    if not inv:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    if inv.get("status") == "paid":
+        raise HTTPException(status_code=400, detail="Factuur is al betaald")
+
+    cfg = await _get_saas_payment_config()
+    if not cfg.get("mope_enabled"):
+        raise HTTPException(status_code=400, detail="Mope is niet ingeschakeld")
+    api_key = cfg.get("mope_api_key", "")
+    if not api_key:
+        raise HTTPException(status_code=400, detail="Mope API key ontbreekt. Neem contact op met superadmin.")
+
+    order_id = f"SAAS-{invoice_id[:8]}"
+    amount_cents = int(round(inv["amount"] * 100))
+    app_url = _os.environ.get("APP_URL", "https://facturatie.sr")
+    redirect_url = f"{app_url}/vastgoed/{company['company_id']}?saas_mope_done=1&invoice={invoice_id}"
+
+    # Mock mode: api key starts with mock_
+    if api_key.startswith("mock_"):
+        mock_id = str(_uuid.uuid4())
+        mock_url = f"https://mope.sr/p/{mock_id}"
+        await db.mope_mock_payments.insert_one({
+            "payment_id": mock_id,
+            "company_id": company["company_id"],
+            "invoice_id": invoice_id,
+            "amount": inv["amount"],
+            "amount_cents": amount_cents,
+            "status": "open",
+            "created_at": datetime.now(timezone.utc),
+            "order_id": order_id,
+            "saas": True,
+        })
+        await db.kiosk_subscription_invoices.update_one(
+            {"invoice_id": invoice_id},
+            {"$set": {"payment_method": "mope", "payment_gateway_id": mock_id, "payment_initiated_at": datetime.now(timezone.utc)}}
+        )
+        return {"payment_id": mock_id, "payment_url": mock_url, "order_id": order_id, "amount": inv["amount"], "mock": True}
+
+    # Real Mope API
+    try:
+        async with _httpx.AsyncClient(timeout=30) as client:
+            resp = await client.post(
+                "https://api.mope.sr/api/shop/payment_request",
+                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                json={
+                    "description": f"Abonnement {inv.get('period','')} - {company.get('name','')}",
+                    "amount": amount_cents,
+                    "order_id": order_id,
+                    "currency": "SRD",
+                    "redirect_url": redirect_url,
+                },
+            )
+            if resp.status_code not in (200, 201):
+                raise HTTPException(status_code=400, detail=f"Mope fout: {resp.text[:200]}")
+            md = resp.json()
+            await db.kiosk_subscription_invoices.update_one(
+                {"invoice_id": invoice_id},
+                {"$set": {
+                    "payment_method": "mope",
+                    "payment_gateway_id": md.get("id"),
+                    "payment_gateway_url": md.get("url"),
+                    "payment_initiated_at": datetime.now(timezone.utc),
+                }}
+            )
+            return {"payment_id": md.get("id"), "payment_url": md.get("url"), "order_id": order_id, "amount": inv["amount"]}
+    except _httpx.RequestError as e:
+        raise HTTPException(status_code=500, detail=f"Verbinding met Mope mislukt: {str(e)}")
+
+
+@router.get("/admin/subscription/invoices/{invoice_id}/mope-status/{payment_id}")
+async def mope_status_saas(invoice_id: str, payment_id: str, company: dict = Depends(get_current_company)):
+    """Poll Mope payment status; if paid, mark the invoice as paid."""
+    inv = await db.kiosk_subscription_invoices.find_one({
+        "invoice_id": invoice_id, "company_id": company["company_id"]
+    })
+    if not inv:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    cfg = await _get_saas_payment_config()
+    api_key = cfg.get("mope_api_key", "")
+    if not api_key:
+        raise HTTPException(status_code=400, detail="Mope niet geconfigureerd")
+
+    status_val = "open"
+    if api_key.startswith("mock_"):
+        mock = await db.mope_mock_payments.find_one({"payment_id": payment_id}, {"_id": 0})
+        if not mock:
+            raise HTTPException(status_code=404, detail="Betaalverzoek niet gevonden")
+        status_val = mock.get("status", "open")
+    else:
+        try:
+            async with _httpx.AsyncClient(timeout=30) as client:
+                r = await client.get(
+                    f"https://api.mope.sr/api/shop/payment_request/{payment_id}",
+                    headers={"Authorization": f"Bearer {api_key}"},
+                )
+                if r.status_code != 200:
+                    raise HTTPException(status_code=400, detail="Kon status niet ophalen")
+                status_val = r.json().get("status", "open")
+        except _httpx.RequestError:
+            raise HTTPException(status_code=500, detail="Verbinding met Mope mislukt")
+
+    # Auto-mark paid on success
+    if status_val in ("paid", "completed", "success") and inv.get("status") != "paid":
+        await db.kiosk_subscription_invoices.update_one(
+            {"invoice_id": invoice_id},
+            {"$set": {
+                "status": "paid",
+                "paid_at": datetime.now(timezone.utc),
+                "marked_paid_by": "mope-auto",
+                "payment_method": "mope",
+            }}
+        )
+        await _recompute_company_status(company["company_id"])
+
+    return {"status": status_val, "invoice_status": "paid" if status_val in ("paid", "completed", "success") else inv.get("status", "unpaid")}
+
+
+# ============== UNI5PAY SaaS CHECKOUT (mock-based, same as kiosk pattern) ==============
+@router.post("/admin/subscription/invoices/{invoice_id}/uni5pay-checkout")
+async def uni5pay_checkout_saas(invoice_id: str, company: dict = Depends(get_current_company)):
+    inv = await db.kiosk_subscription_invoices.find_one({
+        "invoice_id": invoice_id, "company_id": company["company_id"]
+    })
+    if not inv:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    if inv.get("status") == "paid":
+        raise HTTPException(status_code=400, detail="Factuur is al betaald")
+    cfg = await _get_saas_payment_config()
+    if not cfg.get("uni5pay_enabled"):
+        raise HTTPException(status_code=400, detail="Uni5Pay is niet ingeschakeld")
+    merchant_id = cfg.get("uni5pay_merchant_id", "")
+    if not merchant_id:
+        raise HTTPException(status_code=400, detail="Uni5Pay Merchant ID ontbreekt")
+
+    order_id = f"SAAS-U5P-{invoice_id[:8]}"
+    payment_id = str(_uuid.uuid4())
+    amount_cents = int(round(inv["amount"] * 100))
+    mock_qr_url = f"https://uni5pay.sr/pay/{payment_id}"
+    await db.uni5pay_mock_payments.insert_one({
+        "payment_id": payment_id,
+        "company_id": company["company_id"],
+        "invoice_id": invoice_id,
+        "amount": inv["amount"],
+        "amount_cents": amount_cents,
+        "status": "open",
+        "created_at": datetime.now(timezone.utc),
+        "order_id": order_id,
+        "saas": True,
+    })
+    await db.kiosk_subscription_invoices.update_one(
+        {"invoice_id": invoice_id},
+        {"$set": {"payment_method": "uni5pay", "payment_gateway_id": payment_id, "payment_initiated_at": datetime.now(timezone.utc)}}
+    )
+    return {"payment_id": payment_id, "payment_url": mock_qr_url, "order_id": order_id, "amount": inv["amount"], "mock": True}
+
+
+@router.get("/admin/subscription/invoices/{invoice_id}/uni5pay-status/{payment_id}")
+async def uni5pay_status_saas(invoice_id: str, payment_id: str, company: dict = Depends(get_current_company)):
+    inv = await db.kiosk_subscription_invoices.find_one({
+        "invoice_id": invoice_id, "company_id": company["company_id"]
+    })
+    if not inv:
+        raise HTTPException(status_code=404, detail="Factuur niet gevonden")
+    mock = await db.uni5pay_mock_payments.find_one({"payment_id": payment_id}, {"_id": 0})
+    if not mock:
+        raise HTTPException(status_code=404, detail="Betaalverzoek niet gevonden")
+    status_val = mock.get("status", "open")
+    if status_val in ("paid", "completed", "success") and inv.get("status") != "paid":
+        await db.kiosk_subscription_invoices.update_one(
+            {"invoice_id": invoice_id},
+            {"$set": {"status": "paid", "paid_at": datetime.now(timezone.utc), "marked_paid_by": "uni5pay-auto", "payment_method": "uni5pay"}}
+        )
+        await _recompute_company_status(company["company_id"])
+    return {"status": status_val, "invoice_status": "paid" if status_val in ("paid", "completed", "success") else inv.get("status", "unpaid")}
 
 
 # ============== INTERNAL ==============

@@ -86,19 +86,22 @@ export default function SuperAdminDashboard() {
 
   const handleEditPaymentMethods = async () => {
     try {
-      const cur = await axios.get(`${API.replace('/superadmin','')}/public/subscription/payment-methods`);
+      const cur = await axios.get(`${API}/superadmin/subscription/payment-methods`,
+        { headers: { Authorization: `Bearer ${token}` } });
       const d = cur.data || {};
       const bankOn = window.confirm(`Bankoverschrijving ${d.bank_transfer_enabled ? 'AAN' : 'UIT'}. Klik OK voor AAN, Cancel voor UIT.`);
       const mopeOn = window.confirm(`Mope betaling ${d.mope_enabled ? 'AAN' : 'UIT'}. Klik OK voor AAN, Cancel voor UIT.`);
       let mopeData = {};
       if (mopeOn) {
+        const mope_api_key = window.prompt('Mope API Key (gebruik "mock_xxx" voor test mode):', d.mope_api_key || '');
+        if (mope_api_key === null) return;
         const mope_merchant_id = window.prompt('Mope Merchant ID:', d.mope_merchant_id || '');
         if (mope_merchant_id === null) return;
         const mope_merchant_name = window.prompt('Mope Merchant naam:', d.mope_merchant_name || '');
         if (mope_merchant_name === null) return;
         const mope_phone = window.prompt('Mope Telefoonnummer:', d.mope_phone || '');
         if (mope_phone === null) return;
-        mopeData = { mope_merchant_id, mope_merchant_name, mope_phone };
+        mopeData = { mope_api_key, mope_merchant_id, mope_merchant_name, mope_phone };
       }
       const uniOn = window.confirm(`Uni5Pay betaling ${d.uni5pay_enabled ? 'AAN' : 'UIT'}. Klik OK voor AAN, Cancel voor UIT.`);
       let uniData = {};

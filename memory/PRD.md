@@ -1,5 +1,24 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 28 (20 april 2026) — Echte Mope/Uni5Pay Gateway voor SaaS
+
+### Geïmplementeerd:
+Hergebruikt het bestaande Mope/Uni5Pay patroon uit `payment_gateways.py` (voor Kiosk huurbetalingen) en toegepast op SaaS abonnement facturen.
+
+**Backend** (`subscription.py`):
+- `POST /admin/subscription/invoices/{id}/mope-checkout` → echte Mope API call (`https://api.mope.sr/api/shop/payment_request`) of mock als `mock_` prefix; returnt `payment_url` + `payment_id`
+- `GET /admin/subscription/invoices/{id}/mope-status/{pid}` → polled Mope status; bij "paid" wordt factuur **automatisch gemarkeerd** als betaald (geen handmatige tussenkomst nodig)
+- `POST /admin/subscription/invoices/{id}/uni5pay-checkout` + status endpoint (mock pattern zoals kiosk)
+- `GET /superadmin/subscription/payment-methods` → geeft **volledige** config terug (incl. api key) voor superadmin
+- **Security**: `mope_api_key` wordt gestript uit `/public/...` en `/admin/subscription` responses — alleen superadmin ziet het
+
+**Frontend**:
+- `SubscriptionTab.jsx`: "Betaal via Mope/Uni5Pay" knop roept nu echte checkout endpoint aan → opent `payment_url` in nieuwe tab → polled elke 4s tot max 5 min → toont succesmelding + refresh als betaling wordt gedetecteerd
+- Superadmin "Betaalmethoden" dialog vraagt nu ook **Mope API Key** (met hint "gebruik mock_xxx voor test mode")
+
+**Security tested**: `{"detail":"Niet geautoriseerd"}` zonder superadmin token ✅
+**End-to-end tested**: mock checkout → handmatig status = paid in DB → poll endpoint → factuur auto-gemarkeerd als `paid` + `marked_paid_by: mope-auto` ✅
+
 ## Sprint 27 (20 april 2026) — Betaalbewijs upload + Mope/Uni5Pay
 
 ### Geïmplementeerd:

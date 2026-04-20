@@ -2990,15 +2990,74 @@ function SubscriptionTab({ company, token }) {
 
   const handleInitiate = async (invoiceId, method) => {
     const labels = { mope: 'Mope', uni5pay: 'Uni5Pay', bank_transfer: 'Bankoverschrijving' };
-    if (!window.confirm(`Betaling via ${labels[method]} starten?\n\nDe factuur krijgt status "Wacht op review" totdat de superadmin uw betaling bevestigt.`)) return;
+    if (method === 'bank_transfer') {
+      if (!window.confirm(`Betaling via ${labels[method]} starten?\n\nDe factuur krijgt status "Wacht op review" totdat de superadmin uw betaling bevestigt.`)) return;
+      setBusy(`${invoiceId}:${method}`);
+      try {
+        const r = await axios.post(`${API}/admin/subscription/invoices/${invoiceId}/initiate-payment`,
+          { method }, { headers: { Authorization: `Bearer ${token}` } });
+        alert(r.data.message || 'Betaling gestart');
+        await load();
+      } catch (e) { alert('Mislukt: ' + (e.response?.data?.detail || e.message)); }
+      setBusy(null);
+      return;
+    }
+
+    // Real gateway checkout (Mope / Uni5Pay)
     setBusy(`${invoiceId}:${method}`);
     try {
-      const r = await axios.post(`${API}/admin/subscription/invoices/${invoiceId}/initiate-payment`,
-        { method }, { headers: { Authorization: `Bearer ${token}` } });
-      alert(r.data.message || 'Betaling gestart');
-      await load();
-    } catch (e) { alert('Mislukt: ' + (e.response?.data?.detail || e.message)); }
-    setBusy(null);
+      const endpoint = method === 'mope' ? 'mope-checkout' : 'uni5pay-checkout';
+      const r = await axios.post(`${API}/admin/subscription/invoices/${invoiceId}/${endpoint}`, {},
+        { headers: { Authorization: `Bearer ${token}` } });
+      const { payment_url, payment_id, mock } = r.data;
+      if (!payment_url) throw new Error('Geen betaal-URL ontvangen');
+
+      // Open payment URL in new window
+      window.open(payment_url, '_blank', 'noopener,noreferrer');
+
+      // Poll status every 4s up to 5 min (or dismiss button)
+      const statusEndpoint = method === 'mope' ? 'mope-status' : 'uni5pay-status';
+      const maxPolls = 75; // ~5 min
+      let polls = 0;
+      const poll = async () => {
+        polls++;
+        try {
+          const sr = await axios.get(`${API}/admin/subscription/invoices/${invoiceId}/${statusEndpoint}/${payment_id}`,
+            { headers: { Authorization: `Bearer ${token}` } });
+          if (sr.data.status === 'paid' || sr.data.invoice_status === 'paid') {
+            alert(`✅ Betaling via ${labels[method]} succesvol ontvangen! Uw factuur is nu bijgewerkt.`);
+            await load();
+            setBusy(null);
+            return;
+          }
+        } catch { /* skip */ }
+        if (polls < maxPolls) {
+          setTimeout(poll, 4000);
+        } else {
+          setBusy(null);
+          if (window.confirm(`Wij hebben uw ${labels[method]} betaling nog niet gezien. Status opnieuw controleren?`)) {
+            // Restart polling once
+            polls = 0;
+            setBusy(`${invoiceId}:${method}`);
+            setTimeout(poll, 2000);
+          } else {
+            await load();
+          }
+        }
+      };
+      // Show info toast-ish alert, start polling
+      if (mock) {
+        alert(`Mock betaling gestart (betaling wordt NIET automatisch bevestigd met test-API). Sluit dit venster en wacht op bevestiging van superadmin, of activeer live API key.`);
+        setBusy(null);
+        await load();
+      } else {
+        // Start polling silently
+        setTimeout(poll, 3000);
+      }
+    } catch (e) {
+      alert('Checkout mislukt: ' + (e.response?.data?.detail || e.message));
+      setBusy(null);
+    }
   };
 
   const handleUploadProof = async (invoiceId, file) => {
