@@ -1,8 +1,12 @@
 import { useState } from 'react';
 import { ArrowLeft, ArrowRight, Banknote, Droplets, AlertCircle, CheckCircle, Wifi, Hash } from 'lucide-react';
 
-function formatSRD(amount) {
+function fmtSRD(amount) {
   return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+function formatMoney(amount, currency) {
+  const cur = (currency || 'SRD').toString().toUpperCase();
+  return `${cur} ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 const PAYMENT_TYPES = [
@@ -13,6 +17,8 @@ const PAYMENT_TYPES = [
 ];
 
 export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
+  const cur = (tenant?.currency || 'SRD').toUpperCase();
+  const fmt = (v) => formatMoney(v, cur);
   const [selectedTypes, setSelectedTypes] = useState(new Set());
   const [customAmount, setCustomAmount] = useState('');
   const [showMobileKeypad, setShowMobileKeypad] = useState(false);
@@ -52,7 +58,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
     let amount, description, paymentType;
     if (hasCustom) {
       amount = parseFloat(customAmount);
-      description = `Gedeeltelijke betaling - ${formatSRD(amount)}`;
+      description = `Gedeeltelijke betaling - ${fmt(amount)}`;
       paymentType = 'partial_rent';
     } else {
       amount = selectedTotal;
@@ -92,7 +98,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                 </div>
                 <span className="text-sm font-bold text-slate-900">Alles betalen</span>
               </div>
-              <span className="text-sm sm:text-base font-semibold text-orange-600 whitespace-nowrap">{formatSRD(totalDebt)}</span>
+              <span className="text-sm sm:text-base font-semibold text-orange-600 whitespace-nowrap">{fmt(totalDebt)}</span>
             </button>
           )}
 
@@ -119,7 +125,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                     <span className="text-sm font-bold text-slate-900">{type.label}</span>
                   </div>
                   <p className={`text-sm sm:text-base flex-shrink-0 ml-2 whitespace-nowrap font-semibold ${disabled ? 'text-slate-300' : isSelected ? 'text-orange-600' : 'text-slate-900'}`}>
-                    {formatSRD(amount)}
+                    {fmt(amount)}
                   </p>
                 </button>
               );
@@ -133,14 +139,14 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                 <p className="text-xs text-slate-400">{selectedTypes.size} item{selectedTypes.size > 1 ? 's' : ''}</p>
                 <p className="text-xs text-white">{buildDescription()}</p>
               </div>
-              <p className="text-base sm:text-lg font-bold text-white whitespace-nowrap">{formatSRD(selectedTotal)}</p>
+              <p className="text-base sm:text-lg font-bold text-white whitespace-nowrap">{fmt(selectedTotal)}</p>
             </div>
           )}
 
           {/* Next button */}
           <button onClick={handleConfirm} disabled={!canProceed} data-testid="payment-next-btn"
             className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-slate-200 disabled:text-slate-400 text-white rounded-xl flex items-center justify-center gap-2 transition active:scale-[0.98] py-3 sm:py-3.5 mt-1.5 text-sm sm:text-base font-bold">
-            <span>Volgende — {formatSRD(activeAmount)}</span>
+            <span>Volgende — {fmt(activeAmount)}</span>
             <ArrowRight className="w-5 h-5" />
           </button>
 
@@ -162,7 +168,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
                 </div>
                 <div className={`border-2 rounded-lg text-center py-2 mb-2 ${customAmount && parseFloat(customAmount) > 0 ? 'bg-orange-50 border-orange-300' : 'bg-slate-50 border-slate-200'}`}>
                   <span className={`font-mono font-extrabold text-xl ${customAmount && parseFloat(customAmount) > 0 ? 'text-orange-600' : 'text-slate-300'}`}>
-                    SRD {customAmount || '0.00'}
+                    {cur} {customAmount || '0.00'}
                   </span>
                 </div>
                 <div className="grid grid-cols-4 gap-1">
@@ -183,7 +189,7 @@ export default function KioskPaymentSelect({ tenant, onBack, onConfirm }) {
         {/* Right — Keypad (hidden on mobile, visible on desktop) */}
         <div className="kiosk-card hidden md:flex flex-none md:flex-[2] flex-col min-w-0 p-4 sm:p-5">
           <h4 className="text-sm sm:text-base font-bold text-slate-900 mb-0.5">Bedrag invoeren</h4>
-          <p className="text-xs text-slate-400 mb-3">Totaal openstaand: {formatSRD(totalDebt)}</p>
+          <p className="text-xs text-slate-400 mb-3">Totaal openstaand: {fmt(totalDebt)}</p>
           <div className={`border-2 rounded-lg transition px-3 py-3 mb-3 ${hasCustom ? 'bg-orange-50 border-orange-300' : 'bg-slate-50 border-slate-200'}`}>
             <p className="text-xs text-slate-400 mb-0.5">SRD</p>
             <p className={`font-extrabold font-mono text-2xl sm:text-3xl ${hasCustom ? 'text-orange-600' : 'text-slate-900'}`}>{customAmount || '0.00'}</p>

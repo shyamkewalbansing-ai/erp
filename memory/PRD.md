@@ -1,5 +1,45 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 54 (21 april 2026) — Valuta-filter overal + Nieuwe Huurder bug fix
+
+### Verzoek / Bugs
+1. **BUG**: Nieuwe Huurder modal toonde "Maandhuur (SRD)" / "Borgsom (SRD)" zelfs als gekoppeld appartement een USD/EUR valuta had
+2. Kwitanties-tabblad filter toevoegen per valuta (SRD/USD/EUR)
+3. Bank/Kas dashboard globale valuta-filter (verberg accounts die niet in gekozen valuta werken)
+4. Kiosk "Betaling Registreren": bedragen in tenant's valuta tonen
+
+### Implementatie
+**`TenantModal.jsx`:**
+- Nieuwe `currency` state, geïnitialiseerd uit `tenant.currency` OF appartement currency OF 'SRD'
+- Bij wijziging appartement → currency inherited van appartement automatisch
+- Labels dynamisch: `Maandhuur ({currency})`, `Borgsom ({currency})`, `Openstaande huur ({currency})`, `Servicekosten ({currency})`, `Boetes ({currency})`
+- Hulptekst onder appartement-selectie: *"Valuta volgt appartement: **USD**"*
+- Appartement-dropdown opties tonen nu correcte valuta (`A1 - SRD 5000` / `USDTEST - USD 500`)
+- `BillingStatusSection` confirm-dialog gebruikt `tenant.currency` ipv hardcoded SRD
+
+**`PaymentsTab.jsx`:**
+- Nieuwe `currencyFilter` state (all|SRD|USD|EUR) dropdown naast maand-filter
+- `visiblePayments` = payments gefilterd op valuta
+- Top-right pill toont totalen **per valuta apart** (`SRD 25.534,71`) i.p.v. één gemixte som
+- Alle bedrag-cellen (amount, remaining) renderen via `fmtC(amount, p.currency)`
+
+**`KasTab.jsx`:**
+- Nieuwe `globalCurFilter` state + chip-row boven account-tabs: `VALUTA: Alle | SRD | USD | EUR`
+- Verbergt accounts die niet in gekozen valuta werken
+- Bij selectie: auto-switch naar eerste account met die valuta + auto-set per-account `activeCurrencyFilter`
+
+**`KioskPaymentSelect.jsx` + `KioskPaymentConfirm.jsx` + `KioskTenantOverview.jsx`:**
+- `formatMoney(amount, currency)` helper naast bestaande `formatSRD`
+- Alle bedragen gebruiken `cur = tenant.currency || 'SRD'` voor kiosk-schermen
+- Custom bedragveld toont nu juiste valuta-prefix (`USD 500` i.p.v. hardcoded `SRD`)
+
+### Tested ✅ (E2E)
+- Nieuwe Huurder → USDTEST apartment kiezen → **"Valuta volgt appartement: USD"** verschijnt, **"Maandhuur (USD)"** + **"Borgsom (USD)"** labels, waarde 500 auto-gevuld
+- Kwitanties-tab: dropdown `[all, SRD, USD, EUR]` zichtbaar, totalen per valuta in top-right
+- Bank/Kas-tab: chip-row met `VALUTA: Alle · EUR · SRD · USD` zichtbaar, accounts worden gefilterd
+- ESLint: 6 components schoon
+
+
 ## Sprint 53 (21 april 2026) — Multi-valuta per appartement (SRD / USD / EUR)
 
 ### Verzoek

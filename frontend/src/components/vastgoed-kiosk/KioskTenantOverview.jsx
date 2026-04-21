@@ -7,11 +7,17 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 function formatSRD(amount) {
   return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
+function formatMoney(amount, currency) {
+  const cur = (currency || 'SRD').toString().toUpperCase();
+  return `${cur} ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 
 const TYPE_LABELS = { rent: 'Huur', partial_rent: 'Gedeeltelijk', service_costs: 'Servicekosten', fines: 'Boetes', deposit: 'Borg' };
 const METHOD_LABELS = { cash: 'Contant', card: 'Pinpas', mope: 'Mope', bank: 'Bank', pin: 'PIN' };
 
 export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, variant = 'default' }) {
+  const cur = (tenant?.currency || 'SRD').toUpperCase();
+  const fmt = (v) => formatMoney(v, cur);
   const [showHistory, setShowHistory] = useState(false);
   const [payments, setPayments] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
@@ -70,7 +76,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
               </div>
               <div className="text-right">
                 <p className="kiosk-small opacity-60">Totaal openstaand</p>
-                <p className="kiosk-amount-md whitespace-nowrap">{formatSRD(total)}</p>
+                <p className="kiosk-amount-md whitespace-nowrap">{fmt(total)}</p>
               </div>
             </div>
 
@@ -93,7 +99,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                         )}
                       </div>
                     </div>
-                    <span className={`kiosk-subtitle whitespace-nowrap ${isHighlight ? 'text-orange-600' : 'text-slate-800'}`}>{formatSRD(item.value)}</span>
+                    <span className={`kiosk-subtitle whitespace-nowrap ${isHighlight ? 'text-orange-600' : 'text-slate-800'}`}>{fmt(item.value)}</span>
                   </div>
                 );
               })}
@@ -106,7 +112,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                   <button onClick={onPay} data-testid="pay-btn"
                     className="w-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center gap-2 rounded-xl transition active:scale-[0.98]"
                     style={{ padding: 'clamp(12px, 2.2vh, 28px)', marginBottom: '1vh' }}>
-                    <span className="kiosk-btn-text">Betalen — {formatSRD(total)}</span>
+                    <span className="kiosk-btn-text">Betalen — {fmt(total)}</span>
                     <ArrowRight style={{ width: '2.5vh', height: '2.5vh' }} />
                   </button>
                   <button onClick={loadHistory} data-testid="history-btn"
@@ -161,7 +167,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                 ) : payments.length === 0 ? (
                   <div className="text-center" style={{ padding: '4vh 0' }}><p className="kiosk-subtitle text-slate-400">Geen betalingen gevonden</p></div>
                 ) : (
-                  <div>{payments.map((p, i) => { const date = p.created_at ? new Date(p.created_at) : null; const dateStr = date ? date.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : ''; const periode = p.covered_months?.length > 0 ? p.covered_months.join(', ') : ''; const ontvangen = p.processed_by || ''; const goedgekeurd = p.approved_by && p.approved_by !== p.processed_by ? p.approved_by : ''; return (<div key={p.payment_id || i} className="kiosk-card-row flex items-center justify-between"><div className="flex items-center gap-3 min-w-0"><CheckCircle style={{ width: '2vh', height: '2vh' }} className="text-green-500 flex-shrink-0" /><div className="min-w-0"><div className="flex items-center gap-2 flex-wrap"><span className="kiosk-body font-bold text-slate-900">{formatSRD(p.amount)}</span><span className="kiosk-small px-2 py-0.5 rounded bg-orange-100 text-orange-600 font-semibold">{TYPE_LABELS[p.payment_type] || p.payment_type}</span></div><p className="kiosk-small text-slate-400">{dateStr} · {p.kwitantie_nummer || ''}</p>{periode && <p className="kiosk-small text-slate-500 font-medium">Periode: {periode}</p>}{ontvangen && <p className="kiosk-small text-slate-500 font-medium">Ontvangen door: <span className="text-slate-700 font-semibold">{ontvangen}</span></p>}{goedgekeurd && <p className="kiosk-small text-slate-500 font-medium">Goedgekeurd door: <span className="text-slate-700 font-semibold">{goedgekeurd}</span></p>}</div></div></div>); })}</div>
+                  <div>{payments.map((p, i) => { const date = p.created_at ? new Date(p.created_at) : null; const dateStr = date ? date.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : ''; const periode = p.covered_months?.length > 0 ? p.covered_months.join(', ') : ''; const ontvangen = p.processed_by || ''; const goedgekeurd = p.approved_by && p.approved_by !== p.processed_by ? p.approved_by : ''; return (<div key={p.payment_id || i} className="kiosk-card-row flex items-center justify-between"><div className="flex items-center gap-3 min-w-0"><CheckCircle style={{ width: '2vh', height: '2vh' }} className="text-green-500 flex-shrink-0" /><div className="min-w-0"><div className="flex items-center gap-2 flex-wrap"><span className="kiosk-body font-bold text-slate-900">{formatMoney(p.amount, p.currency || cur)}</span><span className="kiosk-small px-2 py-0.5 rounded bg-orange-100 text-orange-600 font-semibold">{TYPE_LABELS[p.payment_type] || p.payment_type}</span></div><p className="kiosk-small text-slate-400">{dateStr} · {p.kwitantie_nummer || ''}</p>{periode && <p className="kiosk-small text-slate-500 font-medium">Periode: {periode}</p>}{ontvangen && <p className="kiosk-small text-slate-500 font-medium">Ontvangen door: <span className="text-slate-700 font-semibold">{ontvangen}</span></p>}{goedgekeurd && <p className="kiosk-small text-slate-500 font-medium">Goedgekeurd door: <span className="text-slate-700 font-semibold">{goedgekeurd}</span></p>}</div></div></div>); })}</div>
                 )}
               </div>
               <div style={{ padding: 'clamp(8px, 1.5vh, 16px) clamp(12px, 1.5vw, 24px)', borderTop: '1px solid #f1f5f9' }}>
@@ -212,14 +218,14 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                   </div>
                 </div>
                 <span className={`text-sm sm:text-base font-semibold whitespace-nowrap ${item.highlight ? 'text-orange-600' : 'text-slate-800'}`}>
-                  {formatSRD(item.value)}
+                  {fmt(item.value)}
                 </span>
               </div>
             ))}
           </div>
           <div className="bg-slate-50 flex items-center justify-between p-3 sm:p-4 border-t-2 border-slate-200">
             <span className="text-sm sm:text-base font-semibold text-slate-600">Totaal openstaand</span>
-            <span className="text-lg sm:text-xl font-bold text-slate-900 whitespace-nowrap">{formatSRD(total)}</span>
+            <span className="text-lg sm:text-xl font-bold text-slate-900 whitespace-nowrap">{fmt(total)}</span>
           </div>
         </div>
 
@@ -231,7 +237,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                 <CreditCard className="w-8 h-8 sm:w-10 sm:h-10 text-orange-500" />
               </div>
               <p className="text-sm text-slate-400 mb-1">Te betalen</p>
-              <p className="text-2xl sm:text-3xl font-bold text-slate-900 whitespace-nowrap mb-4 sm:mb-6">{formatSRD(total)}</p>
+              <p className="text-2xl sm:text-3xl font-bold text-slate-900 whitespace-nowrap mb-4 sm:mb-6">{fmt(total)}</p>
               <button onClick={onPay} data-testid="pay-btn"
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white flex items-center justify-center gap-2 rounded-xl transition active:scale-[0.98] py-3 sm:py-4">
                 <span className="text-base sm:text-lg font-bold">Volgende</span>
@@ -305,7 +311,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                           <CheckCircle style={{ width: '2vh', height: '2vh' }} className="text-green-500 flex-shrink-0" />
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="kiosk-body font-bold text-slate-900">{formatSRD(p.amount)}</span>
+                              <span className="kiosk-body font-bold text-slate-900">{formatMoney(p.amount, p.currency || cur)}</span>
                               <span className="kiosk-small px-2 py-0.5 rounded bg-orange-100 text-orange-600 font-semibold">{TYPE_LABELS[p.payment_type] || p.payment_type}</span>
                               <span className="kiosk-small px-2 py-0.5 rounded bg-slate-100 text-slate-600">{METHOD_LABELS[p.payment_method] || p.payment_method || 'Contant'}</span>
                             </div>

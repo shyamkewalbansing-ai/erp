@@ -5,6 +5,7 @@ import { API, axios } from './utils';
 // Reset billed-through back to current real-world month
 function BillingStatusSection({ tenant, token, onReset }) {
   const [busy, setBusy] = useState(false);
+  const cur = (tenant?.currency || 'SRD').toUpperCase();
   const billedThrough = tenant?.rent_billed_through || '';
   if (!billedThrough) return null;
   const now = new Date();
@@ -27,8 +28,8 @@ function BillingStatusSection({ tenant, token, onReset }) {
       `Van: ${billedLabel} (${monthsAhead} maand(en) vooruit)\n` +
       `Naar: ${currentLabel}\n\n` +
       `Openstaand saldo wordt verlaagd met:\n` +
-      `• Huur: SRD ${rentRefund.toLocaleString('nl-NL', {minimumFractionDigits: 2})}` +
-      (internetRefund > 0 ? `\n• Internet: SRD ${internetRefund.toLocaleString('nl-NL', {minimumFractionDigits: 2})}` : '')
+      `• Huur: ${cur} ${rentRefund.toLocaleString('nl-NL', {minimumFractionDigits: 2})}` +
+      (internetRefund > 0 ? `\n• Internet: ${cur} ${internetRefund.toLocaleString('nl-NL', {minimumFractionDigits: 2})}` : '')
     )) return;
     setBusy(true);
     try {
@@ -87,6 +88,12 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
   const [telefoon, setTelefoon] = useState(tenant?.telefoon || '');
   const [tenantCode, setTenantCode] = useState(tenant?.tenant_code || '');
   const [monthlyRent, setMonthlyRent] = useState(tenant?.monthly_rent || 0);
+  // Derive currency from tenant (existing) or selected apartment (new)
+  const selectedApt = tenant?.apartment_id
+    ? apartments.find(a => a.apartment_id === tenant.apartment_id)
+    : null;
+  const initialCurrency = (tenant?.currency || selectedApt?.currency || 'SRD').toUpperCase();
+  const [currency, setCurrency] = useState(initialCurrency);
   const [depositRequired, setDepositRequired] = useState(tenant?.deposit_required || 0);
   const [outstandingRent, setOutstandingRent] = useState(tenant?.outstanding_rent || 0);
   const [serviceCosts, setServiceCosts] = useState(tenant?.service_costs || 0);
@@ -139,6 +146,7 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
       const headers = { Authorization: `Bearer ${token}` };
       const data = { name, apartment_id: apartmentId, email: email || null, telefoon: telefoon || null,
         monthly_rent: parseFloat(monthlyRent), deposit_required: parseFloat(depositRequired),
+        currency,
         tenant_code: tenantCode || null,
         id_card_number: idCardNumber || null, id_card_name: idCardName || null,
         id_card_dob: idCardDob || null, id_card_raw: idCardRaw || null };
@@ -180,16 +188,29 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
                   setApartmentId(id);
                   if (id) {
                     const apt = apartments.find(a => a.apartment_id === id);
-                    if (apt && apt.monthly_rent) {
-                      setMonthlyRent(apt.monthly_rent);
-                      setDepositRequired(apt.monthly_rent);
+                    if (apt) {
+                      if (apt.monthly_rent) {
+                        setMonthlyRent(apt.monthly_rent);
+                        setDepositRequired(apt.monthly_rent);
+                      }
+                      // Inherit apartment currency
+                      const aptCur = (apt.currency || 'SRD').toUpperCase();
+                      setCurrency(aptCur);
                     }
                   }
                 }} required
                 className="w-full px-4 py-3 border rounded-xl">
                 <option value="">Selecteer...</option>
-                {apartments.filter(a => a.status !== 'occupied' || a.apartment_id === tenant?.apartment_id).map(a => <option key={a.apartment_id} value={a.apartment_id}>{a.number}{a.monthly_rent ? ` - SRD ${a.monthly_rent.toLocaleString('nl-NL')}` : ''}</option>)}
+                {apartments.filter(a => a.status !== 'occupied' || a.apartment_id === tenant?.apartment_id).map(a => {
+                  const aCur = (a.currency || 'SRD').toUpperCase();
+                  return <option key={a.apartment_id} value={a.apartment_id}>{a.number}{a.monthly_rent ? ` - ${aCur} ${a.monthly_rent.toLocaleString('nl-NL')}` : ''}</option>;
+                })}
               </select>
+              {apartmentId && (
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Valuta volgt appartement: <span className="font-bold text-slate-600">{currency}</span>
+                </p>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -214,32 +235,32 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
               <p className="text-xs text-slate-400 mt-1">Leeg = automatisch</p>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Maandhuur (SRD)</label>
+              <label className="block text-sm font-medium mb-1">Maandhuur ({currency})</label>
               <input type="number" value={monthlyRent} onChange={(e) => setMonthlyRent(e.target.value)}
                 className="w-full px-4 py-3 border rounded-xl" />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Borgsom (SRD)</label>
+              <label className="block text-sm font-medium mb-1">Borgsom ({currency})</label>
               <input type="number" value={depositRequired} onChange={(e) => setDepositRequired(e.target.value)}
                 className="w-full px-4 py-3 border rounded-xl" />
             </div>
           </div>
           {tenant && (
             <div className="border-t border-slate-200 pt-4">
-              <p className="text-sm font-semibold text-slate-700 mb-3">Financieel</p>
+              <p className="text-sm font-semibold text-slate-700 mb-3">Financieel <span className="ml-2 text-[10px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{currency}</span></p>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Openstaande huur</label>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Openstaande huur ({currency})</label>
                   <input type="number" step="0.01" value={outstandingRent} onChange={(e) => setOutstandingRent(e.target.value)}
                     className="w-full px-3 py-2.5 border rounded-xl text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Servicekosten</label>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Servicekosten ({currency})</label>
                   <input type="number" step="0.01" value={serviceCosts} onChange={(e) => setServiceCosts(e.target.value)}
                     className="w-full px-3 py-2.5 border rounded-xl text-sm" />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Boetes</label>
+                  <label className="block text-xs font-medium text-slate-500 mb-1">Boetes ({currency})</label>
                   <input type="number" step="0.01" value={fines} onChange={(e) => setFines(e.target.value)}
                     className="w-full px-3 py-2.5 border rounded-xl text-sm" />
                 </div>

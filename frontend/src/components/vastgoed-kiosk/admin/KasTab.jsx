@@ -29,6 +29,7 @@ function KasTab({ token, tenants }) {
   const [accounts, setAccounts] = useState([]);
   const [activeAccountId, setActiveAccountId] = useState(null);
   const [activeCurrencyFilter, setActiveCurrencyFilter] = useState(null); // null = all
+  const [globalCurFilter, setGlobalCurFilter] = useState('all'); // all | SRD | USD | EUR — hides accounts lacking this currency
   const [totalsByCurrency, setTotalsByCurrency] = useState({});
   const [showNewAccount, setShowNewAccount] = useState(false);
   const [newAccName, setNewAccName] = useState('');
@@ -396,8 +397,50 @@ function KasTab({ token, tenants }) {
 
       {/* Account selector (only in Kas view) */}
       {activeView === 'kas' && (
-        <div className="bg-white rounded-xl border border-slate-200 p-3 flex gap-2 flex-wrap items-center">
-          {accounts.map(a => {
+        <div className="bg-white rounded-xl border border-slate-200 p-3 flex gap-2 flex-wrap items-center" data-testid="kas-account-bar">
+          {(() => {
+            // Global valuta filter — verbergt accounts die deze valuta niet bevatten
+            const allCurs = Array.from(new Set(accounts.flatMap(a => a.currencies || [a.currency || 'SRD'])));
+            return (
+              <div className="flex items-center gap-1 mr-3" data-testid="kas-global-currency-filter">
+                <span className="text-[11px] text-slate-400 uppercase font-semibold mr-1">Valuta:</span>
+                <button
+                  onClick={() => setGlobalCurFilter('all')}
+                  className={`px-2 py-1 rounded-md text-[11px] font-semibold border ${globalCurFilter === 'all' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}
+                >Alle</button>
+                {allCurs.sort().map(c => (
+                  <button
+                    key={c}
+                    onClick={() => {
+                      setGlobalCurFilter(c);
+                      // Ensure active account still has this currency — if yes, filter ledger by it too
+                      const curAcc = accounts.find(a => a.account_id === activeAccountId);
+                      const curAccCurs = curAcc?.currencies || [curAcc?.currency || 'SRD'];
+                      if (curAccCurs.includes(c)) {
+                        setActiveCurrencyFilter(c);
+                      } else {
+                        // Switch to first account that has this currency
+                        const next = accounts.find(a => (a.currencies || [a.currency || 'SRD']).includes(c));
+                        if (next) {
+                          setActiveAccountId(next.account_id);
+                          setActiveCurrencyFilter(c);
+                        }
+                      }
+                    }}
+                    data-testid={`kas-global-cur-${c}`}
+                    className={`px-2 py-1 rounded-md text-[11px] font-semibold border ${globalCurFilter === c ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}
+                  >{c}</button>
+                ))}
+              </div>
+            );
+          })()}
+          {accounts
+            .filter(a => {
+              if (globalCurFilter === 'all') return true;
+              const curs = a.currencies || [a.currency || 'SRD'];
+              return curs.includes(globalCurFilter);
+            })
+            .map(a => {
             const curs = a.currencies || [a.currency || 'SRD'];
             const isActive = a.account_id === activeAccountId;
             return (

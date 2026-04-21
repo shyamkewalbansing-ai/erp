@@ -8,9 +8,14 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 function formatSRD(amount) {
   return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
+function formatMoney(amount, currency) {
+  const cur = (currency || 'SRD').toString().toUpperCase();
+  return `${cur} ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
 const TYPE_LABELS = { rent: 'Huur', partial_rent: 'Gedeeltelijke betaling', service_costs: 'Servicekosten', fines: 'Boetes' };
 
 export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuccess, companyId, hideCash = false, kioskEmployee }) {
+  const cur = (tenant?.currency || 'SRD').toUpperCase();
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const [payMethod, setPayMethod] = useState(null);
@@ -279,7 +284,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           </button>
           <div className="text-white text-center">
             <span className="text-sm sm:text-base font-semibold">Hoe wilt u betalen?</span>
-            <span className="text-xs sm:text-sm opacity-70 ml-2">{formatSRD(paymentData.amount)}</span>
+            <span className="text-xs sm:text-sm opacity-70 ml-2">{formatMoney(paymentData.amount, cur)}</span>
           </div>
           <div className="hidden sm:block w-16" />
         </div>
@@ -355,7 +360,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
           <div className="kiosk-card flex flex-col items-center text-center w-full max-w-md p-4 sm:p-6">
             <div className="bg-orange-500 rounded-lg w-full text-center p-3 sm:p-5 mb-4">
               <p className="text-xs text-orange-100 mb-0.5">Te betalen bedrag</p>
-              <p className="text-2xl sm:text-3xl font-extrabold text-white whitespace-nowrap" data-testid="confirm-amount">{formatSRD(paymentData.amount)}</p>
+              <p className="text-2xl sm:text-3xl font-extrabold text-white whitespace-nowrap" data-testid="confirm-amount">{formatMoney(paymentData.amount, cur)}</p>
               <div className="flex items-center justify-center gap-2 text-orange-100 text-xs mt-1">
                 <Banknote className="w-4 h-4" />
                 <span>{paymentData.description || TYPE_LABELS[paymentData.payment_type]}</span>
@@ -409,7 +414,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
               <div className="text-center" data-testid="mope-qr-screen">
                 <div className="bg-emerald-500 rounded-lg w-full text-center" style={{ padding: 'clamp(8px, 1.5vh, 20px)', marginBottom: '2vh' }}>
                   <QrCode className="text-white mx-auto" style={{ width: '3vh', height: '3vh', marginBottom: '0.5vh' }} />
-                  <p className="kiosk-amount-md text-white whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
+                  <p className="kiosk-amount-md text-white whitespace-nowrap">{formatMoney(paymentData.amount, cur)}</p>
                   <p className="kiosk-small text-emerald-100" style={{ marginTop: '0.3vh' }}>{tenant.name} · Appt. {tenant.apartment_number}</p>
                 </div>
                 <div className="bg-white border-2 border-emerald-200 rounded-lg inline-block" style={{ padding: 'clamp(8px, 1.5vh, 20px)', marginBottom: '2vh' }} data-testid="mope-qr-code">
@@ -472,7 +477,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
               <div className="text-center" data-testid="uni5pay-qr-screen">
                 <div className="bg-red-600 rounded-lg w-full text-center" style={{ padding: 'clamp(8px, 1.5vh, 20px)', marginBottom: '2vh' }}>
                   <Smartphone className="text-white mx-auto" style={{ width: '3vh', height: '3vh', marginBottom: '0.5vh' }} />
-                  <p className="kiosk-amount-md text-white whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
+                  <p className="kiosk-amount-md text-white whitespace-nowrap">{formatMoney(paymentData.amount, cur)}</p>
                   <p className="kiosk-small text-red-100" style={{ marginTop: '0.3vh' }}>{tenant.name} · Appt. {tenant.apartment_number}</p>
                 </div>
                 <div className="bg-white border-2 border-red-200 rounded-lg inline-block" style={{ padding: 'clamp(8px, 1.5vh, 20px)', marginBottom: '2vh' }} data-testid="uni5pay-qr-code">
@@ -534,7 +539,7 @@ export default function KioskPaymentConfirm({ tenant, paymentData, onBack, onSuc
             <div className="text-center w-full">
               <div className="bg-blue-500 rounded-lg w-full text-center" style={{ padding: 'clamp(10px, 1.8vh, 24px)', marginBottom: '2vh' }}>
                 <CreditCard className="text-white mx-auto" style={{ width: '3.5vh', height: '3.5vh', marginBottom: '0.5vh' }} />
-                <p className="kiosk-amount-md text-white whitespace-nowrap">{formatSRD(paymentData.amount)}</p>
+                <p className="kiosk-amount-md text-white whitespace-nowrap">{formatMoney(paymentData.amount, cur)}</p>
                 {sumupExchangeRate > 1 && (
                   <p className="kiosk-body text-blue-100 whitespace-nowrap" style={{ marginTop: '0.3vh' }}>
                     = {sumupCurrency} {(paymentData.amount / sumupExchangeRate).toFixed(2)}

@@ -12,6 +12,10 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
   const [fixing, setFixing] = useState(false);
   const [approving, setApproving] = useState(null);
   const [signatureTarget, setSignatureTarget] = useState(null); // payment_id to approve
+  const [currencyFilter, setCurrencyFilter] = useState('all');  // all | SRD | USD | EUR
+
+  // Small inline formatter so we don't have to prop-drill formatAmount
+  const fmtC = (amount, cur) => `${(cur || 'SRD').toUpperCase()} ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 })}`;
   const months = [];
   for (let i = 0; i < 12; i++) {
     const d = new Date();
@@ -143,6 +147,19 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
     }
   };
 
+  // Apply currency filter on top of the props-provided payments
+  const visiblePayments = currencyFilter === 'all'
+    ? payments
+    : payments.filter(p => (p.currency || 'SRD').toUpperCase() === currencyFilter);
+
+  // Group totals per currency for the top-right pill
+  const totalsByCurrency = visiblePayments.reduce((acc, p) => {
+    const c = (p.currency || 'SRD').toUpperCase();
+    acc[c] = (acc[c] || 0) + (p.amount || 0);
+    return acc;
+  }, {});
+  const totalsEntries = Object.entries(totalsByCurrency).filter(([, v]) => v > 0);
+
   return (
     <>
     <div className="bg-white rounded-xl border border-slate-200">
@@ -169,9 +186,26 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
               <option key={m.value} value={m.value}>{m.label}</option>
             ))}
         </select>
+        <select
+          value={currencyFilter}
+          onChange={(e) => setCurrencyFilter(e.target.value)}
+          data-testid="payments-currency-filter"
+          className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-500 font-semibold"
+        >
+          <option value="all">Alle valuta</option>
+          <option value="SRD">SRD</option>
+          <option value="USD">USD</option>
+          <option value="EUR">EUR</option>
+        </select>
         <div className="text-right px-3 py-1.5 bg-orange-50 rounded-lg">
-          <p className="text-[10px] text-orange-600">{payments.length} betalingen</p>
-          <p className="text-sm sm:text-lg font-bold text-orange-600">{formatSRD(totalFiltered)}</p>
+          <p className="text-[10px] text-orange-600">{visiblePayments.length} betalingen</p>
+          <div className="flex flex-wrap gap-x-2 gap-y-0.5 justify-end">
+            {totalsEntries.length === 0 ? (
+              <p className="text-sm sm:text-lg font-bold text-orange-600">{formatSRD(0)}</p>
+            ) : totalsEntries.map(([c, v]) => (
+              <p key={c} className="text-sm sm:text-lg font-bold text-orange-600">{fmtC(v, c)}</p>
+            ))}
+          </div>
         </div>
         <button
           onClick={handleFixCoveredMonths}
@@ -187,7 +221,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
 
       {/* Table - Desktop */}
       <div className="overflow-x-auto hidden md:block">
-        {payments.length === 0 ? (
+        {visiblePayments.length === 0 ? (
           <div className="p-12 text-center text-slate-400">
             Geen betalingen gevonden
           </div>
@@ -208,7 +242,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
               </tr>
             </thead>
             <tbody>
-              {payments.map(p => (
+              {visiblePayments.map(p => (
                 <tr key={p.payment_id} className="border-t border-slate-100 hover:bg-slate-50">
                   <td className="p-4 text-sm text-slate-600">
                     {new Date(p.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -238,14 +272,14 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                       </div>
                     ) : <span className="text-slate-300">—</span>}
                   </td>
-                  <td className="p-4 text-right font-bold text-slate-800">{formatSRD(p.amount)}</td>
+                  <td className="p-4 text-right font-bold text-slate-800">{fmtC(p.amount, p.currency)}</td>
                   <td className="p-4 text-right">
                     {(() => {
                       const hasStored = p.remaining_rent !== null && p.remaining_rent !== undefined;
                       const rem = hasStored
                         ? (p.remaining_rent || 0) + (p.remaining_service || 0) + (p.remaining_fines || 0) + (p.remaining_internet || 0)
                         : (tenantMap[p.tenant_name] || tenantMap[p.tenant_code] || 0);
-                      if (rem > 0) return <span className="font-bold text-red-600">{formatSRD(rem)}</span>;
+                      if (rem > 0) return <span className="font-bold text-red-600">{fmtC(rem, p.currency)}</span>;
                       return <span className="text-green-600 text-sm font-medium">Voldaan</span>;
                     })()}
                   </td>
@@ -273,9 +307,9 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
       </div>
       {/* Mobile card layout */}
       <div className="md:hidden divide-y divide-slate-100">
-        {payments.length === 0 ? (
+        {visiblePayments.length === 0 ? (
           <div className="p-8 text-center text-slate-400 text-sm">Geen betalingen gevonden</div>
-        ) : payments.map(p => {
+        ) : visiblePayments.map(p => {
           const hasStored = p.remaining_rent !== null && p.remaining_rent !== undefined;
           const rem = hasStored
             ? (p.remaining_rent || 0) + (p.remaining_service || 0) + (p.remaining_fines || 0) + (p.remaining_internet || 0)
@@ -287,7 +321,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                   <p className="font-bold text-slate-900 text-sm">{p.tenant_name}</p>
                   <p className="text-xs text-slate-400">{p.apartment_number} · {new Date(p.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                 </div>
-                <p className="font-bold text-slate-900">{formatSRD(p.amount)}</p>
+                <p className="font-bold text-slate-900">{fmtC(p.amount, p.currency)}</p>
               </div>
               <div className="flex items-center gap-2 flex-wrap mb-1.5">
                 <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-medium">
@@ -310,7 +344,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
               )}
               <div className="flex items-center justify-between pt-1.5 border-t border-slate-50">
                 <span className="text-xs">
-                  {p.status === 'pending' ? <span className="font-medium text-yellow-600">Wacht op goedkeuring</span> : rem > 0 ? <span className="font-bold text-red-600">Open: {formatSRD(rem)}</span> : <span className="text-green-600 font-medium">Voldaan</span>}
+                  {p.status === 'pending' ? <span className="font-medium text-yellow-600">Wacht op goedkeuring</span> : rem > 0 ? <span className="font-bold text-red-600">Open: {fmtC(rem, p.currency)}</span> : <span className="text-green-600 font-medium">Voldaan</span>}
                 </span>
                 <div className="flex items-center gap-0.5">
                   {p.status === 'pending' ? (
