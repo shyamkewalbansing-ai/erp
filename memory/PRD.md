@@ -1,5 +1,28 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 51 (21 april 2026) — Maandhuur-toevoegen modal: duidelijke Nederlandse maandnamen
+
+### Bug
+In `/vastgoed/admin → Huurders → Maandhuur toevoegen` was het onduidelijk welke maand werd toegevoegd:
+- Huurders-kolom toonde `t/m apr 2026` (April gefactureerd)
+- Modal toonde `Gefactureerd t/m: 2026-10` (raw YYYY-MM) en `Nieuwe maand: november 2026`
+- Gebruiker interpreteerde sprong van "maart" naar "mei" als "niet in volgorde"
+
+Root cause: de modal liet `billed_through` raw zien (zoals `2026-10`) terwijl Huurders het correct formatteerde als `okt 2026`. Dat maakte het verschil tussen "gefactureerd t/m" en "volgende te factureren" onzichtbaar.
+
+### Fix (`AddRentModal.jsx`)
+- `billedThroughLabel` nu mooi geformatteerd in Nederlandse maandnaam + jaar (`oktober 2026`, `april 2026`, ...).
+- Nieuwe regel: `Volgende te factureren maand: {next}` duidelijk gescheiden van `Gefactureerd t/m: {current}`.
+- Hulptekst toegevoegd: *"Door te bevestigen wordt {maand} aan het openstaand saldo toegevoegd."*
+- Knop zelf toont nu óók de maand: `"Huur november 2026 toevoegen"`.
+- Empty-state afgedekt: bij nieuwe huurder zonder `rent_billed_through` toont modal de huidige real-world maand.
+
+### Getest ✅ (E2E screenshot)
+- Tenant A1 (billed_through=2026-10) → modal toont *"Gefactureerd t/m oktober 2026"* + *"Volgende te factureren maand: november 2026"* + *"Huur november 2026 toevoegen"*.
+- Voor elk tenant is nu zichtbaar: currentmonth → nextmonth volgorde (okt→nov, apr→mei, mrt→apr).
+- ESLint schoon.
+
+
 ## Sprint 50 (21 april 2026) — Kiosk ↔ Beheerder navigatie fix
 
 ### Verzoek / Bug

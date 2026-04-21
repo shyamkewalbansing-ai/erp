@@ -25,13 +25,23 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
     }
   }, [type, tenant]);
 
-  // Calculate next month label
+  // Calculate next month label + pretty-format current billed-through
   const billedThrough = tenant?.rent_billed_through || '';
   let nextMonthLabel = '';
+  let billedThroughLabel = '';
   if (billedThrough) {
     const [y, m] = billedThrough.split('-');
-    const nextDate = new Date(parseInt(y), parseInt(m));
+    const year = parseInt(y);
+    const mIdx = parseInt(m) - 1;        // 1-indexed → JS 0-indexed
+    const billedDate = new Date(year, mIdx);
+    const nextDate = new Date(year, mIdx + 1);   // billed_through + 1 month
+    billedThroughLabel = billedDate.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
     nextMonthLabel = nextDate.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
+  } else {
+    // New tenant without billed_through: default to current real-world month
+    const now = new Date();
+    nextMonthLabel = now.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
+    billedThroughLabel = '';
   }
 
   const totalDebt = (tenant?.outstanding_rent || 0) + (tenant?.service_costs || 0) + (tenant?.fines || 0) + (tenant?.internet_outstanding || tenant?.internet_cost || 0);
@@ -201,16 +211,19 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
           {type === 'rent' ? (
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
               <p className="text-sm text-slate-700 mb-2">
-                Gefactureerd t/m: <span className="font-bold">{billedThrough || '-'}</span>
+                Gefactureerd t/m: <span className="font-bold">{billedThroughLabel || '-'}</span>
               </p>
               <p className="text-sm text-slate-700 mb-2">
                 Openstaand saldo: <span className="font-bold text-red-600">SRD {(tenant.outstanding_rent || 0).toLocaleString('nl-NL', {minimumFractionDigits: 2})}</span>
               </p>
               <div className="border-t border-orange-200 pt-2 mt-2">
                 <p className="text-sm text-slate-700">
-                  Nieuwe maand: <span className="font-bold text-orange-700">{nextMonthLabel}</span>
+                  Volgende te factureren maand: <span className="font-bold text-orange-700">{nextMonthLabel}</span>
                 </p>
-                <p className="text-sm text-slate-700">
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Door te bevestigen wordt <span className="font-semibold">{nextMonthLabel}</span> aan het openstaand saldo toegevoegd.
+                </p>
+                <p className="text-sm text-slate-700 mt-2">
                   Maandhuur: <span className="font-bold">SRD {(tenant.monthly_rent || 0).toLocaleString('nl-NL', {minimumFractionDigits: 2})}</span>
                 </p>
                 <p className="text-sm font-bold text-slate-900 mt-1">
