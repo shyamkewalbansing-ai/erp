@@ -6,6 +6,12 @@ export const formatSRD = (amount) => {
   return `SRD ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 })}`;
 };
 
+// Format any amount with a currency prefix. Falls back to SRD when not provided.
+export const formatAmount = (amount, currency) => {
+  const cur = (currency || 'SRD').toString().toUpperCase();
+  return `${cur} ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 })}`;
+};
+
 export const getInitials = (name) => {
   return name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '??';
 };

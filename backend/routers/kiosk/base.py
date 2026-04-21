@@ -440,12 +440,14 @@ class ApartmentCreate(BaseModel):
     number: str
     description: Optional[str] = None
     monthly_rent: float = 0
+    currency: str = "SRD"  # SRD | USD | EUR
     location_id: Optional[str] = None
 
 class ApartmentUpdate(BaseModel):
     number: Optional[str] = None
     description: Optional[str] = None
     monthly_rent: Optional[float] = None
+    currency: Optional[str] = None  # SRD | USD | EUR
     status: Optional[str] = None
     location_id: Optional[str] = None
 
@@ -464,6 +466,7 @@ class TenantCreate(BaseModel):
     email: Optional[str] = None
     telefoon: Optional[str] = None
     monthly_rent: float = 0
+    currency: Optional[str] = None  # SRD | USD | EUR - inherited from apartment if not set
     deposit_required: float = 0
     lease_start_date: Optional[str] = None  # YYYY-MM-DD
     lease_end_date: Optional[str] = None  # YYYY-MM-DD
@@ -478,6 +481,7 @@ class TenantUpdate(BaseModel):
     email: Optional[str] = None
     telefoon: Optional[str] = None
     monthly_rent: Optional[float] = None
+    currency: Optional[str] = None
     status: Optional[str] = None
     outstanding_rent: Optional[float] = None
     service_costs: Optional[float] = None

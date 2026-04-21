@@ -5,6 +5,7 @@ function ApartmentModal({ apartment, onClose, onSave, token }) {
   const [number, setNumber] = useState(apartment?.number || '');
   const [description, setDescription] = useState(apartment?.description || '');
   const [monthlyRent, setMonthlyRent] = useState(apartment?.monthly_rent || 0);
+  const [currency, setCurrency] = useState((apartment?.currency || 'SRD').toUpperCase());
   const [locationId, setLocationId] = useState(apartment?.location_id || '');
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,7 +21,13 @@ function ApartmentModal({ apartment, onClose, onSave, token }) {
     setLoading(true);
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const data = { number, description, monthly_rent: parseFloat(monthlyRent), location_id: locationId || null };
+      const data = {
+        number,
+        description,
+        monthly_rent: parseFloat(monthlyRent),
+        currency,
+        location_id: locationId || null,
+      };
       if (apartment) {
         await axios.put(`${API}/admin/apartments/${apartment.apartment_id}`, data, { headers });
       } else {
@@ -65,9 +72,31 @@ function ApartmentModal({ apartment, onClose, onSave, token }) {
               className="w-full px-4 py-3 border rounded-xl" placeholder="2 slaapkamers" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Maandhuur (SRD)</label>
-            <input type="number" value={monthlyRent} onChange={(e) => setMonthlyRent(e.target.value)}
-              className="w-full px-4 py-3 border rounded-xl" />
+            <label className="block text-sm font-medium mb-1">Maandhuur</label>
+            <div className="flex gap-2">
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                data-testid="apt-currency-select"
+                className="w-28 px-3 py-3 border rounded-xl bg-white font-semibold text-slate-700"
+              >
+                <option value="SRD">SRD</option>
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+              </select>
+              <input
+                type="number"
+                step="0.01"
+                value={monthlyRent}
+                onChange={(e) => setMonthlyRent(e.target.value)}
+                data-testid="apt-monthly-rent-input"
+                className="flex-1 px-4 py-3 border rounded-xl"
+                placeholder="0.00"
+              />
+            </div>
+            <p className="text-xs text-slate-400 mt-1">
+              Huurders gekoppeld aan dit appartement administreren hun huur in <span className="font-semibold">{currency}</span>.
+            </p>
           </div>
           <div className="flex gap-3">
             <button type="button" onClick={onClose} className="flex-1 py-3 border rounded-xl">Annuleren</button>

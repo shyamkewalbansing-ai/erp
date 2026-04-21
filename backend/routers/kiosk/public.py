@@ -333,6 +333,7 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
         "tenant_code": tenant.get("tenant_code", ""),
         "apartment_number": tenant.get("apartment_number", ""),
         "amount": data.amount,
+        "currency": (tenant.get("currency") or "SRD").upper(),
         "payment_type": data.payment_type,
         "payment_method": data.payment_method,
         "description": data.description,

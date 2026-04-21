@@ -208,6 +208,7 @@ async def list_apartments(company: dict = Depends(get_current_company)):
         "number": apt["number"],
         "description": apt.get("description", ""),
         "monthly_rent": apt.get("monthly_rent", 0),
+        "currency": (apt.get("currency") or "SRD").upper(),
         "status": apt.get("status", "available"),
         "sort_order": apt.get("sort_order", 999),
         "location_id": apt.get("location_id"),
@@ -249,6 +250,7 @@ async def create_apartment(data: ApartmentCreate, company: dict = Depends(get_cu
         "number": data.number.upper(),
         "description": data.description,
         "monthly_rent": data.monthly_rent,
+        "currency": (data.currency or "SRD").upper(),
         "status": "available",
         "location_id": data.location_id,
         "location_name": location_name,
@@ -270,6 +272,9 @@ async def update_apartment(apartment_id: str, data: ApartmentUpdate, company: di
         raise HTTPException(status_code=404, detail="Appartement niet gevonden")
     
     update_data = {k: v for k, v in data.dict().items() if v is not None}
+    # Normalize currency
+    if "currency" in update_data:
+        update_data["currency"] = str(update_data["currency"]).upper()
     # Resolve location_name when location_id changes
     if "location_id" in update_data:
         if update_data["location_id"]:
@@ -290,12 +295,19 @@ async def update_apartment(apartment_id: str, data: ApartmentUpdate, company: di
             {"apartment_id": apartment_id, "company_id": company["company_id"], "status": "active"},
             {"$set": {"monthly_rent": update_data["monthly_rent"], "updated_at": datetime.now(timezone.utc)}}
         )
-        
+    # Sync currency to linked tenants if currency changed
+    if "currency" in update_data:
+        await db.kiosk_tenants.update_many(
+            {"apartment_id": apartment_id, "company_id": company["company_id"], "status": "active"},
+            {"$set": {"currency": update_data["currency"], "updated_at": datetime.now(timezone.utc)}}
+        )
+    if "monthly_rent" in update_data:
         # === AUTO WHATSAPP: Huurprijs gewijzigd notificatie ===
         try:
             comp_name = company.get("stamp_company_name") or company.get("name", "")
             apt_nr = apt.get("number", apartment_id)
             new_rent = update_data["monthly_rent"]
+            cur = update_data.get("currency") or apt.get("currency", "SRD")
             affected_tenants = await db.kiosk_tenants.find(
                 {"apartment_id": apartment_id, "company_id": company["company_id"], "status": "active"}
             ).to_list(100)
@@ -304,7 +316,7 @@ async def update_apartment(apartment_id: str, data: ApartmentUpdate, company: di
                 if t_phone:
                     wa_rent_change_msg = (f"Beste {at['name']},\n\n"
                                           f"De maandhuur voor appartement {apt_nr} is gewijzigd.\n"
-                                          f"Nieuwe huurprijs: SRD {new_rent:,.2f}\n\n"
+                                          f"Nieuwe huurprijs: {cur} {new_rent:,.2f}\n\n"
                                           f"Met vriendelijke groet,\n{comp_name}")
                     await _send_message_auto(
                         company["company_id"], t_phone, wa_rent_change_msg,
@@ -587,6 +599,7 @@ async def list_tenants(company: dict = Depends(get_current_company)):
             "telefoon": t.get("telefoon") or t.get("phone"),
             "phone": t.get("phone") or t.get("telefoon"),
             "monthly_rent": monthly_rent,
+            "currency": (t.get("currency") or "SRD").upper(),
             "outstanding_rent": outstanding,
             "service_costs": t.get("service_costs", 0),
             "fines": current_fines,
@@ -684,6 +697,9 @@ async def create_tenant(data: TenantCreate, company: dict = Depends(get_current_
         count = await db.kiosk_tenants.count_documents({"company_id": company["company_id"]})
         tenant_code = f"H{str(count + 1).zfill(4)}"
     
+    # Inherit currency from apartment (tenant always uses apartment's currency)
+    tenant_currency = (data.currency or apt.get("currency") or "SRD").upper()
+
     tenant = {
         "tenant_id": tenant_id,
         "company_id": company["company_id"],
@@ -695,6 +711,7 @@ async def create_tenant(data: TenantCreate, company: dict = Depends(get_current_
         "telefoon": data.telefoon,
         "phone": data.telefoon,
         "monthly_rent": data.monthly_rent,
+        "currency": tenant_currency,
         "outstanding_rent": data.monthly_rent,  # Start with first month rent
         "service_costs": 0,
         "fines": 0,
@@ -753,12 +770,18 @@ async def update_tenant(tenant_id: str, data: TenantUpdate, company: dict = Depe
     
     update_data = {k: v for k, v in data.dict().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc)
+    # Normalize currency
+    if "currency" in update_data:
+        update_data["currency"] = str(update_data["currency"]).upper()
     
     # If apartment changed, update apartment number and statuses
     if "apartment_id" in update_data:
         apt = await db.kiosk_apartments.find_one({"apartment_id": update_data["apartment_id"]})
         if apt:
             update_data["apartment_number"] = apt["number"]
+            # Auto-inherit currency from new apartment if not explicitly overridden
+            if "currency" not in update_data and apt.get("currency"):
+                update_data["currency"] = apt["currency"]
     
     # If tenant is being deactivated, free up the apartment
     if update_data.get("status") == "inactive" and tenant.get("apartment_id"):
@@ -983,6 +1006,7 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
     tenant_code = payment.get("tenant_code", "")
     apartment_number = payment.get("apartment_number", "")
     amount = payment.get("amount", 0)
+    currency = str(payment.get("currency") or "SRD").upper()
     payment_type = payment.get("payment_type", "")
     payment_method = payment.get("payment_method", "cash")
     description = payment.get("description", "")
@@ -1532,7 +1556,7 @@ function verifyHash(){{
   <tr><td>Type betaling</td><td>{type_label}</td></tr>
   {rent_month_row}
   <tr><td>Betalingswijze</td><td>{method_label}</td></tr>
-  <tr class="amount-row"><td>Ontvangen bedrag</td><td>SRD {amount:,.2f}</td></tr>
+  <tr class="amount-row"><td>Ontvangen bedrag</td><td>{currency} {amount:,.2f}</td></tr>
 </table>
 
 {remaining_html}
@@ -1712,6 +1736,7 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
         "tenant_code": tenant.get("tenant_code", ""),
         "apartment_number": tenant.get("apartment_number", ""),
         "amount": data.amount,
+        "currency": (tenant.get("currency") or "SRD").upper(),
         "payment_type": data.payment_type,
         "payment_method": data.payment_method or "cash",
         "description": data.description or "Handmatige betaling",
@@ -1757,20 +1782,21 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
             comp_name = company.get("stamp_company_name") or company.get("name", "")
             type_labels = {"rent": "Huurbetaling", "partial_rent": "Gedeeltelijke betaling", "service_costs": "Servicekosten", "fines": "Boetes", "deposit": "Borg", "internet": "Internet"}
             type_label = type_labels.get(data.payment_type, data.payment_type)
+            cur_label = (tenant.get("currency") or "SRD").upper()
             covered_str = ", ".join(covered_months)
             total_remaining = payment["remaining_rent"] + payment["remaining_service"] + payment["remaining_fines"] + payment["remaining_internet"]
             if total_remaining <= 0:
                 wa_msg = (f"Beste {tenant['name']},\n\n"
-                          f"Uw betaling van SRD {data.amount:,.2f} ({type_label}) is ontvangen.\n"
+                          f"Uw betaling van {cur_label} {data.amount:,.2f} ({type_label}) is ontvangen.\n"
                           f"Kwitantie: {kwitantie_nummer}\n"
                           f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
                           f"Uw saldo is nu VOLLEDIG VOLDAAN.\n\nBedankt voor uw betaling!\n{comp_name}")
             else:
                 wa_msg = (f"Beste {tenant['name']},\n\n"
-                          f"Uw betaling van SRD {data.amount:,.2f} ({type_label}) is ontvangen.\n"
+                          f"Uw betaling van {cur_label} {data.amount:,.2f} ({type_label}) is ontvangen.\n"
                           f"Kwitantie: {kwitantie_nummer}\n"
                           f"{('Periode: ' + covered_str + chr(10)) if covered_str else ''}\n"
-                          f"Resterend saldo: SRD {total_remaining:,.2f}\n\nMet vriendelijke groet,\n{comp_name}")
+                          f"Resterend saldo: {cur_label} {total_remaining:,.2f}\n\nMet vriendelijke groet,\n{comp_name}")
             await _send_message_auto(company_id, tenant_phone, wa_msg, data.tenant_id, tenant["name"], "payment_confirmation")
     except Exception:
         pass

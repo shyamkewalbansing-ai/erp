@@ -1,5 +1,46 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 53 (21 april 2026) — Multi-valuta per appartement (SRD / USD / EUR)
+
+### Verzoek
+Bij `/vastgoed → Appt. → Nieuw Appartement` moet naast SRD ook USD en EUR gekozen kunnen worden, en die valuta moet zichtbaar zijn bij de huurder.
+
+### User choices
+- (1) Valuta's: **SRD, USD, EUR**
+- (2) Gedrag: appartement heeft **ÉÉN** valuta, alle huurderberekeningen in die valuta
+- (3) Toon alleen de valuta naast het bedrag/appartement-nummer
+- (4) Huurder betaalt in exact de appartement-valuta
+
+### Implementatie
+**Backend (`base.py`, `admin.py`, `public.py`):**
+- `ApartmentCreate`/`ApartmentUpdate`: nieuw veld `currency` (SRD|USD|EUR), default SRD
+- `TenantCreate`/`TenantUpdate`: nieuw veld `currency`, auto-geërfd van appartement als niet gezet
+- `/admin/apartments` POST/PUT normaliseert `currency` naar uppercase; bij update synct naar alle linked actieve tenants
+- `/admin/tenants` POST/PUT erft apartment-currency wanneer `apartment_id` verandert en geen expliciete override
+- `create_tenant`: `currency = data.currency or apt.currency or 'SRD'`
+- `kiosk_payments` document krijgt `currency` veld bij insert (manual én public kiosk payments) — server gebruikt `tenant.currency` als bron
+- Kwitantie HTML/PDF: amount regel toont nu `{currency} {amount}` i.p.v. hardcoded `SRD`
+- WhatsApp bevestigingsberichten gebruiken nu `tenant.currency`
+- `list_apartments` + `list_tenants` projections leveren `currency` mee naar de frontend
+
+**Frontend:**
+- `utils.js`: nieuwe helper `formatAmount(amount, currency)` naast bestaande `formatSRD`
+- `ApartmentModal.jsx`: valuta-dropdown (SRD/USD/EUR) naast bedrag; hulptekst *"Huurders gekoppeld aan dit appartement administreren hun huur in {currency}"*
+- `ApartmentsTab.jsx`: lijst toont bedrag met juiste prefix (`SRD 5.000,00` / `USD 500,00` / `EUR 400,00`). Totale maandinkomen nu gegroepeerd per valuta (i.p.v. onzinvolle gemengde som)
+- `TenantsTab.jsx`: huurdertabel toont kleine badge (`SRD`/`USD`/`EUR`) naast appartement-nummer; alle kolombedragen met juiste currency-prefix. Zowel desktop-tabel als mobiele card view
+- `AddRentModal.jsx`: kopregel toont valuta-badge, alle bedragen via `fmt()`, input-labels `Bedrag ({cur})`, knop `Huur {maand} toevoegen` (ongewijzigd, bedragen nu in juiste valuta)
+
+### Tested ✅
+- Curl: `POST /admin/apartments {number:"TESTUSD",monthly_rent:500,currency:"USD"}` → 201 + terug in list met `currency: "USD"`
+- Curl: tenants-list levert `currency` per huurder (SRD voor bestaande, overgenomen van apartement bij nieuwe)
+- Playwright screenshot:
+  - `Appt. > Nieuw Appartement` toont SRD/USD/EUR dropdown + hulptekst
+  - `Appt.` lijst toont `USD 500,00` naast `SRD 5.000,00` in top-stat (per valuta gegroepeerd)
+  - `Huurders` tabel toont `[SRD]` badge naast appartement A1, alle bedragen `SRD 15.000,00` etc
+  - `AddRent modal` toont `Bharat Kewalbansing - Appt. A1 [SRD]` + `SRD 15.000,00` bedragen
+- ESLint: 4 components schoon
+
+
 ## Sprint 52 (21 april 2026) — "Reset naar huidige maand" voor huurders
 
 ### Verzoek

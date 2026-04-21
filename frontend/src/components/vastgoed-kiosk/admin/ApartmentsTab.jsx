@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Pencil, Trash2, Search, GripVertical } from 'lucide-react';
-import { API, axios } from './utils';
+import { API, axios, formatAmount } from './utils';
 
 function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete, token, onRefresh }) {
   const [aptSearch, setAptSearch] = useState('');
@@ -33,7 +33,13 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete
     } catch (err) { console.error(err); }
   };
 
-  const totalIncome = filteredApartments.reduce((sum, apt) => sum + (apt.monthly_rent || 0), 0);
+  // Group income per currency (since appartementen verschillende valuta's kunnen hebben)
+  const incomeByCurrency = filteredApartments.reduce((acc, apt) => {
+    const cur = (apt.currency || 'SRD').toUpperCase();
+    acc[cur] = (acc[cur] || 0) + (apt.monthly_rent || 0);
+    return acc;
+  }, {});
+  const incomeEntries = Object.entries(incomeByCurrency).filter(([, v]) => v > 0);
 
   return (
     <div className="bg-white rounded-xl border border-slate-200">
@@ -51,7 +57,13 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete
         </div>
         <div className="text-right px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg" data-testid="total-income">
           <p className="text-[10px] text-green-600">Totale maandinkomen</p>
-          <p className="text-sm sm:text-lg font-bold text-green-700">{formatSRD(totalIncome)}</p>
+          <div className="flex flex-wrap gap-x-2 gap-y-0.5 justify-end">
+            {incomeEntries.length === 0 ? (
+              <p className="text-sm sm:text-lg font-bold text-green-700">SRD 0,00</p>
+            ) : incomeEntries.map(([cur, total]) => (
+              <p key={cur} className="text-sm sm:text-lg font-bold text-green-700">{formatAmount(total, cur)}</p>
+            ))}
+          </div>
         </div>
         <span className="text-xs text-slate-400 whitespace-nowrap">{filteredApartments.length} appt.</span>
         <button
@@ -102,7 +114,7 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete
                   <td className="p-4 text-slate-500">{apt.location_name || <span className="text-slate-300">—</span>}</td>
                   <td className="p-4 text-slate-500">{apt.description || '-'}</td>
                   <td className="p-4">{tenant?.name || <span className="text-slate-400">-</span>}</td>
-                  <td className="p-4">{formatSRD(apt.monthly_rent)}</td>
+                  <td className="p-4">{formatAmount(apt.monthly_rent, apt.currency)}</td>
                   <td className="p-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
                       apt.status === 'occupied' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'
@@ -145,7 +157,7 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete
                 </div>
                 {apt.location_name && <p className="text-[11px] text-violet-500 font-semibold truncate">{apt.location_name}</p>}
                 {apt.description && <p className="text-[11px] text-slate-400 truncate">{apt.description}</p>}
-                <p className="text-sm font-bold text-orange-600">{formatSRD(apt.monthly_rent)}</p>
+                <p className="text-sm font-bold text-orange-600">{formatAmount(apt.monthly_rent, apt.currency)}</p>
               </div>
               <div className="flex items-center gap-0.5 flex-shrink-0">
                 <button onClick={() => onEdit(apt)} className="text-slate-400 hover:text-orange-500 p-2"><Pencil className="w-4 h-4" /></button>

@@ -3,7 +3,7 @@ import {
   Users, CreditCard, Plus, Pencil, Trash2, DollarSign, Search, 
   FileText, Mail, Eye, XCircle, CheckCircle
 } from 'lucide-react';
-import { API, axios, formatSRD } from './utils';
+import { API, axios, formatSRD, formatAmount } from './utils';
 import LeaseModal from './LeaseModal';
 
 function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAddTenant, onEditTenant, onAddRent, onRefresh, token }) {
@@ -132,6 +132,8 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
               </thead>
               <tbody>
                 {activeTenants.map(tenant => {
+                  const cur = (tenant.currency || 'SRD').toUpperCase();
+                  const fmt = (v) => formatAmount(v, cur);
                   const rent = tenant.outstanding_rent || 0;
                   const service = tenant.service_costs || 0;
                   const fines = tenant.fines || 0;
@@ -164,7 +166,12 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                           </div>
                         </div>
                       </td>
-                      <td className="p-4 text-slate-600">{tenant.apartment_number}</td>
+                      <td className="p-4 text-slate-600">
+                        <div className="flex items-center gap-1.5">
+                          <span>{tenant.apartment_number}</span>
+                          <span className="text-[10px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded" data-testid={`tenant-currency-${tenant.tenant_id}`}>{cur}</span>
+                        </div>
+                      </td>
                       <td className="p-4">
                         <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-semibold">
                           t/m {billedLabel}
@@ -178,20 +185,20 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                         )}
                       </td>
                       <td className={`p-4 text-right font-bold whitespace-nowrap ${rent > 0 ? 'text-red-600' : 'text-slate-800'}`}>
-                        {formatSRD(rent)}
+                        {fmt(rent)}
                       </td>
                       <td className={`p-4 text-right font-bold whitespace-nowrap ${service > 0 ? 'text-orange-600' : 'text-slate-800'}`}>
-                        {formatSRD(service)}
+                        {fmt(service)}
                       </td>
                       <td className={`p-4 text-right font-bold whitespace-nowrap ${fines > 0 ? 'text-red-600' : 'text-slate-800'}`}>
-                        {formatSRD(fines)}
+                        {fmt(fines)}
                       </td>
                       <td className={`p-4 text-right font-bold whitespace-nowrap ${internet > 0 ? 'text-slate-900' : 'text-slate-800'}`}>
-                        {internet > 0 ? formatSRD(internet) : '-'}
+                        {internet > 0 ? fmt(internet) : '-'}
                         {tenant.internet_plan_name && <p className="text-[10px] text-slate-400 mt-0.5">{tenant.internet_plan_name}</p>}
                       </td>
                       <td className={`p-4 text-right font-black whitespace-nowrap ${total > 0 ? 'text-orange-600' : 'text-slate-800'}`}>
-                        {formatSRD(total)}
+                        {fmt(total)}
                       </td>
                       <td className="p-4">
                         {hasArrears ? (
@@ -244,6 +251,8 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
           {/* Mobile card layout */}
           <div className="md:hidden divide-y divide-slate-100">
             {activeTenants.map(tenant => {
+              const cur = (tenant.currency || 'SRD').toUpperCase();
+              const fmt = (v) => formatAmount(v, cur);
               const rent = tenant.outstanding_rent || 0;
               const service = tenant.service_costs || 0;
               const fines = tenant.fines || 0;
@@ -267,7 +276,10 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                       </div>
                       <div>
                         <p className="font-bold text-slate-900 text-sm">{tenant.name}</p>
-                        <p className="text-xs text-slate-400">{tenant.apartment_number} · {tenant.tenant_code}</p>
+                        <p className="text-xs text-slate-400">
+                          {tenant.apartment_number} · {tenant.tenant_code}
+                          <span className="ml-1.5 text-[10px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{cur}</span>
+                        </p>
                       </div>
                     </div>
                     {hasArrears ? (
@@ -282,15 +294,15 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                     <p className="text-[11px] text-red-500 font-medium mb-2">Achterstand: {overdueMonths.join(', ')}</p>
                   )}
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs mb-2">
-                    <div className="flex justify-between"><span className="text-slate-400">Huur</span><span className={rent > 0 ? 'font-bold text-red-600' : 'text-slate-600'}>{formatSRD(rent)}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Service</span><span className={service > 0 ? 'font-bold text-orange-600' : 'text-slate-600'}>{formatSRD(service)}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Boetes</span><span className={fines > 0 ? 'font-bold text-red-600' : 'text-slate-600'}>{formatSRD(fines)}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Internet</span><span className="text-slate-600">{internet > 0 ? formatSRD(internet) : '-'}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Huur</span><span className={rent > 0 ? 'font-bold text-red-600' : 'text-slate-600'}>{fmt(rent)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Service</span><span className={service > 0 ? 'font-bold text-orange-600' : 'text-slate-600'}>{fmt(service)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Boetes</span><span className={fines > 0 ? 'font-bold text-red-600' : 'text-slate-600'}>{fmt(fines)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Internet</span><span className="text-slate-600">{internet > 0 ? fmt(internet) : '-'}</span></div>
                   </div>
                   <div className="flex items-center justify-between pt-2 border-t border-slate-50">
                     <div>
                       <span className="text-xs text-slate-400">Totaal: </span>
-                      <span className={`text-sm font-black ${total > 0 ? 'text-orange-600' : 'text-slate-800'}`}>{formatSRD(total)}</span>
+                      <span className={`text-sm font-black ${total > 0 ? 'text-orange-600' : 'text-slate-800'}`}>{fmt(total)}</span>
                       {billedLabel && <span className="text-[10px] text-slate-400 ml-2">t/m {billedLabel}</span>}
                     </div>
                     <div className="flex items-center gap-0.5">
