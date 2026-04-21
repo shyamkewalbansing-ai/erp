@@ -1145,8 +1145,46 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
     doc_hash_full = _h
 
     verified_banner_html = ""
+    hash_verify_html = ""
     if public_view:
         verified_banner_html = '<div class="verified-banner">&#10003; Geverifieerd origineel &middot; Authentiek document</div>'
+        # Interactive hash-compare widget (only shows in HTML public view, not in PDF)
+        hash_verify_html = f'''
+<div class="hash-verify no-print" data-testid="hash-verify-widget">
+  <div class="hv-title">Document-hash controleren</div>
+  <p class="hv-help">Voer de SHA-256 hash in die op uw papieren/PDF-kwitantie staat (onderaan). Deze pagina vergelijkt met de authentieke hash op de server.</p>
+  <div class="hv-row">
+    <input id="hvInput" type="text" placeholder="Plak hier de hash van uw kopie..." spellcheck="false" autocomplete="off" data-testid="hash-verify-input" />
+    <button onclick="verifyHash()" data-testid="hash-verify-btn">Vergelijk</button>
+  </div>
+  <div id="hvResult" class="hv-result" data-testid="hash-verify-result"></div>
+  <div class="hv-authentic">Authentieke hash: <code id="hvAuth">{doc_hash_full}</code>
+    <button class="hv-copy" onclick="(function(){{navigator.clipboard&&navigator.clipboard.writeText('{doc_hash_full}');document.getElementById('hvCopiedMsg').style.display='inline';setTimeout(function(){{document.getElementById('hvCopiedMsg').style.display='none';}},1500);}})()" data-testid="hash-copy-btn">Kopieer</button>
+    <span id="hvCopiedMsg" style="display:none;color:#15803d;font-size:7pt;margin-left:6px;">Gekopieerd!</span>
+  </div>
+</div>
+<script>
+function verifyHash(){{
+  var expected = "{doc_hash_full}".toLowerCase();
+  var input = (document.getElementById('hvInput').value || '').trim().toLowerCase().replace(/\\s+/g,'');
+  var out = document.getElementById('hvResult');
+  if (!input){{
+    out.className = 'hv-result hv-warn';
+    out.innerHTML = 'Voer eerst een hash in om te vergelijken.';
+    return;
+  }}
+  if (input === expected){{
+    out.className = 'hv-result hv-ok';
+    out.innerHTML = '&#10003; Gematcht &mdash; document is AUTHENTIEK en ongewijzigd.';
+  }} else if (expected.indexOf(input) === 0 || input.length < 16){{
+    out.className = 'hv-result hv-warn';
+    out.innerHTML = 'Hash te kort of onvolledig. Voer de volledige 64-teken SHA-256 hash in.';
+  }} else {{
+    out.className = 'hv-result hv-bad';
+    out.innerHTML = '&#10007; Mismatch &mdash; dit document wijkt af van de serverversie. Mogelijk VERVALST.';
+  }}
+}}
+</script>'''
 
     # PDF button (only in non-public admin view, not noprint preview)
     pdf_download_url = ""
@@ -1181,13 +1219,13 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
 <meta charset="UTF-8">
 <title>Kwitantie {kwitantie_nummer}</title>
 <style>
-  @page {{ size: A5 portrait; margin: 0 !important; }}
+  @page {{ size: A4 portrait; margin: 0 !important; }}
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-  html, body {{ width: 148mm; }}
+  html, body {{ width: 210mm; }}
   body {{
     font-family: 'Georgia', 'Times New Roman', serif;
-    font-size: 8.5pt;
-    line-height: 1.25;
+    font-size: 9pt;
+    line-height: 1.3;
     color: #000;
     background: #fff;
     position: relative;
@@ -1196,22 +1234,21 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
   body::before {{
     content: "ORIGINEEL";
     position: fixed;
-    top: 38%;
+    top: 30%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(-30deg);
-    font-size: 64pt;
+    font-size: 90pt;
     font-weight: bold;
     color: rgba(0, 0, 0, 0.05);
-    letter-spacing: 8px;
+    letter-spacing: 12px;
     z-index: 0;
     pointer-events: none;
     white-space: nowrap;
   }}
   .page {{
-    width: 148mm;
-    min-height: 210mm;
+    width: 210mm;
     margin: 0 auto;
-    padding: 8mm 10mm;
+    padding: 10mm 14mm 8mm;
     page-break-inside: avoid;
     position: relative;
     z-index: 1;
@@ -1238,22 +1275,22 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 8px;
-    margin: 6px 0 4px;
+    gap: 12px;
+    margin: 8px 0 6px;
   }}
   .receipt-title .title-wrap {{
     flex: 1;
     text-align: center;
   }}
   .receipt-title h1 {{
-    font-size: 12pt;
+    font-size: 15pt;
     color: #000;
-    letter-spacing: 1.5px;
+    letter-spacing: 2px;
     text-transform: uppercase;
   }}
   .receipt-title .qr-inline {{
-    width: 58px;
-    height: 58px;
+    width: 78px;
+    height: 78px;
     flex-shrink: 0;
   }}
   .receipt-title .qr-inline img {{
@@ -1262,21 +1299,21 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
     display: block;
   }}
   .receipt-number {{
-    font-size: 8pt;
+    font-size: 9pt;
     color: #000;
     font-weight: bold;
     font-family: 'Courier New', monospace;
-    margin-top: 1px;
+    margin-top: 2px;
   }}
   .details-table {{
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 4px;
+    margin-bottom: 6px;
   }}
   .details-table td {{
-    padding: 2.5px 6px;
+    padding: 3px 8px;
     border-bottom: 1px solid #e5e7eb;
-    font-size: 8.5pt;
+    font-size: 9pt;
     color: #000;
   }}
   .details-table tr:last-child td {{
@@ -1284,8 +1321,8 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
   }}
   .details-table td:first-child {{
     color: #000;
-    width: 38%;
-    font-size: 7.5pt;
+    width: 30%;
+    font-size: 8pt;
     text-transform: uppercase;
     letter-spacing: 0.3px;
   }}
@@ -1299,15 +1336,15 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
     border-bottom: 1.5px solid #000 !important;
   }}
   .amount-row td {{
-    padding: 5px 6px;
-    font-size: 10.5pt !important;
+    padding: 6px 8px;
+    font-size: 12pt !important;
     font-weight: bold !important;
     color: #000 !important;
   }}
   .amount-row td:last-child {{
     color: #000 !important;
     text-align: right;
-    font-size: 11.5pt !important;
+    font-size: 13pt !important;
   }}
   .stamp-section {{
     display: flex;
@@ -1365,6 +1402,38 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
     text-align: center;
     word-break: break-all;
   }}
+  /* Public hash-verify widget (HTML only, never printed) */
+  .hash-verify {{
+    margin: 14px auto 0;
+    max-width: 480px;
+    padding: 12px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background: #f9fafb;
+    font-family: system-ui, -apple-system, sans-serif;
+  }}
+  .hash-verify .hv-title {{ font-size: 10pt; font-weight: bold; color: #111; margin-bottom: 4px; }}
+  .hash-verify .hv-help {{ font-size: 8pt; color: #555; margin-bottom: 8px; line-height: 1.4; }}
+  .hash-verify .hv-row {{ display: flex; gap: 6px; }}
+  .hash-verify input {{
+    flex: 1; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 4px;
+    font-family: 'Courier New', monospace; font-size: 9pt; background: #fff; min-width: 0;
+  }}
+  .hash-verify input:focus {{ outline: 2px solid #15803d; outline-offset: -1px; }}
+  .hash-verify button {{
+    background: #15803d; color: #fff; border: none; padding: 7px 16px;
+    font-size: 9pt; font-weight: bold; border-radius: 4px; cursor: pointer;
+  }}
+  .hash-verify button:hover {{ background: #166534; }}
+  .hash-verify .hv-result {{ margin-top: 8px; font-size: 9pt; font-weight: bold; min-height: 0; }}
+  .hash-verify .hv-result.hv-ok {{ color: #15803d; }}
+  .hash-verify .hv-result.hv-bad {{ color: #b91c1c; }}
+  .hash-verify .hv-result.hv-warn {{ color: #a16207; }}
+  .hash-verify .hv-authentic {{ margin-top: 10px; font-size: 7pt; color: #555; word-break: break-all; line-height: 1.4; }}
+  .hash-verify .hv-authentic code {{ color: #111; background: #fff; padding: 1px 4px; border-radius: 3px; border: 1px solid #e5e7eb; }}
+  .hash-verify .hv-copy {{ background: #64748b; color: #fff; border: none; padding: 2px 8px; font-size: 7pt; border-radius: 3px; margin-left: 4px; cursor: pointer; font-weight: normal; }}
+  .hash-verify .hv-copy:hover {{ background: #475569; }}
+  @media print {{ .hash-verify, .no-print {{ display: none !important; }} }}
   .footer {{
     margin-top: 5px;
     padding-top: 3px;
@@ -1429,8 +1498,8 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
   @media print {{
     .print-bar {{ display: none !important; }}
     body {{ padding: 0; margin: 0; }}
-    .page {{ padding: 6mm 8mm; margin: 0; }}
-    @page {{ size: A5 portrait; margin: 0 !important; }}
+    .page {{ padding: 8mm 14mm 6mm; margin: 0; }}
+    @page {{ size: A4 portrait; margin: 0 !important; }}
   }}
 </style>
 </head>
@@ -1500,6 +1569,8 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
 <div class="footer">
   {stamp_name} &bull; {stamp_address} &bull; {kwitantie_nummer}
 </div>
+
+{hash_verify_html}
 
 </div>
 </body>

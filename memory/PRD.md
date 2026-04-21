@@ -1,5 +1,31 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 48 (21 april 2026) — A4 volle breedte + Hash-vergelijk widget
+
+### Verzoek:
+1. "Breden moet hele A4 kunnen pakken" — kwitantie mag de volle A4 breedte gebruiken. Lengte/compactheid is nu goed.
+2. "Vergelijk document-hash" vakje toevoegen op de publieke kwitantie-pagina.
+
+### Implementatie
+**Backend (`admin.py`, `base.py`):**
+- `@page` terug van A5 → **A4 portret (210×297mm)** voor zowel huur-kwitantie als shared template (freelancer/loonstrook).
+- Fonts licht vergroot (9pt body, 15pt H1, 12pt amount, 78px QR) om A4 ademruimte te benutten.
+- Watermerk `font-size: 64pt` → **90pt** voor A4 schaal.
+- Content blijft compact verticaal (vult slechts ~halve pagina, geen verspilling aan papier).
+- `.hash-verify` widget CSS toegevoegd: input + "Vergelijk" knop + "Kopieer" knop + authentieke hash in code-blok.
+- JS `verifyHash()` functie: case-insensitive whitespace-resistente SHA-256 vergelijking. 3 uitkomsten:
+  - ✓ **Gematcht — document is AUTHENTIEK en ongewijzigd** (groen)
+  - ✗ **Mismatch — dit document wijkt af van de serverversie. Mogelijk VERVALST** (rood)
+  - ⚠ Hash te kort / onvolledig (oranje waarschuwing)
+- `@media print` verbergt het widget (niet zichtbaar op print).
+
+### Tested ✅
+- A4 PDF: 210×297mm exact, encrypted, modify/extract blocked (3 types: huur, freelancer, loonstrook)
+- Publieke HTML view: visueel bevestigd — volle breedte, watermerk, QR rechtsboven, "Geverifieerd origineel" banner, authentieke hash getoond, "Document-hash controleren" widget met input + Vergelijk + Kopieer knoppen
+- JS `verifyHash()`: AUTHENTIEK + VERVALST branches aanwezig, toLowerCase normalisatie werkt
+- Hash van authentieke kwitantie zichtbaar en copy-pasteable via Kopieer-knop
+
+
 ## Sprint 47 (21 april 2026) — Beveiligde PDF-kwitanties + A5 compact
 
 ### Verzoek:

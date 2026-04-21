@@ -705,41 +705,41 @@ def _build_a4_receipt_html(
 <meta charset="UTF-8">
 <title>{esc(doc_type)} {esc(doc_number)}</title>
 <style>
-  @page {{ size: A5 portrait; margin: 0 !important; }}
+  @page {{ size: A4 portrait; margin: 0 !important; }}
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-  html, body {{ width: 148mm; }}
-  body {{ font-family: 'Georgia', 'Times New Roman', serif; font-size: 8.5pt; line-height: 1.25; color: #000; background: #fff; position: relative; }}
-  body::before {{ content: "ORIGINEEL"; position: fixed; top: 38%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 60pt; font-weight: bold; color: rgba(0,0,0,0.05); letter-spacing: 8px; z-index: 0; pointer-events: none; white-space: nowrap; }}
-  .page {{ width: 148mm; min-height: 210mm; margin: 0 auto; padding: 8mm 10mm; background: #fff; position: relative; z-index: 1; }}
-  .header {{ border-bottom: 1.5px solid #000; padding-bottom: 5px; margin-bottom: 6px; text-align: center; }}
-  .company-name {{ font-size: 11pt; font-weight: bold; color: #000; text-transform: uppercase; letter-spacing: 0.4px; }}
-  .company-info {{ font-size: 6.5pt; color: #000; margin-top: 1px; line-height: 1.25; }}
-  .doc-title {{ text-align: center; margin: 6px 0 4px; }}
-  .doc-title h1 {{ font-size: 12pt; color: #000; letter-spacing: 1.5px; text-transform: uppercase; }}
-  .doc-number {{ font-size: 8pt; color: #000; font-weight: bold; font-family: 'Courier New', monospace; margin-top: 1px; }}
-  .details-table {{ width: 100%; border-collapse: collapse; margin-bottom: 4px; }}
-  .details-table td {{ padding: 2.5px 6px; border-bottom: 1px solid #e5e7eb; font-size: 8.5pt; color: #000; }}
-  .details-table td:first-child {{ width: 38%; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.3px; }}
+  html, body {{ width: 210mm; }}
+  body {{ font-family: 'Georgia', 'Times New Roman', serif; font-size: 9pt; line-height: 1.3; color: #000; background: #fff; position: relative; }}
+  body::before {{ content: "ORIGINEEL"; position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 90pt; font-weight: bold; color: rgba(0,0,0,0.05); letter-spacing: 12px; z-index: 0; pointer-events: none; white-space: nowrap; }}
+  .page {{ width: 210mm; margin: 0 auto; padding: 10mm 14mm 8mm; background: #fff; position: relative; z-index: 1; }}
+  .header {{ border-bottom: 1.5px solid #000; padding-bottom: 6px; margin-bottom: 8px; text-align: center; }}
+  .company-name {{ font-size: 13pt; font-weight: bold; color: #000; text-transform: uppercase; letter-spacing: 0.5px; }}
+  .company-info {{ font-size: 7pt; color: #000; margin-top: 2px; line-height: 1.3; }}
+  .doc-title {{ text-align: center; margin: 8px 0 6px; }}
+  .doc-title h1 {{ font-size: 15pt; color: #000; letter-spacing: 2px; text-transform: uppercase; }}
+  .doc-number {{ font-size: 9pt; color: #000; font-weight: bold; font-family: 'Courier New', monospace; margin-top: 2px; }}
+  .details-table {{ width: 100%; border-collapse: collapse; margin-bottom: 6px; }}
+  .details-table td {{ padding: 3px 8px; border-bottom: 1px solid #e5e7eb; font-size: 9pt; color: #000; }}
+  .details-table td:first-child {{ width: 30%; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.3px; }}
   .details-table td:last-child {{ font-weight: 600; }}
-  .breakdown-table {{ width: 100%; border-collapse: collapse; margin: 4px 0; }}
-  .breakdown-table td {{ padding: 2px 6px; font-size: 8pt; border-bottom: 1px dotted #aaa; }}
-  .amount-row td {{ padding: 5px 6px; font-size: 10.5pt !important; font-weight: bold !important; color: #000 !important; border-top: 1.5px solid #000 !important; border-bottom: 1.5px solid #000 !important; }}
-  .amount-row td:last-child {{ text-align: right; font-size: 11.5pt !important; }}
-  .desc {{ margin: 6px 0; padding: 5px 8px; border-left: 2px solid #000; font-size: 8pt; background: transparent; }}
-  .stamp-section {{ display: flex; align-items: center; justify-content: space-around; gap: 8px; margin: 8px 0 4px; flex-wrap: wrap; }}
-  .stamp-rect {{ display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid #991b1b; padding: 4px 9px; transform: rotate(-5deg); opacity: 0.88; }}
-  .stamp-info p {{ margin: 0; line-height: 1.25; }}
-  .stamp-info .stamp-name {{ color: #991b1b; font-weight: bold; font-size: 7.5pt; }}
-  .stamp-info .stamp-detail {{ color: #1a1a1a; font-size: 6.5pt; }}
-  .sig-line {{ margin-top: 8px; text-align: right; }}
-  .sig-line-rule {{ border-top: 1px solid #000; width: 50%; margin-left: auto; margin-top: 18px; }}
-  .sig-line p {{ font-size: 7pt; margin-top: 2px; text-align: right; padding-right: 20px; }}
-  .doc-hash {{ margin-top: 4px; font-family: 'Courier New', monospace; font-size: 6pt; color: #555; text-align: center; word-break: break-all; }}
-  .footer {{ margin-top: 5px; padding-top: 3px; border-top: 1px solid #000; font-size: 6pt; color: #000; text-align: center; line-height: 1.2; }}
+  .breakdown-table {{ width: 100%; border-collapse: collapse; margin: 6px 0; }}
+  .breakdown-table td {{ padding: 2.5px 8px; font-size: 8.5pt; border-bottom: 1px dotted #aaa; }}
+  .amount-row td {{ padding: 6px 8px; font-size: 12pt !important; font-weight: bold !important; color: #000 !important; border-top: 1.5px solid #000 !important; border-bottom: 1.5px solid #000 !important; }}
+  .amount-row td:last-child {{ text-align: right; font-size: 13pt !important; }}
+  .desc {{ margin: 8px 0; padding: 6px 10px; border-left: 2px solid #000; font-size: 8.5pt; background: transparent; }}
+  .stamp-section {{ display: flex; align-items: center; justify-content: space-around; gap: 10px; margin: 10px 0 6px; flex-wrap: wrap; }}
+  .stamp-rect {{ display: inline-flex; align-items: center; gap: 8px; border: 2px solid #991b1b; padding: 5px 11px; transform: rotate(-5deg); opacity: 0.88; }}
+  .stamp-info p {{ margin: 0; line-height: 1.3; }}
+  .stamp-info .stamp-name {{ color: #991b1b; font-weight: bold; font-size: 8pt; }}
+  .stamp-info .stamp-detail {{ color: #1a1a1a; font-size: 7pt; }}
+  .sig-line {{ margin-top: 12px; text-align: right; }}
+  .sig-line-rule {{ border-top: 1px solid #000; width: 50%; margin-left: auto; margin-top: 22px; }}
+  .sig-line p {{ font-size: 8pt; margin-top: 3px; text-align: right; padding-right: 30px; }}
+  .doc-hash {{ margin-top: 5px; font-family: 'Courier New', monospace; font-size: 6.5pt; color: #555; text-align: center; word-break: break-all; }}
+  .footer {{ margin-top: 6px; padding-top: 4px; border-top: 1px solid #000; font-size: 6.5pt; color: #000; text-align: center; line-height: 1.2; }}
   .print-bar {{ position: fixed; top: 0; left: 0; right: 0; background: #2c3e50; padding: 8px 16px; text-align: center; z-index: 1000; }}
   .print-bar button {{ background: #e67e22; color: white; border: none; padding: 8px 24px; font-size: 13px; border-radius: 4px; cursor: pointer; font-weight: bold; margin: 0 4px; }}
   .print-bar button.pdf-btn {{ background: #15803d; }}
-  @media print {{ .print-bar {{ display: none !important; }} body {{ padding: 0; margin: 0; }} .page {{ padding: 6mm 8mm; margin: 0; }} @page {{ size: A5 portrait; margin: 0 !important; }} }}
+  @media print {{ .print-bar {{ display: none !important; }} body {{ padding: 0; margin: 0; }} .page {{ padding: 8mm 14mm 6mm; margin: 0; }} @page {{ size: A4 portrait; margin: 0 !important; }} }}
 </style>
 </head>
 <body>
