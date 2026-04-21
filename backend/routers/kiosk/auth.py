@@ -211,6 +211,17 @@ async def update_company_settings(data: CompanyUpdate, company: dict = Depends(g
         })
         if existing:
             raise HTTPException(status_code=400, detail="Deze PIN code is al in gebruik door een ander bedrijf. Kies een andere PIN.")
+
+    # Email change: validate uniqueness and normalize (email is used for login)
+    if "email" in update_data and update_data["email"]:
+        new_email = str(update_data["email"]).strip().lower()
+        update_data["email"] = new_email
+        existing_email = await db.kiosk_companies.find_one({
+            "email": new_email,
+            "company_id": {"$ne": company["company_id"]}
+        })
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Dit e-mailadres is al in gebruik door een ander bedrijf.")
     
     old_company_id = company["company_id"]
     new_company_id = None

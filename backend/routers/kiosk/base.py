@@ -382,6 +382,7 @@ class CompanyLogin(BaseModel):
 
 class CompanyUpdate(BaseModel):
     name: Optional[str] = None
+    email: Optional[EmailStr] = None  # Login email - change with care
     telefoon: Optional[str] = None
     adres: Optional[str] = None
     billing_day: Optional[int] = None  # 1-28

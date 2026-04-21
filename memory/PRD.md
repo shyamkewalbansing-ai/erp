@@ -1,5 +1,33 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 49 (21 april 2026) — Email (login) bewerkbaar in Instellingen
+
+### Verzoek
+In `/vastgoed/admin → Instellingen → Bedrijfsgegevens` was het veld "Email (login)" read-only. Beheerder moet dit kunnen wijzigen.
+
+### Implementatie
+**Backend (`base.py`, `auth.py`):**
+- `CompanyUpdate` Pydantic model uitgebreid met `email: Optional[EmailStr]` — automatische formaat-validatie.
+- `/auth/settings` PUT endpoint: bij email-wijziging:
+  - Lowercase normalisatie
+  - Uniciteitscheck tegen andere bedrijven (`{"email":…,"company_id":{"$ne":…}}`) → 400 "Dit e-mailadres is al in gebruik door een ander bedrijf."
+- Wachtwoord blijft ongewijzigd; login werkt direct met nieuw e-mailadres.
+
+**Frontend (`SettingsTab.jsx` → `CompanyDetailsSection`):**
+- Read-only input verwijderd; `SettingsInput type="email"` met `setEmail` onChange.
+- `originalEmail` bewaard bij mount om te detecteren of het adres daadwerkelijk gewijzigd wordt.
+- `handleSave`: als e-mail gewijzigd → formaat-regex check + `window.confirm("Van X naar Y...")` dialoog met duidelijke waarschuwing "U logt hierna in met dit nieuwe adres."
+- Toast bevestigt nieuwe e-mail; alleen `email` meegestuurd in payload wanneer het echt veranderd is (voorkomt false positives).
+- Kleine hint onder veld: "Let op: u logt hierna in met dit adres."
+
+### Tested ✅ (curl E2E)
+- `PUT /auth/settings {"email":"new@x.net"}` → 200 "Instellingen bijgewerkt"
+- `POST /auth/login {"email":"new@x.net","password":"…"}` → 200 met token (nieuwe login werkt)
+- Revert naar oude email → 200 (wachtwoord onveranderd)
+- `PUT` met ongeldig email ("not-an-email") → Pydantic 422 "value is not a valid email address"
+- ESLint frontend: No issues found
+
+
 ## Sprint 48 (21 april 2026) — A4 volle breedte + Hash-vergelijk widget
 
 ### Verzoek:

@@ -3297,7 +3297,8 @@ function SettingsInput({ label, value, onChange, placeholder, type = 'text', dis
 // ============== COMPANY DETAILS SECTION ==============
 function CompanyDetailsSection({ company, token, onRefresh }) {
   const [name, setName] = useState(company?.name || '');
-  const [email] = useState(company?.email || '');
+  const [email, setEmail] = useState(company?.email || '');
+  const originalEmail = (company?.email || '').toLowerCase();
   const [telefoon, setTelefoon] = useState(company?.telefoon || '');
   const [adres, setAdres] = useState(company?.adres || '');
   const [stampName, setStampName] = useState(company?.stamp_company_name || '');
@@ -3325,10 +3326,27 @@ function CompanyDetailsSection({ company, token, onRefresh }) {
   };
 
   const handleSave = async () => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const emailChanged = normalizedEmail && normalizedEmail !== originalEmail;
+    if (emailChanged) {
+      // Basic email sanity check
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+        toast.error('Ongeldig e-mailadres');
+        return;
+      }
+      const ok = window.confirm(
+        `Weet u zeker dat u het login e-mailadres wilt wijzigen?\n\n` +
+        `Van: ${originalEmail}\n` +
+        `Naar: ${normalizedEmail}\n\n` +
+        `U logt vanaf nu in met dit nieuwe adres. Uw wachtwoord blijft hetzelfde.`
+      );
+      if (!ok) return;
+    }
     setSaving(true);
     try {
       const res = await axios.put(`${API}/auth/settings`, {
         name: name.trim() || undefined,
+        email: emailChanged ? normalizedEmail : undefined,
         telefoon: telefoon.trim() || undefined,
         adres: adres.trim() || undefined,
         stamp_company_name: stampName.trim() || undefined,
@@ -3350,7 +3368,11 @@ function CompanyDetailsSection({ company, token, onRefresh }) {
         }, 800);
         return;
       }
-      toast.success('Bedrijfsgegevens opgeslagen');
+      if (emailChanged) {
+        toast.success(`Login e-mail bijgewerkt naar ${normalizedEmail}`);
+      } else {
+        toast.success('Bedrijfsgegevens opgeslagen');
+      }
       onRefresh();
     } catch (err) {
       toast.error(err.response?.data?.detail || 'Opslaan mislukt');
@@ -3405,7 +3427,10 @@ function CompanyDetailsSection({ company, token, onRefresh }) {
                 );
               })()}
             </div>
-            <SettingsInput label="Email (login)" value={email} onChange={() => {}} placeholder="" disabled />
+            <div>
+              <SettingsInput label="Email (login)" value={email} onChange={setEmail} placeholder="naam@bedrijf.com" type="email" />
+              <p className="text-xs text-slate-400 mt-1">Let op: u logt hierna in met dit adres.</p>
+            </div>
             <SettingsInput label="Telefoonnummer" value={telefoon} onChange={updateTelefoon} placeholder="+597 ..." />
             <SettingsInput label="Adres" value={adres} onChange={updateAdres} placeholder="Straat, Stad" />
           </div>
