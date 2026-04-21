@@ -133,6 +133,66 @@ async def advance_tenant_month(tenant_id: str, company: dict = Depends(get_curre
     }
 
 
+@router.post("/admin/tenants/{tenant_id}/reset-to-current-month")
+async def reset_tenant_to_current_month(tenant_id: str, company: dict = Depends(get_current_company)):
+    """Reset tenant's billing status back to the current real-world month.
+    Useful when `rent_billed_through` was accidentally advanced too far into the future.
+    Subtracts `months_ahead * monthly_rent` from outstanding_rent (and internet_outstanding
+    proportionally) and sets `rent_billed_through` to the current month. Clamps at 0 so
+    the tenant never goes into negative outstanding.
+    """
+    company_id = company["company_id"]
+    tenant = await db.kiosk_tenants.find_one({"tenant_id": tenant_id, "company_id": company_id})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+
+    billed_through = tenant.get("rent_billed_through", "")
+    if not billed_through:
+        raise HTTPException(status_code=400, detail="Huurder heeft nog geen factureringsmaand")
+
+    now = datetime.now(timezone.utc)
+    current_month = now.strftime("%Y-%m")
+    if billed_through <= current_month:
+        raise HTTPException(status_code=400, detail="Huurder is niet vooruit gefactureerd")
+
+    billed_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+    current_date = datetime.strptime(current_month + "-01", "%Y-%m-%d")
+    months_ahead = (billed_date.year - current_date.year) * 12 + (billed_date.month - current_date.month)
+
+    monthly_rent = float(tenant.get("monthly_rent", 0) or 0)
+    internet_cost = float(tenant.get("internet_cost", 0) or 0)
+    outstanding = float(tenant.get("outstanding_rent", 0) or 0)
+    internet_outstanding = float(tenant.get("internet_outstanding", 0) or 0)
+
+    rent_refund = monthly_rent * months_ahead
+    internet_refund = internet_cost * months_ahead
+
+    new_outstanding = max(0.0, outstanding - rent_refund)
+    new_internet_outstanding = max(0.0, internet_outstanding - internet_refund)
+
+    await db.kiosk_tenants.update_one(
+        {"tenant_id": tenant_id},
+        {"$set": {
+            "outstanding_rent": new_outstanding,
+            "internet_outstanding": new_internet_outstanding,
+            "rent_billed_through": current_month,
+            "updated_at": datetime.now(timezone.utc),
+        }},
+    )
+
+    month_names_nl = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
+    cur_label = f"{month_names_nl[current_date.month - 1]} {current_date.year}"
+    return {
+        "message": f"Factureringsstatus hersteld naar {cur_label} ({months_ahead} maand(en) teruggedraaid)",
+        "months_rolled_back": months_ahead,
+        "rent_billed_through": current_month,
+        "rent_refunded": rent_refund,
+        "internet_refunded": internet_refund,
+        "outstanding_rent": new_outstanding,
+        "internet_outstanding": new_internet_outstanding,
+    }
+
+
 # ============== LEASE AGREEMENTS ==============
 
 @router.get("/admin/leases")

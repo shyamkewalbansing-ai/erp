@@ -1,5 +1,34 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 52 (21 april 2026) — "Reset naar huidige maand" voor huurders
+
+### Verzoek
+Mogelijkheid om per ongeluk te ver vooruit gefactureerde huurders snel te herstellen naar de huidige maand (bijv. bedrijf A1 stond op `okt 2026` terwijl we in april 2026 zijn → 6 maand vooruit).
+
+### Implementatie
+**Backend (`admin_operations.py`):**
+- Nieuwe endpoint `POST /api/kiosk/admin/tenants/{id}/reset-to-current-month`:
+  - Berekent `months_ahead = billed_through - current_month`
+  - Verlaagt `outstanding_rent` met `months_ahead * monthly_rent` (clamped op 0)
+  - Verlaagt `internet_outstanding` met `months_ahead * internet_cost` (clamped op 0)
+  - Zet `rent_billed_through = current_month`
+  - 400 als huurder niet vooruit is, 404 als niet gevonden
+  - Returns `months_rolled_back`, `rent_refunded`, `internet_refunded`, nieuwe saldi
+
+**Frontend (`TenantModal.jsx`):**
+- Nieuwe sub-component `BillingStatusSection` toont altijd onderaan "Financieel":
+  - **"FACTURERINGSSTATUS"** met `Gefactureerd t/m: {maand jaar}`
+  - Als `billed_through > huidige_maand`: oranje badge `⚠ X maand(en) vooruit gefactureerd` + amberkleurige knop `"Reset naar {huidige maand}"` met `RotateCcw` icon
+  - Als synchroon: alleen info-regel "Huidige maand: X"
+- Click → `window.confirm()` met duidelijke Nederlandse bevestiging (van→naar, bedragen die worden afgetrokken)
+- Extra iconen toegevoegd: `Check`, `RotateCcw`, `AlertTriangle` (+ fix van ontbrekende `Check` import die al gebruikt werd in ID-kaart sectie).
+
+### Tested ✅
+- **Curl E2E**: tenant A1 `billed=2026-10, outstanding=2500` → reset → `billed=2026-04, outstanding=0` (30000 afgetrokken, geclamped op 0). Re-poging → 400 "Huurder is niet vooruit gefactureerd". Na `advance-month × 3` → `billed=2026-07`.
+- **Playwright screenshot**: UI toont correct "Gefactureerd t/m: juli 2026" + badge "3 maand(en) vooruit" + knop "Reset naar april 2026".
+- ESLint schoon.
+
+
 ## Sprint 51 (21 april 2026) — Maandhuur-toevoegen modal: duidelijke Nederlandse maandnamen
 
 ### Bug

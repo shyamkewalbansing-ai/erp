@@ -1,6 +1,84 @@
 import { useState, useEffect, useRef } from 'react';
-import { CreditCard, Trash2 } from 'lucide-react';
+import { CreditCard, Trash2, Check, RotateCcw, AlertTriangle } from 'lucide-react';
 import { API, axios } from './utils';
+
+// Reset billed-through back to current real-world month
+function BillingStatusSection({ tenant, token, onReset }) {
+  const [busy, setBusy] = useState(false);
+  const billedThrough = tenant?.rent_billed_through || '';
+  if (!billedThrough) return null;
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const [by, bm] = billedThrough.split('-');
+  const billedDate = new Date(parseInt(by), parseInt(bm) - 1);
+  const currentDate = new Date(now.getFullYear(), now.getMonth());
+  const monthsAhead = (billedDate.getFullYear() - currentDate.getFullYear()) * 12 +
+                      (billedDate.getMonth() - currentDate.getMonth());
+  const billedLabel = billedDate.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
+  const currentLabel = currentDate.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
+  const monthlyRent = parseFloat(tenant.monthly_rent || 0);
+  const internetCost = parseFloat(tenant.internet_cost || 0);
+  const rentRefund = monthlyRent * Math.max(0, monthsAhead);
+  const internetRefund = internetCost * Math.max(0, monthsAhead);
+
+  const resetToCurrent = async () => {
+    if (!window.confirm(
+      `Weet u zeker dat u de factureringsstatus wilt herstellen?\n\n` +
+      `Van: ${billedLabel} (${monthsAhead} maand(en) vooruit)\n` +
+      `Naar: ${currentLabel}\n\n` +
+      `Openstaand saldo wordt verlaagd met:\n` +
+      `• Huur: SRD ${rentRefund.toLocaleString('nl-NL', {minimumFractionDigits: 2})}` +
+      (internetRefund > 0 ? `\n• Internet: SRD ${internetRefund.toLocaleString('nl-NL', {minimumFractionDigits: 2})}` : '')
+    )) return;
+    setBusy(true);
+    try {
+      const r = await axios.post(
+        `${API}/admin/tenants/${tenant.tenant_id}/reset-to-current-month`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      alert(r.data?.message || 'Factureringsstatus hersteld');
+      if (onReset) onReset();
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Herstellen mislukt');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 pt-4 border-t border-slate-200">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Factureringsstatus</p>
+          <p className="text-sm text-slate-700">
+            Gefactureerd t/m: <span className="font-bold">{billedLabel}</span>
+          </p>
+          {billedThrough > currentMonthKey ? (
+            <div className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
+              <AlertTriangle className="w-3.5 h-3.5" />
+              {monthsAhead} maand(en) vooruit gefactureerd
+            </div>
+          ) : (
+            <p className="text-xs text-slate-400 mt-1">Huidige maand: {currentLabel}</p>
+          )}
+        </div>
+        {billedThrough > currentMonthKey && (
+          <button
+            type="button"
+            onClick={resetToCurrent}
+            disabled={busy}
+            data-testid="reset-to-current-month-btn"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 disabled:opacity-50 shadow-sm"
+          >
+            <RotateCcw className="w-4 h-4" />
+            {busy ? 'Bezig...' : `Reset naar ${currentLabel}`}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) {
   const [name, setName] = useState(tenant?.name || '');
@@ -166,6 +244,7 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
                     className="w-full px-3 py-2.5 border rounded-xl text-sm" />
                 </div>
               </div>
+              <BillingStatusSection tenant={tenant} token={token} onReset={onSave} />
             </div>
           )}
           {!tenant && (
