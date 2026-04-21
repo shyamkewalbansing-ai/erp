@@ -1,5 +1,37 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 50 (21 april 2026) — Kiosk ↔ Beheerder navigatie fix
+
+### Verzoek / Bug
+1. PIN invoeren via Kiosk-achtige landing op `/vastgoed` → `kiosk_medewerker` belandde op `/vastgoed/admin` → kreeg "Geen toegang" → kwam in een loop terug naar /vastgoed PIN.
+2. Vanuit de echte Kiosk (`/vastgoed/:companyId`) via "Beheerder"-knop in het admin dashboard → kon niet meer terug naar de Kiosk.
+3. Vanuit standalone `/vastgoed/admin` gaf de "Kiosk"-knop fout doel (landing i.p.v. `/vastgoed/:companyId`).
+
+### Implementatie
+**`CompanySelect.jsx` (KioskLanding + PinLandingScreen onSuccess):**
+- Role-based routing na PIN login:
+  - `role === 'kiosk_medewerker'` → `navigate('/vastgoed/${company_id}')` (direct de Kiosk)
+  - anders (beheerder/boekhouder) → `navigate('/vastgoed/admin')`
+- `sessionStorage` sleutels worden nu ook gezet bij landing-PIN success:
+  - `kiosk_pin_verified_${company_id} = 'true'` → Kiosk slaat zijn PIN-schermoverslaan
+  - `kiosk_employee_${company_id}` → volledige employee-context voor kiosk-RBAC
+- Auto-redirect bij bezoek aan `/vastgoed` met bestaande token respecteert nu ook `kiosk_employee_session.role` om `kiosk_medewerker` naar de Kiosk te sturen i.p.v. admin.
+
+**`KioskAdminDashboard.jsx`:**
+- Nieuwe `handleOpenKiosk` voor de "Kiosk"-knop. Gedrag:
+  - Embedded in `KioskLayout` (prop `onBack` aanwezig) → roep `onBack()` → internal step terug naar 'select' (apartment select), geen full page navigate, geen state-loss.
+  - Standalone `/vastgoed/admin` → `navigate('/vastgoed/${company.company_id}')` → opent de echte Kiosk URL.
+- De "Kiosk"-knop gebruikt nu `handleOpenKiosk` i.p.v. de generieke `handleBack` (die ging naar `/vastgoed` loginpagina).
+- `data-testid="admin-open-kiosk-btn"` voor testability.
+
+### Tested ✅ (E2E Playwright screenshots)
+1. `/vastgoed` PIN 5678 → `/vastgoed/admin` (correct, beheerder)
+2. Klik "Kiosk" op admin → `/vastgoed/kewalbansing` → apartement-scherm direct zichtbaar, geen 2e PIN
+3. Kiosk → "Beheerder" → admin embedded → "Kiosk" → terug naar `Kies uw appartement` zonder refresh
+4. PIN 9876 (boekhouder) → `/vastgoed/admin` (RBAC ok)
+5. ESLint schoon op beide files
+
+
 ## Sprint 49 (21 april 2026) — Email (login) bewerkbaar in Instellingen
 
 ### Verzoek

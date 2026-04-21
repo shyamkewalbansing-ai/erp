@@ -37,10 +37,23 @@ export default function KioskLanding() {
 
   useEffect(() => {
     const token = localStorage.getItem('kiosk_token');
+    const empSession = localStorage.getItem('kiosk_employee_session');
     if (token) {
       axios.get(`${API}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(res => { setCompany(res.data); setIsLoggedIn(true); navigate('/vastgoed/admin'); })
-        .catch(() => localStorage.removeItem('kiosk_token'))
+        .then(res => {
+          setCompany(res.data);
+          setIsLoggedIn(true);
+          // Route based on last known role: kiosk_medewerker -> Kiosk URL, else admin
+          try {
+            const emp = empSession ? JSON.parse(empSession) : null;
+            if (emp && emp.role === 'kiosk_medewerker') {
+              navigate(`/vastgoed/${res.data.company_id}`);
+              return;
+            }
+          } catch { /* ignore parse error, default to admin */ }
+          navigate('/vastgoed/admin');
+        })
+        .catch(() => { localStorage.removeItem('kiosk_token'); localStorage.removeItem('kiosk_employee_session'); })
         .finally(() => setLoading(false));
     } else { setLoading(false); }
   }, [navigate]);
@@ -77,7 +90,23 @@ export default function KioskLanding() {
         } else {
           localStorage.removeItem('kiosk_employee_session');
         }
-        navigate(`/vastgoed/admin`);
+        // Mark kiosk as PIN-verified for the company so the kiosk doesn't ask again
+        try {
+          sessionStorage.setItem(`kiosk_pin_verified_${data.company_id}`, 'true');
+          if (data.employee_id) {
+            sessionStorage.setItem(`kiosk_employee_${data.company_id}`, JSON.stringify({
+              name: data.employee_name,
+              role: data.role,
+              employee_id: data.employee_id,
+            }));
+          }
+        } catch { /* noop */ }
+        // Kiosk medewerkers mogen niet in het admin dashboard — stuur ze direct naar de Kiosk
+        if (data.role === 'kiosk_medewerker') {
+          navigate(`/vastgoed/${data.company_id}`);
+        } else {
+          navigate('/vastgoed/admin');
+        }
       }}
     />
   );

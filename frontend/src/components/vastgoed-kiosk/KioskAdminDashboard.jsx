@@ -73,6 +73,19 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     }
   };
 
+  const handleOpenKiosk = () => {
+    // If this admin dashboard is embedded inside the Kiosk (KioskLayout),
+    // onBack switches the internal step back to the apartment select screen.
+    // Otherwise (standalone /vastgoed/admin), navigate to the actual Kiosk URL.
+    if (onBack) {
+      onBack();
+    } else if (company?.company_id) {
+      navigate(`/vastgoed/${company.company_id}`);
+    } else {
+      navigate('/vastgoed');
+    }
+  };
+
   const handleLogout = () => {
     if (onLock) {
       onLock();
@@ -248,7 +261,8 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
               <span className="hidden md:inline">Kopieer URL</span>
             </button>
             <button
-              onClick={handleBack}
+              onClick={handleOpenKiosk}
+              data-testid="admin-open-kiosk-btn"
               className="w-8 h-8 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 flex items-center justify-center gap-1.5 bg-orange-500 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold hover:bg-orange-600 transition shadow-sm shadow-orange-500/20"
             >
               <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
