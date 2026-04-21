@@ -1075,17 +1075,11 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
   <img src="{approval_signature}" alt="Handtekening" />
 </div>'''
 
-    # QR code block (verifieerbare online kwitantie)
-    qr_block = ""
+    # QR inline rendered inside the receipt title (right side, no text)
+    qr_inline = ""
     if qr_data_url:
-        qr_block = f'''
-<div class="qr-block">
-  <img src="{qr_data_url}" alt="QR Kwitantie" class="qr-img" />
-  <div class="qr-label">
-    <p class="qr-title">Scan om te verifiëren</p>
-    <p class="qr-hint">Online kwitantie authentiek</p>
-  </div>
-</div>'''
+        qr_inline = f'<div class="qr-inline"><img src="{qr_data_url}" alt="QR" /></div>'
+    qr_block = ""
 
     html = f"""<!DOCTYPE html>
 <html lang="nl">
@@ -1128,14 +1122,31 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
     line-height: 1.3;
   }}
   .receipt-title {{
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
     margin: 10px 0;
+  }}
+  .receipt-title .title-wrap {{
+    flex: 1;
+    text-align: center;
   }}
   .receipt-title h1 {{
     font-size: 14pt;
     color: #000;
     letter-spacing: 2px;
     text-transform: uppercase;
+  }}
+  .receipt-title .qr-inline {{
+    width: 70px;
+    height: 70px;
+    flex-shrink: 0;
+  }}
+  .receipt-title .qr-inline img {{
+    width: 100%;
+    height: 100%;
+    display: block;
   }}
   .receipt-number {{
     font-size: 9pt;
@@ -1151,9 +1162,12 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
   }}
   .details-table td {{
     padding: 4px 8px;
-    border-bottom: 1px solid #000;
+    border-bottom: 1px solid #e5e7eb;
     font-size: 9pt;
     color: #000;
+  }}
+  .details-table tr:last-child td {{
+    border-bottom: none;
   }}
   .details-table td:first-child {{
     color: #000;
@@ -1299,8 +1313,11 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
 </div>
 
 <div class="receipt-title">
-  <h1>Kwitantie</h1>
-  <div class="receipt-number">{kwitantie_nummer}</div>
+  <div class="title-wrap">
+    <h1>Kwitantie</h1>
+    <div class="receipt-number">{kwitantie_nummer}</div>
+  </div>
+  {qr_inline}
 </div>
 
 <table class="details-table">

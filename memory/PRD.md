@@ -1,5 +1,17 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 46 (20 april 2026) — Kwitantie layout verbeteringen
+
+### Wijzigingen (`admin.py` `_render_receipt_html`):
+1. **Lichte grijze lijntjes** tussen rows: `border-bottom: 1px solid #000` → `#e5e7eb` voor alle details-table rows (Datum, Huurder, Appartement, Type Betaling, Huurmaand, Betalingswijze). Laatste rij heeft geen lijn meer (`tr:last-child td { border-bottom: none }`)
+2. **QR code verplaatst naar rechtsbovenin** naast KWITANTIE titel (flex layout met `justify-content: space-between`), compact 70x70px formaat
+3. **Tekst "Scan om te verifiëren" en "Online kwitantie authentiek" verwijderd** — QR spreekt voor zichzelf
+4. Oude aparte `qr-block` sectie onderaan volledig verwijderd
+
+### Tested:
+- Bevestigd dat HTML nu `qr-inline` class bevat (8×), `qr-block` = 0×, tekst "Scan om te verifiëren" = 0× matches ✅
+- Screenshot public receipt toont schone layout: QR rechtsboven, lichte lijntjes, bedrijfsstempel + VOLDAAN status behouden ✅
+
 ## Sprint 45 (20 april 2026) — PWA installatieprompt
 
 ### Verzoek:
