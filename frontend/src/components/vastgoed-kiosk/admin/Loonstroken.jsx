@@ -49,12 +49,17 @@ function Loonstroken({ token, formatSRD, employees, onChange, prefillRequest, on
     } catch { alert('Verwijderen mislukt'); }
   };
 
-  const openPrint = (item) => {
-    axios.get(`${API}/admin/loonstroken/${item.loonstrook_id}/receipt`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => {
-        const win = window.open('', '_blank');
-        if (win) { win.document.open(); win.document.write(r.data); win.document.close(); }
-      });
+  const openPrint = async (item) => {
+    try {
+      const r = await axios.get(
+        `${API}/admin/loonstroken/${item.loonstrook_id}/receipt/pdf`,
+        { headers: { Authorization: `Bearer ${token}` }, responseType: 'blob' }
+      );
+      const blobUrl = URL.createObjectURL(new Blob([r.data], { type: 'application/pdf' }));
+      window.open(blobUrl, '_blank');
+    } catch {
+      alert('Kon PDF niet laden');
+    }
   };
 
   const sendWhatsApp = async () => {

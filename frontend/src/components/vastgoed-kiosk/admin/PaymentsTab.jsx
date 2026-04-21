@@ -98,7 +98,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
   };
 
   const handlePrintDirect = (payment) => {
-    window.open(`${API}/admin/payments/${payment.payment_id}/receipt?token=${token}`, '_blank');
+    window.open(`${API}/admin/payments/${payment.payment_id}/receipt/pdf?token=${token}`, '_blank');
   };
 
   // Fetch receipt HTML when preview modal opens
@@ -135,11 +135,11 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
         };
         await fetch(`${PRINT_SERVER_URL}/print`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(printData) });
       } else {
-        // Open backend-generated receipt HTML in new tab for printing
-        window.open(`${API}/admin/payments/${selectedPayment.payment_id}/receipt?token=${token}`, '_blank');
+        // Open backend-generated PDF in new tab for printing (A5, encrypted, tamper-proof)
+        window.open(`${API}/admin/payments/${selectedPayment.payment_id}/receipt/pdf?token=${token}`, '_blank');
       }
     } catch {
-      window.open(`${API}/admin/payments/${selectedPayment.payment_id}/receipt?token=${token}`, '_blank');
+      window.open(`${API}/admin/payments/${selectedPayment.payment_id}/receipt/pdf?token=${token}`, '_blank');
     }
   };
 

@@ -1,5 +1,43 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 47 (21 april 2026) — Beveiligde PDF-kwitanties + A5 compact
+
+### Verzoek:
+1. Bij printen van kwitantie moet de URL onderaan niet getoond worden.
+2. Alle kwitanties (huur, freelancer, loonstrook, publiek via QR) beveiligen zodat geen enkel programma de PDF kan bewerken of vervalsen.
+3. Kwitantie is te lang bij printen — maak korter/compacter.
+
+### Implementatie
+**Backend (`admin.py`, `admin_operations.py`, `base.py`):**
+- Nieuwe shared helper `_encrypt_receipt_pdf(html_str)` in `base.py` — rendert HTML met **WeasyPrint** en versleutelt met **pikepdf** (R=6 / AES-256-equivalent), random owner-password, user-password leeg (iedereen kan openen, niemand kan bewerken/kopiëren/assembleren/annotations aanpassen).
+- Nieuwe PDF-endpoints:
+  - `GET /api/kiosk/admin/payments/{id}/receipt/pdf?token=…`
+  - `GET /api/kiosk/public/receipt/{id}/pdf` (alleen voor approved payments, QR-target)
+  - `GET /api/kiosk/admin/freelancer-payments/{id}/receipt/pdf`
+  - `GET /api/kiosk/admin/loonstroken/{id}/receipt/pdf`
+- Bestaande HTML-templates (`_render_receipt_html`, `_build_a4_receipt_html`) herzien:
+  - **A5 portret (148×210mm)** in plaats van A4 → ±50% korter, papierbesparing
+  - Diagonaal **"ORIGINEEL" watermerk** (rgba 0.05, rotate -30°)
+  - **SHA-256 document-hash** onderaan (short + full, stabiele hash op `payment_id | kwitantie_nummer | company_id | ontvanger | bedrag | datum`)
+  - Publieke QR-view krijgt groene **"✓ Geverifieerd origineel"** banner
+  - Kleinere fonts (9pt → 8.5pt body, 14pt → 12pt H1), tightere margins (12mm → 8mm)
+- Print-bar toont primair groene **"⬇ Download PDF (Beveiligd)"** button i.p.v. `window.print()`; sluitknop behouden.
+
+**Frontend (`PaymentsTab.jsx`, `FreelancerPayments.jsx`, `Loonstroken.jsx`):**
+- `handlePrintDirect` / `openPrint` / `openPrintNewTab` openen nu de `/receipt/pdf` endpoints (blob → new tab) i.p.v. HTML.
+- Resultaat: gebruiker klikt print → krijgt echte PDF → print uit PDF-viewer → **geen browser-URL** meer onderaan.
+
+**Dependencies:**
+- `weasyprint==68.1` (al aanwezig), `pikepdf==10.5.1` (toegevoegd), `reportlab==4.4.9` (aanwezig).
+
+### Tested ✅
+- `curl /receipt/pdf` → HTTP 200, 26KB, 1 pagina, A5 (419.5×595.3 pt ≈ 148×210mm)
+- `pikepdf.open(...).is_encrypted = True`, `allow.modify_other = False`, `allow.extract = False`
+- Freelancer PDF 23KB, Loonstrook PDF 25KB, Public PDF 28KB — allemaal HTTP 200
+- Visuele verificatie van gerenderde PDF: QR rechtsboven, "ORIGINEEL" watermerk zichtbaar, lichte grijze rijlijnen, SHA-256 hash onderaan, geen overflow
+- Public HTML toont "Geverifieerd origineel" banner + watermerk + hash
+
+
 ## Sprint 46 (20 april 2026) — Kwitantie layout verbeteringen
 
 ### Wijzigingen (`admin.py` `_render_receipt_html`):

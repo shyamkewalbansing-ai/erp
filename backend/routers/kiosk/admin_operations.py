@@ -1,5 +1,7 @@
 from .base import *
 
+import hashlib as _hashlib
+
 # ============== APPLY FINES ==============
 
 @router.post("/admin/apply-fines")
@@ -1383,7 +1385,7 @@ async def delete_freelancer_payment(payment_id: str, company: dict = Depends(get
 
 @router.get("/admin/freelancer-payments/{payment_id}/receipt")
 async def get_freelancer_receipt(payment_id: str, company: dict = Depends(get_current_company), noprint: Optional[str] = None):
-    """Return A4-styled HTML receipt for a freelancer payment (same style as main kwitantie)"""
+    """Return A5-styled HTML receipt for a freelancer payment (same style as main kwitantie)"""
     p = await db.kiosk_freelancer_payments.find_one({"payment_id": payment_id, "company_id": company["company_id"]}, {"_id": 0})
     if not p:
         raise HTTPException(status_code=404, detail="Betaling niet gevonden")
@@ -1397,6 +1399,10 @@ async def get_freelancer_receipt(payment_id: str, company: dict = Depends(get_cu
     processed_by = p.get("processed_by", "")
     functie = p.get("functie", "")
     telefoon = p.get("telefoon", "")
+
+    doc_hash = _hashlib.sha256(
+        f"FREELANCER|{p['payment_id']}|{p['kwitantie_nummer']}|{company['company_id']}|{p['employee_name']}|{float(p['amount']):.2f}|{date_fmt}".encode("utf-8")
+    ).hexdigest()
 
     html = _build_a4_receipt_html(
         doc_type="UITBETALINGSKWITANTIE",
@@ -1417,9 +1423,55 @@ async def get_freelancer_receipt(payment_id: str, company: dict = Depends(get_cu
         company_email=company_email,
         noprint=bool(noprint),
         include_sig_line=True,
+        pdf_download_path=f"./{payment_id}/receipt/pdf",
+        doc_hash=doc_hash,
     )
     from fastapi.responses import HTMLResponse
     return HTMLResponse(content=html)
+
+
+@router.get("/admin/freelancer-payments/{payment_id}/receipt/pdf")
+async def get_freelancer_receipt_pdf(payment_id: str, company: dict = Depends(get_current_company)):
+    """Return tamper-protected, encrypted PDF (A5) for a freelancer payment receipt."""
+    p = await db.kiosk_freelancer_payments.find_one({"payment_id": payment_id, "company_id": company["company_id"]}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    stamp_name = company.get("stamp_company_name") or company.get("name", "")
+    stamp_address = company.get("stamp_address", "")
+    stamp_phone = company.get("stamp_phone", "")
+    stamp_whatsapp = company.get("stamp_whatsapp", "")
+    company_email = company.get("email", "")
+    date_fmt = p["payment_date"].strftime("%d-%m-%Y") if isinstance(p.get("payment_date"), datetime) else str(p.get("payment_date", ""))
+    method_label = {"cash": "Contant", "bank": "Bank overboeking"}.get(p.get("payment_method", "cash"), "Contant")
+    doc_hash = _hashlib.sha256(
+        f"FREELANCER|{p['payment_id']}|{p['kwitantie_nummer']}|{company['company_id']}|{p['employee_name']}|{float(p['amount']):.2f}|{date_fmt}".encode("utf-8")
+    ).hexdigest()
+
+    html = _build_a4_receipt_html(
+        doc_type="UITBETALINGSKWITANTIE",
+        doc_number=p["kwitantie_nummer"],
+        date_str=date_fmt,
+        receiver_name=p["employee_name"],
+        receiver_extra_label="Functie" if p.get("functie") else None,
+        receiver_extra_value=p.get("functie") if p.get("functie") else None,
+        receiver_phone=p.get("telefoon", ""),
+        method_label=method_label,
+        processed_by=p.get("processed_by", ""),
+        description=p.get("description", ""),
+        amount=p["amount"],
+        stamp_name=stamp_name,
+        stamp_address=stamp_address,
+        stamp_phone=stamp_phone,
+        stamp_whatsapp=stamp_whatsapp,
+        company_email=company_email,
+        noprint=True,
+        include_sig_line=True,
+        doc_hash=doc_hash,
+    )
+    pdf_bytes = await _encrypt_receipt_pdf(html)
+    filename = f"Kwitantie_{p['kwitantie_nummer']}.pdf"
+    return Response(content=pdf_bytes, media_type="application/pdf",
+                    headers={"Content-Disposition": f'inline; filename="{filename}"'})
 
 
 @router.post("/admin/freelancer-payments/{payment_id}/send-whatsapp")
@@ -1569,7 +1621,7 @@ async def delete_loonstrook(loonstrook_id: str, company: dict = Depends(get_curr
 
 @router.get("/admin/loonstroken/{loonstrook_id}/receipt")
 async def get_loonstrook_receipt(loonstrook_id: str, company: dict = Depends(get_current_company), noprint: Optional[str] = None):
-    """Return A4-styled Loonstrook HTML"""
+    """Return A5-styled Loonstrook HTML"""
     p = await db.kiosk_loonstroken.find_one({"loonstrook_id": loonstrook_id, "company_id": company["company_id"]}, {"_id": 0})
     if not p:
         raise HTTPException(status_code=404, detail="Loonstrook niet gevonden")
@@ -1598,6 +1650,10 @@ async def get_loonstrook_receipt(loonstrook_id: str, company: dict = Depends(get
     if p.get("overige_aftrek", 0) > 0:
         breakdown.append(("Overige aftrek", f"- SRD {p['overige_aftrek']:,.2f}"))
 
+    doc_hash = _hashlib.sha256(
+        f"LOONSTROOK|{p['loonstrook_id']}|{p['strook_nummer']}|{company['company_id']}|{p['employee_name']}|{float(p['netto_loon']):.2f}|{date_fmt}".encode("utf-8")
+    ).hexdigest()
+
     html = _build_a4_receipt_html(
         doc_type="LOONSTROOK",
         doc_number=p["strook_nummer"],
@@ -1619,9 +1675,75 @@ async def get_loonstrook_receipt(loonstrook_id: str, company: dict = Depends(get
         company_email=company_email,
         noprint=bool(noprint),
         include_sig_line=True,
+        pdf_download_path=f"./{loonstrook_id}/receipt/pdf",
+        doc_hash=doc_hash,
     )
     from fastapi.responses import HTMLResponse
     return HTMLResponse(content=html)
+
+
+@router.get("/admin/loonstroken/{loonstrook_id}/receipt/pdf")
+async def get_loonstrook_receipt_pdf(loonstrook_id: str, company: dict = Depends(get_current_company)):
+    """Return tamper-protected, encrypted PDF (A5) for a loonstrook."""
+    p = await db.kiosk_loonstroken.find_one({"loonstrook_id": loonstrook_id, "company_id": company["company_id"]}, {"_id": 0})
+    if not p:
+        raise HTTPException(status_code=404, detail="Loonstrook niet gevonden")
+    stamp_name = company.get("stamp_company_name") or company.get("name", "")
+    stamp_address = company.get("stamp_address", "")
+    stamp_phone = company.get("stamp_phone", "")
+    stamp_whatsapp = company.get("stamp_whatsapp", "")
+    company_email = company.get("email", "")
+    date_fmt = p["payment_date"].strftime("%d-%m-%Y") if isinstance(p.get("payment_date"), datetime) else str(p.get("payment_date", ""))
+    method_label = {"cash": "Contant", "bank": "Bank overboeking"}.get(p.get("payment_method", "cash"), "Bank")
+
+    breakdown = []
+    if p.get("dagen_gewerkt"):
+        breakdown.append(("Dagen gewerkt", str(p["dagen_gewerkt"])))
+    if p.get("uren_gewerkt"):
+        breakdown.append(("Uren gewerkt", f"{p['uren_gewerkt']:.1f}"))
+    breakdown.append(("Bruto loon", f"SRD {p['bruto_loon']:,.2f}"))
+    if p.get("overuren_bedrag", 0) > 0:
+        breakdown.append(("Overuren", f"SRD {p['overuren_bedrag']:,.2f}"))
+    if p.get("bonus", 0) > 0:
+        breakdown.append(("Bonus", f"SRD {p['bonus']:,.2f}"))
+    bruto_totaal = p['bruto_loon'] + p.get('overuren_bedrag', 0) + p.get('bonus', 0)
+    breakdown.append(("Bruto totaal", f"SRD {bruto_totaal:,.2f}"))
+    if p.get("belasting_aftrek", 0) > 0:
+        breakdown.append(("Belasting aftrek", f"- SRD {p['belasting_aftrek']:,.2f}"))
+    if p.get("overige_aftrek", 0) > 0:
+        breakdown.append(("Overige aftrek", f"- SRD {p['overige_aftrek']:,.2f}"))
+
+    doc_hash = _hashlib.sha256(
+        f"LOONSTROOK|{p['loonstrook_id']}|{p['strook_nummer']}|{company['company_id']}|{p['employee_name']}|{float(p['netto_loon']):.2f}|{date_fmt}".encode("utf-8")
+    ).hexdigest()
+
+    html = _build_a4_receipt_html(
+        doc_type="LOONSTROOK",
+        doc_number=p["strook_nummer"],
+        date_str=date_fmt,
+        receiver_name=p["employee_name"],
+        receiver_extra_label="Functie" if p.get("functie") else None,
+        receiver_extra_value=p.get("functie") if p.get("functie") else None,
+        receiver_phone=p.get("telefoon"),
+        method_label=method_label,
+        processed_by=p.get("processed_by"),
+        description=p.get("notes", "") or f"Loonuitbetaling periode: {p['period_label']}",
+        amount=p["netto_loon"],
+        amount_label="NETTO LOON",
+        breakdown_rows=breakdown,
+        stamp_name=stamp_name,
+        stamp_address=stamp_address,
+        stamp_phone=stamp_phone,
+        stamp_whatsapp=stamp_whatsapp,
+        company_email=company_email,
+        noprint=True,
+        include_sig_line=True,
+        doc_hash=doc_hash,
+    )
+    pdf_bytes = await _encrypt_receipt_pdf(html)
+    filename = f"Loonstrook_{p['strook_nummer']}.pdf"
+    return Response(content=pdf_bytes, media_type="application/pdf",
+                    headers={"Content-Disposition": f'inline; filename="{filename}"'})
 
 
 @router.post("/admin/loonstroken/{loonstrook_id}/send-whatsapp")

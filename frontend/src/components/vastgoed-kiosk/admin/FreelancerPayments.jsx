@@ -35,13 +35,18 @@ function FreelancerPayments({ token, formatSRD, employees, onChange }) {
     setPreviewPayment(payment);
   };
 
-  const openPrintNewTab = (payment) => {
-    // Fetch authenticated HTML, open in new tab as srcDoc
-    axios.get(`${API}/admin/freelancer-payments/${payment.payment_id}/receipt`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => {
-        const win = window.open('', '_blank');
-        if (win) { win.document.open(); win.document.write(r.data); win.document.close(); }
-      });
+  const openPrintNewTab = async (payment) => {
+    // Fetch authenticated, encrypted PDF and open in a new tab
+    try {
+      const r = await axios.get(
+        `${API}/admin/freelancer-payments/${payment.payment_id}/receipt/pdf`,
+        { headers: { Authorization: `Bearer ${token}` }, responseType: 'blob' }
+      );
+      const blobUrl = URL.createObjectURL(new Blob([r.data], { type: 'application/pdf' }));
+      window.open(blobUrl, '_blank');
+    } catch {
+      alert('Kon PDF niet laden');
+    }
   };
 
   useEffect(() => {

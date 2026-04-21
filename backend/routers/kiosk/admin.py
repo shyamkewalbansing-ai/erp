@@ -6,6 +6,8 @@ import ssl
 import io as _io
 import os as _os
 import base64 as _b64
+import hashlib as _hashlib
+import secrets as _secrets
 import dns.resolver
 
 # ============== CUSTOM DOMAIN ==============
@@ -899,6 +901,53 @@ async def public_receipt(payment_id: str):
     return await _render_receipt_html(payment, payment["company_id"], noprint=True, public_view=True)
 
 
+async def _render_receipt_pdf_bytes(payment: dict, company_id: str, public_view: bool = False) -> bytes:
+    """Render the kwitantie as a tamper-protected, encrypted PDF (A5 compact)."""
+    html_resp = await _render_receipt_html(payment, company_id, noprint=True, public_view=public_view)
+    html_bytes = html_resp.body if hasattr(html_resp, "body") else html_resp
+    html_str = html_bytes.decode("utf-8", errors="ignore") if isinstance(html_bytes, bytes) else str(html_bytes)
+    return await _encrypt_receipt_pdf(html_str)
+
+
+@router.get("/admin/payments/{payment_id}/receipt/pdf")
+async def generate_receipt_pdf(payment_id: str, token: Optional[str] = None):
+    """Download the kwitantie as a tamper-protected, encrypted PDF (A5, compact)."""
+    if not token:
+        raise HTTPException(status_code=401, detail="Token vereist")
+    try:
+        payload = decode_token(token)
+        company_id = payload["company_id"]
+    except Exception:
+        raise HTTPException(status_code=401, detail="Ongeldig token")
+    payment = await db.kiosk_payments.find_one({"payment_id": payment_id, "company_id": company_id})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    pdf_bytes = await _render_receipt_pdf_bytes(payment, company_id, public_view=False)
+    filename = f"Kwitantie_{payment.get('kwitantie_nummer', payment_id)}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
+
+
+@router.get("/public/receipt/{payment_id}/pdf")
+async def public_receipt_pdf(payment_id: str):
+    """Publicly download the verified kwitantie PDF (only for approved payments)."""
+    payment = await db.kiosk_payments.find_one({"payment_id": payment_id})
+    if not payment:
+        raise HTTPException(status_code=404, detail="Kwitantie niet gevonden")
+    if payment.get("status") not in ("approved", "completed"):
+        raise HTTPException(status_code=404, detail="Kwitantie niet beschikbaar")
+    pdf_bytes = await _render_receipt_pdf_bytes(payment, payment["company_id"], public_view=True)
+    filename = f"Kwitantie_{payment.get('kwitantie_nummer', payment_id)}.pdf"
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="{filename}"'},
+    )
+
+
 async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = False, public_view: bool = False):
     """Render the kwitantie HTML. Shared between /admin/.../receipt and /public/receipt/..."""
 
@@ -1075,6 +1124,51 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
   <img src="{approval_signature}" alt="Handtekening" />
 </div>'''
 
+    # Compute tamper-proof SHA-256 document hash (stable over payment content)
+    import json as _json
+    hash_payload = {
+        "payment_id": payment.get("payment_id"),
+        "kwitantie_nummer": kwitantie_nummer,
+        "company_id": company_id,
+        "tenant_id": payment.get("tenant_id"),
+        "tenant_name": tenant_name,
+        "apartment_number": apartment_number,
+        "amount": float(amount or 0),
+        "payment_type": payment_type,
+        "payment_method": payment_method,
+        "rent_month": rent_month,
+        "created_at": payment.get("created_at").isoformat() if isinstance(payment.get("created_at"), datetime) else str(payment.get("created_at") or ""),
+        "approved_by": approved_by,
+    }
+    _h = _hashlib.sha256(_json.dumps(hash_payload, sort_keys=True, default=str).encode("utf-8")).hexdigest()
+    doc_hash_short = _h[:16].upper()
+    doc_hash_full = _h
+
+    verified_banner_html = ""
+    if public_view:
+        verified_banner_html = '<div class="verified-banner">&#10003; Geverifieerd origineel &middot; Authentiek document</div>'
+
+    # PDF button (only in non-public admin view, not noprint preview)
+    pdf_download_url = ""
+    if not public_view:
+        # Token for admin PDF endpoint - use same token passed to generate_receipt if available via query param
+        pdf_download_url = f"./{payment['payment_id']}/receipt/pdf"
+
+    # Build print bar HTML outside f-string (backslashes not allowed in f-expressions)
+    if noprint:
+        print_bar_html = ""
+    else:
+        _pdf_js = (
+            "window.location.href='" + pdf_download_url +
+            "?token=' + (new URLSearchParams(window.location.search).get('token')||'')"
+        )
+        print_bar_html = (
+            '<div class="print-bar">'
+            f'<button class="pdf-btn" onclick="{_pdf_js}">&#11015; Download PDF (Beveiligd)</button>'
+            '<button onclick="window.close()">Sluiten</button>'
+            '</div>'
+        )
+
     # QR inline rendered inside the receipt title (right side, no text)
     qr_inline = ""
     if qr_data_url:
@@ -1087,60 +1181,79 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
 <meta charset="UTF-8">
 <title>Kwitantie {kwitantie_nummer}</title>
 <style>
-  @page {{ size: A4; margin: 0 !important; }}
+  @page {{ size: A5 portrait; margin: 0 !important; }}
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+  html, body {{ width: 148mm; }}
   body {{
     font-family: 'Georgia', 'Times New Roman', serif;
-    font-size: 9pt;
-    line-height: 1.3;
+    font-size: 8.5pt;
+    line-height: 1.25;
     color: #000;
     background: #fff;
+    position: relative;
+  }}
+  /* Tamper-proof diagonal watermark */
+  body::before {{
+    content: "ORIGINEEL";
+    position: fixed;
+    top: 38%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    font-size: 64pt;
+    font-weight: bold;
+    color: rgba(0, 0, 0, 0.05);
+    letter-spacing: 8px;
+    z-index: 0;
+    pointer-events: none;
+    white-space: nowrap;
   }}
   .page {{
-    width: 100%;
-    max-width: 180mm;
+    width: 148mm;
+    min-height: 210mm;
     margin: 0 auto;
-    padding: 12mm 15mm;
+    padding: 8mm 10mm;
     page-break-inside: avoid;
+    position: relative;
+    z-index: 1;
   }}
   .header {{
-    border-bottom: 2px solid #000;
-    padding-bottom: 8px;
-    margin-bottom: 10px;
+    border-bottom: 1.5px solid #000;
+    padding-bottom: 5px;
+    margin-bottom: 6px;
   }}
   .company-name {{
-    font-size: 13pt;
+    font-size: 11pt;
     font-weight: bold;
     color: #000;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.4px;
   }}
   .company-info {{
-    font-size: 7pt;
+    font-size: 6.5pt;
     color: #000;
-    margin-top: 2px;
-    line-height: 1.3;
+    margin-top: 1px;
+    line-height: 1.25;
   }}
   .receipt-title {{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    margin: 10px 0;
+    gap: 8px;
+    margin: 6px 0 4px;
   }}
   .receipt-title .title-wrap {{
     flex: 1;
     text-align: center;
   }}
   .receipt-title h1 {{
-    font-size: 14pt;
+    font-size: 12pt;
     color: #000;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
     text-transform: uppercase;
   }}
   .receipt-title .qr-inline {{
-    width: 70px;
-    height: 70px;
+    width: 58px;
+    height: 58px;
     flex-shrink: 0;
   }}
   .receipt-title .qr-inline img {{
@@ -1149,21 +1262,21 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
     display: block;
   }}
   .receipt-number {{
-    font-size: 9pt;
+    font-size: 8pt;
     color: #000;
     font-weight: bold;
     font-family: 'Courier New', monospace;
-    margin-top: 2px;
+    margin-top: 1px;
   }}
   .details-table {{
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
   }}
   .details-table td {{
-    padding: 4px 8px;
+    padding: 2.5px 6px;
     border-bottom: 1px solid #e5e7eb;
-    font-size: 9pt;
+    font-size: 8.5pt;
     color: #000;
   }}
   .details-table tr:last-child td {{
@@ -1171,8 +1284,8 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
   }}
   .details-table td:first-child {{
     color: #000;
-    width: 35%;
-    font-size: 8pt;
+    width: 38%;
+    font-size: 7.5pt;
     text-transform: uppercase;
     letter-spacing: 0.3px;
   }}
@@ -1182,62 +1295,81 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
   }}
   .amount-row {{
     background: #fff;
-    border-top: 2px solid #000 !important;
-    border-bottom: 2px solid #000 !important;
+    border-top: 1.5px solid #000 !important;
+    border-bottom: 1.5px solid #000 !important;
   }}
   .amount-row td {{
-    padding: 8px;
-    font-size: 12pt !important;
+    padding: 5px 6px;
+    font-size: 10.5pt !important;
     font-weight: bold !important;
     color: #000 !important;
   }}
   .amount-row td:last-child {{
     color: #000 !important;
     text-align: right;
-    font-size: 13pt !important;
+    font-size: 11.5pt !important;
   }}
   .stamp-section {{
     display: flex;
     align-items: center;
     justify-content: space-around;
-    gap: 12px;
-    margin: 14px 0 6px;
+    gap: 8px;
+    margin: 8px 0 4px;
     flex-wrap: wrap;
   }}
   .stamp-rect {{
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    border: 2px solid #991b1b;
-    padding: 6px 12px;
+    gap: 6px;
+    border: 1.5px solid #991b1b;
+    padding: 4px 9px;
     transform: rotate(-5deg);
-    opacity: 0.85;
+    opacity: 0.88;
   }}
-  .stamp-info p {{ margin: 0; line-height: 1.3; }}
-  .stamp-info .stamp-name {{ color: #991b1b; font-weight: bold; font-size: 8pt; }}
-  .stamp-info .stamp-detail {{ color: #1a1a1a; font-size: 7pt; }}
+  .stamp-info p {{ margin: 0; line-height: 1.25; }}
+  .stamp-info .stamp-name {{ color: #991b1b; font-weight: bold; font-size: 7.5pt; }}
+  .stamp-info .stamp-detail {{ color: #1a1a1a; font-size: 6.5pt; }}
   .approval-signature {{
     text-align: center;
-    min-width: 160px;
+    min-width: 130px;
   }}
   .approval-signature img {{
-    max-width: 180px;
-    max-height: 60px;
+    max-width: 150px;
+    max-height: 46px;
     display: block;
     margin: 0 auto 2px;
   }}
   .approval-signature .sig-label {{
-    border-top: 1.5px solid #000;
-    padding-top: 3px;
-    font-size: 7.5pt;
+    border-top: 1px solid #000;
+    padding-top: 2px;
+    font-size: 7pt;
     color: #000;
     font-weight: bold;
   }}
-  .footer {{
+  .verified-banner {{
     margin-top: 6px;
-    padding-top: 4px;
+    padding: 4px 8px;
+    border: 1.5px solid #15803d;
+    color: #15803d;
+    font-weight: bold;
+    font-size: 8pt;
+    text-align: center;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }}
+  .doc-hash {{
+    margin-top: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 6pt;
+    color: #555;
+    text-align: center;
+    word-break: break-all;
+  }}
+  .footer {{
+    margin-top: 5px;
+    padding-top: 3px;
     border-top: 1px solid #000;
-    font-size: 6.5pt;
+    font-size: 6pt;
     color: #000;
     text-align: center;
     line-height: 1.2;
@@ -1288,18 +1420,22 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
     cursor: pointer;
     font-weight: bold;
     margin: 0 4px;
+    text-decoration: none;
+    display: inline-block;
   }}
+  .print-bar button.pdf-btn {{ background: #15803d; }}
   .print-bar button:hover {{ background: #d35400; }}
+  .print-bar button.pdf-btn:hover {{ background: #166534; }}
   @media print {{
     .print-bar {{ display: none !important; }}
     body {{ padding: 0; margin: 0; }}
-    .page {{ padding: 8mm 12mm; margin: 0; }}
-    @page {{ margin: 0 !important; }}
+    .page {{ padding: 6mm 8mm; margin: 0; }}
+    @page {{ size: A5 portrait; margin: 0 !important; }}
   }}
 </style>
 </head>
 <body>
-{'' if noprint else '<div class="print-bar"><button onclick="window.print()">Afdrukken / Print</button><button onclick="window.close()">Sluiten</button></div>'}
+{print_bar_html}
 
 <div class="page" style="{'margin-top: 0' if noprint else 'margin-top: 40px'}; position: relative;">
 
@@ -1356,6 +1492,10 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
 </div>
 
 {qr_block}
+
+{verified_banner_html}
+
+<div class="doc-hash">Document-hash (SHA-256): {doc_hash_short} &middot; {doc_hash_full}</div>
 
 <div class="footer">
   {stamp_name} &bull; {stamp_address} &bull; {kwitantie_nummer}
