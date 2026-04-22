@@ -1,4 +1,5 @@
 {
+  "id": "/vastgoed",
   "name": "Vastgoed Kiosk",
   "short_name": "Kiosk",
   "description": "Vastgoed huurbetaling kiosk terminal",
@@ -12,8 +13,10 @@
   "icons": [
     { "src": "/kiosk-icons/kiosk-72.png", "sizes": "72x72", "type": "image/png", "purpose": "any" },
     { "src": "/kiosk-icons/kiosk-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
-    { "src": "/kiosk-icons/kiosk-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/kiosk-icons/kiosk-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    { "src": "/kiosk-icons/kiosk-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/kiosk-icons/kiosk-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/kiosk-icons/kiosk-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/kiosk-icons/kiosk-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "categories": ["business", "finance"],
   "lang": "nl",

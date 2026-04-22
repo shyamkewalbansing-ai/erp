@@ -3,7 +3,7 @@
  * BELANGRIJK: Cache index.html tijdens install en serveer bij navigatie
  */
 
-const CACHE_NAME = 'boekhouding-v3';
+const CACHE_NAME = 'boekhouding-v4';
 
 // Bestanden die ALTIJD gecached moeten worden
 const PRECACHE_FILES = [
