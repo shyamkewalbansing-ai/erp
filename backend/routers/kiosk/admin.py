@@ -443,12 +443,20 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                 months_billed = 0
                 check_month = billed_date + relativedelta(months=1)
                 
+                # Helper: clamp billing_day to the actual last day of the target month.
+                # This ensures billing_day=30 works in April (30 days), May (31), but clamps
+                # to 28/29 in February automatically.
+                import calendar as _cal
+                def _safe_due(dt, day):
+                    last_day = _cal.monthrange(dt.year, dt.month)[1]
+                    return dt.replace(day=min(day, last_day))
+
                 while True:
                     prev_month = check_month - relativedelta(months=1)
                     if billing_next_month:
-                        due_date = check_month.replace(day=min(billing_day, 28))
+                        due_date = _safe_due(check_month, billing_day)
                     else:
-                        due_date = prev_month.replace(day=min(billing_day, 28))
+                        due_date = _safe_due(prev_month, billing_day)
                     
                     if engine_now >= due_date.replace(tzinfo=timezone.utc):
                         months_billed += 1
@@ -481,9 +489,9 @@ async def list_tenants(company: dict = Depends(get_current_company)):
             if outstanding > 0 and fine_amount > 0 and not updates.get("last_fine_month"):
                 billed_dt = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
                 if billing_next_month:
-                    current_due = (billed_dt + relativedelta(months=1)).replace(day=min(billing_day, 28))
+                    current_due = _safe_due(billed_dt + relativedelta(months=1), billing_day)
                 else:
-                    current_due = billed_dt.replace(day=min(billing_day, 28))
+                    current_due = _safe_due(billed_dt, billing_day)
                 
                 if now >= current_due.replace(tzinfo=timezone.utc):
                     last_fine_month = t.get("last_fine_month", "")
@@ -543,9 +551,9 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                 try:
                     bt_dt = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
                     if billing_next_month:
-                        due_dt = (bt_dt + relativedelta(months=1)).replace(day=min(billing_day, 28))
+                        due_dt = _safe_due(bt_dt + relativedelta(months=1), billing_day)
                     else:
-                        due_dt = bt_dt.replace(day=min(billing_day, 28))
+                        due_dt = _safe_due(bt_dt, billing_day)
                     cutoff_dt = due_dt + timedelta(days=power_cutoff_days)
                     if now >= cutoff_dt.replace(tzinfo=timezone.utc):
                         shelly = await db.kiosk_shelly_devices.find_one(
