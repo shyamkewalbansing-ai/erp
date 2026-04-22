@@ -75,6 +75,51 @@
                 addLink('apple-touch-icon', apple180, { sizes: '180x180' });
                 addLink('apple-touch-icon', apple167, { sizes: '167x167' });
 
+                // iOS splash screens (branded oranje met huis-logo) voor Kiosk PWAs
+                if (isKiosk) {
+                    var splashes = [
+                        // iPad Pro 12.9"
+                        { w: 2048, h: 2732, dpr: 2, orient: 'portrait', f: 'ipad-pro-12-portrait.png' },
+                        { w: 2732, h: 2048, dpr: 2, orient: 'landscape', f: 'ipad-pro-12-landscape.png' },
+                        // iPad Pro 11"
+                        { w: 1668, h: 2388, dpr: 2, orient: 'portrait', f: 'ipad-pro-11-portrait.png' },
+                        { w: 2388, h: 1668, dpr: 2, orient: 'landscape', f: 'ipad-pro-11-landscape.png' },
+                        // iPad
+                        { w: 1536, h: 2048, dpr: 2, orient: 'portrait', f: 'ipad-portrait.png' },
+                        { w: 2048, h: 1536, dpr: 2, orient: 'landscape', f: 'ipad-landscape.png' },
+                        // iPhone 15/14 Pro Max (430x932 @3x)
+                        { w: 1290, h: 2796, dpr: 3, orient: 'portrait', f: 'iphone-15-promax-portrait.png' },
+                        { w: 2796, h: 1290, dpr: 3, orient: 'landscape', f: 'iphone-15-promax-landscape.png' },
+                        // iPhone 15/14 Pro (393x852 @3x)
+                        { w: 1179, h: 2556, dpr: 3, orient: 'portrait', f: 'iphone-15-pro-portrait.png' },
+                        { w: 2556, h: 1179, dpr: 3, orient: 'landscape', f: 'iphone-15-pro-landscape.png' },
+                        // iPhone 13/14 (390x844 @3x)
+                        { w: 1170, h: 2532, dpr: 3, orient: 'portrait', f: 'iphone-13-portrait.png' },
+                        { w: 2532, h: 1170, dpr: 3, orient: 'landscape', f: 'iphone-13-landscape.png' },
+                        // iPhone X/XS/11Pro (375x812 @3x)
+                        { w: 1125, h: 2436, dpr: 3, orient: 'portrait', f: 'iphone-x-portrait.png' },
+                        { w: 2436, h: 1125, dpr: 3, orient: 'landscape', f: 'iphone-x-landscape.png' },
+                        // iPhone XS Max / 11 Pro Max (414x896 @3x)
+                        { w: 1242, h: 2688, dpr: 3, orient: 'portrait', f: 'iphone-xs-max-portrait.png' },
+                        { w: 2688, h: 1242, dpr: 3, orient: 'landscape', f: 'iphone-xs-max-landscape.png' },
+                        // iPhone XR / 11 (414x896 @2x)
+                        { w: 828, h: 1792, dpr: 2, orient: 'portrait', f: 'iphone-xr-portrait.png' },
+                        { w: 1792, h: 828, dpr: 2, orient: 'landscape', f: 'iphone-xr-landscape.png' },
+                        // iPhone 6/7/8/SE (375x667 @2x)
+                        { w: 750, h: 1334, dpr: 2, orient: 'portrait', f: 'iphone-8-portrait.png' },
+                        { w: 1334, h: 750, dpr: 2, orient: 'landscape', f: 'iphone-8-landscape.png' }
+                    ];
+                    splashes.forEach(function(s) {
+                        var l = document.createElement('link');
+                        l.rel = 'apple-touch-startup-image';
+                        l.href = '/kiosk-icons/splash/' + s.f + '?v=' + v;
+                        var cssW = Math.round(s.w / s.dpr);
+                        var cssH = Math.round(s.h / s.dpr);
+                        l.media = '(device-width: ' + cssW + 'px) and (device-height: ' + cssH + 'px) and (-webkit-device-pixel-ratio: ' + s.dpr + ') and (orientation: ' + s.orient + ')';
+                        document.head.appendChild(l);
+                    });
+                }
+
                 // Theme color + apple title
                 var mTheme = document.querySelector('meta[name="theme-color"]');
                 if (mTheme) mTheme.content = themeColor;
