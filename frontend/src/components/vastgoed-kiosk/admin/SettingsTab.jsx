@@ -329,10 +329,11 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
               <input
                 type="number"
                 min="1"
-                max="28"
+                max="31"
                 value={billingDay}
-                onChange={(e) => setBillingDay(parseInt(e.target.value) || 1)}
+                onChange={(e) => setBillingDay(Math.min(31, Math.max(1, parseInt(e.target.value) || 1)))}
                 className="w-24 px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 text-center text-lg font-bold"
+                data-testid="billing-day-input"
               />
               <span className="text-sm text-slate-500">van de</span>
               <div className="flex bg-slate-100 rounded-xl p-1">
@@ -352,7 +353,39 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
                 </button>
               </div>
             </div>
-            <div className="bg-slate-50 rounded-lg p-3 text-sm text-slate-600">
+
+            {/* Live vervaldata preview — toont echte einde-van-maand clamping */}
+            <div className="bg-slate-50 rounded-lg p-3 mb-2 border border-slate-200" data-testid="due-dates-preview">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Vervaldata preview (volgende 6 maanden)</p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                {(() => {
+                  const monthsNl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+                  const now = new Date();
+                  const rows = [];
+                  for (let i = 0; i < 6; i++) {
+                    // "Huur voor maand X vervalt op dag Y van maand X (dezelfde) of maand X+1 (volgende)"
+                    const rentMonth = new Date(now.getFullYear(), now.getMonth() + i, 1);
+                    const dueMonth = new Date(rentMonth.getFullYear(), rentMonth.getMonth() + (billingNextMonth ? 1 : 0), 1);
+                    const lastDay = new Date(dueMonth.getFullYear(), dueMonth.getMonth() + 1, 0).getDate();
+                    const actualDay = Math.min(billingDay, lastDay);
+                    const clamped = actualDay !== billingDay;
+                    rows.push(
+                      <div key={i} className="bg-white rounded px-2 py-1.5 border border-slate-100">
+                        <p className="text-[10px] text-slate-400">Huur {monthsNl[rentMonth.getMonth()]}</p>
+                        <p className="font-bold text-slate-800">
+                          {actualDay} {monthsNl[dueMonth.getMonth()]}
+                          {clamped && <span className="text-amber-600 ml-1" title={`Dag ${billingDay} bestaat niet in ${monthsNl[dueMonth.getMonth()]} — gekapt naar ${actualDay}`}>*</span>}
+                        </p>
+                      </div>
+                    );
+                  }
+                  return rows;
+                })()}
+              </div>
+              <p className="text-[10px] text-slate-400 mt-2">* = dag {billingDay} bestaat niet in die maand, wordt automatisch de laatste dag gebruikt.</p>
+            </div>
+
+            <div className="bg-orange-50 rounded-lg p-3 text-sm text-slate-600 border border-orange-100">
               <span className="font-medium">Voorbeeld:</span> Huur van maart moet betaald zijn voor{' '}
               <span className="font-bold text-orange-600">
                 {billingDay} {billingNextMonth ? 'april' : 'maart'}
