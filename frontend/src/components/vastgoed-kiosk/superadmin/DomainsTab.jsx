@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
   Globe, Plus, Trash2, RefreshCw, Check, X, Copy, Terminal,
-  AlertCircle, Loader2, Server, ShieldCheck, Sparkles
+  AlertCircle, Loader2, Server, ShieldCheck, Sparkles, FileSearch
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -15,6 +15,7 @@ export default function DomainsTab({ token }) {
   const [commands, setCommands] = useState(null);
   const [verifyResults, setVerifyResults] = useState({}); // { domain: {dns, ssl} }
   const [verifyingDomain, setVerifyingDomain] = useState(null);
+  const [showAnalyzer, setShowAnalyzer] = useState(false);
 
   const headers = { Authorization: `Bearer ${token}` };
 
@@ -131,6 +132,14 @@ export default function DomainsTab({ token }) {
           >
             <Terminal className="w-4 h-4" /> Commando's
           </button>
+          <button
+            onClick={() => setShowAnalyzer(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-sm font-semibold"
+            data-testid="open-config-analyzer"
+            title="Plak je huidige nginx config en zie exact wat je moet wijzigen"
+          >
+            <FileSearch className="w-4 h-4" /> Config Analyzer
+          </button>
         </div>
       </div>
 
@@ -214,6 +223,15 @@ export default function DomainsTab({ token }) {
         <CommandsModal
           commands={commands}
           onClose={() => setCommands(null)}
+          onCopy={copyToClipboard}
+        />
+      )}
+
+      {/* Config Analyzer modal */}
+      {showAnalyzer && (
+        <ConfigAnalyzerModal
+          token={token}
+          onClose={() => setShowAnalyzer(false)}
           onCopy={copyToClipboard}
         />
       )}
@@ -517,6 +535,231 @@ function CodeBlock({ label, code, onCopy, testid }) {
         </button>
       </div>
       <pre className="p-3 text-[11px] text-green-400 font-mono overflow-x-auto leading-relaxed whitespace-pre-wrap break-all">{code}</pre>
+    </div>
+  );
+}
+
+
+// ============== CONFIG ANALYZER MODAL ==============
+function ConfigAnalyzerModal({ token, onClose, onCopy }) {
+  const [configText, setConfigText] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const headers = { Authorization: `Bearer ${token}` };
+
+  const handleAnalyze = async () => {
+    if (!configText.trim()) { toast.error('Plak eerst je nginx config'); return; }
+    setAnalyzing(true);
+    try {
+      const res = await axios.post(`${API}/superadmin/domains/analyze-nginx-config`, {
+        config_text: configText,
+        main_domain: 'facturatie.sr'
+      }, { headers });
+      setResult(res.data);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Analyse mislukt');
+    }
+    setAnalyzing(false);
+  };
+
+  const renderDiffLine = (line, idx) => {
+    let cls = 'text-slate-400';
+    if (line.startsWith('+++') || line.startsWith('---')) cls = 'text-slate-500 font-bold';
+    else if (line.startsWith('@@')) cls = 'text-indigo-400 font-bold';
+    else if (line.startsWith('+')) cls = 'text-green-400 bg-green-500/10';
+    else if (line.startsWith('-')) cls = 'text-red-400 bg-red-500/10';
+    return <div key={idx} className={`${cls} font-mono text-[11px] px-2 whitespace-pre`}>{line || ' '}</div>;
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <div className="bg-white sm:rounded-2xl shadow-2xl w-full max-w-4xl h-[100dvh] sm:h-auto sm:max-h-[92vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="p-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center flex-shrink-0">
+              <FileSearch className="w-5 h-5 text-white" />
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-bold text-slate-900">Nginx Config Analyzer</h3>
+              <p className="text-xs text-slate-500 truncate">Plak je huidige nginx config → zie exact wat je moet wijzigen</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0">
+            <X className="w-4 h-4 text-slate-500" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+          {!result && (
+            <>
+              {/* Instructies */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs space-y-1">
+                <p className="font-bold text-amber-900">📋 Hoe werkt dit?</p>
+                <ol className="list-decimal list-inside space-y-0.5 text-amber-800">
+                  <li>SSH naar je productieserver</li>
+                  <li>Kopieer je huidige config: <code className="bg-amber-100 px-1 rounded font-mono">cat /etc/nginx/sites-enabled/facturatie.conf</code></li>
+                  <li>Plak hieronder → klik "Analyseer"</li>
+                  <li>De app toont exact welke <code className="bg-amber-100 px-1 rounded font-mono">server_name</code> regels je moet wijzigen</li>
+                </ol>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">Plak je nginx config hier</label>
+                <textarea
+                  value={configText}
+                  onChange={e => setConfigText(e.target.value)}
+                  rows={14}
+                  placeholder={`server {\n    listen 80;\n    server_name facturatie.sr www.facturatie.sr;\n    ...\n}\n\nserver {\n    listen 443 ssl;\n    server_name facturatie.sr www.facturatie.sr;\n    ssl_certificate ...\n}`}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs font-mono focus:outline-none focus:border-amber-400"
+                  data-testid="config-analyzer-textarea"
+                />
+              </div>
+
+              <button
+                onClick={handleAnalyze}
+                disabled={analyzing || !configText.trim()}
+                className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                data-testid="run-analyzer-btn"
+              >
+                {analyzing ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileSearch className="w-4 h-4" />}
+                {analyzing ? 'Analyseren...' : 'Analyseer config'}
+              </button>
+            </>
+          )}
+
+          {result && (
+            <>
+              {/* Status overview */}
+              <div className={`rounded-lg p-3 border ${result.all_domains_covered ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+                <div className="flex items-center gap-2 mb-1">
+                  {result.all_domains_covered
+                    ? <><Check className="w-4 h-4 text-green-600" /><p className="text-sm font-bold text-green-800">Alles in orde!</p></>
+                    : <><AlertCircle className="w-4 h-4 text-red-600" /><p className="text-sm font-bold text-red-800">{result.missing_domains.length} domein(en) ontbreken</p></>
+                  }
+                </div>
+                <p className="text-xs text-slate-600">
+                  {result.blocks_found} server block(s) gevonden · Vereiste domeinen: {result.required_domains.length}
+                </p>
+                {result.missing_domains.length > 0 && (
+                  <p className="text-xs text-red-700 mt-1 font-mono">Ontbrekend: {result.missing_domains.join(', ')}</p>
+                )}
+              </div>
+
+              {/* Per block analysis */}
+              <div>
+                <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Server blocks</h4>
+                <div className="space-y-2">
+                  {result.analysis.map((b, i) => (
+                    <div key={i} className={`rounded-lg p-3 border text-xs ${b.ok ? 'bg-slate-50 border-slate-200' : 'bg-red-50 border-red-200'}`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-bold text-slate-900">{b.label} — regel {b.start_line}-{b.end_line}</span>
+                        {b.ok
+                          ? <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded text-[10px] font-bold">OK</span>
+                          : <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded text-[10px] font-bold">AANPASSEN</span>
+                        }
+                      </div>
+                      <p className="text-slate-500">Huidig: <span className="font-mono text-slate-700">{b.current_server_names.join(' ')}</span></p>
+                      {b.missing.length > 0 && (
+                        <p className="text-red-600 mt-0.5">Toe te voegen: <span className="font-mono">{b.missing.join(' ')}</span></p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Changes — inline diff */}
+              {result.changes.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Wijzigingen ({result.changes.length})</h4>
+                  <div className="space-y-2">
+                    {result.changes.map((c, i) => (
+                      <div key={i} className="bg-slate-900 rounded-lg overflow-hidden">
+                        <div className="px-3 py-1.5 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
+                          <span className="text-[10px] text-slate-400 font-semibold">{c.block_label} · regel {c.block_start_line}</span>
+                        </div>
+                        <div className="p-2 font-mono text-[11px] leading-relaxed">
+                          <div className="text-red-400 bg-red-500/10 px-2 py-0.5">- {c.old}</div>
+                          <div className="text-green-400 bg-green-500/10 px-2 py-0.5">+ {c.new}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Full unified diff */}
+              {result.diff && (
+                <div>
+                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Volledige diff</h4>
+                  <div className="bg-slate-900 rounded-lg overflow-hidden">
+                    <div className="px-3 py-1.5 bg-slate-800 border-b border-slate-700 flex items-center justify-between">
+                      <span className="text-[10px] text-slate-400 font-semibold">unified diff</span>
+                      <button
+                        onClick={() => onCopy(result.diff, 'Diff')}
+                        className="flex items-center gap-1 px-2 py-0.5 bg-slate-700 hover:bg-slate-600 text-green-400 rounded text-[10px] font-bold"
+                      >
+                        <Copy className="w-3 h-3" /> Kopieer
+                      </button>
+                    </div>
+                    <div className="py-2 overflow-x-auto max-h-64">
+                      {result.diff.split('\n').map((l, i) => renderDiffLine(l, i))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* New config full */}
+              {result.changes.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Nieuwe volledige config</h4>
+                  <CodeBlock
+                    label="Vervang je hele facturatie.conf met dit"
+                    code={result.new_config}
+                    onCopy={() => onCopy(result.new_config, 'Nieuwe config')}
+                    testid="copy-new-config"
+                  />
+                </div>
+              )}
+
+              {/* Next steps */}
+              <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-3 text-xs space-y-2">
+                <p className="font-bold text-indigo-900">🚀 Vervolgstappen op productie</p>
+                <CodeBlock
+                  label="1. Test + reload"
+                  code={result.reload_command}
+                  onCopy={() => onCopy(result.reload_command, 'Reload commando')}
+                  testid="copy-reload-cmd"
+                />
+                {!result.all_domains_covered && (
+                  <CodeBlock
+                    label="2. Certificaat opnieuw installeren (indien nodig)"
+                    code={result.install_cert_command}
+                    onCopy={() => onCopy(result.install_cert_command, 'Install commando')}
+                    testid="copy-install-cmd"
+                  />
+                )}
+              </div>
+
+              <button
+                onClick={() => { setResult(null); setConfigText(''); }}
+                className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-sm font-medium"
+                data-testid="analyze-again-btn"
+              >
+                ↺ Nieuwe analyse
+              </button>
+            </>
+          )}
+        </div>
+
+        <div className="p-4 border-t border-slate-100 flex items-center justify-end flex-shrink-0 bg-slate-50">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-semibold"
+            data-testid="analyzer-close"
+          >Sluiten</button>
+        </div>
+      </div>
     </div>
   );
 }

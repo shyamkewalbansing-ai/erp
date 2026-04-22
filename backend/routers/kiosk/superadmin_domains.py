@@ -370,3 +370,159 @@ server {{
         "dns_instructions": dns_instructions,
         "steps": steps,
     }
+
+
+# ============== NGINX CONFIG ANALYZER ==============
+
+class NginxConfigAnalyze(BaseModel):
+    config_text: str  # raw inhoud van /etc/nginx/sites-enabled/facturatie.conf
+    main_domain: str = "facturatie.sr"
+
+
+def _parse_server_blocks(config: str):
+    """Parse nginx config text and return list of server blocks with line numbers
+    and extracted server_name values."""
+    import re
+    blocks = []
+    lines = config.split("\n")
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+        # Detect "server {" start (with possible whitespace, may be on same line as open brace)
+        if re.match(r'^\s*server\s*\{?\s*$', stripped) or stripped == "server":
+            start = i
+            depth = 0
+            # Find opening brace (may be on next line)
+            found_open = "{" in line
+            j = i
+            while j < len(lines):
+                depth += lines[j].count("{") - lines[j].count("}")
+                if "{" in lines[j]:
+                    found_open = True
+                if found_open and depth == 0:
+                    end = j
+                    break
+                j += 1
+            else:
+                break
+            block_text = "\n".join(lines[start:end + 1])
+            # Extract server_name
+            sn_match = re.search(r'^\s*server_name\s+([^;]+);', block_text, re.MULTILINE)
+            server_names = []
+            if sn_match:
+                server_names = sn_match.group(1).split()
+            # Detect if HTTPS
+            is_https = "listen" in block_text and ("443" in block_text or "ssl" in block_text)
+            is_http = re.search(r'listen\s+(\[::\]:)?80\b', block_text) is not None
+            blocks.append({
+                "start_line": start + 1,
+                "end_line": end + 1,
+                "server_names": server_names,
+                "is_https": is_https,
+                "is_http": is_http,
+                "text": block_text,
+                "server_name_line": sn_match.start() if sn_match else -1,
+                "server_name_match": sn_match.group(0) if sn_match else None,
+            })
+            i = end + 1
+        else:
+            i += 1
+    return blocks
+
+
+@router.post("/superadmin/domains/analyze-nginx-config")
+async def sa_analyze_nginx_config(data: NginxConfigAnalyze, admin=Depends(get_superadmin)):
+    """Parse de geplakte nginx config, vergelijk met alle huidige custom_domains,
+    en geef terug welke regels gewijzigd moeten worden."""
+    config = data.config_text
+    if not config.strip():
+        raise HTTPException(status_code=400, detail="Config is leeg")
+
+    main = data.main_domain.strip().lower()
+
+    # Verzamel alle benodigde domeinen
+    companies = await db.kiosk_companies.find(
+        {"custom_domain": {"$nin": [None, ""]}},
+        {"_id": 0, "custom_domain": 1, "name": 1}
+    ).to_list(500)
+
+    required_domains = {main, f"www.{main}"}
+    for c in companies:
+        cd = (c.get("custom_domain") or "").strip().lower()
+        if cd:
+            required_domains.add(cd)
+
+    blocks = _parse_server_blocks(config)
+    if not blocks:
+        raise HTTPException(status_code=400, detail="Geen 'server { ... }' blokken gevonden — is dit wel een nginx config?")
+
+    # Analyseer elk block
+    analysis = []
+    overall_missing = set(required_domains)
+    for b in blocks:
+        present = set(n.lower() for n in b["server_names"])
+        missing = required_domains - present
+        overall_missing -= present  # als een block alles al heeft, geen actie
+        analysis.append({
+            "start_line": b["start_line"],
+            "end_line": b["end_line"],
+            "is_https": b["is_https"],
+            "is_http": b["is_http"],
+            "label": "HTTPS (443)" if b["is_https"] else ("HTTP (80)" if b["is_http"] else "onbekend"),
+            "current_server_names": b["server_names"],
+            "missing": sorted(list(missing)),
+            "ok": len(missing) == 0,
+        })
+
+    # Genereer voorgestelde nieuwe config met aangepaste server_name regels
+    import re
+    new_config = config
+    changes = []  # list of {old_line, new_line, line_number}
+
+    # Vervang server_name regels in alle blokken die relevant zijn (HTTP/HTTPS)
+    for b in blocks:
+        if not (b["is_http"] or b["is_https"]):
+            continue
+        current = b["server_names"]
+        current_set = set(n.lower() for n in current)
+        if required_domains <= current_set:
+            continue  # al volledig
+        merged = list(current) + [d for d in sorted(required_domains) if d not in current_set]
+        new_sn_line = "    server_name " + " ".join(merged) + ";"
+
+        if b["server_name_match"]:
+            # Escape voor regex vervang
+            old_line = b["server_name_match"]
+            new_config = new_config.replace(old_line, new_sn_line, 1)
+            changes.append({
+                "old": old_line.strip(),
+                "new": new_sn_line.strip(),
+                "block_label": "HTTPS (443)" if b["is_https"] else "HTTP (80)",
+                "block_start_line": b["start_line"],
+            })
+
+    # Genereer diff (unified-style)
+    import difflib
+    diff_lines = list(difflib.unified_diff(
+        config.split("\n"),
+        new_config.split("\n"),
+        fromfile="huidige config",
+        tofile="nieuwe config",
+        lineterm="",
+        n=2,
+    ))
+
+    return {
+        "main_domain": main,
+        "required_domains": sorted(list(required_domains)),
+        "blocks_found": len(blocks),
+        "analysis": analysis,
+        "changes": changes,
+        "missing_domains": sorted(list(overall_missing)),
+        "all_domains_covered": len(overall_missing) == 0,
+        "new_config": new_config,
+        "diff": "\n".join(diff_lines),
+        "install_cert_command": f"sudo certbot install --cert-name {main}-0002  # of zonder -0002 afhankelijk van welke cert-name je hebt",
+        "reload_command": "sudo nginx -t && sudo systemctl reload nginx",
+    }
