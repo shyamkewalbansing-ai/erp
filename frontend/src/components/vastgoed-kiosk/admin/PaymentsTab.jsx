@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import axios from 'axios';
 import ReceiptTicket from '../ReceiptTicket';
 import SignatureModal from './SignatureModal';
+import { getKioskOriginAPI } from './utils';
 
 function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD, token, company, tenants, onDeletePayment, onRefresh }) {
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -102,7 +103,8 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
   };
 
   const handlePrintDirect = (payment) => {
-    window.open(`${API}/admin/payments/${payment.payment_id}/receipt/pdf?token=${token}`, '_blank');
+    const origin = getKioskOriginAPI();
+    window.open(`${origin}/admin/payments/${payment.payment_id}/receipt/pdf?token=${token}`, '_blank');
   };
 
   // Fetch receipt HTML when preview modal opens
@@ -140,10 +142,10 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
         await fetch(`${PRINT_SERVER_URL}/print`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(printData) });
       } else {
         // Open backend-generated PDF in new tab for printing (A5, encrypted, tamper-proof)
-        window.open(`${API}/admin/payments/${selectedPayment.payment_id}/receipt/pdf?token=${token}`, '_blank');
+        window.open(`${getKioskOriginAPI()}/admin/payments/${selectedPayment.payment_id}/receipt/pdf?token=${token}`, '_blank');
       }
     } catch {
-      window.open(`${API}/admin/payments/${selectedPayment.payment_id}/receipt/pdf?token=${token}`, '_blank');
+      window.open(`${getKioskOriginAPI()}/admin/payments/${selectedPayment.payment_id}/receipt/pdf?token=${token}`, '_blank');
     }
   };
 

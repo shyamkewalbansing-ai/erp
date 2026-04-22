@@ -3,7 +3,7 @@ import {
   Users, CreditCard, Plus, Pencil, Trash2, DollarSign, Search, 
   FileText, Mail, Eye, XCircle, CheckCircle
 } from 'lucide-react';
-import { API, axios, formatSRD, formatAmount } from './utils';
+import { API, axios, formatSRD, formatAmount, getKioskOriginAPI } from './utils';
 import LeaseModal from './LeaseModal';
 
 function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAddTenant, onEditTenant, onAddRent, onRefresh, token }) {
@@ -469,7 +469,7 @@ function LeasesTab({ leases, tenants, apartments, formatSRD, onRefresh, token })
   const activeTenants = tenants.filter(t => t.status === 'active');
 
   const openLeaseDoc = async (leaseId) => {
-    window.open(`${API}/admin/leases/${leaseId}/document?token=${token}`, '_blank');
+    window.open(`${getKioskOriginAPI()}/admin/leases/${leaseId}/document?token=${token}`, '_blank');
   };
 
   const handleDeleteLease = async (leaseId) => {

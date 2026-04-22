@@ -46,7 +46,7 @@
                 var appleTitle = 'Facturatie';
 
                 if (isVastgoedPath || isCustomKioskDomain) {
-                    manifest = '/manifest-vastgoed.json';
+                    manifest = isCustomKioskDomain ? '/manifest-kiosk-custom.json' : '/manifest-vastgoed.json';
                     appleTitle = 'Kiosk';
                     document.title = 'Vastgoed Kiosk';
                     themeColor = '#f97316';

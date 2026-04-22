@@ -2,7 +2,7 @@
 Appartement Kiosk - Standalone Huurbetalingen System
 Multi-tenant SaaS voor vastgoedbeheer in Suriname
 """
-from fastapi import APIRouter, HTTPException, Depends, Response
+from fastapi import APIRouter, HTTPException, Depends, Response, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 from typing import List, Optional
@@ -22,7 +22,7 @@ security = HTTPBearer(auto_error=False)
 # Explicit __all__ so `from .base import *` includes underscore-prefixed helpers
 __all__ = [
     # Re-export stdlib/third-party for sub-modules
-    "APIRouter", "HTTPException", "Depends", "Response",
+    "APIRouter", "HTTPException", "Depends", "Response", "Request",
     "HTTPBearer", "HTTPAuthorizationCredentials",
     "BaseModel", "EmailStr", "List", "Optional",
     "datetime", "timezone", "timedelta", "relativedelta",

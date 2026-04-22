@@ -916,7 +916,7 @@ async def get_payment(payment_id: str, company: dict = Depends(get_current_compa
 
 
 @router.get("/admin/payments/{payment_id}/receipt")
-async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint: Optional[str] = None):
+async def generate_receipt(payment_id: str, request: Request, token: Optional[str] = None, noprint: Optional[str] = None):
     """Generate printable receipt/kwitantie HTML. Pass ?noprint=1 to disable auto-print (for iframe preview)."""
     if not token:
         raise HTTPException(status_code=401, detail="Token vereist")
@@ -929,11 +929,11 @@ async def generate_receipt(payment_id: str, token: Optional[str] = None, noprint
     payment = await db.kiosk_payments.find_one({"payment_id": payment_id, "company_id": company_id})
     if not payment:
         raise HTTPException(status_code=404, detail="Betaling niet gevonden")
-    return await _render_receipt_html(payment, company_id, noprint=bool(noprint))
+    return await _render_receipt_html(payment, company_id, noprint=bool(noprint), request=request)
 
 
 @router.get("/public/receipt/{payment_id}")
-async def public_receipt(payment_id: str):
+async def public_receipt(payment_id: str, request: Request):
     """Publicly accessible receipt view (for QR code scanning). 
     Payment_id is a UUID, non-guessable. Only shows approved payments."""
     payment = await db.kiosk_payments.find_one({"payment_id": payment_id})
@@ -941,19 +941,19 @@ async def public_receipt(payment_id: str):
         raise HTTPException(status_code=404, detail="Kwitantie niet gevonden")
     if payment.get("status") not in ("approved", "completed"):
         raise HTTPException(status_code=404, detail="Kwitantie niet beschikbaar")
-    return await _render_receipt_html(payment, payment["company_id"], noprint=True, public_view=True)
+    return await _render_receipt_html(payment, payment["company_id"], noprint=True, public_view=True, request=request)
 
 
-async def _render_receipt_pdf_bytes(payment: dict, company_id: str, public_view: bool = False) -> bytes:
+async def _render_receipt_pdf_bytes(payment: dict, company_id: str, public_view: bool = False, request=None) -> bytes:
     """Render the kwitantie as a tamper-protected, encrypted PDF (A5 compact)."""
-    html_resp = await _render_receipt_html(payment, company_id, noprint=True, public_view=public_view)
+    html_resp = await _render_receipt_html(payment, company_id, noprint=True, public_view=public_view, request=request)
     html_bytes = html_resp.body if hasattr(html_resp, "body") else html_resp
     html_str = html_bytes.decode("utf-8", errors="ignore") if isinstance(html_bytes, bytes) else str(html_bytes)
     return await _encrypt_receipt_pdf(html_str)
 
 
 @router.get("/admin/payments/{payment_id}/receipt/pdf")
-async def generate_receipt_pdf(payment_id: str, token: Optional[str] = None):
+async def generate_receipt_pdf(payment_id: str, request: Request, token: Optional[str] = None):
     """Download the kwitantie as a tamper-protected, encrypted PDF (A5, compact)."""
     if not token:
         raise HTTPException(status_code=401, detail="Token vereist")
@@ -965,7 +965,7 @@ async def generate_receipt_pdf(payment_id: str, token: Optional[str] = None):
     payment = await db.kiosk_payments.find_one({"payment_id": payment_id, "company_id": company_id})
     if not payment:
         raise HTTPException(status_code=404, detail="Betaling niet gevonden")
-    pdf_bytes = await _render_receipt_pdf_bytes(payment, company_id, public_view=False)
+    pdf_bytes = await _render_receipt_pdf_bytes(payment, company_id, public_view=False, request=request)
     filename = f"Kwitantie_{payment.get('kwitantie_nummer', payment_id)}.pdf"
     return Response(
         content=pdf_bytes,
@@ -975,14 +975,14 @@ async def generate_receipt_pdf(payment_id: str, token: Optional[str] = None):
 
 
 @router.get("/public/receipt/{payment_id}/pdf")
-async def public_receipt_pdf(payment_id: str):
+async def public_receipt_pdf(payment_id: str, request: Request):
     """Publicly download the verified kwitantie PDF (only for approved payments)."""
     payment = await db.kiosk_payments.find_one({"payment_id": payment_id})
     if not payment:
         raise HTTPException(status_code=404, detail="Kwitantie niet gevonden")
     if payment.get("status") not in ("approved", "completed"):
         raise HTTPException(status_code=404, detail="Kwitantie niet beschikbaar")
-    pdf_bytes = await _render_receipt_pdf_bytes(payment, payment["company_id"], public_view=True)
+    pdf_bytes = await _render_receipt_pdf_bytes(payment, payment["company_id"], public_view=True, request=request)
     filename = f"Kwitantie_{payment.get('kwitantie_nummer', payment_id)}.pdf"
     return Response(
         content=pdf_bytes,
@@ -991,11 +991,29 @@ async def public_receipt_pdf(payment_id: str):
     )
 
 
-async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = False, public_view: bool = False):
+def _get_request_base_url(request) -> str:
+    """Bepaal de juiste publieke base URL voor deze request.
+    Respecteert X-Forwarded-Host en X-Forwarded-Proto (gezet door nginx/reverse proxy).
+    Valt terug op APP_URL env var wanneer geen request beschikbaar is (bv. scheduler).
+    """
+    if request is None:
+        return _os.environ.get("APP_URL", "https://facturatie.sr").rstrip("/")
+    try:
+        # Respect proxy headers
+        forwarded_host = request.headers.get("x-forwarded-host") or request.headers.get("host")
+        forwarded_proto = request.headers.get("x-forwarded-proto") or request.url.scheme
+        if forwarded_host:
+            return f"{forwarded_proto}://{forwarded_host}".rstrip("/")
+    except Exception:
+        pass
+    return _os.environ.get("APP_URL", "https://facturatie.sr").rstrip("/")
+
+
+async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = False, public_view: bool = False, request=None):
     """Render the kwitantie HTML. Shared between /admin/.../receipt and /public/receipt/..."""
 
     # Build public QR URL (authentic kwitantie link) for this payment
-    app_url = _os.environ.get("APP_URL", "https://facturatie.sr").rstrip("/")
+    app_url = _get_request_base_url(request)
     qr_url = f"{app_url}/api/kiosk/public/receipt/{payment['payment_id']}"
     qr_data_url = ""
     try:
