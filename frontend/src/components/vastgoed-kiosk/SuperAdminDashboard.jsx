@@ -4,9 +4,10 @@ import {
   Building2, Users, Home, CreditCard, Loader2, Search,
   Crown, ArrowLeft, TrendingUp, DollarSign, Shield,
   ToggleLeft, ToggleRight, Power, PowerOff, RefreshCw,
-  LogIn, Trash2
+  LogIn, Trash2, Globe
 } from 'lucide-react';
 import axios from 'axios';
+import DomainsTab from './superadmin/DomainsTab';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 const PRO_PRICE = 3500;
@@ -273,6 +274,7 @@ export default function SuperAdminDashboard() {
   const TABS = [
     { id: 'companies', label: 'Bedrijven', icon: Building2 },
     { id: 'payments', label: 'Abonnement Facturen', icon: CreditCard },
+    { id: 'domains', label: 'Domeinen', icon: Globe },
   ];
 
   if (loading) {
@@ -662,6 +664,11 @@ export default function SuperAdminDashboard() {
               </div>
             )}
           </div>
+        )}
+
+        {/* Domains Tab */}
+        {activeTab === 'domains' && (
+          <DomainsTab token={token} />
         )}
       </div>
     </div>

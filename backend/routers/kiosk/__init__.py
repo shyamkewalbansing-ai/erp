@@ -14,6 +14,7 @@ from . import kas_accounts  # noqa: F401
 from . import devices
 from . import messaging
 from . import superadmin
+from . import superadmin_domains  # noqa: F401
 from . import faceid
 from . import scheduler
 
