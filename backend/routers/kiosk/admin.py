@@ -581,11 +581,12 @@ async def list_tenants(company: dict = Depends(get_current_company)):
                 remainder_amt = outstanding - (months_owed * monthly_rent)
                 if remainder_amt > 0:
                     months_owed += 1
-                # Overdue months: count backward from billed_through, EXCLUDING billed_through itself
-                # Because: tenant pays for billed_through month NEXT month (not yet due)
+                # Overdue months: count backward from billed_through INCLUSIVE
+                # In advance mode: billed_through is the last month added to outstanding.
+                # If outstanding > 0, billed_through itself is the most recent overdue month.
                 month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
                 for i in range(months_owed):
-                    m_date = bt_date - relativedelta(months=i + 1)
+                    m_date = bt_date - relativedelta(months=i)
                     m_name = month_names_nl[m_date.month - 1]
                     overdue_months.append(f"{m_name} {m_date.year}")
                 overdue_months.reverse()
