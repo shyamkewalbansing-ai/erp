@@ -19,9 +19,18 @@
         <script>
             (function() {
                 var p = window.location.pathname;
-                var isVastgoed = p.indexOf('/vastgoed') === 0;
-                var isHuurders = p.indexOf('/huurders') === 0;
-                var isKiosk = isVastgoed || isHuurders;
+                var host = window.location.hostname;
+                var isVastgoedPath = p.indexOf('/vastgoed') === 0;
+                var isHuurdersPath = p.indexOf('/huurders') === 0;
+
+                // Detect custom domain: not facturatie.sr, niet preview, niet localhost
+                var mainDomains = ['facturatie.sr', 'www.facturatie.sr', 'app.facturatie.sr', 'localhost', '127.0.0.1'];
+                var isMainDomain = mainDomains.indexOf(host) >= 0
+                    || host.indexOf('.preview.emergentagent.com') >= 0
+                    || host.endsWith('.facturatie.sr');
+                var isCustomKioskDomain = !isMainDomain;
+
+                var isKiosk = isVastgoedPath || isHuurdersPath || isCustomKioskDomain;
 
                 var v = '2026-02-24';  // cache-bust voor iOS apple-touch-icon
 
@@ -36,12 +45,12 @@
                 var themeColor = '#0caf60';
                 var appleTitle = 'Facturatie';
 
-                if (isVastgoed) {
+                if (isVastgoedPath || isCustomKioskDomain) {
                     manifest = '/manifest-vastgoed.json';
                     appleTitle = 'Kiosk';
                     document.title = 'Vastgoed Kiosk';
                     themeColor = '#f97316';
-                } else if (isHuurders) {
+                } else if (isHuurdersPath) {
                     manifest = '/manifest-huurders.json';
                     appleTitle = 'Huurders';
                     document.title = 'Huurders Portaal';
