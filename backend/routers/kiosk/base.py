@@ -404,6 +404,7 @@ class CompanyUpdate(BaseModel):
     adres: Optional[str] = None
     billing_day: Optional[int] = None  # 1-28
     billing_next_month: Optional[bool] = None  # True = deadline is next month
+    rent_billing_mode: Optional[str] = None  # 'arrears' (achteraf) | 'advance' (vooruit, default)
     fine_amount: Optional[float] = None
     power_cutoff_days: Optional[int] = None  # Days after due date to auto-cut power (0 = disabled)
     stamp_company_name: Optional[str] = None

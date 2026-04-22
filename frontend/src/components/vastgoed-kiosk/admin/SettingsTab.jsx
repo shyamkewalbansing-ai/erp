@@ -13,6 +13,8 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
   const [settingsSubTab, setSettingsSubTab] = useState('general');
   const [billingDay, setBillingDay] = useState(company?.billing_day || 1);
   const [billingNextMonth, setBillingNextMonth] = useState(company?.billing_next_month !== false);
+  const [rentBillingMode, setRentBillingMode] = useState(company?.rent_billing_mode || 'advance');
+  const [shiftingBillingMode, setShiftingBillingMode] = useState(false);
   const [fineAmount, setFineAmount] = useState(company?.fine_amount || 0);
   const [powerCutoffDays, setPowerCutoffDays] = useState(company?.power_cutoff_days || 0);
   const [stampName, setStampName] = useState(company?.stamp_company_name || '');
@@ -227,6 +229,7 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
       await axios.put(`${API}/auth/settings`, {
         billing_day: billingDay,
         billing_next_month: billingNextMonth,
+        rent_billing_mode: rentBillingMode,
         fine_amount: fineAmount,
         power_cutoff_days: powerCutoffDays
       }, { headers: { Authorization: `Bearer ${token}` } });
@@ -321,6 +324,68 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
         </div>
 
         <div className="grid grid-cols-1 gap-6">
+          {/* Huurincasso modus */}
+          <div className="border border-slate-200 rounded-xl p-4 bg-slate-50" data-testid="rent-billing-mode-section">
+            <label className="block text-sm font-semibold text-slate-900 mb-2">
+              Huurincasso modus
+            </label>
+            <p className="text-xs text-slate-500 mb-3">
+              Hoe wordt de huur gerekend t.o.v. de huidige maand? Dit bepaalt welke maand als "openstaand" wordt getoond.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+              <button
+                type="button"
+                onClick={() => setRentBillingMode('arrears')}
+                data-testid="rent-mode-arrears"
+                className={`p-3 border-2 rounded-xl text-left transition ${rentBillingMode === 'arrears' ? 'border-orange-500 bg-orange-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+              >
+                <p className={`font-bold text-sm ${rentBillingMode === 'arrears' ? 'text-orange-700' : 'text-slate-700'}`}>Achteraf</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">In april incasseer je de huur van <b>maart</b></p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setRentBillingMode('advance')}
+                data-testid="rent-mode-advance"
+                className={`p-3 border-2 rounded-xl text-left transition ${rentBillingMode === 'advance' ? 'border-orange-500 bg-orange-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+              >
+                <p className={`font-bold text-sm ${rentBillingMode === 'advance' ? 'text-orange-700' : 'text-slate-700'}`}>Vooruit</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">In april incasseer je de huur van <b>april</b></p>
+              </button>
+            </div>
+            <div className="bg-white rounded-lg p-3 text-xs text-slate-600 border border-slate-200">
+              <p className="font-medium mb-1">Wat doet dit?</p>
+              <ul className="list-disc pl-4 space-y-0.5">
+                <li>Bepaalt de initiële <code className="bg-slate-100 px-1 rounded">Gefactureerd t/m</code> voor <b>nieuwe</b> huurders</li>
+                <li>Via de knop "Corrigeer bestaande huurders" hieronder kunt u <b>alle actieve huurders</b> in één keer herkalibreren</li>
+              </ul>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!window.confirm(
+                  `Weet u zeker dat u ALLE actieve huurders wilt herkalibreren naar modus "${rentBillingMode === 'arrears' ? 'Achteraf' : 'Vooruit'}"?\n\n` +
+                  `Dit past zowel de 'Gefactureerd t/m' als het openstaand saldo aan.\n\n` +
+                  `Tip: sla eerst de modus op met de groene "Opslaan" knop hieronder als u die zojuist gewijzigd heeft.`
+                )) return;
+                setShiftingBillingMode(true);
+                try {
+                  const r = await axios.post(`${API}/admin/tenants/shift-billing-mode`, {}, { headers: { Authorization: `Bearer ${token}` } });
+                  alert(r.data?.message || 'Klaar');
+                  onRefresh();
+                } catch (err) {
+                  alert(err.response?.data?.detail || 'Mislukt');
+                } finally {
+                  setShiftingBillingMode(false);
+                }
+              }}
+              disabled={shiftingBillingMode}
+              data-testid="shift-billing-mode-btn"
+              className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 disabled:opacity-50"
+            >
+              {shiftingBillingMode ? 'Bezig...' : 'Corrigeer bestaande huurders naar deze modus'}
+            </button>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
               Huur vervalt op dag
