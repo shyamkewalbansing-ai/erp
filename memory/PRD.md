@@ -1,5 +1,29 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 56 (feb 2026) — Huurincasso modus (Achteraf vs Vooruit)
+
+### Verzoek
+Gebruiker wilde per bedrijf kunnen instellen of de huur **vooruit** (standaard, bv. april betaalt voor april) of **achteraf** (april betaalt voor maart) wordt geïnd. De auto-billing engine moest dit respecteren en bestaande huurders moesten bulk 1 maand teruggeschoven kunnen worden zonder data te verliezen.
+
+### Implementatie
+**Backend:**
+- `kiosk_companies` DB: nieuw veld `rent_billing_mode` ∈ `{"advance", "arrears"}` (default `"advance"`)
+- `CompanyUpdate` model accepteert `rent_billing_mode`
+- `list_tenants` in `admin.py`: auto-billing logica evalueert nu modus voordat `next_billing_date` wordt doorgerold
+- **Nieuw endpoint** `POST /api/kiosk/admin/tenants/bulk-shift-billing` — verplaatst `next_billing_date` van alle huurders binnen bedrijf één maand terug (voor migratie naar arrears)
+- `/auth/me` exposed `rent_billing_mode` naar frontend
+
+**Frontend (`SettingsTab.jsx`):**
+- Nieuwe sectie "Huurincasso modus" met radio-keuze Achteraf / Vooruit
+- Bulk-shift-knop met bevestigingsdialog + teller van aangepaste huurders
+- Duidelijke NL uitleg wanneer welke modus geschikt is
+
+### Tested ✅
+- Screenshot E2E in vorige fork bevestigt UI + flow werken correct
+- Auto-billing rolt datums correct door in beide modi
+
+---
+
 ## Sprint 55 (22 april 2026) — Twilio SMS ondersteuning + WhatsApp debugging
 
 ### Verzoek
