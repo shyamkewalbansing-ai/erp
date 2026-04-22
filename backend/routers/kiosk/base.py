@@ -820,36 +820,71 @@ async def _encrypt_receipt_pdf(html_str: str) -> bytes:
     """Render HTML to PDF via WeasyPrint and encrypt with pikepdf.
     Uses a random owner password to block edit/copy/assemble. User password is empty
     so anyone can view. Returns PDF bytes.
+
+    Graceful degradation:
+    - If WeasyPrint is not installed/usable (missing system libs like libpango),
+      raise a clear HTTP 500 with install instructions.
+    - If pikepdf is not installed, return the un-encrypted PDF and log a warning
+      (document is still a valid A4 PDF, just not tamper-proof).
     """
     import io as _io
-    import secrets as _secrets
-    from weasyprint import HTML as _WHTML
-    import pikepdf as _pikepdf
+    import logging as _logging
+
+    _log = _logging.getLogger("kiosk.pdf")
+
+    # --- 1. Render HTML -> PDF (WeasyPrint) ---
+    try:
+        from weasyprint import HTML as _WHTML
+    except Exception as e:  # ImportError or libpango missing
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "PDF rendering niet beschikbaar: WeasyPrint ontbreekt of kan niet laden. "
+                "Installeer op de server:  pip install weasyprint==68.1  "
+                "en systeempakketten:  apt-get install -y libpango-1.0-0 libpangoft2-1.0-0. "
+                f"Originele fout: {e}"
+            ),
+        )
 
     def _make_pdf():
         return _WHTML(string=html_str, base_url=os.environ.get("APP_URL", "")).write_pdf()
 
     pdf_bytes = await asyncio.to_thread(_make_pdf)
 
+    # --- 2. Encrypt PDF (pikepdf) — optional ---
+    try:
+        import secrets as _secrets
+        import pikepdf as _pikepdf
+    except ImportError:
+        _log.warning(
+            "pikepdf niet geïnstalleerd — PDF wordt niet gecodeerd. "
+            "Installeer met: pip install pikepdf==10.5.1"
+        )
+        return pdf_bytes
+
     owner_pw = _secrets.token_urlsafe(32)
     in_buf = _io.BytesIO(pdf_bytes)
     out_buf = _io.BytesIO()
-    with _pikepdf.open(in_buf) as pdf:
-        with pdf.open_metadata() as meta:
-            meta["dc:creator"] = "Vastgoed Kiosk ERP"
-            meta["pdf:Producer"] = "facturatie.sr"
-        perms = _pikepdf.Permissions(
-            extract=False,
-            modify_annotation=False,
-            modify_assembly=False,
-            modify_form=False,
-            modify_other=False,
-            print_lowres=True,
-            print_highres=True,
-        )
-        pdf.save(
-            out_buf,
-            encryption=_pikepdf.Encryption(owner=owner_pw, user="", R=6, allow=perms),
-            linearize=True,
-        )
-    return out_buf.getvalue()
+    try:
+        with _pikepdf.open(in_buf) as pdf:
+            with pdf.open_metadata() as meta:
+                meta["dc:creator"] = "Vastgoed Kiosk ERP"
+                meta["pdf:Producer"] = "facturatie.sr"
+            perms = _pikepdf.Permissions(
+                extract=False,
+                modify_annotation=False,
+                modify_assembly=False,
+                modify_form=False,
+                modify_other=False,
+                print_lowres=True,
+                print_highres=True,
+            )
+            pdf.save(
+                out_buf,
+                encryption=_pikepdf.Encryption(owner=owner_pw, user="", R=6, allow=perms),
+                linearize=True,
+            )
+        return out_buf.getvalue()
+    except Exception as e:
+        _log.warning(f"pikepdf encryptie mislukt, val terug op un-encrypted PDF: {e}")
+        return pdf_bytes
