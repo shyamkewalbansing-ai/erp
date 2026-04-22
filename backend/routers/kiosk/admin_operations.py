@@ -133,65 +133,6 @@ async def advance_tenant_month(tenant_id: str, company: dict = Depends(get_curre
     }
 
 
-@router.post("/admin/tenants/shift-billing-mode")
-async def shift_all_tenants_billing_mode(company: dict = Depends(get_current_company)):
-    """Corrigeer `rent_billed_through` voor alle actieve huurders naar de ingestelde `rent_billing_mode`.
-    
-    - `advance`  → billed_through moet huidige maand zijn
-    - `arrears`  → billed_through moet vorige maand zijn (huur van vorige maand nog openstaand)
-    
-    Past het saldo (outstanding_rent) dienovereenkomstig aan door het verschil in maanden te verrekenen.
-    """
-    from dateutil.relativedelta import relativedelta
-    company_id = company["company_id"]
-    mode = (company.get("rent_billing_mode") or "advance").lower()
-    now = datetime.now(timezone.utc)
-    current_month = now.strftime("%Y-%m")
-    target_month = current_month
-    if mode == "arrears":
-        target_month = (now - relativedelta(months=1)).strftime("%Y-%m")
-
-    tenants = await db.kiosk_tenants.find({"company_id": company_id, "status": "active"}).to_list(1000)
-    adjusted = 0
-    for t in tenants:
-        billed = t.get("rent_billed_through", "")
-        if not billed or billed == target_month:
-            continue
-        billed_date = datetime.strptime(billed + "-01", "%Y-%m-%d")
-        target_date = datetime.strptime(target_month + "-01", "%Y-%m-%d")
-        months_diff = (billed_date.year - target_date.year) * 12 + (billed_date.month - target_date.month)
-        if months_diff == 0:
-            continue
-        monthly_rent = float(t.get("monthly_rent", 0) or 0)
-        internet_cost = float(t.get("internet_cost", 0) or 0)
-        outstanding = float(t.get("outstanding_rent", 0) or 0)
-        internet_outstanding = float(t.get("internet_outstanding", 0) or 0)
-        # Subtract if ahead (positive diff), add if behind (negative diff)
-        new_outstanding = max(0.0, outstanding - monthly_rent * months_diff)
-        new_internet = max(0.0, internet_outstanding - internet_cost * months_diff)
-        await db.kiosk_tenants.update_one(
-            {"tenant_id": t["tenant_id"]},
-            {"$set": {
-                "rent_billed_through": target_month,
-                "outstanding_rent": new_outstanding,
-                "internet_outstanding": new_internet,
-                "updated_at": datetime.now(timezone.utc),
-            }},
-        )
-        adjusted += 1
-
-    month_names_nl = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
-    td = datetime.strptime(target_month + "-01", "%Y-%m-%d")
-    target_label = f"{month_names_nl[td.month - 1]} {td.year}"
-    return {
-        "message": f"{adjusted} huurder(s) bijgewerkt naar gefactureerd t/m {target_label}",
-        "mode": mode,
-        "target_month": target_month,
-        "adjusted": adjusted,
-    }
-
-
-
 async def reset_tenant_to_current_month(tenant_id: str, company: dict = Depends(get_current_company)):
     """Reset tenant's billing status back to the current real-world month.
     Useful when `rent_billed_through` was accidentally advanced too far into the future.

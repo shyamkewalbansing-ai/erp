@@ -152,7 +152,6 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "adres": company.get("adres"),
         "billing_day": company.get("billing_day", 1),
         "billing_next_month": company.get("billing_next_month", True),
-        "rent_billing_mode": company.get("rent_billing_mode", "advance"),
         "fine_amount": company.get("fine_amount", 0),
         "power_cutoff_days": company.get("power_cutoff_days", 0),
         "stamp_company_name": company.get("stamp_company_name", ""),

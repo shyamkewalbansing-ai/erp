@@ -410,19 +410,10 @@ async def list_tenants(company: dict = Depends(get_current_company)):
     comp = await db.kiosk_companies.find_one({"company_id": company_id})
     billing_day = comp.get("billing_day", 1) if comp else 1
     billing_next_month = comp.get("billing_next_month", True) if comp else True
-    rent_billing_mode = (comp.get("rent_billing_mode") or "advance").lower() if comp else "advance"
     fine_amount = comp.get("fine_amount", 0) if comp else 0
     
     now = datetime.now(timezone.utc)
-    # In "arrears" (achteraf) mode, the engine sees time as 1 month earlier so it never
-    # bills the CURRENT month — it only bills months that have fully ended.
-    # e.g. On April 22 met mode=arrears: engine acts as if it's March 22, so it bills
-    # up to February (last fully-ended month before March). Combined with the correct
-    # initial billed_through (= previous month), this keeps tenant always 1 month behind.
-    if rent_billing_mode == "arrears":
-        engine_now = now - relativedelta(months=1)
-    else:
-        engine_now = now
+    engine_now = now
     current_month = now.strftime("%Y-%m")
     
     result = []
@@ -710,16 +701,6 @@ async def create_tenant(data: TenantCreate, company: dict = Depends(get_current_
     # Inherit currency from apartment (tenant always uses apartment's currency)
     tenant_currency = (data.currency or apt.get("currency") or "SRD").upper()
 
-    # Rent billing mode: 'arrears' (achteraf) = in April we collect March rent
-    #                   'advance' (vooruit, default) = in April we collect April rent
-    rent_mode = (company.get("rent_billing_mode") or "advance").lower()
-    if rent_mode == "arrears":
-        # Today is April: first unpaid month is LAST month (March)
-        first_unpaid = (now - relativedelta(months=1))
-        initial_billed_through = first_unpaid.strftime("%Y-%m")
-    else:
-        initial_billed_through = now.strftime("%Y-%m")
-
     tenant = {
         "tenant_id": tenant_id,
         "company_id": company["company_id"],
@@ -732,12 +713,12 @@ async def create_tenant(data: TenantCreate, company: dict = Depends(get_current_
         "phone": data.telefoon,
         "monthly_rent": data.monthly_rent,
         "currency": tenant_currency,
-        "outstanding_rent": data.monthly_rent,  # Start with first month rent (current month in advance, or previous month in arrears)
+        "outstanding_rent": data.monthly_rent,  # Start with current month rent owed
         "service_costs": 0,
         "fines": 0,
         "deposit_required": data.deposit_required,
         "deposit_paid": 0,
-        "rent_billed_through": initial_billed_through,
+        "rent_billed_through": now.strftime("%Y-%m"),
         "status": "active",
         "id_card_number": data.id_card_number,
         "id_card_name": data.id_card_name,
