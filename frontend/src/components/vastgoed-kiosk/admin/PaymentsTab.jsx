@@ -315,38 +315,38 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
             ? (p.remaining_rent || 0) + (p.remaining_service || 0) + (p.remaining_fines || 0) + (p.remaining_internet || 0)
             : (tenantMap[p.tenant_name] || tenantMap[p.tenant_code] || 0);
           return (
-            <div key={p.payment_id} className="p-4">
-              <div className="flex items-start justify-between mb-1.5">
-                <div>
-                  <p className="font-bold text-slate-900 text-sm">{p.tenant_name}</p>
-                  <p className="text-xs text-slate-400">{p.apartment_number} · {new Date(p.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+            <div key={p.payment_id} className="p-4 overflow-hidden">
+              <div className="flex items-start justify-between gap-2 mb-1.5 min-w-0">
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-slate-900 text-sm truncate">{p.tenant_name}</p>
+                  <p className="text-xs text-slate-400 truncate">{p.apartment_number} · {new Date(p.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
                 </div>
-                <p className="font-bold text-slate-900">{fmtC(p.amount, p.currency)}</p>
+                <p className="font-bold text-slate-900 flex-shrink-0 whitespace-nowrap text-sm">{fmtC(p.amount, p.currency)}</p>
               </div>
               <div className="flex items-center gap-2 flex-wrap mb-1.5">
                 <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-[10px] font-medium">
                   {{monthly_rent:'Maandhuur',rent:'Huur',service_costs:'Service',deposit:'Borg',fine:'Boete',fines:'Boete',partial_rent:'Deelbetaling',internet:'Internet',other:'Overig'}[p.payment_type] || p.payment_type}
                 </span>
-                <span className="text-[10px] text-orange-600 font-mono">{p.kwitantie_nummer}</span>
+                <span className="text-[10px] text-orange-600 font-mono truncate max-w-[60%]">{p.kwitantie_nummer}</span>
                 {p.status === 'pending' && <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 rounded text-[10px] font-bold">IN AFWACHTING</span>}
                 {p.status === 'rejected' && <span className="px-1.5 py-0.5 bg-red-100 text-red-600 rounded text-[10px] font-bold">AFGEWEZEN</span>}
               </div>
               {p.covered_months?.length > 0 && (
-                <p className="text-xs text-slate-500 mb-1">Periode: {p.covered_months.join(', ')}</p>
+                <p className="text-xs text-slate-500 mb-1 truncate">Periode: {p.covered_months.join(', ')}</p>
               )}
               {p.processed_by && (
-                <p className="text-xs text-slate-500 mb-1.5">
+                <p className="text-xs text-slate-500 mb-1.5 truncate">
                   Ontvangen door: <span className="text-slate-700 font-semibold">{p.processed_by}</span>
                   {p.approved_by && p.approved_by !== p.processed_by && (
                     <span className="text-slate-400"> · gk: {p.approved_by}</span>
                   )}
                 </p>
               )}
-              <div className="flex items-center justify-between pt-1.5 border-t border-slate-50">
-                <span className="text-xs">
-                  {p.status === 'pending' ? <span className="font-medium text-yellow-600">Wacht op goedkeuring</span> : rem > 0 ? <span className="font-bold text-red-600">Open: {fmtC(rem, p.currency)}</span> : <span className="text-green-600 font-medium">Voldaan</span>}
+              <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-50 flex-wrap">
+                <span className="text-xs min-w-0 truncate">
+                  {p.status === 'pending' ? <span className="font-medium text-yellow-600">Wacht op goedkeuring</span> : rem > 0 ? <span className="font-bold text-red-600 whitespace-nowrap">Open: {fmtC(rem, p.currency)}</span> : <span className="text-green-600 font-medium">Voldaan</span>}
                 </span>
-                <div className="flex items-center gap-0.5">
+                <div className="flex items-center gap-0.5 flex-shrink-0">
                   {p.status === 'pending' ? (
                     <>
                       <button onClick={() => handleApprove(p.payment_id)} disabled={approving === p.payment_id} className="text-green-500 hover:text-green-700 p-1.5 disabled:opacity-50"><CheckCircle className="w-5 h-5" /></button>
