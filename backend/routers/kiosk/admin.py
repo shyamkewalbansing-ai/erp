@@ -1684,10 +1684,10 @@ async def fix_covered_months(company: dict = Depends(get_current_company)):
         if remainder > 0:
             months_owed += 1
         
-        # Build covered months: exclude billed_through, count from oldest
+        # Build covered months: include billed_through itself, count from oldest
         all_unpaid = []
         for i in range(months_owed):
-            m_date = bt_date - relativedelta(months=i + 1)
+            m_date = bt_date - relativedelta(months=i)
             all_unpaid.append(f"{month_names_nl[m_date.month - 1]} {m_date.year}")
         all_unpaid.reverse()
         
@@ -1740,10 +1740,10 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
             if remainder > 0:
                 months_owed += 1
             month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
-            # Build list of unpaid months: exclude billed_through (current, not yet due)
+            # Build list of unpaid months: include billed_through itself (most recent overdue)
             all_unpaid = []
             for i in range(months_owed):
-                m_date = bt_date - relativedelta(months=i + 1)
+                m_date = bt_date - relativedelta(months=i)
                 all_unpaid.append({"label": f"{month_names_nl[m_date.month - 1]} {m_date.year}"})
             all_unpaid.reverse()
             # Map payment amount to months (oldest/overdue first)
