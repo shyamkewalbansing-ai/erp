@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Search, GripVertical } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, GripVertical, Building2 } from 'lucide-react';
 import { API, axios, formatAmount } from './utils';
 
 function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete, token, onRefresh }) {
@@ -139,25 +139,26 @@ function ApartmentsTab({ apartments, tenants, formatSRD, onAdd, onEdit, onDelete
         </table>
       </div>
       {/* Mobile card layout */}
-      <div className="md:hidden divide-y divide-slate-100">
+      <div className="md:hidden divide-y divide-slate-100 overflow-hidden">
         {filteredApartments.map((apt) => {
           const tenant = tenants.find(t => t.apartment_id === apt.apartment_id && t.status === 'active');
           const isOccupied = apt.status === 'occupied';
           return (
-            <div key={apt.apartment_id} className="p-4 flex items-center gap-3">
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${isOccupied ? 'bg-red-50 border-2 border-red-200' : 'bg-green-50 border-2 border-green-200'}`}>
-                <span className={`text-sm font-black ${isOccupied ? 'text-red-600' : 'text-green-600'}`}>{apt.number}</span>
+            <div key={apt.apartment_id} className="p-3 flex items-center gap-3 min-w-0">
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${isOccupied ? 'bg-red-50 border-2 border-red-200' : 'bg-green-50 border-2 border-green-200'}`}>
+                <Building2 className={`w-5 h-5 ${isOccupied ? 'text-red-500' : 'text-green-600'}`} />
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <span className="font-bold text-slate-900 text-sm truncate">{tenant?.name || 'Beschikbaar'}</span>
+              <div className="flex-1 min-w-0 overflow-hidden">
+                <div className="flex items-center gap-2 mb-0.5 min-w-0">
+                  <span className="font-bold text-slate-900 text-sm truncate flex-1 min-w-0">{apt.number}</span>
                   <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold flex-shrink-0 ${isOccupied ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
                     {isOccupied ? 'Bezet' : 'Vrij'}
                   </span>
                 </div>
+                <p className="text-[11px] text-slate-600 truncate">{tenant?.name || <span className="text-slate-400">Beschikbaar</span>}</p>
                 {apt.location_name && <p className="text-[11px] text-violet-500 font-semibold truncate">{apt.location_name}</p>}
                 {apt.description && <p className="text-[11px] text-slate-400 truncate">{apt.description}</p>}
-                <p className="text-sm font-bold text-orange-600">{formatAmount(apt.monthly_rent, apt.currency)}</p>
+                <p className="text-sm font-bold text-orange-600 truncate">{formatAmount(apt.monthly_rent, apt.currency)}</p>
               </div>
               <div className="flex items-center gap-0.5 flex-shrink-0">
                 <button onClick={() => onEdit(apt)} className="text-slate-400 hover:text-orange-500 p-2"><Pencil className="w-4 h-4" /></button>
