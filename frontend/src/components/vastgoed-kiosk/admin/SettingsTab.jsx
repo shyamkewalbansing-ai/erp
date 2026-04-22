@@ -54,6 +54,9 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
   const [twilioToken, setTwilioToken] = useState(company?.twilio_auth_token || '');
   const [twilioPhone, setTwilioPhone] = useState(company?.twilio_phone_number || '');
   const [twilioEnabled, setTwilioEnabled] = useState(company?.twilio_enabled || false);
+  const [twilioSmsNumber, setTwilioSmsNumber] = useState(company?.twilio_sms_number || '');
+  const [twilioMode, setTwilioMode] = useState(company?.twilio_mode || 'whatsapp');  // whatsapp | sms | both
+  const [twilioTestPhone, setTwilioTestPhone] = useState('');
   const [twilioTesting, setTwilioTesting] = useState(false);
   const [twilioTestResult, setTwilioTestResult] = useState(null);
 
@@ -130,6 +133,8 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
         twilio_account_sid: twilioSid,
         twilio_auth_token: twilioToken,
         twilio_phone_number: twilioPhone,
+        twilio_sms_number: twilioSmsNumber,
+        twilio_mode: twilioMode,
         twilio_enabled: twilioEnabled,
       }, { headers: { Authorization: `Bearer ${token}` } });
       onRefresh();
@@ -141,14 +146,25 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
   };
 
   const handleTestTwilio = async () => {
+    if (!twilioTestPhone || !twilioTestPhone.trim()) {
+      alert('Vul eerst een test-telefoonnummer in (bv. +597XXXXXXX)');
+      return;
+    }
     setTwilioTesting(true);
     setTwilioTestResult(null);
     try {
       await handleSaveTwilio();
-      const res = await axios.post(`${API}/admin/twilio/test`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.post(`${API}/auth/twilio/test`, {
+        phone: twilioTestPhone.trim(),
+        mode: twilioMode,
+      }, { headers: { Authorization: `Bearer ${token}` } });
       setTwilioTestResult(res.data);
     } catch (err) {
-      setTwilioTestResult({ status: 'error', message: 'Test mislukt' });
+      setTwilioTestResult({
+        success: false,
+        error: err.response?.data?.detail || err.message || 'Test mislukt',
+        results: []
+      });
     } finally {
       setTwilioTesting(false);
     }
@@ -768,22 +784,22 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
         )}
       </div>
 
-      {/* Twilio SMS Integration */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6">
+      {/* Twilio SMS + WhatsApp Integration */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6" data-testid="twilio-integration-section">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
             <Phone className="w-5 h-5 text-red-500" />
           </div>
           <div>
-            <h3 className="font-bold text-slate-900">Twilio WhatsApp</h3>
-            <p className="text-xs text-slate-500">Verstuur WhatsApp berichten naar huurders via Twilio</p>
+            <h3 className="font-bold text-slate-900">Twilio WhatsApp & SMS</h3>
+            <p className="text-xs text-slate-500">Verstuur WhatsApp én/of SMS naar huurders via Twilio</p>
           </div>
         </div>
 
         <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl mb-4">
           <div>
-            <p className="font-medium text-slate-800">Twilio WhatsApp activeren</p>
-            <p className="text-xs text-slate-500">Schakel in om WhatsApp berichten te versturen via Twilio</p>
+            <p className="font-medium text-slate-800">Twilio activeren</p>
+            <p className="text-xs text-slate-500">Schakel in om berichten te versturen via Twilio</p>
           </div>
           <button onClick={() => setTwilioEnabled(!twilioEnabled)} className={`w-12 h-6 rounded-full transition-all relative ${twilioEnabled ? 'bg-red-500' : 'bg-slate-300'}`}>
             <div className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-all shadow ${twilioEnabled ? 'left-[26px]' : 'left-0.5'}`} />
@@ -792,6 +808,29 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
 
         {twilioEnabled && (
           <>
+            {/* Channel mode selector */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-slate-700 mb-2">Verzendkanaal</label>
+              <div className="grid grid-cols-3 gap-2" data-testid="twilio-mode-selector">
+                {[
+                  { value: 'whatsapp', label: 'WhatsApp', desc: 'Alleen WhatsApp' },
+                  { value: 'sms', label: 'SMS', desc: 'Alleen SMS' },
+                  { value: 'both', label: 'Beide', desc: 'WhatsApp + SMS' },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setTwilioMode(opt.value)}
+                    data-testid={`twilio-mode-${opt.value}`}
+                    className={`p-3 border-2 rounded-xl text-left transition ${twilioMode === opt.value ? 'border-red-500 bg-red-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}
+                  >
+                    <p className={`font-bold text-sm ${twilioMode === opt.value ? 'text-red-700' : 'text-slate-700'}`}>{opt.label}</p>
+                    <p className="text-[11px] text-slate-500">{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="space-y-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Account SID</label>
@@ -801,35 +840,82 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Auth Token</label>
                 <input type="password" value={twilioToken} onChange={e => setTwilioToken(e.target.value)} placeholder="Uw Twilio Auth Token" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500 font-mono text-sm" />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">WhatsApp Nummer</label>
-                <input type="text" value={twilioPhone} onChange={e => setTwilioPhone(e.target.value)} placeholder="whatsapp:+14155238886" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500 font-mono text-sm" />
+              {(twilioMode === 'whatsapp' || twilioMode === 'both') && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">WhatsApp Nummer <span className="text-red-500">*</span></label>
+                  <input type="text" value={twilioPhone} onChange={e => setTwilioPhone(e.target.value)} placeholder="+14155238886 (sandbox) of uw goedgekeurde WA nummer" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500 font-mono text-sm" />
+                  <p className="text-[11px] text-slate-400 mt-1">Sandbox: <code className="bg-slate-100 px-1 rounded">+14155238886</code>. Het "whatsapp:"-voorvoegsel wordt automatisch toegevoegd.</p>
+                </div>
+              )}
+              {(twilioMode === 'sms' || twilioMode === 'both') && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">SMS Nummer {twilioMode === 'both' && <span className="text-slate-400 text-xs font-normal">(optioneel — anders gebruik WA-nummer)</span>}</label>
+                  <input type="text" value={twilioSmsNumber} onChange={e => setTwilioSmsNumber(e.target.value)} placeholder="+1XXXXXXXXXX (uw Twilio SMS-nummer)" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-red-500 font-mono text-sm" />
+                  <p className="text-[11px] text-slate-400 mt-1">Koop een Twilio nummer met SMS-capability voor uw land in Twilio Console &gt; Phone Numbers.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Test sectie */}
+            <div className="border border-slate-200 rounded-xl p-4 mb-4 bg-slate-50">
+              <p className="font-semibold text-slate-700 mb-2 text-sm">Test verzenden</p>
+              <div className="flex gap-2 flex-wrap">
+                <input
+                  type="text"
+                  value={twilioTestPhone}
+                  onChange={(e) => setTwilioTestPhone(e.target.value)}
+                  placeholder="+597XXXXXXX (uw eigen nummer)"
+                  data-testid="twilio-test-phone"
+                  className="flex-1 min-w-[200px] px-3 py-2.5 border border-slate-200 rounded-xl font-mono text-sm bg-white"
+                />
+                <button
+                  onClick={handleTestTwilio}
+                  disabled={twilioTesting || !twilioSid || !twilioToken}
+                  data-testid="twilio-test-btn"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-700 disabled:opacity-50 text-sm font-medium"
+                >
+                  {twilioTesting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+                  {twilioTesting ? 'Versturen...' : 'Stuur testbericht'}
+                </button>
               </div>
             </div>
 
             {twilioTestResult && (
-              <div className={`mb-4 p-3 rounded-xl text-sm font-medium ${twilioTestResult.status === 'connected' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-                {twilioTestResult.message}
+              <div className={`mb-4 p-4 rounded-xl border ${twilioTestResult.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`} data-testid="twilio-test-result">
+                <p className={`font-bold text-sm mb-2 ${twilioTestResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                  {twilioTestResult.success ? '✓ Testbericht succesvol verstuurd' : '✗ Test mislukt'}
+                </p>
+                {twilioTestResult.error && (
+                  <p className="text-sm text-red-700 font-medium mb-2">{twilioTestResult.error}</p>
+                )}
+                {(twilioTestResult.results || []).map((r, i) => (
+                  <div key={i} className={`mt-2 p-3 rounded-lg ${r.status === 'sent' ? 'bg-white border border-green-200' : 'bg-white border border-red-200'}`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-xs uppercase">{r.channel}</span>
+                      <span className={`text-xs font-bold ${r.status === 'sent' ? 'text-green-600' : 'text-red-600'}`}>{r.status === 'sent' ? 'VERSTUURD' : 'MISLUKT'}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 font-mono">From: {r.from} → To: {r.to}</p>
+                    {r.sid && <p className="text-[11px] text-slate-400 font-mono">SID: {r.sid}</p>}
+                    {r.error && <p className="text-xs text-red-600 mt-1 break-all">{r.error}</p>}
+                    {r.hint && <p className="text-xs text-amber-700 mt-1 bg-amber-50 px-2 py-1 rounded">💡 {r.hint}</p>}
+                  </div>
+                ))}
               </div>
             )}
 
             <div className="bg-slate-50 rounded-xl p-4 mb-4">
-              <p className="font-medium text-slate-700 text-sm mb-2">Hoe instellen?</p>
-              <ol className="text-xs text-slate-500 space-y-1.5 list-decimal pl-4">
-                <li>Ga naar <span className="font-mono text-slate-700">twilio.com/console</span> en maak een account aan</li>
-                <li>Kopieer uw <b>Account SID</b> en <b>Auth Token</b> van het dashboard</li>
-                <li>Ga naar <b>Messaging &gt; Try it out &gt; Send a WhatsApp message</b></li>
-                <li>Activeer de Twilio Sandbox of koppel uw eigen WhatsApp Business nummer</li>
-                <li>Vul het nummer in als <span className="font-mono text-slate-700">whatsapp:+14155238886</span></li>
+              <p className="font-medium text-slate-700 text-sm mb-2">Veelvoorkomende oorzaken waarom WhatsApp niet werkt:</p>
+              <ol className="text-xs text-slate-600 space-y-1.5 list-decimal pl-4">
+                <li><b>Sandbox opt-in vereist</b>: ontvanger moet eerst <code className="bg-white px-1 rounded">join &lt;uw-code&gt;</code> sturen naar uw sandbox-nummer (zie Twilio Console &gt; WhatsApp Sandbox)</li>
+                <li><b>Trial account</b>: bij een trial-account moet elk ontvanger-nummer eerst "verified" worden in Twilio Console</li>
+                <li><b>Production WhatsApp</b>: vereist goedgekeurde message-templates, tenzij u binnen 24u na laatste klant-reactie verstuurt</li>
+                <li><b>Verkeerd format</b>: WhatsApp nummer moet <code className="bg-white px-1 rounded">+landcode nummer</code> zijn, bv. <code className="bg-white px-1 rounded">+14155238886</code></li>
+                <li><b>Auth token expired</b>: als u het token geroteerd heeft in Twilio, moet u hier ook de nieuwe invullen</li>
               </ol>
             </div>
 
             <div className="flex gap-3">
-              <button onClick={handleTestTwilio} disabled={twilioTesting || !twilioSid || !twilioToken} className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 disabled:opacity-50 text-sm font-medium">
-                {twilioTesting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
-                {twilioTesting ? 'Testen...' : 'Verbinding testen'}
-              </button>
-              <button onClick={handleSaveTwilio} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 text-sm font-medium">
+              <button onClick={handleSaveTwilio} disabled={saving} data-testid="twilio-save-btn" className="flex items-center gap-2 px-6 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 disabled:opacity-50 text-sm font-medium">
                 <Save className="w-4 h-4" />
                 {saving ? 'Opslaan...' : 'Opslaan'}
               </button>

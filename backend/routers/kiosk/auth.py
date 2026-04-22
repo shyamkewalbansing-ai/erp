@@ -180,6 +180,8 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "twilio_account_sid": company.get("twilio_account_sid", ""),
         "twilio_auth_token": company.get("twilio_auth_token", ""),
         "twilio_phone_number": company.get("twilio_phone_number", ""),
+        "twilio_sms_number": company.get("twilio_sms_number", ""),
+        "twilio_mode": company.get("twilio_mode", "whatsapp"),
         "twilio_enabled": company.get("twilio_enabled", False),
         "start_screen": company.get("start_screen", "kiosk"),
         "custom_domain": company.get("custom_domain", ""),
@@ -272,3 +274,116 @@ async def update_company_settings(data: CompanyUpdate, company: dict = Depends(g
         result["token"] = new_token
     return result
 
+
+
+
+class TwilioTestPayload(BaseModel):
+    phone: str
+    message: Optional[str] = None
+    mode: Optional[str] = None  # whatsapp | sms | both — overrides company default
+
+
+@router.post("/auth/twilio/test")
+async def test_twilio_send(data: TwilioTestPayload, company: dict = Depends(get_current_company)):
+    """Test Twilio integration — stuur een bericht direct en geef de EXACTE fout terug indien mislukt.
+    Hierdoor kan de gebruiker zien waarom WhatsApp/SMS niet verstuurd kan worden."""
+    comp = await db.kiosk_companies.find_one({"company_id": company["company_id"]}, {"_id": 0})
+    if not comp.get("twilio_enabled"):
+        raise HTTPException(status_code=400, detail="Twilio is niet ingeschakeld in instellingen.")
+    if not comp.get("twilio_account_sid") or not comp.get("twilio_auth_token") or not comp.get("twilio_phone_number"):
+        raise HTTPException(status_code=400, detail="Twilio credentials (SID/Token/Nummer) zijn niet volledig ingevuld.")
+
+    phone_clean = data.phone.replace(" ", "").replace("-", "")
+    if not phone_clean.startswith("+"):
+        if phone_clean.startswith("597"):
+            phone_clean = "+" + phone_clean
+        else:
+            phone_clean = "+597" + phone_clean
+
+    message = data.message or f"Dit is een testbericht van {comp.get('name', 'uw bedrijf')} via Twilio."
+    mode = (data.mode or comp.get("twilio_mode") or "whatsapp").lower()
+
+    try:
+        from twilio.rest import Client as TwilioClient
+        client = TwilioClient(comp["twilio_account_sid"], comp["twilio_auth_token"])
+    except ImportError:
+        raise HTTPException(status_code=500, detail="Twilio Python package niet geïnstalleerd op server. Run: pip install twilio")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Kon geen Twilio client maken: {str(e)[:300]}")
+
+    raw_from = comp["twilio_phone_number"].strip()
+    sms_from = (comp.get("twilio_sms_number") or raw_from).strip()
+    wa_from = raw_from if raw_from.startswith("whatsapp:") else f"whatsapp:{raw_from}"
+
+    results = []
+    channels = []
+    if mode in ("whatsapp", "both"):
+        channels.append(("whatsapp", wa_from, f"whatsapp:{phone_clean}"))
+    if mode in ("sms", "both"):
+        channels.append(("sms", sms_from, phone_clean))
+
+    for ch, from_addr, to_addr in channels:
+        try:
+            msg = client.messages.create(body=message, from_=from_addr, to=to_addr)
+            results.append({"channel": ch, "status": "sent", "sid": msg.sid, "from": from_addr, "to": to_addr})
+        except Exception as e:
+            err_str = str(e)
+            # Twilio errors have codes like 21608 (unverified sandbox number), 63016 (not approved template), etc.
+            import re
+            code_match = re.search(r"Error code:?\s*(\d+)|HTTP\s*(\d+)", err_str)
+            code = code_match.group(1) or code_match.group(2) if code_match else None
+            hint = ""
+            if "401" in err_str or "20003" in err_str or "authenticate" in err_str.lower():
+                hint = "Authenticatie mislukt. Controleer Account SID en Auth Token in Twilio Console → Dashboard (tokens kunnen roteren)."
+            elif "21608" in err_str or "21614" in err_str:
+                hint = "WhatsApp sandbox: ontvanger moet eerst 'join <code>' sturen naar uw sandbox nummer. Zie Twilio Console > WhatsApp Sandbox."
+            elif "63016" in err_str or "63007" in err_str:
+                hint = "WhatsApp production vereist goedgekeurde message template. Gebruik een goedgekeurde template of stuur binnen 24u na laatste klantreactie."
+            elif "21659" in err_str or "21660" in err_str:
+                hint = "Verzendnummer is geen geldig Twilio nummer. Zorg dat u een WhatsApp-enabled nummer gebruikt (bv. whatsapp:+14155238886 voor sandbox)."
+            elif "21211" in err_str:
+                hint = "Ongeldig ontvanger-nummer. Moet formaat +[landcode][nummer] hebben (bv. +597XXXXXXX)."
+            elif "21614" in err_str:
+                hint = "Nummer niet geverifieerd. Bij trial accounts moet het ontvanger-nummer eerst geverifieerd zijn in Twilio Console."
+            results.append({
+                "channel": ch, "status": "failed",
+                "from": from_addr, "to": to_addr,
+                "error": err_str[:500],
+                "error_code": code,
+                "hint": hint,
+            })
+
+    # Log test results in wa_messages for traceability
+    for r in results:
+        await db.kiosk_wa_messages.insert_one({
+            "message_id": generate_uuid(),
+            "company_id": company["company_id"],
+            "tenant_id": "",
+            "tenant_name": "(Twilio test)",
+            "phone": phone_clean,
+            "message_type": "test",
+            "channel": f"twilio_{r['channel']}",
+            "message": message,
+            "status": r["status"],
+            "error": r.get("error", ""),
+            "created_at": datetime.now(timezone.utc),
+        })
+
+    any_sent = any(r["status"] == "sent" for r in results)
+    return {
+        "success": any_sent,
+        "results": results,
+        "phone_used": phone_clean,
+        "mode": mode,
+    }
+
+
+@router.get("/auth/twilio/recent-errors")
+async def list_twilio_errors(company: dict = Depends(get_current_company), limit: int = 20):
+    """Lijst recente verzend-pogingen (sent + failed) met foutmeldingen voor debugging."""
+    cursor = db.kiosk_wa_messages.find(
+        {"company_id": company["company_id"], "channel": {"$in": ["twilio_whatsapp", "twilio_sms"]}},
+        {"_id": 0, "message_id": 1, "phone": 1, "tenant_name": 1, "channel": 1,
+         "message_type": 1, "status": 1, "error": 1, "created_at": 1}
+    ).sort("created_at", -1).limit(min(limit, 100))
+    return await cursor.to_list(length=limit)

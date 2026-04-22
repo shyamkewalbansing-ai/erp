@@ -1,5 +1,54 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 55 (22 april 2026) — Twilio SMS ondersteuning + WhatsApp debugging
+
+### Verzoek
+1. Twilio integratie toont alleen "WhatsApp", moet ook **SMS** ondersteunen
+2. WhatsApp lukt niet om te versturen — geen zichtbare foutmelding
+
+### Root cause (voor WhatsApp die niet werkt)
+Oude `_send_twilio_auto` had `except Exception: send_status = "failed"` zonder de **exacte fout op te slaan**. De gebruiker zag alleen "failed" zonder reden. Meest voorkomende oorzaken (nu zichtbaar):
+- **401 Authentication Error**: SID/Token verkeerd of geroteerd
+- **21608 Sandbox opt-in**: ontvanger moet eerst `join <code>` sturen
+- **63016 No approved template**: production WA vereist templates buiten 24u-window
+- **21614 Trial account**: ontvanger-nummer niet verified
+
+### Implementatie
+**Backend (`base.py`, `auth.py`):**
+- `_send_twilio_auto` opnieuw geschreven:
+  - Respect `twilio_mode`: `whatsapp` | `sms` | `both`
+  - `twilio_sms_number` optioneel separaat SMS-nummer (anders valt terug op `twilio_phone_number`)
+  - Echte foutmelding wordt nu **opgeslagen** in `kiosk_wa_messages.error` + gelogd
+  - `channel` veld in DB: `twilio_whatsapp` of `twilio_sms`
+- `CompanyUpdate` model: nieuwe velden `twilio_sms_number`, `twilio_mode`
+- `/auth/me` response exposed deze velden naar frontend
+- **Nieuw endpoint** `POST /api/kiosk/auth/twilio/test` — stuurt testbericht en geeft directe response met:
+  - `success`, `results[]` per kanaal (WhatsApp én/of SMS)
+  - `error` met volledige Twilio error message
+  - `error_code` (bv. "401", "21608", "63016")
+  - `hint` met Nederlandse uitleg per bekende error-code
+- **Nieuw endpoint** `GET /api/kiosk/auth/twilio/recent-errors` — recente pogingen met fout-details
+- Error hints voor: 401/20003 (auth), 21608/21614 (sandbox/trial), 63016/63007 (template), 21659/21660 (from-nummer), 21211 (to-nummer)
+
+**Frontend (`SettingsTab.jsx`):**
+- Sectie heet nu "Twilio WhatsApp & SMS"
+- **3-knops kanaal-selector**: WhatsApp / SMS / Beide
+- Velden tonen/verbergen o.b.v. modus:
+  - WhatsApp Nummer (zichtbaar als WA of Both)
+  - SMS Nummer (zichtbaar als SMS of Both, optioneel)
+- **Test-sectie**: input voor testnummer + "Stuur testbericht" knop
+- **Gedetailleerde resultaten-box** na test:
+  - Per kanaal groene "VERSTUURD" of rode "MISLUKT" badge
+  - Volledige error message
+  - 💡 Gele hint-box met concrete oplossing voor veelvoorkomende fouten
+- **Troubleshooting-box** met 5 meest voorkomende oorzaken waarom WA niet werkt
+
+### Tested ✅ (curl E2E)
+- Fake credentials test → `{success: false, error_code: "401", error: "Authentication Error - invalid username", hint: "Authenticatie mislukt. Controleer Account SID en Auth Token..."}`
+- `twilio_mode: "both"` + WA+SMS → twee entries in results array, elk met eigen status
+- ESLint `SettingsTab.jsx` schoon
+
+
 ## Sprint 54 (21 april 2026) — Valuta-filter overal + Nieuwe Huurder bug fix
 
 ### Verzoek / Bugs

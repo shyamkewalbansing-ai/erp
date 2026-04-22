@@ -179,7 +179,11 @@ async def _send_wa_auto(company_id: str, phone: str, message: str, tenant_id: st
 
 
 async def _send_twilio_auto(company_id: str, phone: str, message: str, tenant_id: str = "", tenant_name: str = "", msg_type: str = "auto"):
-    """Internal helper: send WhatsApp message via Twilio if enabled for this company"""
+    """Internal helper: send WhatsApp and/or SMS via Twilio if enabled for this company.
+    Respects `twilio_mode` setting: 'whatsapp' (default), 'sms', or 'both'.
+    """
+    import logging
+    log = logging.getLogger("twilio_auto")
     try:
         comp = await db.kiosk_companies.find_one({"company_id": company_id}, {"_id": 0})
         if not comp or not comp.get("twilio_enabled") or not comp.get("twilio_account_sid") or not comp.get("twilio_auth_token") or not comp.get("twilio_phone_number"):
@@ -203,37 +207,50 @@ async def _send_twilio_auto(company_id: str, phone: str, message: str, tenant_id
 
         from twilio.rest import Client as TwilioClient
         twilio_client = TwilioClient(comp["twilio_account_sid"], comp["twilio_auth_token"])
-        
-        twilio_from = comp["twilio_phone_number"]
-        # Add whatsapp: prefix for Twilio WhatsApp API
-        if not twilio_from.startswith("whatsapp:"):
-            twilio_from = f"whatsapp:{twilio_from}"
-        
-        send_status = "pending"
-        try:
-            twilio_client.messages.create(
-                body=message,
-                from_=twilio_from,
-                to=f"whatsapp:{phone_clean}"
-            )
-            send_status = "sent"
-        except Exception:
-            send_status = "failed"
 
-        await db.kiosk_wa_messages.insert_one({
-            "message_id": generate_uuid(),
-            "company_id": company_id,
-            "tenant_id": tenant_id,
-            "tenant_name": tenant_name,
-            "phone": phone_clean,
-            "message_type": msg_type,
-            "channel": "twilio_whatsapp",
-            "message": message,
-            "status": send_status,
-            "created_at": datetime.now(timezone.utc)
-        })
-    except Exception:
-        pass  # Auto messages should never break the main flow
+        raw_from = comp["twilio_phone_number"].strip()
+        # Separate numbers for SMS vs WhatsApp when provided
+        sms_from = (comp.get("twilio_sms_number") or raw_from).strip()
+        wa_from = raw_from if raw_from.startswith("whatsapp:") else f"whatsapp:{raw_from}"
+
+        mode = (comp.get("twilio_mode") or "whatsapp").lower()
+        channels = []
+        if mode in ("whatsapp", "both"):
+            channels.append(("twilio_whatsapp", wa_from, f"whatsapp:{phone_clean}"))
+        if mode in ("sms", "both"):
+            channels.append(("twilio_sms", sms_from, phone_clean))
+
+        for channel, from_addr, to_addr in channels:
+            send_status = "pending"
+            error_detail = ""
+            try:
+                twilio_client.messages.create(
+                    body=message,
+                    from_=from_addr,
+                    to=to_addr,
+                )
+                send_status = "sent"
+            except Exception as e:
+                send_status = "failed"
+                error_detail = str(e)[:500]  # Store real error
+                log.warning(f"Twilio {channel} send failed for {to_addr}: {error_detail}")
+
+            await db.kiosk_wa_messages.insert_one({
+                "message_id": generate_uuid(),
+                "company_id": company_id,
+                "tenant_id": tenant_id,
+                "tenant_name": tenant_name,
+                "phone": phone_clean,
+                "message_type": msg_type,
+                "channel": channel,
+                "message": message,
+                "status": send_status,
+                "error": error_detail,
+                "created_at": datetime.now(timezone.utc)
+            })
+    except Exception as e:
+        log.error(f"Twilio helper outer error: {e}")
+        # Auto messages should never break the main flow
 
 
 async def _send_message_auto(company_id: str, phone: str, message: str, tenant_id: str = "", tenant_name: str = "", msg_type: str = "auto"):
@@ -422,6 +439,8 @@ class CompanyUpdate(BaseModel):
     twilio_account_sid: Optional[str] = None
     twilio_auth_token: Optional[str] = None
     twilio_phone_number: Optional[str] = None
+    twilio_sms_number: Optional[str] = None  # Aparte SMS-verzendnummer (optioneel; anders valt terug op twilio_phone_number)
+    twilio_mode: Optional[str] = None  # 'whatsapp' | 'sms' | 'both'
     twilio_enabled: Optional[bool] = None
     # Email SMTP Integration
     smtp_host: Optional[str] = None
