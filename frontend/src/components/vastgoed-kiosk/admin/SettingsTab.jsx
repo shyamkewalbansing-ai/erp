@@ -392,6 +392,36 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
               </span>
               . Na die datum wordt de nieuwe maandhuur automatisch bij het saldo opgeteld.
             </div>
+
+            {/* Bulk reset knop: zet alle huurders terug naar vorige maand (arrears migratie) */}
+            <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-3">
+              <p className="text-xs font-bold text-amber-900 mb-1">Hulp nodig bij incasso achteraf?</p>
+              <p className="text-[11px] text-amber-800 mb-2">
+                Wanneer je in april pas de huur van maart ophaalt, maar de app toont al april als gefactureerd, kun je hieronder alle huurders in één klap terugzetten naar de vorige maand. Dit werkt alleen vóór de vervaldag.
+              </p>
+              <button
+                type="button"
+                data-testid="bulk-reset-prev-month-btn"
+                onClick={async () => {
+                  if (!window.confirm(
+                    `Weet u zeker dat u ALLE actieve huurders met billed_through = huidige maand wilt terugzetten naar de vorige maand?\n\n` +
+                    `• Outstanding wordt met één maandhuur verminderd (de te vroeg toegevoegde maand)\n` +
+                    `• Alleen toegestaan als de vervaldag nog NIET gepasseerd is\n\n` +
+                    `Tip: sla eerst de billing_day instelling op met "Opslaan" hieronder.`
+                  )) return;
+                  try {
+                    const r = await axios.post(`${API}/admin/tenants/reset-all-to-previous-month`, {}, { headers: { Authorization: `Bearer ${token}` } });
+                    alert(r.data?.message || 'Klaar');
+                    onRefresh();
+                  } catch (err) {
+                    alert(err.response?.data?.detail || 'Mislukt');
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-amber-500 text-white text-xs font-semibold hover:bg-amber-600"
+              >
+                Zet alle huurders terug naar vorige maand
+              </button>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">

@@ -133,6 +133,7 @@ async def advance_tenant_month(tenant_id: str, company: dict = Depends(get_curre
     }
 
 
+@router.post("/admin/tenants/{tenant_id}/reset-to-current-month")
 async def reset_tenant_to_current_month(tenant_id: str, company: dict = Depends(get_current_company)):
     """Reset tenant's billing status back to the current real-world month.
     Useful when `rent_billed_through` was accidentally advanced too far into the future.
@@ -189,6 +190,86 @@ async def reset_tenant_to_current_month(tenant_id: str, company: dict = Depends(
         "internet_refunded": internet_refund,
         "outstanding_rent": new_outstanding,
         "internet_outstanding": new_internet_outstanding,
+    }
+
+
+@router.post("/admin/tenants/reset-all-to-previous-month")
+async def reset_all_tenants_to_previous_month(company: dict = Depends(get_current_company)):
+    """Bulk reset: Zet alle actieve huurders met billed_through = huidige_maand terug
+    naar de VORIGE maand — maar alleen als de vervaldag nog niet gepasseerd is.
+    
+    Gebruikscase (arrears workflow): Je incasseert in april de huur van maart.
+    Als de engine al te vroeg april heeft toegevoegd (door oude settings), zet deze
+    knop alle huurders in één klap terug naar maart — zodat de achterstand consistent is.
+    
+    De outstanding wordt NIET aangepast wanneer billed_through=current_month (geen rent
+    refund, want april was nog niet "te innen"). Voor tenants die 2+ maanden vooruit staan
+    gebruik de per-tenant "Reset" knop in de huurder modal.
+    """
+    import calendar as _cal
+    company_id = company["company_id"]
+    billing_day = int(company.get("billing_day", 1) or 1)
+    billing_next_month = bool(company.get("billing_next_month", True))
+
+    now = datetime.now(timezone.utc)
+    current_month = now.strftime("%Y-%m")
+    prev_month = (now - relativedelta(months=1)).strftime("%Y-%m")
+
+    # Bereken vervaldag voor de huidige maand. Als vervaldag nog niet gepasseerd is,
+    # mag je billed_through terugzetten naar prev_month.
+    if billing_next_month:
+        due_month = datetime(now.year, now.month, 1)
+    else:
+        due_month = datetime(now.year, now.month, 1) - relativedelta(months=1)
+    last_day = _cal.monthrange(due_month.year, due_month.month)[1]
+    due_date = due_month.replace(day=min(billing_day, last_day), tzinfo=timezone.utc)
+
+    if now >= due_date:
+        month_names_nl = ["januari", "februari", "maart", "april", "mei", "juni",
+                          "juli", "augustus", "september", "oktober", "november", "december"]
+        due_label = f"{due_date.day} {month_names_nl[due_date.month - 1]}"
+        raise HTTPException(
+            status_code=400,
+            detail=f"Vervaldag ({due_label}) is al gepasseerd. Huurders kunnen niet meer terug — huidige maand is officieel achterstallig.",
+        )
+
+    # Zoek tenants op current_month → reset naar prev_month
+    tenants = await db.kiosk_tenants.find({
+        "company_id": company_id,
+        "status": "active",
+        "rent_billed_through": current_month,
+    }).to_list(2000)
+
+    adjusted = 0
+    for t in tenants:
+        monthly_rent = float(t.get("monthly_rent", 0) or 0)
+        internet_cost = float(t.get("internet_cost", 0) or 0)
+        outstanding = float(t.get("outstanding_rent", 0) or 0)
+        internet_outstanding = float(t.get("internet_outstanding", 0) or 0)
+
+        # Subtract the prematurely-added rent (current maand was te vroeg toegevoegd)
+        new_outstanding = max(0.0, outstanding - monthly_rent)
+        new_internet = max(0.0, internet_outstanding - internet_cost)
+
+        await db.kiosk_tenants.update_one(
+            {"tenant_id": t["tenant_id"]},
+            {"$set": {
+                "rent_billed_through": prev_month,
+                "outstanding_rent": new_outstanding,
+                "internet_outstanding": new_internet,
+                "updated_at": datetime.now(timezone.utc),
+            }},
+        )
+        adjusted += 1
+
+    month_names_nl = ["januari", "februari", "maart", "april", "mei", "juni",
+                      "juli", "augustus", "september", "oktober", "november", "december"]
+    pd = datetime.strptime(prev_month + "-01", "%Y-%m-%d")
+    prev_label = f"{month_names_nl[pd.month - 1]} {pd.year}"
+    return {
+        "message": f"{adjusted} huurder(s) teruggezet naar {prev_label}",
+        "target_month": prev_month,
+        "adjusted": adjusted,
     }
 
 
