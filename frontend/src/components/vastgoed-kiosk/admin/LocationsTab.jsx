@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Plus, Pencil, Trash2, Building2 } from 'lucide-react';
 import { API, axios } from './utils';
+import MobileModalShell from './MobileModalShell';
 
 function LocationsTab({ token, apartments = [], onRefresh }) {
   const [locations, setLocations] = useState([]);
@@ -141,8 +142,7 @@ function LocationModal({ location, token, onClose, onSave }) {
   const [address, setAddress] = useState(location?.address || '');
   const [saving, setSaving] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     if (!name.trim()) return;
     setSaving(true);
     try {
@@ -159,32 +159,28 @@ function LocationModal({ location, token, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-md p-5 sm:p-6" onClick={e => e.stopPropagation()}>
-        <h3 className="text-xl font-bold mb-4">{location ? 'Bewerk' : 'Nieuwe'} Locatie</h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Naam *</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} required autoFocus
-              data-testid="location-name-input"
-              className="w-full px-4 py-3 border rounded-xl" placeholder="bijv. Hoofdgebouw" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Adres</label>
-            <input type="text" value={address} onChange={(e) => setAddress(e.target.value)}
-              data-testid="location-address-input"
-              className="w-full px-4 py-3 border rounded-xl" placeholder="bijv. Heerenstraat 12" />
-          </div>
-          <div className="flex gap-3">
-            <button type="button" onClick={onClose} className="flex-1 py-3 border rounded-xl">Annuleren</button>
-            <button type="submit" disabled={saving} data-testid="location-submit-btn"
-              className="flex-1 py-3 bg-orange-500 text-white rounded-xl disabled:opacity-50">
-              {saving ? 'Opslaan...' : 'Opslaan'}
-            </button>
-          </div>
-        </form>
+    <MobileModalShell
+      title={location ? 'Bewerk Locatie' : 'Nieuwe Locatie'}
+      subtitle={location?.name}
+      onClose={onClose}
+      onSubmit={handleSubmit}
+      loading={saving}
+      submitLabel="Opslaan"
+      testIdPrefix="location-modal"
+    >
+      <div>
+        <label className="block text-sm font-medium mb-1">Naam *</label>
+        <input type="text" value={name} onChange={(e) => setName(e.target.value)} required autoFocus
+          data-testid="location-name-input"
+          className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" placeholder="bijv. Hoofdgebouw" />
       </div>
-    </div>
+      <div>
+        <label className="block text-sm font-medium mb-1">Adres</label>
+        <input type="text" value={address} onChange={(e) => setAddress(e.target.value)}
+          data-testid="location-address-input"
+          className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" placeholder="bijv. Heerenstraat 12" />
+      </div>
+    </MobileModalShell>
   );
 }
 

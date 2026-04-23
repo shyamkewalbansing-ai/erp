@@ -130,10 +130,12 @@ function EmployeesTab({ token, formatSRD }) {
 
       {/* Werknemers Tabel */}
       <div className="bg-white rounded-xl border border-slate-200">
-        <div className="p-4 border-b border-slate-200 flex justify-between items-center">
-          <h2 className="font-semibold text-slate-900">Werknemers ({activeEmps.length})</h2>
-          <button onClick={() => { resetForm(); setShowForm(true); }} className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600" data-testid="add-employee-btn">
-            <Plus className="w-4 h-4" /> Nieuwe Werknemer
+        <div className="p-3 sm:p-4 border-b border-slate-200 flex flex-wrap justify-between items-center gap-2">
+          <h2 className="font-semibold text-slate-900 text-sm sm:text-base">Werknemers ({activeEmps.length})</h2>
+          <button onClick={() => { resetForm(); setShowForm(true); }} className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 whitespace-nowrap" data-testid="add-employee-btn">
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Nieuwe Werknemer</span>
+            <span className="sm:hidden">Nieuw</span>
           </button>
         </div>
 

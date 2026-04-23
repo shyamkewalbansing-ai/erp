@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, DollarSign, Loader2, Eye, Wallet, XCircle } from 'lucide-react';
 import { API, axios } from './utils';
+import MobileModalShell from './MobileModalShell';
 
 function LoansTab({ token, tenants, formatSRD, onShowDetail }) {
   const [loans, setLoans] = useState([]);
@@ -49,26 +50,27 @@ function LoansTab({ token, tenants, formatSRD, onShowDetail }) {
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-orange-500" /></div>;
 
   return (
-    <div className="space-y-6" data-testid="loans-tab">
+    <div className="space-y-4 sm:space-y-6" data-testid="loans-tab">
       {/* Actions bar */}
-      <div className="bg-white rounded-xl border border-slate-200 p-4 flex flex-wrap items-center gap-3">
+      <div className="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 flex flex-wrap items-center gap-2 sm:gap-3">
         <select
           value={filterStatus}
           onChange={e => setFilterStatus(e.target.value)}
           data-testid="loans-filter-status"
-          className="px-3 py-2.5 border border-slate-200 rounded-lg text-sm bg-white"
+          className="px-3 py-2.5 border border-slate-200 rounded-lg text-sm bg-white flex-1 sm:flex-none min-w-0"
         >
-          <option value="all">Alle leningen ({loans.length})</option>
+          <option value="all">Alle ({loans.length})</option>
           <option value="active">Actief ({stats.activeCount})</option>
           <option value="paid_off">Afgelost ({stats.paidOffCount})</option>
         </select>
-        <div className="flex-1" />
         <button
           onClick={() => setShowCreateModal(true)}
           data-testid="loans-create-btn"
-          className="flex items-center gap-2 px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition whitespace-nowrap"
         >
-          <Plus className="w-4 h-4" /> Nieuwe lening
+          <Plus className="w-4 h-4" />
+          <span className="hidden sm:inline">Nieuwe lening</span>
+          <span className="sm:hidden">Nieuw</span>
         </button>
       </div>
 
@@ -81,7 +83,9 @@ function LoansTab({ token, tenants, formatSRD, onShowDetail }) {
             <p className="text-sm text-slate-400 mt-1">Maak een nieuwe lening aan via de knop hierboven</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Desktop table */}
+          <div className="overflow-x-auto hidden md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50">
@@ -119,29 +123,17 @@ function LoansTab({ token, tenants, formatSRD, onShowDetail }) {
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-1">
                           {loan.status === 'active' && (
-                            <button
-                              onClick={() => setShowPayModal(loan)}
-                              data-testid={`loan-pay-${loan.loan_id}`}
-                              className="p-1.5 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition"
-                              title="Aflossing registreren"
-                            >
+                            <button onClick={() => setShowPayModal(loan)} data-testid={`loan-pay-${loan.loan_id}`}
+                              className="p-1.5 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition" title="Aflossing registreren">
                               <DollarSign className="w-4 h-4" />
                             </button>
                           )}
-                          <button
-                            onClick={() => loadDetail(loan.loan_id)}
-                            data-testid={`loan-detail-${loan.loan_id}`}
-                            className="p-1.5 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 transition"
-                            title="Details bekijken"
-                          >
+                          <button onClick={() => loadDetail(loan.loan_id)} data-testid={`loan-detail-${loan.loan_id}`}
+                            className="p-1.5 rounded-lg bg-slate-50 text-slate-600 hover:bg-slate-100 transition" title="Details bekijken">
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => deleteLoan(loan.loan_id)}
-                            data-testid={`loan-delete-${loan.loan_id}`}
-                            className="p-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition"
-                            title="Verwijderen"
-                          >
+                          <button onClick={() => deleteLoan(loan.loan_id)} data-testid={`loan-delete-${loan.loan_id}`}
+                            className="p-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 transition" title="Verwijderen">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -152,6 +144,60 @@ function LoansTab({ token, tenants, formatSRD, onShowDetail }) {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {filtered.map(loan => {
+              const progress = loan.amount > 0 ? Math.min(100, (loan.total_paid / loan.amount) * 100) : 0;
+              return (
+                <div key={loan.loan_id} data-testid={`loan-card-${loan.loan_id}`} className="p-3">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-slate-900 truncate">{loan.tenant_name}</p>
+                      <p className="text-xs text-slate-400 truncate">Appt. {loan.apartment_number}</p>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 ${loan.status === 'active' ? 'bg-blue-100 text-blue-700' : loan.status === 'paid_off' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}`}>
+                      {loan.status === 'active' ? 'Actief' : loan.status === 'paid_off' ? 'Afgelost' : 'Geann.'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-2 text-xs border-t border-slate-100 pt-2">
+                    <div>
+                      <p className="text-slate-400">Bedrag</p>
+                      <p className="font-bold text-slate-700">{formatSRD(loan.amount)}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400">Afgelost</p>
+                      <p className="font-bold text-green-600">{formatSRD(loan.total_paid)}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-400">Openstaand</p>
+                      <p className={`font-bold ${loan.remaining > 0 ? 'text-red-600' : 'text-green-600'}`}>{formatSRD(loan.remaining)}</p>
+                    </div>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-1.5 mb-2">
+                    <div className="bg-green-500 h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
+                  </div>
+                  <div className="flex items-center justify-end gap-1 pt-1">
+                    {loan.status === 'active' && (
+                      <button onClick={() => setShowPayModal(loan)} data-testid={`loan-pay-m-${loan.loan_id}`}
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-green-50 text-green-600 active:scale-95">
+                        <DollarSign className="w-3.5 h-3.5" /> Aflos
+                      </button>
+                    )}
+                    <button onClick={() => loadDetail(loan.loan_id)} data-testid={`loan-detail-m-${loan.loan_id}`}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 active:scale-95">
+                      <Eye className="w-3.5 h-3.5" /> Details
+                    </button>
+                    <button onClick={() => deleteLoan(loan.loan_id)} data-testid={`loan-delete-m-${loan.loan_id}`}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-500 active:scale-95">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          </>
         )}
       </div>
 
@@ -189,6 +235,7 @@ function LoanCreateModal({ tenants, token, formatSRD, onClose, onSave }) {
   const [saving, setSaving] = useState(false);
 
   const activeTenants = tenants.filter(t => t.status === 'active');
+  const inputCls = "w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400";
 
   const handleSave = async () => {
     if (!tenantId || !amount || !monthlyPayment) return alert('Vul alle verplichte velden in');
@@ -208,96 +255,52 @@ function LoanCreateModal({ tenants, token, formatSRD, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl" onClick={e => e.stopPropagation()}>
-        <div className="p-6 border-b border-slate-200">
-          <h2 className="text-lg font-bold text-slate-900" data-testid="loan-create-title">Nieuwe Lening</h2>
+    <MobileModalShell
+      title="Nieuwe Lening"
+      subtitle="Vul gegevens in"
+      onClose={onClose}
+      onSubmit={handleSave}
+      loading={saving}
+      submitLabel="Lening aanmaken"
+      testIdPrefix="loan-create"
+    >
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Huurder *</label>
+        <select value={tenantId} onChange={e => setTenantId(e.target.value)} data-testid="loan-tenant-select" className={inputCls + ' bg-white'}>
+          <option value="">Selecteer huurder...</option>
+          {activeTenants.map(t => (
+            <option key={t.tenant_id} value={t.tenant_id}>{t.name} — {t.apartment_number}</option>
+          ))}
+        </select>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Leningbedrag (SRD) *</label>
+          <input type="number" inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)}
+            data-testid="loan-amount-input" placeholder="0.00" min="0" step="0.01" className={inputCls} />
         </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Huurder *</label>
-            <select
-              value={tenantId}
-              onChange={e => setTenantId(e.target.value)}
-              data-testid="loan-tenant-select"
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm bg-white"
-            >
-              <option value="">Selecteer huurder...</option>
-              {activeTenants.map(t => (
-                <option key={t.tenant_id} value={t.tenant_id}>
-                  {t.name} — {t.apartment_number}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Leningbedrag (SRD) *</label>
-              <input
-                type="number"
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-                data-testid="loan-amount-input"
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Maand. aflossing (SRD) *</label>
-              <input
-                type="number"
-                value={monthlyPayment}
-                onChange={e => setMonthlyPayment(e.target.value)}
-                data-testid="loan-monthly-input"
-                placeholder="0.00"
-                min="0"
-                step="0.01"
-                className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Startdatum</label>
-            <input
-              type="date"
-              value={startDate}
-              onChange={e => setStartDate(e.target.value)}
-              data-testid="loan-start-date"
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Omschrijving</label>
-            <input
-              type="text"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              data-testid="loan-description"
-              placeholder="Bijv. Voorschot verbouwing"
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm"
-            />
-          </div>
-          {amount && monthlyPayment && parseFloat(monthlyPayment) > 0 && (
-            <div className="bg-slate-50 rounded-lg p-3 text-sm text-slate-600">
-              Geschatte looptijd: <strong>{Math.ceil(parseFloat(amount) / parseFloat(monthlyPayment))} maanden</strong>
-            </div>
-          )}
-        </div>
-        <div className="p-6 border-t border-slate-200 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Annuleren</button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            data-testid="loan-save-btn"
-            className="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Lening aanmaken'}
-          </button>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">Maand. aflossing *</label>
+          <input type="number" inputMode="decimal" value={monthlyPayment} onChange={e => setMonthlyPayment(e.target.value)}
+            data-testid="loan-monthly-input" placeholder="0.00" min="0" step="0.01" className={inputCls} />
         </div>
       </div>
-    </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Startdatum</label>
+        <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
+          data-testid="loan-start-date" className={inputCls} />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Omschrijving</label>
+        <input type="text" value={description} onChange={e => setDescription(e.target.value)}
+          data-testid="loan-description" placeholder="Bijv. Voorschot verbouwing" className={inputCls} />
+      </div>
+      {amount && monthlyPayment && parseFloat(monthlyPayment) > 0 && (
+        <div className="bg-slate-50 rounded-lg p-3 text-sm text-slate-600">
+          Geschatte looptijd: <strong>{Math.ceil(parseFloat(amount) / parseFloat(monthlyPayment))} maanden</strong>
+        </div>
+      )}
+    </MobileModalShell>
   );
 }
 
@@ -306,6 +309,7 @@ function LoanPayModal({ loan, token, formatSRD, onClose, onSave }) {
   const [description, setDescription] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [saving, setSaving] = useState(false);
+  const inputCls = "w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400";
 
   const handlePay = async () => {
     const payAmount = parseFloat(amount);
@@ -324,72 +328,46 @@ function LoanPayModal({ loan, token, formatSRD, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
-        <div className="p-6 border-b border-slate-200">
-          <h2 className="text-lg font-bold text-slate-900" data-testid="loan-pay-title">Aflossing — {loan.tenant_name}</h2>
-          <p className="text-sm text-slate-500 mt-1">Openstaand: <span className="font-bold text-red-600">{formatSRD(loan.remaining)}</span></p>
-        </div>
-        <div className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Bedrag (SRD) *</label>
-            <input
-              type="number"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              data-testid="loan-pay-amount"
-              placeholder="0.00"
-              min="0"
-              step="0.01"
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm"
-            />
-            <div className="flex gap-2 mt-2">
-              <button onClick={() => setAmount(loan.monthly_payment?.toString())} className="text-xs px-2 py-1 bg-slate-100 rounded hover:bg-slate-200 transition">
-                Maandelijks ({formatSRD(loan.monthly_payment)})
-              </button>
-              <button onClick={() => setAmount(loan.remaining?.toString())} className="text-xs px-2 py-1 bg-slate-100 rounded hover:bg-slate-200 transition">
-                Volledig ({formatSRD(loan.remaining)})
-              </button>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Betaalmethode</label>
-            <select
-              value={paymentMethod}
-              onChange={e => setPaymentMethod(e.target.value)}
-              data-testid="loan-pay-method"
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm bg-white"
-            >
-              <option value="cash">Contant</option>
-              <option value="bank">Bank</option>
-              <option value="pin">Pinpas</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Omschrijving</label>
-            <input
-              type="text"
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              data-testid="loan-pay-description"
-              placeholder="Aflossing"
-              className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm"
-            />
-          </div>
-        </div>
-        <div className="p-6 border-t border-slate-200 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Annuleren</button>
-          <button
-            onClick={handlePay}
-            disabled={saving}
-            data-testid="loan-pay-submit"
-            className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition disabled:opacity-50"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Aflossing registreren'}
+    <MobileModalShell
+      title="Aflossing registreren"
+      subtitle={`${loan.tenant_name} · Openstaand ${formatSRD(loan.remaining)}`}
+      onClose={onClose}
+      onSubmit={handlePay}
+      loading={saving}
+      submitLabel="Aflossing registreren"
+      testIdPrefix="loan-pay"
+    >
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Bedrag (SRD) *</label>
+        <input type="number" inputMode="decimal" value={amount} onChange={e => setAmount(e.target.value)}
+          data-testid="loan-pay-amount" placeholder="0.00" min="0" step="0.01" className={inputCls} />
+        <div className="flex gap-2 mt-2">
+          <button type="button" onClick={() => setAmount(loan.monthly_payment?.toString())} className="text-xs px-2 py-1 bg-slate-100 rounded hover:bg-slate-200 transition">
+            Maandelijks ({formatSRD(loan.monthly_payment)})
+          </button>
+          <button type="button" onClick={() => setAmount(loan.remaining?.toString())} className="text-xs px-2 py-1 bg-slate-100 rounded hover:bg-slate-200 transition">
+            Volledig ({formatSRD(loan.remaining)})
           </button>
         </div>
       </div>
-    </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Betaalmethode</label>
+        <div className="grid grid-cols-3 gap-2">
+          {[{id:'cash',label:'Contant'},{id:'bank',label:'Bank'},{id:'pin',label:'Pinpas'}].map(m => (
+            <button key={m.id} type="button" onClick={() => setPaymentMethod(m.id)}
+              data-testid={`loan-pay-method-${m.id}`}
+              className={`py-2.5 rounded-lg text-sm font-medium transition active:scale-95 ${paymentMethod === m.id ? 'bg-orange-500 text-white' : 'bg-slate-100 text-slate-600'}`}>
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">Omschrijving</label>
+        <input type="text" value={description} onChange={e => setDescription(e.target.value)}
+          data-testid="loan-pay-description" placeholder="Aflossing" className={inputCls} />
+      </div>
+    </MobileModalShell>
   );
 }
 
@@ -412,41 +390,42 @@ function LoanDetailModal({ loan, formatSRD, onClose, onPay }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto" onClick={onClose}>
-      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl" onClick={e => e.stopPropagation()}>
-        <div className="p-5 border-b border-slate-200 flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900" data-testid="loan-detail-title">Lening — {loan.tenant_name}</h2>
-            <p className="text-sm text-slate-500 mt-1">App. {loan.apartment_number} | Aangemaakt: {formatDate(loan.start_date)}</p>
+    <div className="fixed inset-0 bg-black/60 z-[70] flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <div className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl h-[100dvh] sm:h-auto sm:max-h-[92vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        {/* Sticky header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 flex-shrink-0">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate" data-testid="loan-detail-title">Lening — {loan.tenant_name}</h3>
+            <p className="text-[11px] text-slate-400 truncate">Appt. {loan.apartment_number} · {formatDate(loan.start_date)}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className={`px-3 py-1 rounded-full text-xs font-bold ${loan.status === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${loan.status === 'active' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
               {loan.status === 'active' ? 'Actief' : 'Afgelost'}
             </span>
-            <button onClick={onClose} className="p-1 rounded-lg hover:bg-slate-100 transition">
-              <XCircle className="w-5 h-5 text-slate-400" />
+            <button onClick={onClose} className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center active:scale-95">
+              <XCircle className="w-4 h-4 text-slate-500" />
             </button>
           </div>
         </div>
-        <div className="p-5">
-          {/* Summary */}
-          <div className="grid grid-cols-3 gap-3 mb-5">
+
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-y-auto min-h-0 p-4 space-y-4">
+          <div className="grid grid-cols-3 gap-2">
             <div className="bg-slate-50 rounded-lg p-3 text-center border border-slate-200">
-              <p className="text-xs text-slate-500 mb-1">Leningbedrag</p>
-              <p className="text-lg font-bold text-slate-900">{formatSRD(loan.amount)}</p>
+              <p className="text-[10px] text-slate-500 mb-1">Bedrag</p>
+              <p className="text-sm sm:text-base font-bold text-slate-900">{formatSRD(loan.amount)}</p>
             </div>
             <div className="bg-green-50 rounded-lg p-3 text-center border border-green-200">
-              <p className="text-xs text-slate-500 mb-1">Afgelost</p>
-              <p className="text-lg font-bold text-green-600">{formatSRD(loan.total_paid)}</p>
+              <p className="text-[10px] text-slate-500 mb-1">Afgelost</p>
+              <p className="text-sm sm:text-base font-bold text-green-600">{formatSRD(loan.total_paid)}</p>
             </div>
             <div className="bg-red-50 rounded-lg p-3 text-center border border-red-200">
-              <p className="text-xs text-slate-500 mb-1">Openstaand</p>
-              <p className="text-lg font-bold text-red-600">{formatSRD(loan.remaining)}</p>
+              <p className="text-[10px] text-slate-500 mb-1">Open</p>
+              <p className="text-sm sm:text-base font-bold text-red-600">{formatSRD(loan.remaining)}</p>
             </div>
           </div>
 
-          {/* Progress bar */}
-          <div className="mb-5">
+          <div>
             <div className="flex justify-between text-xs text-slate-500 mb-1">
               <span>Voortgang</span>
               <span className="font-bold">{progress.toFixed(0)}%</span>
@@ -457,52 +436,74 @@ function LoanDetailModal({ loan, formatSRD, onClose, onPay }) {
           </div>
 
           {loan.description && (
-            <div className="bg-slate-50 rounded-lg p-3 mb-5 text-sm text-slate-600 border border-slate-200">
+            <div className="bg-slate-50 rounded-lg p-3 text-sm text-slate-600 border border-slate-200">
               <span className="font-medium">Omschrijving:</span> {loan.description}
             </div>
           )}
 
-          <p className="text-sm font-semibold text-slate-700 mb-4">Maandelijkse aflossing: <span className="text-orange-600">{formatSRD(loan.monthly_payment)}</span></p>
+          <p className="text-sm font-semibold text-slate-700">Maand. aflossing: <span className="text-orange-600">{formatSRD(loan.monthly_payment)}</span></p>
 
-          {/* Payment history */}
-          <h3 className="text-sm font-bold text-slate-700 mb-3">Betaalgeschiedenis ({loan.payments?.length || 0})</h3>
-          {(!loan.payments || loan.payments.length === 0) ? (
-            <p className="text-sm text-slate-400 py-4 text-center">Nog geen aflossingen geregistreerd</p>
-          ) : (
-            <div className="border border-slate-200 rounded-lg overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-slate-50 border-b border-slate-200">
-                    <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Datum</th>
-                    <th className="text-right py-2 px-3 text-xs font-semibold text-slate-500">Bedrag</th>
-                    <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Methode</th>
-                    <th className="text-right py-2 px-3 text-xs font-semibold text-slate-500">Resterend</th>
-                    <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Omschrijving</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {loan.payments.map(p => (
-                    <tr key={p.payment_id} className="hover:bg-slate-50">
-                      <td className="py-2 px-3 text-slate-600">{formatDateTime(p.created_at)}</td>
-                      <td className="py-2 px-3 text-right font-medium text-green-600">{formatSRD(p.amount)}</td>
-                      <td className="py-2 px-3 text-slate-500 capitalize">{p.payment_method}</td>
-                      <td className="py-2 px-3 text-right text-slate-600">{formatSRD(p.remaining_after)}</td>
-                      <td className="py-2 px-3 text-slate-500">{p.description || '-'}</td>
+          <div>
+            <h3 className="text-sm font-bold text-slate-700 mb-2">Betaalgeschiedenis ({loan.payments?.length || 0})</h3>
+            {(!loan.payments || loan.payments.length === 0) ? (
+              <p className="text-sm text-slate-400 py-4 text-center">Nog geen aflossingen</p>
+            ) : (
+              <>
+              {/* Desktop payments table */}
+              <div className="border border-slate-200 rounded-lg overflow-hidden hidden sm:block">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200">
+                      <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Datum</th>
+                      <th className="text-right py-2 px-3 text-xs font-semibold text-slate-500">Bedrag</th>
+                      <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Methode</th>
+                      <th className="text-right py-2 px-3 text-xs font-semibold text-slate-500">Resterend</th>
+                      <th className="text-left py-2 px-3 text-xs font-semibold text-slate-500">Omschr.</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {loan.payments.map(p => (
+                      <tr key={p.payment_id} className="hover:bg-slate-50">
+                        <td className="py-2 px-3 text-slate-600">{formatDateTime(p.created_at)}</td>
+                        <td className="py-2 px-3 text-right font-medium text-green-600">{formatSRD(p.amount)}</td>
+                        <td className="py-2 px-3 text-slate-500 capitalize">{p.payment_method}</td>
+                        <td className="py-2 px-3 text-right text-slate-600">{formatSRD(p.remaining_after)}</td>
+                        <td className="py-2 px-3 text-slate-500">{p.description || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {/* Mobile payments cards */}
+              <div className="sm:hidden space-y-2">
+                {loan.payments.map(p => (
+                  <div key={p.payment_id} className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-xs">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-slate-500">{formatDateTime(p.created_at)}</span>
+                      <span className="font-bold text-green-600">{formatSRD(p.amount)}</span>
+                    </div>
+                    <div className="flex justify-between text-slate-500">
+                      <span className="capitalize">{p.payment_method}</span>
+                      <span>Rest: {formatSRD(p.remaining_after)}</span>
+                    </div>
+                    {p.description && <p className="text-slate-500 mt-1 truncate">{p.description}</p>}
+                  </div>
+                ))}
+              </div>
+              </>
+            )}
+          </div>
         </div>
-        <div className="p-5 border-t border-slate-200 flex justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Sluiten</button>
+
+        {/* Sticky footer */}
+        <div className="flex gap-2 p-3 border-t border-slate-100 flex-shrink-0 bg-white sm:bg-slate-50"
+          style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}>
+          <button onClick={onClose} className="flex-1 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 active:scale-[0.98] transition">
+            Sluiten
+          </button>
           {loan.status === 'active' && (
-            <button
-              onClick={onPay}
-              data-testid="loan-detail-pay-btn"
-              className="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition"
-            >
+            <button onClick={onPay} data-testid="loan-detail-pay-btn"
+              className="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl text-sm font-bold active:scale-[0.98] transition">
               Aflossing registreren
             </button>
           )}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Loader2, Zap, AlertTriangle } from 'lucide-react';
 import { API, axios } from './utils';
+import MobileModalShell from './MobileModalShell';
 
 function PowerTab({ apartments, tenants, token, onRefresh }) {
   const [shellyDevices, setShellyDevices] = useState([]);
@@ -73,25 +74,27 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
       {/* Main Panel - Realistic circuit breaker box */}
       <div className="rounded-xl overflow-hidden border border-slate-200 bg-white">
         {/* Panel header strip */}
-        <div className="px-6 py-3 flex items-center justify-between bg-slate-100 border-b border-slate-200">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-sm font-bold text-slate-700 tracking-wider uppercase">Stroombrekers Paneel</span>
+        <div className="px-3 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-2 bg-slate-100 border-b border-slate-200">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-bold text-slate-700 tracking-wider uppercase truncate">Stroombrekers</span>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={handleRefreshAll} disabled={updating === 'all'} className="text-xs text-slate-500 hover:text-slate-800 transition flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-md">
+          <div className="flex items-center gap-2">
+            <button onClick={handleRefreshAll} disabled={updating === 'all'} className="text-xs text-slate-500 hover:text-slate-800 transition flex items-center gap-1 px-2 sm:px-3 py-1.5 bg-white border border-slate-200 rounded-md">
               <Loader2 className={`w-3.5 h-3.5 ${updating === 'all' ? 'animate-spin' : ''}`} />
-              Status verversen
+              <span className="hidden sm:inline">Status verversen</span>
+              <span className="sm:hidden">Ververs</span>
             </button>
-            <button onClick={() => setShowAddModal(true)} className="text-xs text-white bg-orange-500 hover:bg-orange-600 px-3 py-1.5 rounded-md flex items-center gap-1.5 transition font-medium">
+            <button onClick={() => setShowAddModal(true)} className="text-xs text-white bg-orange-500 hover:bg-orange-600 px-2 sm:px-3 py-1.5 rounded-md flex items-center gap-1 transition font-medium">
               <Plus className="w-3.5 h-3.5" />
-              Shelly toevoegen
+              <span className="hidden sm:inline">Shelly toevoegen</span>
+              <span className="sm:hidden">Nieuw</span>
             </button>
           </div>
         </div>
 
         {/* Breaker grid */}
-        <div className="p-6 bg-slate-50">
+        <div className="p-3 sm:p-6 bg-slate-50">
           {shellyDevices.length === 0 ? (
             <div className="text-center py-12">
               <Zap className="w-12 h-12 text-slate-300 mx-auto mb-4" />
@@ -240,45 +243,44 @@ function PowerTab({ apartments, tenants, token, onRefresh }) {
 
       {/* Add Device Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-md mx-4 p-4 sm:p-6" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Shelly Apparaat Toevoegen</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Appartement</label>
-                <select value={newDevice.apartment_id} onChange={e => setNewDevice({...newDevice, apartment_id: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500">
-                  <option value="">Selecteer appartement...</option>
-                  {apartments.map(a => <option key={a.apartment_id} value={a.apartment_id}>Appt. {a.number} - {a.description}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">IP-adres van Shelly</label>
-                <input type="text" value={newDevice.device_ip} onChange={e => setNewDevice({...newDevice, device_ip: e.target.value})} placeholder="bijv. 192.168.1.100" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500 font-mono" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Naam (optioneel)</label>
-                <input type="text" value={newDevice.device_name} onChange={e => setNewDevice({...newDevice, device_name: e.target.value})} placeholder="bijv. Meterkast A-101" className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500" />
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
-                  <select value={newDevice.device_type} onChange={e => setNewDevice({...newDevice, device_type: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500">
-                    <option value="gen1">Gen1 (Shelly 1)</option>
-                    <option value="gen2">Gen2+ (Plus/Pro)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Kanaal</label>
-                  <input type="number" min="0" max="3" value={newDevice.channel} onChange={e => setNewDevice({...newDevice, channel: parseInt(e.target.value) || 0})} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-orange-500" />
-                </div>
-              </div>
+        <MobileModalShell
+          title="Shelly Apparaat Toevoegen"
+          subtitle="Koppel een relais aan een appartement"
+          onClose={() => setShowAddModal(false)}
+          onSubmit={handleAddDevice}
+          loading={false}
+          submitLabel="Toevoegen"
+          testIdPrefix="shelly-add"
+        >
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Appartement</label>
+            <select value={newDevice.apartment_id} onChange={e => setNewDevice({...newDevice, apartment_id: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-orange-400">
+              <option value="">Selecteer appartement...</option>
+              {apartments.map(a => <option key={a.apartment_id} value={a.apartment_id}>Appt. {a.number} - {a.description}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">IP-adres van Shelly</label>
+            <input type="text" value={newDevice.device_ip} onChange={e => setNewDevice({...newDevice, device_ip: e.target.value})} placeholder="bijv. 192.168.1.100" className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-orange-400" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Naam (optioneel)</label>
+            <input type="text" value={newDevice.device_name} onChange={e => setNewDevice({...newDevice, device_name: e.target.value})} placeholder="bijv. Meterkast A-101" className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
+              <select value={newDevice.device_type} onChange={e => setNewDevice({...newDevice, device_type: e.target.value})} className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-orange-400">
+                <option value="gen1">Gen1 (Shelly 1)</option>
+                <option value="gen2">Gen2+ (Plus/Pro)</option>
+              </select>
             </div>
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => setShowAddModal(false)} className="flex-1 px-4 py-3 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50">Annuleren</button>
-              <button onClick={handleAddDevice} disabled={!newDevice.apartment_id || !newDevice.device_ip} className="flex-1 px-4 py-3 bg-orange-500 text-white rounded-xl hover:bg-orange-600 disabled:bg-slate-300 disabled:text-slate-500 font-medium">Toevoegen</button>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Kanaal</label>
+              <input type="number" inputMode="numeric" min="0" max="3" value={newDevice.channel} onChange={e => setNewDevice({...newDevice, channel: parseInt(e.target.value) || 0})} className="w-full px-4 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" />
             </div>
           </div>
-        </div>
+        </MobileModalShell>
       )}
 
     </div>

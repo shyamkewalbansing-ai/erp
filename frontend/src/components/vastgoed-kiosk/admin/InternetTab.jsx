@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Loader2, Wifi, Power, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { API, axios } from './utils';
+import MobileModalShell from './MobileModalShell';
 
 function InternetTab({ token, tenants, formatSRD, onRefresh }) {
   const [plans, setPlans] = useState([]);
@@ -325,156 +326,132 @@ function InternetTab({ token, tenants, formatSRD, onRefresh }) {
 
       {/* Plan Create/Edit Modal */}
       {showPlanModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowPlanModal(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
-            <div className="p-5 border-b border-slate-200">
-              <h3 className="font-bold text-slate-900" data-testid="plan-modal-title">{editPlan ? 'Plan Bewerken' : 'Nieuw Internet Plan'}</h3>
-            </div>
-            <div className="p-5 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Naam *</label>
-                <input type="text" value={planName} onChange={e => setPlanName(e.target.value)}
-                  data-testid="plan-name" placeholder="Bijv. Basis" className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Snelheid *</label>
-                <input type="text" value={planSpeed} onChange={e => setPlanSpeed(e.target.value)}
-                  data-testid="plan-speed" placeholder="Bijv. 25 Mbps" className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Prijs per maand (SRD) *</label>
-                <input type="number" value={planPrice} onChange={e => setPlanPrice(e.target.value)}
-                  data-testid="plan-price" placeholder="0.00" min="0" step="0.01" className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm" />
-              </div>
-            </div>
-            <div className="p-5 border-t border-slate-200 flex justify-end gap-3">
-              <button onClick={() => setShowPlanModal(false)} className="px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Annuleren</button>
-              <button onClick={handleSavePlan} disabled={saving} data-testid="plan-save"
-                className="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50">
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Opslaan'}
-              </button>
-            </div>
+        <MobileModalShell
+          title={editPlan ? 'Plan Bewerken' : 'Nieuw Internet Plan'}
+          subtitle={editPlan?.name}
+          onClose={() => setShowPlanModal(false)}
+          onSubmit={handleSavePlan}
+          loading={saving}
+          submitLabel="Opslaan"
+          testIdPrefix="plan-modal"
+        >
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Naam *</label>
+            <input type="text" value={planName} onChange={e => setPlanName(e.target.value)}
+              data-testid="plan-name" placeholder="Bijv. Basis" className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" />
           </div>
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Snelheid *</label>
+            <input type="text" value={planSpeed} onChange={e => setPlanSpeed(e.target.value)}
+              data-testid="plan-speed" placeholder="Bijv. 25 Mbps" className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Prijs per maand (SRD) *</label>
+            <input type="number" inputMode="decimal" value={planPrice} onChange={e => setPlanPrice(e.target.value)}
+              data-testid="plan-price" placeholder="0.00" min="0" step="0.01" className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" />
+          </div>
+        </MobileModalShell>
       )}
 
       {/* Assign Plan Modal */}
       {assignModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setAssignModal(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
-            <div className="p-5 border-b border-slate-200">
-              <h3 className="font-bold text-slate-900" data-testid="assign-modal-title">Internet — {assignModal.name}</h3>
-              <p className="text-sm text-slate-500 mt-1">App. {assignModal.apartment_number}</p>
-            </div>
-            <div className="p-5 space-y-3">
-              <button
-                onClick={() => handleAssign(assignModal.tenant_id, 'none')}
-                data-testid="assign-none"
-                className={`w-full text-left p-3 rounded-xl border transition ${!assignModal.internet_plan_id ? 'border-orange-400 bg-orange-50' : 'border-slate-200 hover:border-slate-300'}`}
-              >
-                <p className="font-medium text-slate-700">Geen internet</p>
-                <p className="text-xs text-slate-400">Aansluiting verwijderen</p>
-              </button>
-              {plans.map(p => (
-                <button
-                  key={p.plan_id}
-                  onClick={() => handleAssign(assignModal.tenant_id, p.plan_id)}
-                  data-testid={`assign-plan-${p.plan_id}`}
-                  className={`w-full text-left p-3 rounded-xl border transition ${assignModal.internet_plan_id === p.plan_id ? 'border-orange-400 bg-orange-50' : 'border-slate-200 hover:border-slate-300'}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-slate-900">{p.name}</p>
-                      <p className="text-xs text-orange-600">{p.speed}</p>
-                    </div>
-                    <span className="font-bold text-slate-900">{formatSRD(p.price)}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-            <div className="p-5 border-t border-slate-200">
-              <button onClick={() => setAssignModal(null)} className="w-full px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Sluiten</button>
-            </div>
-          </div>
-        </div>
+        <MobileModalShell
+          title={`Internet — ${assignModal.name}`}
+          subtitle={`App. ${assignModal.apartment_number}`}
+          onClose={() => setAssignModal(null)}
+          hideFooter={true}
+          testIdPrefix="assign-modal"
+        >
+          <button
+            onClick={() => handleAssign(assignModal.tenant_id, 'none')}
+            data-testid="assign-none"
+            className={`w-full text-left p-3 rounded-xl border transition ${!assignModal.internet_plan_id ? 'border-orange-400 bg-orange-50' : 'border-slate-200 hover:border-slate-300'}`}
+          >
+            <p className="font-medium text-slate-700">Geen internet</p>
+            <p className="text-xs text-slate-400">Aansluiting verwijderen</p>
+          </button>
+          {plans.map(p => (
+            <button
+              key={p.plan_id}
+              onClick={() => handleAssign(assignModal.tenant_id, p.plan_id)}
+              data-testid={`assign-plan-${p.plan_id}`}
+              className={`w-full text-left p-3 rounded-xl border transition ${assignModal.internet_plan_id === p.plan_id ? 'border-orange-400 bg-orange-50' : 'border-slate-200 hover:border-slate-300'}`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-slate-900">{p.name}</p>
+                  <p className="text-xs text-orange-600">{p.speed}</p>
+                </div>
+                <span className="font-bold text-slate-900">{formatSRD(p.price)}</span>
+              </div>
+            </button>
+          ))}
+        </MobileModalShell>
       )}
 
       {/* Add Router Modal */}
       {showRouterModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowRouterModal(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl" onClick={e => e.stopPropagation()}>
-            <div className="p-5 border-b border-slate-200">
-              <h3 className="font-bold text-slate-900" data-testid="router-modal-title">Tenda Router Toevoegen</h3>
-            </div>
-            <div className="p-5 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Huurder *</label>
-                <select value={routerTenantId} onChange={e => setRouterTenantId(e.target.value)}
-                  data-testid="router-tenant-select"
-                  className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm">
-                  <option value="">Selecteer huurder...</option>
-                  {tenants.filter(t => t.status === 'active' && !routers.find(r => r.tenant_id === t.tenant_id)).map(t => (
-                    <option key={t.tenant_id} value={t.tenant_id}>{t.name} — {t.apartment_number}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Router IP-adres *</label>
-                <input type="text" value={routerIp} onChange={e => setRouterIp(e.target.value)}
-                  data-testid="router-ip" placeholder="bijv. 192.168.1.1 of publiek IP" className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Admin Wachtwoord *</label>
-                <input type="password" value={routerPassword} onChange={e => setRouterPassword(e.target.value)}
-                  data-testid="router-password" placeholder="Router admin wachtwoord" className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Naam (optioneel)</label>
-                <input type="text" value={routerName} onChange={e => setRouterName(e.target.value)}
-                  data-testid="router-name" placeholder="bijv. Router App. A1" className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm" />
-              </div>
-            </div>
-            <div className="p-5 border-t border-slate-200 flex justify-end gap-3">
-              <button onClick={() => setShowRouterModal(false)} className="px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Annuleren</button>
-              <button onClick={handleAddRouter} disabled={saving} data-testid="router-save"
-                className="px-5 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition disabled:opacity-50">
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Toevoegen'}
-              </button>
-            </div>
+        <MobileModalShell
+          title="Tenda Router Toevoegen"
+          subtitle="Koppel router aan huurder"
+          onClose={() => setShowRouterModal(false)}
+          onSubmit={handleAddRouter}
+          loading={saving}
+          submitLabel="Toevoegen"
+          testIdPrefix="router-modal"
+        >
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Huurder *</label>
+            <select value={routerTenantId} onChange={e => setRouterTenantId(e.target.value)}
+              data-testid="router-tenant-select"
+              className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-orange-400">
+              <option value="">Selecteer huurder...</option>
+              {tenants.filter(t => t.status === 'active' && !routers.find(r => r.tenant_id === t.tenant_id)).map(t => (
+                <option key={t.tenant_id} value={t.tenant_id}>{t.name} — {t.apartment_number}</option>
+              ))}
+            </select>
           </div>
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Router IP-adres *</label>
+            <input type="text" value={routerIp} onChange={e => setRouterIp(e.target.value)}
+              data-testid="router-ip" placeholder="bijv. 192.168.1.1 of publiek IP" className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Admin Wachtwoord *</label>
+            <input type="password" value={routerPassword} onChange={e => setRouterPassword(e.target.value)}
+              data-testid="router-password" placeholder="Router admin wachtwoord" className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Naam (optioneel)</label>
+            <input type="text" value={routerName} onChange={e => setRouterName(e.target.value)}
+              data-testid="router-name" placeholder="bijv. Router App. A1" className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" />
+          </div>
+        </MobileModalShell>
       )}
 
       {/* Connected Devices Modal */}
       {deviceModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setDeviceModal(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-md shadow-xl" onClick={e => e.stopPropagation()}>
-            <div className="p-5 border-b border-slate-200">
-              <h3 className="font-bold text-slate-900" data-testid="devices-modal-title">Verbonden Apparaten</h3>
-              <p className="text-sm text-slate-500 mt-1">{deviceModal.devices.length} apparaten online</p>
-            </div>
-            <div className="p-5 max-h-80 overflow-y-auto">
-              {deviceModal.devices.length === 0 ? (
-                <p className="text-center text-slate-400 py-4">Geen apparaten verbonden</p>
-              ) : (
-                <div className="space-y-2">
-                  {deviceModal.devices.map((d, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-slate-900 text-sm">{d.name || 'Onbekend apparaat'}</p>
-                        <p className="text-xs text-slate-400 font-mono">{d.mac}</p>
-                      </div>
-                      <span className="text-xs font-mono text-slate-500">{d.ip}</span>
-                    </div>
-                  ))}
+        <MobileModalShell
+          title="Verbonden Apparaten"
+          subtitle={`${deviceModal.devices.length} apparaten online`}
+          onClose={() => setDeviceModal(null)}
+          hideFooter={true}
+          testIdPrefix="devices-modal"
+        >
+          {deviceModal.devices.length === 0 ? (
+            <p className="text-center text-slate-400 py-4">Geen apparaten verbonden</p>
+          ) : (
+            deviceModal.devices.map((d, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-slate-900 text-sm truncate">{d.name || 'Onbekend apparaat'}</p>
+                  <p className="text-xs text-slate-400 font-mono truncate">{d.mac}</p>
                 </div>
-              )}
-            </div>
-            <div className="p-5 border-t border-slate-200">
-              <button onClick={() => setDeviceModal(null)} className="w-full px-4 py-2.5 text-sm text-slate-600 hover:bg-slate-100 rounded-lg transition">Sluiten</button>
-            </div>
-          </div>
-        </div>
+                <span className="text-xs font-mono text-slate-500 flex-shrink-0 ml-2">{d.ip}</span>
+              </div>
+            ))
+          )}
+        </MobileModalShell>
       )}
     </div>
   );

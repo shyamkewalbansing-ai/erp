@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FileText, Plus, Trash2, Printer, Loader2, X, MessageCircle, Send, Wallet } from 'lucide-react';
 import { API, axios } from './utils';
+import MobileModalShell from './MobileModalShell';
 
 function Loonstroken({ token, formatSRD, employees, onChange, prefillRequest, onPrefillConsumed }) {
   const [items, setItems] = useState([]);
@@ -288,84 +289,74 @@ function LoonstrookModal({ token, employees, onClose, onCreated, initialValues }
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => !saving && onClose()}>
-      <div className="bg-white rounded-2xl w-full max-w-lg max-h-[95vh] overflow-y-auto p-5 sm:p-6" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center"><Wallet className="w-6 h-6 text-green-600" /></div>
-            <div><h3 className="text-lg font-bold text-slate-900">Nieuwe Loonstrook</h3></div>
-          </div>
-          <button onClick={onClose} className="text-slate-400"><X className="w-5 h-5" /></button>
-        </div>
-        <form onSubmit={submit} className="space-y-3">
-          <div>
-            <label className="block text-xs font-medium mb-1">Werknemer *</label>
-            <select value={employeeId} onChange={e => setEmployeeId(e.target.value)} required
-              className="w-full px-3 py-2.5 border rounded-lg text-sm bg-white">
-              <option value="">— Kies werknemer —</option>
-              {employees.filter(e => e.status === 'active').map(e => (
-                <option key={e.employee_id} value={e.employee_id}>{e.name}{e.functie ? ` · ${e.functie}` : ''}</option>
-              ))}
-            </select>
-            {selectedEmp && !selectedEmp.telefoon && <p className="text-xs text-amber-600 mt-1">⚠️ Geen telefoonnummer bij werknemer - WhatsApp versturen niet mogelijk.</p>}
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1">Periode *</label>
-            <input type="text" value={period} onChange={e => setPeriod(e.target.value)} required
-              className="w-full px-3 py-2.5 border rounded-lg text-sm" placeholder="bijv. april 2026" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><label className="block text-xs font-medium mb-1">Dagen gewerkt</label>
-              <input type="number" value={dagen} onChange={e => setDagen(e.target.value)} className="w-full px-3 py-2.5 border rounded-lg text-sm" /></div>
-            <div><label className="block text-xs font-medium mb-1">Uren gewerkt</label>
-              <input type="number" step="0.5" value={uren} onChange={e => setUren(e.target.value)} className="w-full px-3 py-2.5 border rounded-lg text-sm" /></div>
-          </div>
-          <div className="bg-slate-50 rounded-lg p-3 space-y-2">
-            <div><label className="block text-xs font-medium mb-1">Bruto loon (SRD) *</label>
-              <input type="number" step="0.01" value={bruto} onChange={e => setBruto(e.target.value)} required
-                className="w-full px-3 py-2.5 border rounded-lg text-sm font-bold" /></div>
-            <div className="grid grid-cols-2 gap-2">
-              <div><label className="block text-xs font-medium mb-1">Overuren</label>
-                <input type="number" step="0.01" value={overuren} onChange={e => setOveruren(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-              <div><label className="block text-xs font-medium mb-1">Bonus</label>
-                <input type="number" step="0.01" value={bonus} onChange={e => setBonus(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            </div>
-          </div>
-          <div className="bg-red-50 rounded-lg p-3 space-y-2">
-            <p className="text-xs font-bold text-red-700">Aftrek</p>
-            <div className="grid grid-cols-2 gap-2">
-              <div><label className="block text-xs font-medium mb-1">Belasting</label>
-                <input type="number" step="0.01" value={belasting} onChange={e => setBelasting(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-              <div><label className="block text-xs font-medium mb-1">Overige</label>
-                <input type="number" step="0.01" value={overigeAftrek} onChange={e => setOverigeAftrek(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm" /></div>
-            </div>
-          </div>
-          <div className="bg-green-50 border-2 border-green-300 rounded-lg p-3 text-center">
-            <p className="text-xs text-slate-600">NETTO LOON</p>
-            <p className="text-2xl font-bold text-green-700">SRD {netto.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}</p>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><label className="block text-xs font-medium mb-1">Uit betaald vanuit</label>
-              <select value={method} onChange={e => setMethod(e.target.value)} className="w-full px-3 py-2.5 border rounded-lg text-sm bg-white">
-                <option value="bank">Bank</option><option value="cash">Kas</option></select></div>
-            <div><label className="block text-xs font-medium mb-1">Datum</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full px-3 py-2.5 border rounded-lg text-sm" /></div>
-          </div>
-          <div>
-            <label className="block text-xs font-medium mb-1">Opmerkingen (optioneel)</label>
-            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="w-full px-3 py-2 border rounded-lg text-sm resize-none" />
-          </div>
-          <div className="flex gap-2 pt-2">
-            <button type="button" onClick={onClose} disabled={saving} className="flex-1 py-2.5 border rounded-lg text-sm font-medium">Annuleren</button>
-            <button type="submit" disabled={saving || !employeeId || netto <= 0}
-              className="flex-1 py-2.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-              {saving ? 'Bezig...' : 'Loonstrook Opslaan'}
-            </button>
-          </div>
-        </form>
+    <MobileModalShell
+      title="Nieuwe Loonstrook"
+      subtitle={selectedEmp?.name}
+      onClose={() => !saving && onClose()}
+      onSubmit={() => { if (!employeeId || netto <= 0 || saving) return; const fake = { preventDefault: () => {} }; submit(fake); }}
+      loading={saving}
+      submitLabel="Loonstrook Opslaan"
+      testIdPrefix="loonstrook-modal"
+      maxWidth="sm:max-w-lg"
+    >
+      <div>
+        <label className="block text-xs font-medium mb-1">Werknemer *</label>
+        <select value={employeeId} onChange={e => setEmployeeId(e.target.value)} required
+          className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-orange-400">
+          <option value="">— Kies werknemer —</option>
+          {employees.filter(e => e.status === 'active').map(e => (
+            <option key={e.employee_id} value={e.employee_id}>{e.name}{e.functie ? ` · ${e.functie}` : ''}</option>
+          ))}
+        </select>
+        {selectedEmp && !selectedEmp.telefoon && <p className="text-xs text-amber-600 mt-1">⚠️ Geen telefoonnummer - WhatsApp versturen niet mogelijk.</p>}
       </div>
-    </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Periode *</label>
+        <input type="text" value={period} onChange={e => setPeriod(e.target.value)} required
+          className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" placeholder="bijv. april 2026" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div><label className="block text-xs font-medium mb-1">Dagen gewerkt</label>
+          <input type="number" inputMode="numeric" value={dagen} onChange={e => setDagen(e.target.value)} className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" /></div>
+        <div><label className="block text-xs font-medium mb-1">Uren gewerkt</label>
+          <input type="number" inputMode="decimal" step="0.5" value={uren} onChange={e => setUren(e.target.value)} className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" /></div>
+      </div>
+      <div className="bg-slate-50 rounded-lg p-3 space-y-2">
+        <div><label className="block text-xs font-medium mb-1">Bruto loon (SRD) *</label>
+          <input type="number" inputMode="decimal" step="0.01" value={bruto} onChange={e => setBruto(e.target.value)} required
+            className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm font-bold focus:outline-none focus:border-orange-400" /></div>
+        <div className="grid grid-cols-2 gap-2">
+          <div><label className="block text-xs font-medium mb-1">Overuren</label>
+            <input type="number" inputMode="decimal" step="0.01" value={overuren} onChange={e => setOveruren(e.target.value)} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm" /></div>
+          <div><label className="block text-xs font-medium mb-1">Bonus</label>
+            <input type="number" inputMode="decimal" step="0.01" value={bonus} onChange={e => setBonus(e.target.value)} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm" /></div>
+        </div>
+      </div>
+      <div className="bg-red-50 rounded-lg p-3 space-y-2">
+        <p className="text-xs font-bold text-red-700">Aftrek</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div><label className="block text-xs font-medium mb-1">Belasting</label>
+            <input type="number" inputMode="decimal" step="0.01" value={belasting} onChange={e => setBelasting(e.target.value)} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm" /></div>
+          <div><label className="block text-xs font-medium mb-1">Overige</label>
+            <input type="number" inputMode="decimal" step="0.01" value={overigeAftrek} onChange={e => setOverigeAftrek(e.target.value)} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm" /></div>
+        </div>
+      </div>
+      <div className="bg-green-50 border-2 border-green-300 rounded-lg p-3 text-center">
+        <p className="text-xs text-slate-600">NETTO LOON</p>
+        <p className="text-2xl font-bold text-green-700">SRD {netto.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}</p>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div><label className="block text-xs font-medium mb-1">Uit betaald vanuit</label>
+          <select value={method} onChange={e => setMethod(e.target.value)} className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-orange-400">
+            <option value="bank">Bank</option><option value="cash">Kas</option></select></div>
+        <div><label className="block text-xs font-medium mb-1">Datum</label>
+          <input type="date" value={date} onChange={e => setDate(e.target.value)} className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" /></div>
+      </div>
+      <div>
+        <label className="block text-xs font-medium mb-1">Opmerkingen (optioneel)</label>
+        <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm resize-none focus:outline-none focus:border-orange-400" />
+      </div>
+    </MobileModalShell>
   );
 }
 

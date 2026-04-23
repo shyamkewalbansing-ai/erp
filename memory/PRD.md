@@ -1,5 +1,43 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 60 (23 apr 2026) — /vastgoed volledig mobile-vriendelijk: alle modals + tabs
+
+### Verzoek
+Gebruiker wilde dat ALLE tabs en modals in de /vastgoed kiosk admin mobile-friendly werden gemaakt, naar voorbeeld van "Nieuwe Huurders" (TenantModal) — fullscreen op mobile, sticky header met X, scrollbare body, sticky footer met safe-area padding.
+
+### Implementatie
+**Nieuwe herbruikbare component:**
+- `MobileModalShell.jsx` — één gedeelde modal-shell die overal wordt gebruikt. Props: `title`, `subtitle`, `onClose`, `onSubmit`, `loading`, `submitLabel`, `cancelLabel`, `maxWidth`, `hideFooter`, `testIdPrefix`, `children`
+
+**Modals gemigreerd naar MobileModalShell:**
+- `ApartmentModal` (Nieuw Appartement)
+- `LeaseModal` (Nieuwe Huurovereenkomst)
+- `LocationModal` (Nieuwe Locatie — in LocationsTab.jsx)
+- `LoanCreateModal` (Nieuwe Lening)
+- `LoanPayModal` (Aflossing registreren)
+- `LoanDetailModal` (inline custom shell met zelfde patroon, want full-size 2xl layout)
+- `Shelly Add Modal` (Stroombrekers — in PowerTab.jsx)
+- `Internet Plan Modal` (Nieuw/Bewerk plan — in InternetTab.jsx)
+- `Internet Assign Modal` (Plan toewijzen — hideFooter)
+- `Internet Router Modal` (Tenda router toevoegen)
+- `Internet Devices Modal` (Verbonden apparaten — hideFooter)
+- `LoonstrookModal` (Nieuwe Loonstrook — in Loonstroken.jsx)
+- `FreelancerPayments Modal` (Losse Uitbetaling)
+
+**Tabs met mobile card layout toegevoegd:**
+- `LoansTab` — cards met status-badge, bedrag/afgelost/openstaand grid, progress-bar, compacte actie-knoppen
+
+**Responsive headers:**
+- `PowerTab` header strip: flex-wrap, shorter button text op mobile ("Ververs" / "Nieuw")
+- `EmployeesTab` header: "Nieuwe Werknemer" → "Nieuw" op mobile
+- `LeasesTab` header: identieke responsive pattern
+
+### Tested ✅
+- Screenshots op 390px viewport van meerdere modals (Nieuw Appartement, Nieuwe Lening) bevestigen: fullscreen layout, sticky header met X, sticky footer met check-icon + Opslaan/Aanmaken, alle velden full-width
+- Linting passed op de hele `admin/` directory
+
+---
+
 ## Sprint 59 (23 apr 2026) — Mobile-friendly Contracten en ID Kaart tabs
 
 ### Verzoek

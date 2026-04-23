@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { HandCoins, Receipt as ReceiptIcon, Trash2, Plus, Printer, Loader2, X, MessageCircle, Send } from 'lucide-react';
 import { API, axios } from './utils';
+import MobileModalShell from './MobileModalShell';
 
 function FreelancerPayments({ token, formatSRD, employees, onChange }) {
   const [payments, setPayments] = useState([]);
@@ -286,98 +287,69 @@ function FreelancerPaymentModal({ token, employees, onClose, onCreated }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => !saving && onClose()}>
-      <div className="bg-white rounded-2xl w-full max-w-md p-5 sm:p-6" onClick={e => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-orange-100 flex items-center justify-center">
-              <HandCoins className="w-6 h-6 text-orange-600" />
-            </div>
-            <div>
-              <h3 className="text-lg font-bold text-slate-900">Losse Uitbetaling</h3>
-              <p className="text-xs text-slate-500">Registreer + printbare kwitantie</p>
-            </div>
-          </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X className="w-5 h-5" /></button>
-        </div>
-
-        <form onSubmit={submit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Naam ontvanger *</label>
-            <input type="text" value={employeeName} onChange={e => setEmployeeName(e.target.value)} required autoFocus
-              data-testid="fp-name-input"
-              className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm"
-              placeholder="bijv. Rakesh Jaglal" />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Functie / Type werk</label>
-            <input type="text" value={functie} onChange={e => setFunctie(e.target.value)}
-              data-testid="fp-functie-input"
-              className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm"
-              placeholder="bijv. Schilder, Loodgieter" />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Telefoon (voor WhatsApp kwitantie)</label>
-            <input type="tel" value={telefoon} onChange={e => setTelefoon(e.target.value)}
-              data-testid="fp-telefoon-input"
-              className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm"
-              placeholder="+597 8812345" />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Bedrag (SRD) *</label>
-            <input type="number" step="0.01" min="0.01" value={amount} onChange={e => setAmount(e.target.value)} required
-              data-testid="fp-amount-input"
-              className="w-full px-3 py-3 border border-slate-300 rounded-lg text-lg font-bold" placeholder="0.00" />
-          </div>
-
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Omschrijving</label>
-            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2}
-              data-testid="fp-description-input"
-              className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm resize-none"
-              placeholder="Bijv. Schilderwerk appt. A1, 3 dagen werk" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Uit betaald vanuit</label>
-              <select value={method} onChange={e => setMethod(e.target.value)}
-                data-testid="fp-method-select"
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm bg-white">
-                <option value="cash">Kas (contant)</option>
-                <option value="bank">Bank</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Datum</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)}
-                className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm" />
-            </div>
-          </div>
-
-          {/* Info box */}
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-xs text-slate-600">
-            <p><strong className="text-orange-700">Info:</strong> Dit bedrag wordt als uitgave geboekt in <strong>Bank/Kas</strong> onder categorie &quot;freelancer&quot;. Uw saldo daalt met SRD {parseFloat(amount) > 0 ? parseFloat(amount).toFixed(2) : '0,00'}.</p>
-          </div>
-
-          <div className="flex gap-2 pt-2">
-            <button type="button" onClick={onClose} disabled={saving}
-              className="flex-1 py-2.5 border border-slate-200 rounded-lg text-sm font-medium hover:bg-slate-50">
-              Annuleren
-            </button>
-            <button type="submit" disabled={saving || !employeeName.trim() || !amount}
-              data-testid="fp-submit-btn"
-              className="flex-1 py-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-bold disabled:opacity-50 flex items-center justify-center gap-2">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <ReceiptIcon className="w-4 h-4" />}
-              {saving ? 'Bezig...' : 'Uitbetalen & Kwitantie'}
-            </button>
-          </div>
-        </form>
+    <MobileModalShell
+      title="Losse Uitbetaling"
+      subtitle="Registreer + printbare kwitantie"
+      onClose={() => !saving && onClose()}
+      onSubmit={() => { if (!employeeName.trim() || !amount || saving) return; submit({ preventDefault: () => {} }); }}
+      loading={saving}
+      submitLabel="Uitbetalen & Kwitantie"
+      testIdPrefix="fp-modal"
+    >
+      <div>
+        <label className="block text-xs font-medium text-slate-600 mb-1">Naam ontvanger *</label>
+        <input type="text" value={employeeName} onChange={e => setEmployeeName(e.target.value)} required autoFocus
+          data-testid="fp-name-input"
+          className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+          placeholder="bijv. Rakesh Jaglal" />
       </div>
-    </div>
+      <div>
+        <label className="block text-xs font-medium text-slate-600 mb-1">Functie / Type werk</label>
+        <input type="text" value={functie} onChange={e => setFunctie(e.target.value)}
+          data-testid="fp-functie-input"
+          className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+          placeholder="bijv. Schilder, Loodgieter" />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-slate-600 mb-1">Telefoon (voor WhatsApp kwitantie)</label>
+        <input type="tel" value={telefoon} onChange={e => setTelefoon(e.target.value)}
+          data-testid="fp-telefoon-input"
+          className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+          placeholder="+597 8812345" />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-slate-600 mb-1">Bedrag (SRD) *</label>
+        <input type="number" inputMode="decimal" step="0.01" min="0.01" value={amount} onChange={e => setAmount(e.target.value)} required
+          data-testid="fp-amount-input"
+          className="w-full px-3 py-3 border border-slate-200 rounded-xl text-lg font-bold focus:outline-none focus:border-orange-400" placeholder="0.00" />
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-slate-600 mb-1">Omschrijving</label>
+        <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2}
+          data-testid="fp-description-input"
+          className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm resize-none focus:outline-none focus:border-orange-400"
+          placeholder="Bijv. Schilderwerk appt. A1, 3 dagen werk" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Uit betaald vanuit</label>
+          <select value={method} onChange={e => setMethod(e.target.value)}
+            data-testid="fp-method-select"
+            className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-orange-400">
+            <option value="cash">Kas (contant)</option>
+            <option value="bank">Bank</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Datum</label>
+          <input type="date" value={date} onChange={e => setDate(e.target.value)}
+            className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" />
+        </div>
+      </div>
+      <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-xs text-slate-600">
+        <p><strong className="text-orange-700">Info:</strong> Dit bedrag wordt als uitgave geboekt in <strong>Bank/Kas</strong> onder categorie &quot;freelancer&quot;. Uw saldo daalt met SRD {parseFloat(amount) > 0 ? parseFloat(amount).toFixed(2) : '0,00'}.</p>
+      </div>
+    </MobileModalShell>
   );
 }
 
