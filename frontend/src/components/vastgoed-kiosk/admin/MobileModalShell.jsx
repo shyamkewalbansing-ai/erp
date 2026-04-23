@@ -20,7 +20,7 @@ function MobileModalShell({
   loading = false,
   submitLabel = 'Opslaan',
   cancelLabel = 'Annuleren',
-  maxWidth = 'sm:max-w-md',
+  maxWidth = 'sm:max-w-2xl',
   children,
   hideFooter = false,
   testIdPrefix = 'modal',
