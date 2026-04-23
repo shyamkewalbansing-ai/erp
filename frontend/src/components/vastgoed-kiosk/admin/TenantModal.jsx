@@ -319,9 +319,10 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-[70] flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 z-[70] flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={onClose}
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       <div
-        className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl h-[100dvh] sm:h-auto sm:max-h-[92vh] flex flex-col"
+        className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl h-[calc(100dvh-env(safe-area-inset-top,0px))] sm:h-auto sm:max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sticky header */}

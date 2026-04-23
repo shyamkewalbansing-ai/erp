@@ -229,7 +229,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-slate-100 z-50" style={{ overflow: 'hidden' }}>
+    <div className="fixed inset-0 flex flex-col bg-slate-100 z-50" style={{ overflow: 'hidden', paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       <ImpersonationBanner />
       <SubscriptionBanner token={token} />
       <PWAInstallPrompt />

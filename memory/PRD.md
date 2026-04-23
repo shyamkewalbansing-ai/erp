@@ -1,5 +1,34 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 61 (23 apr 2026) — iOS status bar ALTIJD oranje (PWA standalone)
+
+### Verzoek
+Gebruiker meldde dat de oranje statusbalk bovenaan de iPhone (waar tijd/wifi/batterij staan) soms wegging bij scrollen of wisselen van tabs. Wilde dat die **ALTIJD** oranje blijft in de /vastgoed kiosk en /huurders portal.
+
+### Implementatie
+**`/app/frontend/public/index.html`:**
+- `apple-mobile-web-app-status-bar-style` dynamisch naar `black-translucent` gezet op kiosk routes (was `default`)
+- Op kiosk routes (`/vastgoed`, `/huurders`, custom subdomains) wordt `html` en `body` class `kiosk-orange-statusbar` toegevoegd
+- Nieuwe CSS regels:
+  - `html/body.kiosk-orange-statusbar` → background `#f97316`
+  - `body.kiosk-orange-statusbar::before` → fixed pseudo-element met `height: env(safe-area-inset-top)`, `background: #f97316`, `z-index: 2147483647` — vormt een permanente oranje laag over het status bar gebied (ook tijdens scroll-bounce)
+  - `body.kiosk-orange-statusbar #root` → `padding-top: env(safe-area-inset-top)` zodat content onder status bar start
+  - Media query <640px → alle `.fixed.inset-0` backdrops krijgen `padding-top: env(safe-area-inset-top)` zodat modals niet onder de oranje laag verdwijnen
+
+**Dashboards/Layouts:**
+- `KioskAdminDashboard.jsx` → `fixed inset-0` container krijgt inline `paddingTop: env(safe-area-inset-top)`
+- `HuurdersLayout.jsx` → zelfde inline padding
+
+**Modal-inner containers:**
+- Alle fullscreen modals (`TenantModal`, `MobileModalShell`, `LoanDetailModal`, `AddRentModal`, `PaymentsTab` detail, `FreelancerPayments` preview, `Loonstroken` preview, `DomainsTab`) krijgen nu `h-[calc(100dvh-env(safe-area-inset-top,0px))]` ipv gewoon `h-[100dvh]`, zodat inner content niet overflowt
+
+### Tested ✅
+- DOM check: `body.class = kiosk-orange-statusbar`, `apple-mobile-web-app-status-bar-style = black-translucent`, `theme-color = #f97316`
+- `::before` pseudo-element geverifieerd: `position: fixed`, `background: rgb(249,115,22)`, `z-index: 2147483647`
+- iOS simulatie screenshot (47px safe-area) bevestigt persistente oranje balk bovenaan ALLE routes
+
+---
+
 ## Sprint 60 (23 apr 2026) — /vastgoed volledig mobile-vriendelijk: alle modals + tabs
 
 ### Verzoek

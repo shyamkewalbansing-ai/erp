@@ -205,7 +205,7 @@ export default function HuurdersLayout() {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-slate-100 overflow-hidden">
+    <div className="fixed inset-0 flex flex-col bg-slate-100 overflow-hidden" style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
       {/* Main content area */}
       <div className="flex-1 relative min-h-0">
         <AnimatePresence mode="wait">

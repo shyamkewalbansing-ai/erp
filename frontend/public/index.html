@@ -9,7 +9,7 @@
         <!-- PWA Meta Tags -->
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" id="apple-sb-style" />
         <meta name="apple-mobile-web-app-title" content="Facturatie" />
         <meta name="application-name" content="Facturatie N.V." />
         <meta name="msapplication-TileColor" content="#0caf60" />
@@ -136,6 +136,21 @@
                 if (mAppleTitle) mAppleTitle.content = appleTitle;
                 var mAppName = document.querySelector('meta[name="application-name"]');
                 if (mAppName && isKiosk) mAppName.content = appleTitle;
+
+                // For kiosk routes: orange body background + black-translucent status bar
+                // This ensures the iOS status bar area stays orange consistently,
+                // and Android browser chrome stays orange via theme-color.
+                if (isKiosk) {
+                    var mSbStyle = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+                    if (mSbStyle) mSbStyle.content = 'black-translucent';
+                    // Apply orange body background so it shows through translucent status bar
+                    // Also ensures scroll-bounce top shows orange instead of white.
+                    document.documentElement.classList.add('kiosk-orange-statusbar');
+                    document.documentElement.style.background = themeColor;
+                    document.addEventListener('DOMContentLoaded', function() {
+                        document.body.classList.add('kiosk-orange-statusbar');
+                    });
+                }
             })();
         </script>
         
@@ -185,6 +200,40 @@
             .initial-loader { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
             .initial-loader::after { content: ''; width: 32px; height: 32px; border: 3px solid #e5e7eb; border-top-color: #0caf60; border-radius: 50%; animation: spin 0.8s linear infinite; }
             @keyframes spin { to { transform: rotate(360deg); } }
+
+            /* Kiosk: keep iOS status bar ALWAYS orange.
+               - black-translucent status bar => body background shows through status bar area
+               - orange html/body background => status bar renders orange
+               - safe-area-inset-top padding on #root => real content starts below status bar
+               - fixed orange "top-shield" div so scroll-bounce also shows orange */
+            html.kiosk-orange-statusbar,
+            body.kiosk-orange-statusbar {
+                background: #f97316 !important;
+            }
+            body.kiosk-orange-statusbar::before {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: env(safe-area-inset-top, 0px);
+                background: #f97316;
+                z-index: 2147483647;
+                pointer-events: none;
+            }
+            body.kiosk-orange-statusbar #root {
+                padding-top: env(safe-area-inset-top, 0px);
+                box-sizing: border-box;
+                min-height: 100vh;
+                min-height: 100dvh;
+                background: #f1f5f9;
+            }
+            /* Push modal backdrops below the orange status-bar shield so modal content is visible */
+            @media (max-width: 639px) {
+                body.kiosk-orange-statusbar .fixed.inset-0 {
+                    padding-top: env(safe-area-inset-top, 0px);
+                }
+            }
         </style>
     </head>
     <body>

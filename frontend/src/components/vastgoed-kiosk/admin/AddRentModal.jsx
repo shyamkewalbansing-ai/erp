@@ -124,7 +124,7 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
     return (
       <div className="fixed inset-0 bg-black/60 z-[70] flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
         <div
-          className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-md h-[100dvh] sm:h-auto sm:max-h-[92vh] flex flex-col"
+          className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-md h-[calc(100dvh-env(safe-area-inset-top,0px))] sm:h-auto sm:max-h-[92vh] flex flex-col"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex-1 overflow-y-auto min-h-0 p-4 sm:p-6 text-center">
@@ -188,7 +188,7 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
   return (
     <div className="fixed inset-0 bg-black/60 z-[70] flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
       <div
-        className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-md h-[100dvh] sm:h-auto sm:max-h-[92vh] flex flex-col"
+        className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-md h-[calc(100dvh-env(safe-area-inset-top,0px))] sm:h-auto sm:max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sticky header */}

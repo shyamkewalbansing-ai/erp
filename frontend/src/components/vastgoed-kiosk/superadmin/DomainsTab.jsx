@@ -418,7 +418,7 @@ function CommandsModal({ commands, onClose, onCopy }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
-      <div className="bg-white sm:rounded-2xl shadow-2xl w-full max-w-3xl h-[100dvh] sm:h-auto sm:max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="bg-white sm:rounded-2xl shadow-2xl w-full max-w-3xl h-[calc(100dvh-env(safe-area-inset-top,0px))] sm:h-auto sm:max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="p-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3 min-w-0">
@@ -574,7 +574,7 @@ function ConfigAnalyzerModal({ token, onClose, onCopy }) {
 
   return (
     <div className="fixed inset-0 bg-black/60 z-50 flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
-      <div className="bg-white sm:rounded-2xl shadow-2xl w-full max-w-4xl h-[100dvh] sm:h-auto sm:max-h-[92vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="bg-white sm:rounded-2xl shadow-2xl w-full max-w-4xl h-[calc(100dvh-env(safe-area-inset-top,0px))] sm:h-auto sm:max-h-[92vh] flex flex-col" onClick={e => e.stopPropagation()}>
         <div className="p-4 border-b border-slate-100 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center flex-shrink-0">

@@ -372,7 +372,7 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
     {/* Kwitantie Preview Modal - toont volledige HTML kwitantie zoals geprint */}
     {selectedPayment && (
       <div className="fixed inset-0 bg-black/60 z-50 flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={() => setSelectedPayment(null)}>
-        <div className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-4xl h-[100dvh] sm:h-[92vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-4xl h-[calc(100dvh-env(safe-area-inset-top,0px))] sm:h-[92vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
           {/* Header */}
           <div className="flex items-center justify-between p-3 sm:p-4 border-b border-slate-100 flex-shrink-0">
             <div className="flex items-center gap-2 min-w-0">
