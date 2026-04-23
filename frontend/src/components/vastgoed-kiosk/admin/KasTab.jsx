@@ -369,29 +369,29 @@ function KasTab({ token, tenants }) {
   const restPct = 100 - totalPct;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Tab Switcher */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="grid grid-cols-3 gap-1.5 sm:flex sm:gap-2 sm:flex-wrap">
         <button
           onClick={() => setActiveView('kas')}
           data-testid="kas-view-btn"
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${activeView === 'kas' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:border-orange-300'}`}
+          className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all active:scale-95 ${activeView === 'kas' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:border-orange-300'}`}
         >
-          <Landmark className="w-4 h-4" /> Bank/Kas
+          <Landmark className="w-4 h-4 flex-shrink-0" /> <span className="truncate">Bank/Kas</span>
         </button>
         <button
           onClick={() => setActiveView('verdeling')}
           data-testid="verdeling-view-btn"
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${activeView === 'verdeling' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:border-orange-300'}`}
+          className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all active:scale-95 ${activeView === 'verdeling' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:border-orange-300'}`}
         >
-          <PieChart className="w-4 h-4" /> Verdeling
+          <PieChart className="w-4 h-4 flex-shrink-0" /> <span className="truncate">Verdeling</span>
         </button>
         <button
           onClick={() => setActiveView('koers')}
           data-testid="koers-view-btn"
-          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all ${activeView === 'koers' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:border-orange-300'}`}
+          className={`flex items-center justify-center gap-1 sm:gap-2 px-2 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all active:scale-95 ${activeView === 'koers' ? 'bg-orange-500 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:border-orange-300'}`}
         >
-          <ArrowLeftRight className="w-4 h-4" /> Koers Berekenen
+          <ArrowLeftRight className="w-4 h-4 flex-shrink-0" /> <span className="truncate">Koers</span>
         </button>
       </div>
 
@@ -1294,107 +1294,108 @@ function KasTab({ token, tenants }) {
         )
       ) : (
         /* ========== KOERS BEREKENEN VIEW ========== */
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Rates header */}
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center flex-wrap gap-2">
-              <div>
-                <h2 className="font-semibold text-slate-900 flex items-center gap-2">
-                  <ArrowLeftRight className="w-4 h-4 text-orange-500" /> Wisselkoersen
+            <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-slate-200 flex justify-between items-start gap-2">
+              <div className="min-w-0">
+                <h2 className="font-semibold text-slate-900 flex items-center gap-1.5 text-sm sm:text-base">
+                  <ArrowLeftRight className="w-4 h-4 text-orange-500 flex-shrink-0" /> Wisselkoersen
                 </h2>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-[10px] sm:text-xs text-slate-400 mt-0.5 truncate">
                   Live van <a href="https://www.cme.sr/" target="_blank" rel="noreferrer" className="underline hover:text-orange-500">cme.sr</a>
-                  {rates?.as_of && <span className="ml-2">• bijgewerkt {rates.as_of}</span>}
-                  {rates?.cached && <span className="ml-2 text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">gecached</span>}
+                  {rates?.as_of && <span className="ml-2">• {rates.as_of}</span>}
+                  {rates?.cached && <span className="ml-1 text-[9px] bg-slate-100 text-slate-500 px-1 py-0.5 rounded">cache</span>}
                 </p>
               </div>
               <button onClick={loadRates} disabled={loadingRates} data-testid="reload-rates-btn"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 disabled:opacity-50">
-                <RefreshCw className={`w-3.5 h-3.5 ${loadingRates ? 'animate-spin' : ''}`} /> Vernieuwen
+                className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 disabled:opacity-50 flex-shrink-0 active:scale-95">
+                <RefreshCw className={`w-3.5 h-3.5 ${loadingRates ? 'animate-spin' : ''}`} /> <span className="hidden sm:inline">Vernieuwen</span>
               </button>
             </div>
             {!rates ? (
-              <div className="p-12 text-center text-slate-400 flex items-center justify-center gap-2"><Loader2 className="w-5 h-5 animate-spin" /> Koersen laden...</div>
+              <div className="p-8 sm:p-12 text-center text-slate-400 flex items-center justify-center gap-2 text-sm"><Loader2 className="w-5 h-5 animate-spin" /> Koersen laden...</div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-0 divide-y md:divide-y-0 md:divide-x divide-slate-100">
-                <div className="p-6">
-                  <p className="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-3">CME Koopt (u verkoopt aan CME)</p>
+              <div className="grid grid-cols-2 gap-0 divide-x divide-slate-100">
+                <div className="p-3 sm:p-6">
+                  <p className="text-[9px] sm:text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2 sm:mb-3 leading-tight">CME Koopt<span className="hidden sm:inline"> (u verkoopt)</span></p>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[10px] font-bold">$</span>1 USD</span>
-                      <span className="font-mono font-bold text-slate-900" data-testid="rate-usd-buy">SRD {rates.USD_buy?.toFixed(2)}</span>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs sm:text-sm text-slate-500 flex items-center gap-1.5 truncate"><span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">$</span>1 USD</span>
+                      <span className="font-mono font-bold text-slate-900 text-xs sm:text-base" data-testid="rate-usd-buy">{rates.USD_buy?.toFixed(2)}</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">€</span>1 EUR</span>
-                      <span className="font-mono font-bold text-slate-900" data-testid="rate-eur-buy">SRD {rates.EUR_buy?.toFixed(2)}</span>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs sm:text-sm text-slate-500 flex items-center gap-1.5 truncate"><span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">€</span>1 EUR</span>
+                      <span className="font-mono font-bold text-slate-900 text-xs sm:text-base" data-testid="rate-eur-buy">{rates.EUR_buy?.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
-                <div className="p-6">
-                  <p className="text-xs uppercase tracking-wider text-slate-400 font-semibold mb-3">CME Verkoopt (u koopt bij CME)</p>
+                <div className="p-3 sm:p-6">
+                  <p className="text-[9px] sm:text-xs uppercase tracking-wider text-slate-400 font-semibold mb-2 sm:mb-3 leading-tight">CME Verkoopt<span className="hidden sm:inline"> (u koopt)</span></p>
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[10px] font-bold">$</span>1 USD</span>
-                      <span className="font-mono font-bold text-slate-900" data-testid="rate-usd-sell">SRD {rates.USD_sell?.toFixed(2)}</span>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs sm:text-sm text-slate-500 flex items-center gap-1.5 truncate"><span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">$</span>1 USD</span>
+                      <span className="font-mono font-bold text-slate-900 text-xs sm:text-base" data-testid="rate-usd-sell">{rates.USD_sell?.toFixed(2)}</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500 flex items-center gap-2"><span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">€</span>1 EUR</span>
-                      <span className="font-mono font-bold text-slate-900" data-testid="rate-eur-sell">SRD {rates.EUR_sell?.toFixed(2)}</span>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs sm:text-sm text-slate-500 flex items-center gap-1.5 truncate"><span className="w-5 h-5 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold flex-shrink-0">€</span>1 EUR</span>
+                      <span className="font-mono font-bold text-slate-900 text-xs sm:text-base" data-testid="rate-eur-sell">{rates.EUR_sell?.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
               </div>
             )}
+            <p className="px-3 sm:px-6 py-2 bg-slate-50 text-[10px] sm:text-xs text-slate-400 border-t border-slate-100 sm:hidden">Alle prijzen in SRD</p>
           </div>
 
           {/* Converter */}
-          <div className="bg-white rounded-xl border border-slate-200 p-6">
-            <h3 className="font-semibold text-slate-900 mb-4 flex items-center gap-2"><ArrowLeftRight className="w-4 h-4 text-orange-500" /> Koers Berekenen</h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
-              <div className="md:col-span-2">
+          <div className="bg-white rounded-xl border border-slate-200 p-3 sm:p-6">
+            <h3 className="font-semibold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2 text-sm sm:text-base"><ArrowLeftRight className="w-4 h-4 text-orange-500" /> Koers Berekenen</h3>
+            <div className="space-y-3">
+              <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">Bedrag</label>
-                <input type="number" step="0.01" value={convAmount} onChange={e => setConvAmount(e.target.value)} data-testid="conv-amount"
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-lg font-mono" placeholder="0.00" />
+                <input type="number" inputMode="decimal" step="0.01" value={convAmount} onChange={e => setConvAmount(e.target.value)} data-testid="conv-amount"
+                  className="w-full px-3 py-3 border border-slate-300 rounded-lg text-xl font-mono font-bold" placeholder="0.00" />
               </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Van</label>
-                <select value={convFrom} onChange={e => setConvFrom(e.target.value)} data-testid="conv-from"
-                  className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold bg-white">
-                  <option value="SRD">SRD — Surinaamse Dollar</option>
-                  <option value="USD">USD — Amerikaanse Dollar</option>
-                  <option value="EUR">EUR — Euro</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Naar</label>
-                <div className="flex gap-1">
-                  <select value={convTo} onChange={e => setConvTo(e.target.value)} data-testid="conv-to"
-                    className="flex-1 px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold bg-white">
+              <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Van</label>
+                  <select value={convFrom} onChange={e => setConvFrom(e.target.value)} data-testid="conv-from"
+                    className="w-full px-2 sm:px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold bg-white">
                     <option value="SRD">SRD</option>
                     <option value="USD">USD</option>
                     <option value="EUR">EUR</option>
                   </select>
-                  <button type="button" onClick={() => { const t = convFrom; setConvFrom(convTo); setConvTo(t); setConvResult(null); }} data-testid="conv-swap"
-                    title="Wissel van/naar" className="p-2 rounded-lg bg-slate-50 hover:bg-slate-100 border border-slate-200">
-                    <ArrowLeftRight className="w-4 h-4 text-slate-600" />
-                  </button>
+                </div>
+                <button type="button" onClick={() => { const t = convFrom; setConvFrom(convTo); setConvTo(t); setConvResult(null); }} data-testid="conv-swap"
+                  title="Wissel" className="mb-px p-2.5 rounded-lg bg-orange-50 hover:bg-orange-100 border border-orange-200 active:scale-95">
+                  <ArrowLeftRight className="w-4 h-4 text-orange-600" />
+                </button>
+                <div>
+                  <label className="block text-xs font-medium text-slate-600 mb-1">Naar</label>
+                  <select value={convTo} onChange={e => setConvTo(e.target.value)} data-testid="conv-to"
+                    className="w-full px-2 sm:px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold bg-white">
+                    <option value="SRD">SRD</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                  </select>
                 </div>
               </div>
             </div>
             <button onClick={handleConvert} disabled={converting || !convAmount} data-testid="conv-calculate"
-              className="mt-4 w-full md:w-auto px-6 py-2.5 bg-orange-500 text-white rounded-lg text-sm font-semibold hover:bg-orange-600 disabled:opacity-50 flex items-center gap-2 justify-center">
+              className="mt-3 w-full px-4 py-3 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 disabled:opacity-50 flex items-center gap-2 justify-center active:scale-[0.98]">
               {converting ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowLeftRight className="w-4 h-4" />} Bereken
             </button>
 
             {convResult && (
-              <div className="mt-5 p-5 rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-50/40" data-testid="conv-result">
-                <p className="text-xs uppercase tracking-wider text-emerald-600 font-bold mb-2">Resultaat</p>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <span className="font-mono font-bold text-slate-500 text-lg">{Number(convResult.amount).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {convResult.from}</span>
-                  <ArrowLeftRight className="w-5 h-5 text-emerald-500" />
-                  <span className="font-mono font-black text-emerald-600 text-2xl">{Number(convResult.result).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} {convResult.to}</span>
+              <div className="mt-4 p-3 sm:p-5 rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-emerald-50/40" data-testid="conv-result">
+                <p className="text-[10px] sm:text-xs uppercase tracking-wider text-emerald-600 font-bold mb-2">Resultaat</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono font-bold text-slate-500 text-sm sm:text-lg">{Number(convResult.amount).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {convResult.from}</span>
+                  <ArrowLeftRight className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+                  <span className="font-mono font-black text-emerald-600 text-lg sm:text-2xl break-all">{Number(convResult.result).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 4 })} {convResult.to}</span>
                 </div>
-                <p className="text-xs text-slate-400 mt-3">Koers: 1 {convResult.from} = {Number(convResult.rate).toLocaleString('nl-NL', { minimumFractionDigits: 4, maximumFractionDigits: 6 })} {convResult.to}</p>
+                <p className="text-[10px] sm:text-xs text-slate-400 mt-2 sm:mt-3 break-all">Koers: 1 {convResult.from} = {Number(convResult.rate).toLocaleString('nl-NL', { minimumFractionDigits: 4, maximumFractionDigits: 6 })} {convResult.to}</p>
               </div>
             )}
           </div>
