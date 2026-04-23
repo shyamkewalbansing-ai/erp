@@ -1,5 +1,24 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 59 (23 apr 2026) — Mobile-friendly Contracten en ID Kaart tabs
+
+### Verzoek
+Gebruiker meldde dat de sub-tabs "Huurovereenkomsten / Contracten" en "ID Kaart" onder Huurders niet goed werkten op telefoon (horizontaal scrollen van brede tabellen).
+
+### Implementatie
+**Frontend (`TenantsTab.jsx` — `IdCardTab` en `LeasesTab`):**
+- Bestaande tabellen gekregen `hidden md:block` wrapper
+- Nieuwe mobile-card weergave (`md:hidden`) toegevoegd:
+  - **IdCardTab**: Per huurder een card met naam + appt, "Geregistreerd/Ontbreekt" badge, details-lijst (kaartnr, naam, geb.datum) of rode "niet geregistreerd" melding. Rode border bij ontbrekende ID.
+  - **LeasesTab**: Per contract een card met huurder + appt, status-badge (Actief/Verlopen/Beëindigd), periode en maandhuur, en drie compacte actie-knoppen (Doc / Bewerk / Trash).
+- Header in LeasesTab nu responsive (kleine titel op mobile, "Nieuw" ipv "Nieuwe Overeenkomst")
+
+### Tested ✅
+- DOM-counts bevestigen dat zowel mobile cards als desktop rows correct worden gerenderd
+- Screenshots op 390px viewport bevestigen schone layout zonder horizontaal scrollen
+
+---
+
 ## Sprint 58 (23 apr 2026) — Mobile-friendly AddRentModal (Maandhuur actie)
 
 ### Verzoek

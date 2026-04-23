@@ -414,7 +414,7 @@ function IdCardTab({ tenants, token, onRefresh }) {
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-3 mb-2">
+      <div className="flex flex-wrap gap-2 sm:gap-3 mb-2">
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
           <CheckCircle className="w-3.5 h-3.5" /> {registered.length} Geregistreerd
         </span>
@@ -422,7 +422,9 @@ function IdCardTab({ tenants, token, onRefresh }) {
           <XCircle className="w-3.5 h-3.5" /> {notRegistered.length} Niet geregistreerd
         </span>
       </div>
-      <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto">
+
+      {/* Desktop table */}
+      <div className="bg-white rounded-xl border border-slate-200 overflow-x-auto hidden md:block">
         <table className="w-full min-w-[700px]">
           <thead className="bg-slate-50">
             <tr>
@@ -458,6 +460,62 @@ function IdCardTab({ tenants, token, onRefresh }) {
           </tbody>
         </table>
       </div>
+
+      {/* Mobile cards */}
+      <div className="md:hidden space-y-2">
+        {activeTenants.length === 0 && (
+          <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-sm text-slate-400">Geen huurders</div>
+        )}
+        {activeTenants.map(t => {
+          const hasCard = !!t.id_card_number;
+          return (
+            <div
+              key={t.tenant_id}
+              data-testid={`idcard-card-${t.tenant_id}`}
+              className={`bg-white rounded-xl border p-3 ${hasCard ? 'border-slate-200' : 'border-red-200'}`}
+            >
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-slate-900 truncate">{t.name}</p>
+                  <p className="text-xs text-slate-400 truncate">Appt. {t.apartment_number}</p>
+                </div>
+                {hasCard ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-700 flex-shrink-0">
+                    <CheckCircle className="w-3 h-3" /> OK
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-50 text-red-600 flex-shrink-0">
+                    <XCircle className="w-3 h-3" /> Ontbreekt
+                  </span>
+                )}
+              </div>
+              {hasCard ? (
+                <div className="text-xs space-y-1 border-t border-slate-100 pt-2">
+                  <div className="flex justify-between gap-2">
+                    <span className="text-slate-400 flex-shrink-0">Kaartnr.</span>
+                    <span className="font-mono text-slate-700 truncate">{t.id_card_number}</span>
+                  </div>
+                  {t.id_card_name && (
+                    <div className="flex justify-between gap-2">
+                      <span className="text-slate-400 flex-shrink-0">Naam</span>
+                      <span className="text-slate-700 truncate">{t.id_card_name}</span>
+                    </div>
+                  )}
+                  {t.id_card_dob && (
+                    <div className="flex justify-between gap-2">
+                      <span className="text-slate-400 flex-shrink-0">Geb.datum</span>
+                      <span className="text-slate-700">{t.id_card_dob}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-[11px] text-red-500 border-t border-red-100 pt-2">ID-kaart niet geregistreerd</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
       <p className="text-xs text-slate-400">ID kaart registratie gaat via Huurder bewerken (Huurders tab) of bij het aanmaken van een nieuwe huurder.</p>
     </div>
   );
@@ -483,15 +541,16 @@ function LeasesTab({ leases, tenants, apartments, formatSRD, onRefresh, token })
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl border border-slate-200">
-        <div className="p-4 border-b border-slate-200 flex justify-between items-center">
-          <h2 className="font-semibold text-slate-900">Huurovereenkomsten ({(leases || []).length})</h2>
+        <div className="p-3 sm:p-4 border-b border-slate-200 flex flex-wrap justify-between items-center gap-2">
+          <h2 className="font-semibold text-slate-900 text-sm sm:text-base">Huurovereenkomsten ({(leases || []).length})</h2>
           <button
             onClick={() => { setEditingLease(null); setShowLeaseModal(true); }}
             data-testid="add-lease-button"
-            className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 whitespace-nowrap"
           >
             <Plus className="w-4 h-4" />
-            Nieuwe Overeenkomst
+            <span className="hidden sm:inline">Nieuwe Overeenkomst</span>
+            <span className="sm:hidden">Nieuw</span>
           </button>
         </div>
         {(leases || []).length === 0 ? (
@@ -500,7 +559,9 @@ function LeasesTab({ leases, tenants, apartments, formatSRD, onRefresh, token })
             <p className="text-slate-400">Nog geen huurovereenkomsten</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Desktop table */}
+          <div className="overflow-x-auto hidden md:block">
             <table className="w-full min-w-[600px]">
               <thead className="bg-slate-50">
                 <tr>
@@ -552,6 +613,53 @@ function LeasesTab({ leases, tenants, apartments, formatSRD, onRefresh, token })
               </tbody>
             </table>
           </div>
+
+          {/* Mobile cards */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {(leases || []).slice().sort((a, b) => (a.tenant_name || '').localeCompare(b.tenant_name || '')).map(lease => {
+              const isExpired = new Date(lease.end_date) < new Date();
+              const status = lease.status === 'terminated' ? 'terminated' : isExpired ? 'expired' : 'active';
+              return (
+                <div key={lease.lease_id} data-testid={`lease-card-${lease.lease_id}`} className="p-3">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-slate-900 truncate">{lease.tenant_name}</p>
+                      <p className="text-xs text-slate-400 truncate">Appt. {lease.apartment_number}</p>
+                    </div>
+                    {status === 'active' ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100 text-green-600 flex-shrink-0">Actief</span>
+                    ) : status === 'expired' ? (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-600 flex-shrink-0">Verlopen</span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 flex-shrink-0">Beëindigd</span>
+                    )}
+                  </div>
+                  <div className="text-xs space-y-1 border-t border-slate-100 pt-2 mb-2">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-slate-400">Periode</span>
+                      <span className="text-slate-700 text-right truncate">{lease.start_date} → {lease.end_date}</span>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <span className="text-slate-400">Maandhuur</span>
+                      <span className="font-bold text-slate-900">{formatSRD(lease.monthly_rent)}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end gap-1 pt-1">
+                    <button onClick={() => openLeaseDoc(lease.lease_id)} data-testid={`lease-doc-mobile-${lease.lease_id}`} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-slate-100 text-slate-600 active:scale-95" title="Document">
+                      <Eye className="w-3.5 h-3.5" /> Doc
+                    </button>
+                    <button onClick={() => { setEditingLease(lease); setShowLeaseModal(true); }} data-testid={`lease-edit-mobile-${lease.lease_id}`} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-orange-50 text-orange-600 active:scale-95" title="Bewerken">
+                      <Pencil className="w-3.5 h-3.5" /> Bewerk
+                    </button>
+                    <button onClick={() => handleDeleteLease(lease.lease_id)} data-testid={`lease-delete-mobile-${lease.lease_id}`} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium bg-red-50 text-red-600 active:scale-95" title="Verwijderen">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          </>
         )}
       </div>
 
