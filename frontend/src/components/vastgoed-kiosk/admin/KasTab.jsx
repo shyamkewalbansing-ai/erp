@@ -700,38 +700,38 @@ function KasTab({ token, tenants }) {
           )}
 
           {/* Kas Samenvatting - per currency (always single currency now) */}
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+          <div className="grid gap-3 grid-cols-3">
             {(() => {
               const cur = activeCurrencyFilter || accountCurrencies[0];
               const t = totalsByCurrency[cur] || { total_income: 0, total_expense: 0, balance: 0 };
               return (
                 <>
-                  <div className="bg-white rounded-xl border border-green-200 p-6">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                        <TrendingUp className="w-5 h-5 text-green-600" />
+                  <div className="bg-white rounded-xl border border-green-200 p-3 sm:p-6">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                        <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                       </div>
-                      <p className="text-sm text-slate-500">{activeAccount?.is_default ? 'Huurinkomsten' : 'Inkomsten'}</p>
+                      <p className="text-[10px] sm:text-sm text-slate-500 truncate leading-tight">{activeAccount?.is_default ? 'Huurinkomsten' : 'Inkomsten'}</p>
                     </div>
-                    <p className="text-2xl font-bold text-slate-900" data-testid={`kas-income-${cur}`}>{formatMoney(t.total_income, cur)}</p>
+                    <p className="text-sm sm:text-2xl font-bold text-slate-900 break-all" data-testid={`kas-income-${cur}`}>{formatMoney(t.total_income, cur)}</p>
                   </div>
-                  <div className="bg-white rounded-xl border border-red-200 p-6">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
-                        <TrendingDown className="w-5 h-5 text-red-600" />
+                  <div className="bg-white rounded-xl border border-red-200 p-3 sm:p-6">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
                       </div>
-                      <p className="text-sm text-slate-500">Totale Uitgaven</p>
+                      <p className="text-[10px] sm:text-sm text-slate-500 truncate leading-tight">Uitgaven</p>
                     </div>
-                    <p className="text-2xl font-bold text-red-600" data-testid={`kas-expense-${cur}`}>{formatMoney(t.total_expense, cur)}</p>
+                    <p className="text-sm sm:text-2xl font-bold text-red-600 break-all" data-testid={`kas-expense-${cur}`}>{formatMoney(t.total_expense, cur)}</p>
                   </div>
-                  <div className="bg-white rounded-xl border border-orange-200 p-6">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                        <Landmark className="w-5 h-5 text-orange-600" />
+                  <div className="bg-white rounded-xl border border-orange-200 p-3 sm:p-6">
+                    <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+                        <Landmark className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
                       </div>
-                      <p className="text-sm text-slate-500">Saldo — {activeAccount?.name}</p>
+                      <p className="text-[10px] sm:text-sm text-slate-500 truncate leading-tight">Saldo</p>
                     </div>
-                    <p className="text-2xl font-bold text-slate-900" data-testid={`kas-balance-${cur}`}>{formatMoney(t.balance, cur)}</p>
+                    <p className="text-sm sm:text-2xl font-bold text-slate-900 break-all" data-testid={`kas-balance-${cur}`}>{formatMoney(t.balance, cur)}</p>
                   </div>
                 </>
               );
@@ -740,53 +740,53 @@ function KasTab({ token, tenants }) {
 
           {/* Boekingen Tabel */}
           <div className="bg-white rounded-xl border border-slate-200">
-            <div className="p-4 border-b border-slate-200 flex justify-between items-center flex-wrap gap-3">
-              <h2 className="font-semibold text-slate-900">Boekingen Overzicht</h2>
-              <div className="flex gap-2 flex-wrap">
-                <button onClick={() => { setFormType('income'); setShowForm(true); }} className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600" data-testid="add-income-btn">
-                  <TrendingUp className="w-4 h-4" /> Inkomsten Registreren
+            <div className="p-3 sm:p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+              <h2 className="font-semibold text-slate-900 text-sm sm:text-base">Boekingen Overzicht</h2>
+              <div className="grid grid-cols-3 sm:flex gap-1.5 sm:gap-2">
+                <button onClick={() => { setFormType('income'); setShowForm(true); }} className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-2 sm:px-4 py-2 bg-green-500 text-white rounded-lg text-[10px] sm:text-sm hover:bg-green-600 active:scale-95" data-testid="add-income-btn">
+                  <TrendingUp className="w-4 h-4" /> <span>Inkomst</span>
                 </button>
-                <button onClick={() => { setFormType('expense'); setShowForm(true); }} className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600" data-testid="add-expense-btn">
-                  <TrendingDown className="w-4 h-4" /> Uitgave Registreren
+                <button onClick={() => { setFormType('expense'); setShowForm(true); }} className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-2 sm:px-4 py-2 bg-red-500 text-white rounded-lg text-[10px] sm:text-sm hover:bg-red-600 active:scale-95" data-testid="add-expense-btn">
+                  <TrendingDown className="w-4 h-4" /> <span>Uitgave</span>
                 </button>
-                <button onClick={openExchange} className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm hover:bg-indigo-600" data-testid="open-exchange-btn">
-                  <Repeat className="w-4 h-4" /> Wisselen
+                <button onClick={openExchange} className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-2 sm:px-4 py-2 bg-indigo-500 text-white rounded-lg text-[10px] sm:text-sm hover:bg-indigo-600 active:scale-95" data-testid="open-exchange-btn">
+                  <Repeat className="w-4 h-4" /> <span>Wisselen</span>
                 </button>
               </div>
             </div>
 
             {showForm && (
-              <form onSubmit={handleSubmit} className="p-4 border-b border-slate-200 bg-slate-50">
-                <div className={`grid grid-cols-1 ${accountCurrencies.length > 1 ? 'md:grid-cols-5' : 'md:grid-cols-4'} gap-3 items-end`}>
+              <form onSubmit={handleSubmit} className="p-3 sm:p-4 border-b border-slate-200 bg-slate-50">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                   {accountCurrencies.length > 1 && (
                     <div>
                       <label className="block text-xs font-medium text-slate-600 mb-1">Valuta</label>
                       <select value={entryCurrency} onChange={e => setEntryCurrency(e.target.value)} data-testid="kas-entry-currency"
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm font-semibold bg-white">
+                        className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm font-semibold bg-white">
                         {accountCurrencies.map(c => <option key={c} value={c}>{currencyLabel(c)}</option>)}
                       </select>
                     </div>
                   )}
                   <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1">Bedrag ({entryCurrency})</label>
-                    <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="0.00" required data-testid="kas-amount-input" />
+                    <input type="number" inputMode="decimal" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm" placeholder="0.00" required data-testid="kas-amount-input" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1">Omschrijving</label>
-                    <input value={description} onChange={e => setDescription(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder={formType === 'income' ? 'Bijv. Huur pand 3, Borg ontvangen' : 'Bijv. Onderhoud dak, EBS rekening'} required data-testid="kas-description-input" />
+                    <input value={description} onChange={e => setDescription(e.target.value)} className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm" placeholder={formType === 'income' ? 'Huur pand 3...' : 'Onderhoud dak...'} required data-testid="kas-description-input" />
                   </div>
                   <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1">Categorie</label>
-                    <input value={category} onChange={e => setCategory(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder={formType === 'income' ? 'Bijv. Huur, Borg, Overig' : 'Bijv. Onderhoud, Nutsvoorzieningen, Materialen'} data-testid="kas-category-input" />
+                    <input value={category} onChange={e => setCategory(e.target.value)} className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm" placeholder={formType === 'income' ? 'Huur, Borg...' : 'Onderhoud, EBS...'} data-testid="kas-category-input" />
                   </div>
-                  <div className="flex gap-2">
-                    <button type="submit" disabled={saving} className="flex-1 px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50" data-testid="kas-submit-btn">
-                      {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Opslaan'}
-                    </button>
-                    <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 bg-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-300">
-                      Annuleer
-                    </button>
-                  </div>
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <button type="button" onClick={() => setShowForm(false)} className="flex-1 sm:flex-none px-4 py-2.5 bg-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-300">
+                    Annuleer
+                  </button>
+                  <button type="submit" disabled={saving} className="flex-1 sm:flex-none px-4 py-2.5 bg-orange-500 text-white rounded-lg text-sm font-bold hover:bg-orange-600 disabled:opacity-50" data-testid="kas-submit-btn">
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Opslaan'}
+                  </button>
                 </div>
               </form>
             )}
@@ -797,7 +797,73 @@ function KasTab({ token, tenants }) {
                 <p className="text-slate-400">Nog geen boekingen</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <>
+                {/* Mobile card layout */}
+                <div className="md:hidden divide-y divide-slate-100 overflow-hidden">
+                  {entries.map(e => {
+                    const isExchange = !!e.exchange_id;
+                    const dateStr = e.created_at ? new Date(e.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short' }) : '-';
+                    const typeColorCls = isExchange
+                      ? 'bg-indigo-100 text-indigo-700'
+                      : e.entry_type === 'income' ? 'bg-green-100 text-green-700'
+                      : e.entry_type === 'expense' ? 'bg-red-100 text-red-700'
+                      : e.entry_type === 'salary' ? 'bg-purple-100 text-purple-700'
+                      : 'bg-slate-100 text-slate-600';
+                    const typeLabel = isExchange ? 'Wissel' : e.entry_type === 'income' ? 'Inkomst' : e.entry_type === 'expense' ? 'Uitgave' : e.entry_type === 'salary' ? 'Loon' : e.entry_type;
+                    const amountColorCls = isExchange
+                      ? (e.exchange_direction === 'in' ? 'text-indigo-600' : 'text-indigo-400')
+                      : e.entry_type === 'income' ? 'text-green-600' : 'text-red-600';
+                    return (
+                      <div key={e.entry_id} className="p-3 flex items-start gap-2.5 min-w-0">
+                        <div className="flex-1 min-w-0 overflow-hidden">
+                          <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-1 ${typeColorCls}`}>
+                              {isExchange && <Repeat className="w-2.5 h-2.5" />}{typeLabel}
+                            </span>
+                            <span className="text-[10px] text-slate-400">{dateStr}</span>
+                            {e.category && <span className="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] capitalize truncate max-w-[40%]">{e.category}</span>}
+                          </div>
+                          <p className="text-sm text-slate-900 font-medium truncate">{e.description}</p>
+                          {(e.related_tenant_name || e.related_employee_name) && (
+                            <p className="text-[11px] text-slate-400 truncate">{e.related_tenant_name || e.related_employee_name}</p>
+                          )}
+                          {isExchange && e.exchange_counterparty_currency && e.exchange_counterparty_amount != null && (
+                            <p className="text-[10px] text-indigo-500 mt-0.5">
+                              {e.exchange_direction === 'in' ? 'van' : 'naar'} {formatMoney(e.exchange_counterparty_amount, e.exchange_counterparty_currency)}
+                            </p>
+                          )}
+                          {isExchange && e.exchange_counterparty_account_id && (
+                            <button
+                              onClick={() => {
+                                setActiveAccountId(e.exchange_counterparty_account_id);
+                                setActiveCurrencyFilter(e.exchange_counterparty_currency || null);
+                              }}
+                              data-testid={`exchange-jump-m-${e.entry_id}`}
+                              className="inline-flex items-center gap-1 text-[10px] text-indigo-600 font-semibold mt-0.5 active:scale-95"
+                            >
+                              <ArrowLeftRight className="w-3 h-3" /> Tegenboeking
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex flex-col items-end flex-shrink-0 gap-1">
+                          <span className={`text-sm font-bold whitespace-nowrap ${amountColorCls}`}>
+                            {e.entry_type === 'income' ? '+' : '-'} {formatMoney(e.amount, e.currency || activeCurrency)}
+                          </span>
+                          <button
+                            onClick={() => handleDelete(e.entry_id)}
+                            className="text-slate-300 hover:text-red-500 p-1.5 active:scale-95"
+                            title="Verwijderen"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop table layout */}
+                <div className="hidden md:block overflow-x-auto">
                 <table className="w-full min-w-[600px]">
                   <thead className="bg-slate-50">
                     <tr>
@@ -868,7 +934,8 @@ function KasTab({ token, tenants }) {
                     ))}
                   </tbody>
                 </table>
-              </div>
+                </div>
+              </>
             )}
           </div>
         </>
