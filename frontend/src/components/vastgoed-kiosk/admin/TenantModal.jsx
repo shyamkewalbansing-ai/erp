@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { CreditCard, Trash2, Check, RotateCcw, AlertTriangle } from 'lucide-react';
+import {
+  CreditCard, Check, RotateCcw, AlertTriangle, X, Camera, Upload, Loader2, Sparkles
+} from 'lucide-react';
+import { toast } from 'sonner';
 import { API, axios } from './utils';
 
 // Reset billed-through back to current real-world month
@@ -38,10 +41,10 @@ function BillingStatusSection({ tenant, token, onReset }) {
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      alert(r.data?.message || 'Factureringsstatus hersteld');
+      toast.success(r.data?.message || 'Factureringsstatus hersteld');
       if (onReset) onReset();
     } catch (err) {
-      alert(err.response?.data?.detail || 'Herstellen mislukt');
+      toast.error(err.response?.data?.detail || 'Herstellen mislukt');
     } finally {
       setBusy(false);
     }
@@ -81,14 +84,160 @@ function BillingStatusSection({ tenant, token, onReset }) {
   );
 }
 
-function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) {
+// ID card camera scanner component
+function IdCardScanner({ token, onScanned }) {
+  const [preview, setPreview] = useState(null);
+  const [scanning, setScanning] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const fileToBase64 = (file) => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+
+  // Downscale large images before upload (mobile phones produce 10+ MB photos)
+  const downscale = (dataUrl, maxDim = 1600) => new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (Math.max(width, height) > maxDim) {
+        const ratio = maxDim / Math.max(width, height);
+        width = Math.round(width * ratio);
+        height = Math.round(height * ratio);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+
+  const handleFile = async (file) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('Alleen foto\'s toegestaan');
+      return;
+    }
+    try {
+      const raw = await fileToBase64(file);
+      const compact = await downscale(raw);
+      setPreview(compact);
+      // Auto-scan
+      await runOcr(compact);
+    } catch {
+      toast.error('Foto laden mislukt');
+    }
+  };
+
+  const runOcr = async (img) => {
+    setScanning(true);
+    try {
+      const r = await axios.post(
+        `${API}/admin/ocr/id-card`,
+        { image_base64: img },
+        { headers: { Authorization: `Bearer ${token}` }, timeout: 60000 }
+      );
+      const { id_number, name, dob, raw_text } = r.data;
+      onScanned({ id_number, name, dob, raw_text, image: img });
+      toast.success('ID kaart gescand!');
+    } catch (err) {
+      toast.error(err.response?.data?.detail || 'Scan mislukt — vul handmatig in');
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const rescan = () => {
+    setPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  return (
+    <div className="space-y-3">
+      {!preview && (
+        <>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={(e) => handleFile(e.target.files?.[0])}
+            className="hidden"
+            data-testid="id-card-camera-input"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={scanning}
+            data-testid="id-card-scan-btn"
+            className="w-full flex items-center justify-center gap-2 px-4 py-4 rounded-xl border-2 border-dashed border-orange-300 bg-orange-50/50 text-orange-700 font-medium hover:bg-orange-50 disabled:opacity-50 active:scale-[0.98] transition"
+          >
+            <Camera className="w-5 h-5" />
+            <span>Foto van ID-kaart maken</span>
+          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (fileInputRef.current) {
+                  fileInputRef.current.removeAttribute('capture');
+                  fileInputRef.current.click();
+                  // restore capture for next time
+                  setTimeout(() => { if (fileInputRef.current) fileInputRef.current.setAttribute('capture', 'environment'); }, 100);
+                }
+              }}
+              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-100 text-slate-600 text-xs font-medium hover:bg-slate-200"
+              data-testid="id-card-upload-btn"
+            >
+              <Upload className="w-3.5 h-3.5" /> Upload foto
+            </button>
+            <div className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-indigo-50 text-indigo-600 text-xs font-medium">
+              <Sparkles className="w-3.5 h-3.5" /> AI OCR
+            </div>
+          </div>
+        </>
+      )}
+
+      {preview && (
+        <div className="space-y-2">
+          <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-900">
+            <img src={preview} alt="ID kaart" className="w-full max-h-64 object-contain" />
+            {scanning && (
+              <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center">
+                <Loader2 className="w-8 h-8 text-white animate-spin mb-2" />
+                <p className="text-white text-sm font-medium">AI leest je ID-kaart...</p>
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={rescan}
+            disabled={scanning}
+            className="w-full py-2 text-xs font-medium text-slate-500 hover:text-slate-700 border border-slate-200 rounded-lg disabled:opacity-50"
+            data-testid="id-card-rescan"
+          >
+            Opnieuw scannen
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+function TenantModal({ tenant, apartments, onClose, onSave, token }) {
   const [name, setName] = useState(tenant?.name || '');
   const [apartmentId, setApartmentId] = useState(tenant?.apartment_id || '');
   const [email, setEmail] = useState(tenant?.email || '');
   const [telefoon, setTelefoon] = useState(tenant?.telefoon || '');
   const [tenantCode, setTenantCode] = useState(tenant?.tenant_code || '');
   const [monthlyRent, setMonthlyRent] = useState(tenant?.monthly_rent || 0);
-  // Derive currency from tenant (existing) or selected apartment (new)
   const selectedApt = tenant?.apartment_id
     ? apartments.find(a => a.apartment_id === tenant.apartment_id)
     : null;
@@ -104,52 +253,44 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
   const [idCardName, setIdCardName] = useState(tenant?.id_card_name || '');
   const [idCardDob, setIdCardDob] = useState(tenant?.id_card_dob || '');
   const [idCardRaw, setIdCardRaw] = useState('');
-  const [cardReaderActive, setCardReaderActive] = useState(false);
-  const cardBufferRef = useRef('');
-  const cardTimerRef = useRef(null);
+  const [idCardPhoto, setIdCardPhoto] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const availableApartments = apartments.filter(a => a.status !== 'occupied' || a.apartment_id === tenant?.apartment_id);
+  // Section tabs for mobile — keeps form compact
+  const [section, setSection] = useState('basis');
 
-  // USB Card Reader listener - captures rapid keyboard input
-  useEffect(() => {
-    if (!cardReaderActive) return;
-    const handleKeyDown = (e) => {
-      if (e.key === 'Enter') {
-        const raw = cardBufferRef.current.trim();
-        if (raw.length > 5) {
-          setIdCardRaw(raw);
-          // Parse card data - try common delimiters
-          const parts = raw.split(/[;^|=\t]+/).filter(Boolean);
-          if (parts.length >= 1) setIdCardNumber(parts[0]);
-          if (parts.length >= 2) setIdCardName(parts[1]);
-          if (parts.length >= 3) setIdCardDob(parts[2]);
-        }
-        cardBufferRef.current = '';
-        setCardReaderActive(false);
-        return;
-      }
-      if (e.key.length === 1) {
-        cardBufferRef.current += e.key;
-        clearTimeout(cardTimerRef.current);
-        cardTimerRef.current = setTimeout(() => { cardBufferRef.current = ''; }, 500);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [cardReaderActive]);
+  const handleOcrResult = ({ id_number, name: ocrName, dob, raw_text, image }) => {
+    if (id_number) setIdCardNumber(id_number);
+    if (ocrName) {
+      setIdCardName(ocrName);
+      // If main name is empty and we got one from card, prefill
+      if (!name) setName(ocrName);
+    }
+    if (dob) setIdCardDob(dob);
+    if (raw_text) setIdCardRaw(raw_text);
+    if (image) setIdCardPhoto(image);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!name.trim()) { toast.error('Naam is verplicht'); setSection('basis'); return; }
+    if (!apartmentId) { toast.error('Kies een appartement'); setSection('basis'); return; }
+
     setLoading(true);
     try {
       const headers = { Authorization: `Bearer ${token}` };
-      const data = { name, apartment_id: apartmentId, email: email || null, telefoon: telefoon || null,
-        monthly_rent: parseFloat(monthlyRent), deposit_required: parseFloat(depositRequired),
+      const data = {
+        name, apartment_id: apartmentId,
+        email: email || null, telefoon: telefoon || null,
+        monthly_rent: parseFloat(monthlyRent),
+        deposit_required: parseFloat(depositRequired),
         currency,
         tenant_code: tenantCode || null,
-        id_card_number: idCardNumber || null, id_card_name: idCardName || null,
-        id_card_dob: idCardDob || null, id_card_raw: idCardRaw || null };
+        id_card_number: idCardNumber || null,
+        id_card_name: idCardName || null,
+        id_card_dob: idCardDob || null,
+        id_card_raw: idCardRaw || null,
+      };
       if (tenant) {
         data.outstanding_rent = parseFloat(outstandingRent);
         data.service_costs = parseFloat(serviceCosts);
@@ -162,196 +303,338 @@ function TenantModal({ tenant, apartments, onClose, onSave, token, companyId }) 
         }
         await axios.post(`${API}/admin/tenants`, data, { headers });
       }
+      toast.success(tenant ? 'Huurder bijgewerkt' : 'Huurder toegevoegd');
       onSave();
     } catch (err) {
-      alert('Opslaan mislukt');
+      toast.error(err.response?.data?.detail || 'Opslaan mislukt');
     } finally {
       setLoading(false);
     }
   };
 
+  const tabs = [
+    { id: 'basis', label: 'Basis' },
+    { id: 'id', label: 'ID Kaart' },
+    ...(tenant ? [{ id: 'saldo', label: 'Saldo' }] : [{ id: 'lease', label: 'Contract' }]),
+  ];
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl w-full max-w-lg sm:max-w-4xl mx-3 sm:mx-4 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-xl font-bold mb-4">{tenant ? 'Bewerk' : 'Nieuwe'} Huurder</h3>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Naam *</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} required
-                className="w-full px-4 py-3 border rounded-xl" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Appartement *</label>
-              <select value={apartmentId} onChange={(e) => {
-                  const id = e.target.value;
-                  setApartmentId(id);
-                  if (id) {
-                    const apt = apartments.find(a => a.apartment_id === id);
-                    if (apt) {
-                      if (apt.monthly_rent) {
-                        setMonthlyRent(apt.monthly_rent);
-                        setDepositRequired(apt.monthly_rent);
-                      }
-                      // Inherit apartment currency
-                      const aptCur = (apt.currency || 'SRD').toUpperCase();
-                      setCurrency(aptCur);
-                    }
-                  }
-                }} required
-                className="w-full px-4 py-3 border rounded-xl">
-                <option value="">Selecteer...</option>
-                {apartments.filter(a => a.status !== 'occupied' || a.apartment_id === tenant?.apartment_id).map(a => {
-                  const aCur = (a.currency || 'SRD').toUpperCase();
-                  return <option key={a.apartment_id} value={a.apartment_id}>{a.number}{a.monthly_rent ? ` - ${aCur} ${a.monthly_rent.toLocaleString('nl-NL')}` : ''}</option>;
-                })}
-              </select>
-              {apartmentId && (
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Valuta volgt appartement: <span className="font-bold text-slate-600">{currency}</span>
-                </p>
-              )}
-            </div>
+    <div className="fixed inset-0 bg-black/60 z-50 flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <div
+        className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl h-[100dvh] sm:h-auto sm:max-h-[92vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Sticky header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 flex-shrink-0">
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-slate-900">{tenant ? 'Huurder bewerken' : 'Nieuwe huurder'}</h3>
+            <p className="text-[11px] text-slate-400">{tenant ? tenant.name : 'Vul onderstaande velden in'}</p>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">E-mail</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border rounded-xl" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Telefoon</label>
-              <input type="tel" value={telefoon} onChange={(e) => setTelefoon(e.target.value)}
-                className="w-full px-4 py-3 border rounded-xl" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Huurderscode</label>
-              <input type="text" value={tenantCode} onChange={(e) => setTenantCode(e.target.value.toUpperCase())}
-                placeholder="bijv. A101"
-                data-testid="tenant-code-input"
-                className="w-full px-4 py-3 border rounded-xl font-mono uppercase" />
-              <p className="text-xs text-slate-400 mt-1">Leeg = automatisch</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Maandhuur ({currency})</label>
-              <input type="number" value={monthlyRent} onChange={(e) => setMonthlyRent(e.target.value)}
-                className="w-full px-4 py-3 border rounded-xl" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Borgsom ({currency})</label>
-              <input type="number" value={depositRequired} onChange={(e) => setDepositRequired(e.target.value)}
-                className="w-full px-4 py-3 border rounded-xl" />
-            </div>
-          </div>
-          {tenant && (
-            <div className="border-t border-slate-200 pt-4">
-              <p className="text-sm font-semibold text-slate-700 mb-3">Financieel <span className="ml-2 text-[10px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{currency}</span></p>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Openstaande huur ({currency})</label>
-                  <input type="number" step="0.01" value={outstandingRent} onChange={(e) => setOutstandingRent(e.target.value)}
-                    className="w-full px-3 py-2.5 border rounded-xl text-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Servicekosten ({currency})</label>
-                  <input type="number" step="0.01" value={serviceCosts} onChange={(e) => setServiceCosts(e.target.value)}
-                    className="w-full px-3 py-2.5 border rounded-xl text-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Boetes ({currency})</label>
-                  <input type="number" step="0.01" value={fines} onChange={(e) => setFines(e.target.value)}
-                    className="w-full px-3 py-2.5 border rounded-xl text-sm" />
-                </div>
-              </div>
-              <BillingStatusSection tenant={tenant} token={token} onReset={onSave} />
-            </div>
-          )}
-          {!tenant && (
-            <>
-              <div className="border-t border-slate-200 pt-4">
-                <p className="text-sm font-semibold text-slate-700 mb-3">Huurovereenkomst</p>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">Startdatum</label>
-                    <input type="date" value={leaseStart} onChange={(e) => setLeaseStart(e.target.value)}
-                      data-testid="tenant-lease-start"
-                      className="w-full px-3 py-2.5 border rounded-xl text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-500 mb-1">Einddatum</label>
-                    <input type="date" value={leaseEnd} onChange={(e) => setLeaseEnd(e.target.value)}
-                      data-testid="tenant-lease-end"
-                      className="w-full px-3 py-2.5 border rounded-xl text-sm" />
-                  </div>
-                </div>
-                <p className="text-xs text-slate-400 mt-1">Automatisch een huurovereenkomst aanmaken</p>
-              </div>
-            </>
-          )}
-          {/* ID Kaart Section */}
-          <div className="border-t border-slate-200 pt-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <CreditCard className="w-4 h-4 text-orange-600" />
-                <p className="text-sm font-semibold text-slate-700">ID Kaart</p>
-              </div>
-              {idCardNumber && (
-                <span className="flex items-center gap-1 text-xs font-bold text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                  <Check className="w-3 h-3" /> Geregistreerd
-                </span>
-              )}
-            </div>
-            <div className="space-y-3">
-              <button
-                type="button"
-                onClick={() => { setCardReaderActive(!cardReaderActive); cardBufferRef.current = ''; }}
-                data-testid="card-reader-toggle"
-                className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed text-sm font-medium transition ${
-                  cardReaderActive
-                    ? 'border-orange-400 bg-orange-50 text-orange-700 animate-pulse'
-                    : 'border-slate-300 text-slate-500 hover:border-orange-300 hover:text-orange-600'
-                }`}
-              >
-                <CreditCard className="w-5 h-5" />
-                {cardReaderActive ? 'Wacht op kaart... (scan nu)' : 'ID Kaart Scannen'}
-              </button>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Kaartnummer / ID</label>
-                  <input type="text" value={idCardNumber} onChange={e => setIdCardNumber(e.target.value)}
-                    data-testid="id-card-number" placeholder="Wordt automatisch ingevuld"
-                    className="w-full px-3 py-2.5 border rounded-xl text-sm font-mono" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Naam op kaart</label>
-                  <input type="text" value={idCardName} onChange={e => setIdCardName(e.target.value)}
-                    data-testid="id-card-name" placeholder="Wordt automatisch ingevuld"
-                    className="w-full px-3 py-2.5 border rounded-xl text-sm" />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-500 mb-1">Geboortedatum</label>
-                  <input type="text" value={idCardDob} onChange={e => setIdCardDob(e.target.value)}
-                    data-testid="id-card-dob" placeholder="Wordt automatisch ingevuld"
-                    className="w-full px-3 py-2.5 border rounded-xl text-sm" />
-                </div>
-              </div>
-              <p className="text-xs text-slate-400">Scan de ID kaart met de USB kaartlezer of vul handmatig in</p>
-            </div>
-          </div>
-          <div className="flex gap-3">
-            <button type="button" onClick={onClose} className="flex-1 py-3 border rounded-xl">Annuleren</button>
-            <button type="submit" disabled={loading} className="flex-1 py-3 bg-orange-500 text-white rounded-xl disabled:opacity-50">
-              {loading ? 'Opslaan...' : 'Opslaan'}
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center active:scale-95"
+            data-testid="tenant-modal-close"
+          >
+            <X className="w-4 h-4 text-slate-500" />
+          </button>
+        </div>
+
+        {/* Section tabs */}
+        <div className="flex gap-0 border-b border-slate-100 flex-shrink-0 overflow-x-auto">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setSection(t.id)}
+              className={`flex-1 px-3 py-2.5 text-xs font-semibold whitespace-nowrap border-b-2 transition ${
+                section === t.id
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-slate-500'
+              }`}
+              data-testid={`tenant-tab-${t.id}`}
+            >
+              {t.label}
             </button>
-          </div>
+          ))}
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto min-h-0">
+          {section === 'basis' && (
+            <div className="p-4 space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Naam *</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                  data-testid="tenant-name"
+                  placeholder="Volledige naam"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Appartement *</label>
+                <select
+                  value={apartmentId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setApartmentId(id);
+                    if (id) {
+                      const apt = apartments.find(a => a.apartment_id === id);
+                      if (apt) {
+                        if (apt.monthly_rent) {
+                          setMonthlyRent(apt.monthly_rent);
+                          setDepositRequired(apt.monthly_rent);
+                        }
+                        setCurrency((apt.currency || 'SRD').toUpperCase());
+                      }
+                    }
+                  }}
+                  required
+                  className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                  data-testid="tenant-apartment"
+                >
+                  <option value="">Selecteer appartement...</option>
+                  {apartments.filter(a => a.status !== 'occupied' || a.apartment_id === tenant?.apartment_id).map(a => {
+                    const aCur = (a.currency || 'SRD').toUpperCase();
+                    return (
+                      <option key={a.apartment_id} value={a.apartment_id}>
+                        {a.number}{a.monthly_rent ? ` — ${aCur} ${a.monthly_rent.toLocaleString('nl-NL')}` : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+                {apartmentId && (
+                  <p className="text-[11px] text-slate-400 mt-1">Valuta: <span className="font-bold text-slate-600">{currency}</span></p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Maandhuur</label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={monthlyRent}
+                    onChange={(e) => setMonthlyRent(e.target.value)}
+                    className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                    data-testid="tenant-rent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Borg</label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={depositRequired}
+                    onChange={(e) => setDepositRequired(e.target.value)}
+                    className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                    data-testid="tenant-deposit"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Telefoon</label>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  value={telefoon}
+                  onChange={(e) => setTelefoon(e.target.value)}
+                  className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                  data-testid="tenant-phone"
+                  placeholder="+597 ..."
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">E-mail</label>
+                <input
+                  type="email"
+                  inputMode="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                  data-testid="tenant-email"
+                  placeholder="huurder@email.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Huurdercode (optioneel)</label>
+                <input
+                  type="text"
+                  value={tenantCode}
+                  onChange={(e) => setTenantCode(e.target.value)}
+                  className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm font-mono uppercase focus:outline-none focus:border-orange-400"
+                  data-testid="tenant-code"
+                  placeholder="Automatisch als leeg"
+                />
+              </div>
+
+              {tenant && (
+                <BillingStatusSection tenant={tenant} token={token} onReset={onSave} />
+              )}
+            </div>
+          )}
+
+          {section === 'id' && (
+            <div className="p-4 space-y-4">
+              <div className="flex items-center gap-2 mb-1">
+                <CreditCard className="w-4 h-4 text-orange-500" />
+                <p className="text-sm font-semibold text-slate-700">ID Kaart Registratie</p>
+                {idCardNumber && (
+                  <span className="ml-auto flex items-center gap-1 text-[10px] font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded-full">
+                    <Check className="w-3 h-3" /> Gescand
+                  </span>
+                )}
+              </div>
+
+              <IdCardScanner token={token} onScanned={handleOcrResult} />
+
+              {idCardPhoto && (
+                <details className="bg-slate-50 rounded-lg p-2">
+                  <summary className="text-xs text-slate-500 cursor-pointer">Foto bekijken</summary>
+                  <img src={idCardPhoto} alt="ID" className="mt-2 rounded-lg max-h-40" />
+                </details>
+              )}
+
+              <div className="space-y-3 border-t border-slate-100 pt-3">
+                <p className="text-[11px] text-slate-400">
+                  Wordt automatisch ingevuld na scannen. Controleer of alles klopt.
+                </p>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">ID-nummer</label>
+                  <input
+                    type="text"
+                    value={idCardNumber}
+                    onChange={(e) => setIdCardNumber(e.target.value)}
+                    className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:border-orange-400"
+                    data-testid="id-card-number"
+                    placeholder="Wordt ingevuld na scan"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Naam op kaart</label>
+                  <input
+                    type="text"
+                    value={idCardName}
+                    onChange={(e) => setIdCardName(e.target.value)}
+                    className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                    data-testid="id-card-name"
+                    placeholder="Wordt ingevuld na scan"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Geboortedatum</label>
+                  <input
+                    type="text"
+                    value={idCardDob}
+                    onChange={(e) => setIdCardDob(e.target.value)}
+                    className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                    data-testid="id-card-dob"
+                    placeholder="DD-MM-JJJJ"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {section === 'lease' && !tenant && (
+            <div className="p-4 space-y-3">
+              <p className="text-sm font-semibold text-slate-700 mb-2">Huurovereenkomst</p>
+              <p className="text-xs text-slate-500">Optioneel — automatisch een contract aanmaken</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Startdatum</label>
+                  <input
+                    type="date"
+                    value={leaseStart}
+                    onChange={(e) => setLeaseStart(e.target.value)}
+                    data-testid="tenant-lease-start"
+                    className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Einddatum</label>
+                  <input
+                    type="date"
+                    value={leaseEnd}
+                    onChange={(e) => setLeaseEnd(e.target.value)}
+                    data-testid="tenant-lease-end"
+                    className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {section === 'saldo' && tenant && (
+            <div className="p-4 space-y-3">
+              <p className="text-sm font-semibold text-slate-700 mb-2">Openstaand Saldo</p>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Openstaande huur ({currency})</label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  value={outstandingRent}
+                  onChange={(e) => setOutstandingRent(e.target.value)}
+                  className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Service kosten</label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={serviceCosts}
+                    onChange={(e) => setServiceCosts(e.target.value)}
+                    className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Boetes</label>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={fines}
+                    onChange={(e) => setFines(e.target.value)}
+                    className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </form>
+
+        {/* Sticky footer with action buttons */}
+        <div className="flex gap-2 p-3 border-t border-slate-100 flex-shrink-0 bg-white sm:bg-slate-50">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 active:scale-[0.98] transition"
+            data-testid="tenant-cancel-btn"
+          >
+            Annuleren
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="flex-1 py-3 bg-orange-500 text-white rounded-xl text-sm font-bold disabled:opacity-50 active:scale-[0.98] transition flex items-center justify-center gap-1.5"
+            data-testid="tenant-save-btn"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+            {loading ? 'Opslaan...' : 'Opslaan'}
+          </button>
+        </div>
       </div>
     </div>
   );
 }
-
-
 
 export default TenantModal;

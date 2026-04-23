@@ -15,6 +15,7 @@ from . import devices
 from . import messaging
 from . import superadmin
 from . import superadmin_domains  # noqa: F401
+from . import ocr  # noqa: F401
 from . import faceid
 from . import scheduler
 
