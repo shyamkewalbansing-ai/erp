@@ -53,7 +53,7 @@ function MobileModalShell({
 
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto min-h-0">
-          <div className="p-4 space-y-4">{children}</div>
+          <div className="p-4 space-y-3">{children}</div>
         </div>
 
         {/* Sticky footer */}

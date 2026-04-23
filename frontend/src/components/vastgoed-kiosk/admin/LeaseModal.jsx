@@ -43,11 +43,12 @@ function LeaseModal({ lease, tenants, apartments, onClose, onSave, token }) {
     }
   };
 
-  const inputCls = "w-full border border-slate-200 rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-orange-400";
+  const labelCls = "block text-xs font-semibold text-slate-600 mb-1.5";
+  const inputCls = "w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400";
 
   return (
     <MobileModalShell
-      title={lease ? 'Huurovereenkomst Bewerken' : 'Nieuwe Huurovereenkomst'}
+      title={lease ? 'Huurovereenkomst bewerken' : 'Nieuwe huurovereenkomst'}
       subtitle={lease ? `${lease.tenant_name} · ${lease.apartment_number}` : 'Vul onderstaande velden in'}
       onClose={onClose}
       onSubmit={handleSubmit}
@@ -58,7 +59,7 @@ function LeaseModal({ lease, tenants, apartments, onClose, onSave, token }) {
       {!lease && (
         <>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Huurder</label>
+            <label className={labelCls}>Huurder *</label>
             <select value={tenantId} onChange={e => handleTenantChange(e.target.value)} required
               className={inputCls + ' bg-white'}
               data-testid="lease-tenant-select">
@@ -67,7 +68,7 @@ function LeaseModal({ lease, tenants, apartments, onClose, onSave, token }) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Appartement</label>
+            <label className={labelCls}>Appartement *</label>
             <select value={apartmentId} onChange={e => setApartmentId(e.target.value)} required
               className={inputCls + ' bg-white'}
               data-testid="lease-apartment-select">
@@ -77,26 +78,27 @@ function LeaseModal({ lease, tenants, apartments, onClose, onSave, token }) {
           </div>
         </>
       )}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Startdatum</label>
+          <label className={labelCls}>Startdatum *</label>
           <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} required
             className={inputCls} data-testid="lease-start-date" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-slate-700 mb-1">Einddatum</label>
+          <label className={labelCls}>Einddatum *</label>
           <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} required
             className={inputCls} data-testid="lease-end-date" />
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Maandhuur (SRD)</label>
-        <input type="number" step="0.01" inputMode="decimal" value={monthlyRent} onChange={e => setMonthlyRent(e.target.value)} required
-          className={inputCls} data-testid="lease-monthly-rent" />
+        <label className={labelCls}>Maandhuur (SRD) *</label>
+        <input type="number" inputMode="decimal" step="0.01" value={monthlyRent} onChange={e => setMonthlyRent(e.target.value)} required
+          className={inputCls} data-testid="lease-monthly-rent" placeholder="0.00" />
       </div>
       <div>
-        <label className="block text-sm font-medium text-slate-700 mb-1">Voorwaarden</label>
-        <textarea value={voorwaarden} onChange={e => setVoorwaarden(e.target.value)} rows={4} placeholder="Aanvullende voorwaarden van de huurovereenkomst..."
+        <label className={labelCls}>Voorwaarden</label>
+        <textarea value={voorwaarden} onChange={e => setVoorwaarden(e.target.value)} rows={4}
+          placeholder="Aanvullende voorwaarden van de huurovereenkomst..."
           className={inputCls + ' resize-none'} data-testid="lease-voorwaarden" />
       </div>
     </MobileModalShell>
