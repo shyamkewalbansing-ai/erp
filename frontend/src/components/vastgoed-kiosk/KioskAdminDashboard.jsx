@@ -263,17 +263,17 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
             <button
               onClick={handleOpenKiosk}
               data-testid="admin-open-kiosk-btn"
-              className="w-8 h-8 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1.5 flex items-center justify-center gap-1.5 bg-orange-500 text-white rounded-lg text-xs font-bold hover:bg-orange-600 transition shadow-sm shadow-orange-500/20"
+              className="w-7 h-7 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 flex items-center justify-center gap-1.5 bg-orange-500 text-white rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold hover:bg-orange-600 transition shadow-sm shadow-orange-500/20"
             >
-              <ExternalLink className="w-3.5 h-3.5 sm:w-3.5 sm:h-3.5" />
+              <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">Kiosk</span>
             </button>
             <button
               onClick={handleLogout}
               data-testid="admin-logout-button"
-              className="w-8 h-8 sm:w-auto sm:h-auto sm:px-2.5 sm:py-1.5 flex items-center justify-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-600 rounded-lg text-xs font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition"
+              className="w-7 h-7 sm:w-auto sm:h-auto sm:px-4 sm:py-2.5 flex items-center justify-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-600 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition"
             >
-              <LogIn className="w-3.5 h-3.5 sm:w-3.5 sm:h-3.5 rotate-180" />
+              <LogIn className="w-3 h-3 sm:w-4 sm:h-4 rotate-180" />
               <span className="hidden sm:inline">Uit</span>
             </button>
           </div>
