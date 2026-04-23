@@ -32,7 +32,7 @@ function MobileModalShell({
       style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
       <div
-        className={`bg-white sm:rounded-2xl shadow-2xl w-full ${maxWidth} h-[calc(100dvh-env(safe-area-inset-top,0px))] sm:h-auto sm:max-h-[92vh] flex flex-col`}
+        className={`bg-white sm:rounded-2xl shadow-2xl w-full ${maxWidth} h-[calc(100dvh-env(safe-area-inset-top,0px))] sm:h-auto sm:max-h-[92vh] flex flex-col overflow-hidden`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Sticky header */}
