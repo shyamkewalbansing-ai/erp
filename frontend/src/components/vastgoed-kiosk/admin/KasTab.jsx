@@ -257,6 +257,14 @@ function KasTab({ token, tenants }) {
 
   useEffect(() => { loadAccounts(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (activeAccountId) loadKas(activeAccountId, activeCurrencyFilter); }, [activeAccountId, activeCurrencyFilter, loadKas]);
+  // Auto-select first available currency when accounts are loaded (no "Alle" option)
+  useEffect(() => {
+    if (accounts.length === 0) return;
+    if (globalCurFilter !== 'all') return;
+    const allCurs = Array.from(new Set(accounts.flatMap(a => a.currencies || [a.currency || 'SRD']))).sort();
+    const first = allCurs.includes('SRD') ? 'SRD' : allCurs[0];
+    if (first) setGlobalCurFilter(first);
+  }, [accounts, globalCurFilter]);
   // Reset currency filter to primary when switching account
   useEffect(() => {
     const acc = accounts.find(a => a.account_id === activeAccountId);

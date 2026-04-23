@@ -1,5 +1,22 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 57 (23 apr 2026) — KasTab UI polish: verwijderen "Alle" valutafilter
+
+### Verzoek
+Gebruiker wilde dat de "Alle" knop uit de valutafilter van de Bank/Kas tab werd verwijderd, zodat altijd één specifieke valuta (bv. SRD) actief is en de accounts vooraf gefilterd getoond worden.
+
+### Implementatie
+**Frontend (`KasTab.jsx`):**
+- "Alle" knop verwijderd — alleen individuele valuta-buttons (EUR / SRD / USD) worden gerenderd
+- Nieuwe `useEffect` die bij het laden van accounts automatisch de eerste beschikbare valuta kiest (voorkeur: SRD → anders eerste alfabetisch)
+- `globalCurFilter` default blijft `'all'` voor safety maar wordt direct overschreven zodra accounts binnenkomen
+
+### Tested ✅
+- Screenshot E2E: "Alle" knop weg, SRD automatisch actief, accountfiltering werkt correct
+
+---
+
+
 ## Sprint 56 (feb 2026) — Huurincasso modus (Achteraf vs Vooruit)
 
 ### Verzoek
