@@ -1641,73 +1641,98 @@ async def delete_payment(payment_id: str, company: dict = Depends(get_current_co
 
 @router.post("/admin/payments/fix-covered-months")
 async def fix_covered_months(company: dict = Depends(get_current_company)):
-    """One-time migration: recalculate covered_months for all payments using correct algorithm"""
-    company_id = company["company_id"]
-    payments = await db.kiosk_payments.find({"company_id": company_id}).sort("created_at", 1).to_list(10000)
+    """Recalculate covered_months for all rent payments using a date-based approach.
     
+    Uses the payment's created_at to determine which month(s) the payment covered:
+    - Single month payment (amount == monthly_rent): covered_month = vorige kalendermaand
+      (arrears workflow: betaling op 16 april = huur voor maart)
+    - Multiple months: splits bedrag over opeenvolgende maanden vanaf oudste achterstand
+    
+    Dit is stabiel door de tijd (payment_date verandert niet), in tegenstelling tot de
+    vorige logica die afhankelijk was van de huidige billed_through (die door auto-billing
+    verandert).
+    """
+    import calendar as _cal
+    company_id = company["company_id"]
+    billing_day = int(company.get("billing_day", 1) or 1)
+    billing_next_month = bool(company.get("billing_next_month", True))
+
+    payments = await db.kiosk_payments.find({"company_id": company_id}).sort("created_at", 1).to_list(10000)
     month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
     fixed = 0
-    
+
     for p in payments:
         if p.get("payment_type") not in ("rent", "partial_rent", "monthly_rent"):
             continue
-        
+
         tenant_id = p.get("tenant_id")
         if not tenant_id:
             continue
-        
+
         tenant = await db.kiosk_tenants.find_one({"tenant_id": tenant_id, "company_id": company_id})
         if not tenant:
             continue
-        
-        monthly_rent = tenant.get("monthly_rent", 0)
-        outstanding = tenant.get("outstanding_rent", 0)
-        billed_through = tenant.get("rent_billed_through", "")
-        
-        if not billed_through or monthly_rent <= 0:
+
+        monthly_rent = float(tenant.get("monthly_rent", 0) or 0)
+        if monthly_rent <= 0:
             continue
-        
-        bt_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
-        
-        # Calculate months owed at time of this payment
-        # Use current outstanding + sum of all later payments to reconstruct
-        later_payments = [lp for lp in payments 
-                         if lp.get("tenant_id") == tenant_id 
-                         and lp.get("payment_type") in ("rent", "partial_rent", "monthly_rent")
-                         and lp.get("created_at", "") > p.get("created_at", "")
-                        ]
-        later_sum = sum(lp.get("amount", 0) for lp in later_payments)
-        outstanding_at_time = outstanding + later_sum + p.get("amount", 0)
-        
-        months_owed = int(outstanding_at_time / monthly_rent) if monthly_rent > 0 else 0
-        remainder = outstanding_at_time - (months_owed * monthly_rent)
-        if remainder > 0:
-            months_owed += 1
-        
-        # Build covered months: include billed_through itself, count from oldest
-        all_unpaid = []
-        for i in range(months_owed):
-            m_date = bt_date - relativedelta(months=i)
-            all_unpaid.append(f"{month_names_nl[m_date.month - 1]} {m_date.year}")
-        all_unpaid.reverse()
-        
+
+        # Step 1: Bepaal de "reference month" op basis van betaaldatum + billing_day
+        pay_date = p.get("created_at") or datetime.now(timezone.utc)
+        if isinstance(pay_date, str):
+            try:
+                pay_date = datetime.fromisoformat(pay_date.replace("Z", "+00:00"))
+            except Exception:
+                pay_date = datetime.now(timezone.utc)
+
+        # Reference month = de maand waarvoor deze betaling geldt.
+        # Arrears workflow met billing_next_month=true: betaling in maand X geldt voor maand X-1.
+        # Bepaal of de vervaldag van HUIDIGE maand al gepasseerd is ten tijde van betaling.
+        last_day = _cal.monthrange(pay_date.year, pay_date.month)[1]
+        due_day_clamped = min(billing_day, last_day)
+        due_this_month = pay_date.replace(day=due_day_clamped, hour=23, minute=59, second=59, microsecond=0)
+
+        if billing_next_month:
+            # Huur van vorige maand vervalt deze maand op billing_day
+            # Als betaling vóór vervaldag → betaling is voor prev maand
+            # Als betaling na vervaldag → nog steeds voor prev maand (al achterstand)
+            ref_month = pay_date - relativedelta(months=1)
+        else:
+            # Huur van huidige maand vervalt deze maand op billing_day
+            # Voor vervaldag: betaling is voor huidige maand
+            # Na vervaldag: mogelijk al achterstand van huidige maand
+            ref_month = pay_date
+
+        # Step 2: Aantal maanden dit payment dekt
+        pay_amount = float(p.get("amount", 0) or 0)
+        months_covered_count = int(pay_amount / monthly_rent) if monthly_rent > 0 else 0
+        remainder = pay_amount - (months_covered_count * monthly_rent)
+        partial_month = remainder > 0
+
+        # Step 3: Bouw de lijst — oudste eerst, eindigend bij ref_month
         covered = []
-        pay_amount = p.get("amount", 0)
-        for label in all_unpaid:
-            if pay_amount >= monthly_rent:
-                covered.append(label)
-                pay_amount -= monthly_rent
-            elif pay_amount > 0:
-                covered.append(label + " (gedeeltelijk)")
-                pay_amount = 0
-        
+        for i in range(months_covered_count):
+            # Start with oldest: ref_month - (count-1) + i
+            m_offset = (months_covered_count - 1) - i
+            m_date = ref_month - relativedelta(months=m_offset)
+            covered.append(f"{month_names_nl[m_date.month - 1]} {m_date.year}")
+
+        if partial_month:
+            # Een extra gedeeltelijke maand: één maand ouder dan de oudste volledige
+            oldest_full_offset = months_covered_count
+            m_date = ref_month - relativedelta(months=oldest_full_offset)
+            covered.insert(0, f"{month_names_nl[m_date.month - 1]} {m_date.year} (gedeeltelijk)")
+        elif months_covered_count == 0 and pay_amount > 0:
+            # Alleen een kleine partiële betaling, geen volledige maand
+            covered.append(f"{month_names_nl[ref_month.month - 1]} {ref_month.year} (gedeeltelijk)")
+
         if covered != p.get("covered_months", []):
             await db.kiosk_payments.update_one(
                 {"payment_id": p["payment_id"]},
                 {"$set": {"covered_months": covered}}
             )
             fixed += 1
-    
+
     return {"message": f"{fixed} betalingen bijgewerkt", "total": len(payments)}
 
 
