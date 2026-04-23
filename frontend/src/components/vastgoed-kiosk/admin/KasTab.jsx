@@ -947,33 +947,33 @@ function KasTab({ token, tenants }) {
           <div className="space-y-6">
             {/* Verdeling Samenvatting */}
             {overzicht && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white rounded-xl border border-green-200 p-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-green-600" />
+              <div className="grid gap-3 grid-cols-3">
+                <div className="bg-white rounded-xl border border-green-200 p-3 sm:p-6">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-green-100 flex items-center justify-center flex-shrink-0">
+                      <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                     </div>
-                    <p className="text-sm text-slate-500">Huurinkomsten</p>
+                    <p className="text-[10px] sm:text-sm text-slate-500 truncate leading-tight">Huurinkomsten</p>
                   </div>
-                  <p className="text-2xl font-bold text-slate-900" data-testid="verdeling-income">{formatSRD(overzicht.huurinkomsten)}</p>
+                  <p className="text-sm sm:text-2xl font-bold text-slate-900 break-all" data-testid="verdeling-income">{formatSRD(overzicht.huurinkomsten)}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-blue-200 p-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <Users className="w-5 h-5 text-blue-600" />
+                <div className="bg-white rounded-xl border border-blue-200 p-3 sm:p-6">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                     </div>
-                    <p className="text-sm text-slate-500">Te verdelen ({totalPct}%)</p>
+                    <p className="text-[10px] sm:text-sm text-slate-500 truncate leading-tight">Te verdelen <span className="hidden sm:inline">({totalPct}%)</span></p>
                   </div>
-                  <p className="text-2xl font-bold text-blue-600" data-testid="verdeling-distributed">{formatSRD(overzicht.total_distributed)}</p>
+                  <p className="text-sm sm:text-2xl font-bold text-blue-600 break-all" data-testid="verdeling-distributed">{formatSRD(overzicht.total_distributed)}</p>
                 </div>
-                <div className="bg-white rounded-xl border border-orange-200 p-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-10 h-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                      <Landmark className="w-5 h-5 text-orange-600" />
+                <div className="bg-white rounded-xl border border-orange-200 p-3 sm:p-6">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-orange-100 flex items-center justify-center flex-shrink-0">
+                      <Landmark className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
                     </div>
-                    <p className="text-sm text-slate-500">Restant kassaldo ({restPct}%)</p>
+                    <p className="text-[10px] sm:text-sm text-slate-500 truncate leading-tight">Restant <span className="hidden sm:inline">kassaldo ({restPct}%)</span></p>
                   </div>
-                  <p className="text-2xl font-bold text-slate-900" data-testid="verdeling-restant">{formatSRD(overzicht.restant_bedrag)}</p>
+                  <p className="text-sm sm:text-2xl font-bold text-slate-900 break-all" data-testid="verdeling-restant">{formatSRD(overzicht.restant_bedrag)}</p>
                 </div>
               </div>
             )}
