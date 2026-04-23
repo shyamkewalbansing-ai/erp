@@ -1,18 +1,19 @@
 # Vastgoed Kiosk ERP — PRD
 
-## Sprint 57 (23 apr 2026) — KasTab UI polish: verwijderen "Alle" valutafilter
+## Sprint 57 (23 apr 2026) — KasTab UI polish: volledige verwijdering valutafilter + accountlabels schoon
 
 ### Verzoek
-Gebruiker wilde dat de "Alle" knop uit de valutafilter van de Bank/Kas tab werd verwijderd, zodat altijd één specifieke valuta (bv. SRD) actief is en de accounts vooraf gefilterd getoond worden.
+Gebruiker wilde de volledige "Valuta:" balk weghalen (inclusief "Alle" + individuele valuta-knoppen). Reden: zodra je op een bank/kas klikt zie je al alle valuta binnen dat account. Daarnaast moeten bij de account-knoppen alleen de **naam** van de bank/kas staan — geen "SRD · USD · EUR" badge erachter en geen gekleurde stipjes ervoor.
 
 ### Implementatie
 **Frontend (`KasTab.jsx`):**
-- "Alle" knop verwijderd — alleen individuele valuta-buttons (EUR / SRD / USD) worden gerenderd
-- Nieuwe `useEffect` die bij het laden van accounts automatisch de eerste beschikbare valuta kiest (voorkeur: SRD → anders eerste alfabetisch)
-- `globalCurFilter` default blijft `'all'` voor safety maar wordt direct overschreven zodra accounts binnenkomen
+- Complete `kas-global-currency-filter` IIFE-blok verwijderd (Valuta label + EUR/SRD/USD knoppen)
+- `globalCurFilter` state + bijbehorende `useEffect` + `.filter(a => …)` op accounts weggehaald
+- In account-knop: currency-joinstring (`{curs.join(' · ')}`) en de gekleurde stipjes-div verwijderd
+- Per-account valuta-switcher binnenin de account-view blijft behouden (lines ~692, alleen zichtbaar bij multi-currency accounts)
 
 ### Tested ✅
-- Screenshot E2E: "Alle" knop weg, SRD automatisch actief, accountfiltering werkt correct
+- Screenshot E2E: Valutabalk volledig weg; accounts tonen alleen hun naam (Hoofdkas, Reserve kas EUR, US Dollar Cash, Multi-Currency Kas, Kantoorkas)
 
 ---
 

@@ -29,7 +29,6 @@ function KasTab({ token, tenants }) {
   const [accounts, setAccounts] = useState([]);
   const [activeAccountId, setActiveAccountId] = useState(null);
   const [activeCurrencyFilter, setActiveCurrencyFilter] = useState(null); // null = all
-  const [globalCurFilter, setGlobalCurFilter] = useState('all'); // all | SRD | USD | EUR — hides accounts lacking this currency
   const [totalsByCurrency, setTotalsByCurrency] = useState({});
   const [showNewAccount, setShowNewAccount] = useState(false);
   const [newAccName, setNewAccName] = useState('');
@@ -257,14 +256,6 @@ function KasTab({ token, tenants }) {
 
   useEffect(() => { loadAccounts(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (activeAccountId) loadKas(activeAccountId, activeCurrencyFilter); }, [activeAccountId, activeCurrencyFilter, loadKas]);
-  // Auto-select first available currency when accounts are loaded (no "Alle" option)
-  useEffect(() => {
-    if (accounts.length === 0) return;
-    if (globalCurFilter !== 'all') return;
-    const allCurs = Array.from(new Set(accounts.flatMap(a => a.currencies || [a.currency || 'SRD']))).sort();
-    const first = allCurs.includes('SRD') ? 'SRD' : allCurs[0];
-    if (first) setGlobalCurFilter(first);
-  }, [accounts, globalCurFilter]);
   // Reset currency filter to primary when switching account
   useEffect(() => {
     const acc = accounts.find(a => a.account_id === activeAccountId);
@@ -406,43 +397,7 @@ function KasTab({ token, tenants }) {
       {/* Account selector (only in Kas view) */}
       {activeView === 'kas' && (
         <div className="bg-white rounded-xl border border-slate-200 p-3 flex gap-2 flex-wrap items-center" data-testid="kas-account-bar">
-          {(() => {
-            const allCurs = Array.from(new Set(accounts.flatMap(a => a.currencies || [a.currency || 'SRD']))).sort();
-            return (
-              <div className="flex items-center gap-1 mr-3" data-testid="kas-global-currency-filter">
-                <span className="text-[11px] text-slate-400 uppercase font-semibold mr-1">Valuta:</span>
-                {allCurs.map(c => (
-                  <button
-                    key={c}
-                    onClick={() => {
-                      setGlobalCurFilter(c);
-                      const curAcc = accounts.find(a => a.account_id === activeAccountId);
-                      const curAccCurs = curAcc?.currencies || [curAcc?.currency || 'SRD'];
-                      if (curAccCurs.includes(c)) {
-                        setActiveCurrencyFilter(c);
-                      } else {
-                        const next = accounts.find(a => (a.currencies || [a.currency || 'SRD']).includes(c));
-                        if (next) {
-                          setActiveAccountId(next.account_id);
-                          setActiveCurrencyFilter(c);
-                        }
-                      }
-                    }}
-                    data-testid={`kas-global-cur-${c}`}
-                    className={`px-2 py-1 rounded-md text-[11px] font-semibold border ${globalCurFilter === c ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-600 border-slate-200'}`}
-                  >{c}</button>
-                ))}
-              </div>
-            );
-          })()}
-          {accounts
-            .filter(a => {
-              if (globalCurFilter === 'all') return true;
-              const curs = a.currencies || [a.currency || 'SRD'];
-              return curs.includes(globalCurFilter);
-            })
-            .map(a => {
-            const curs = a.currencies || [a.currency || 'SRD'];
+          {accounts.map(a => {
             const isActive = a.account_id === activeAccountId;
             return (
               <button
@@ -453,13 +408,7 @@ function KasTab({ token, tenants }) {
                   isActive ? 'bg-slate-900 text-white shadow' : 'bg-slate-50 text-slate-700 hover:bg-slate-100 border border-slate-200'
                 }`}
               >
-                <div className="flex -space-x-1">
-                  {curs.map(c => (
-                    <span key={c} className={`inline-block w-1.5 h-1.5 rounded-full ${c === 'SRD' ? 'bg-orange-400' : c === 'USD' ? 'bg-green-400' : 'bg-blue-400'}`} />
-                  ))}
-                </div>
                 {a.name}
-                <span className={`text-[10px] font-mono ${isActive ? 'text-white/70' : 'text-slate-400'}`}>{curs.join(' · ')}</span>
                 {!a.is_default && isActive && (
                   <X className="w-3 h-3 ml-1 opacity-70 hover:opacity-100" onClick={(ev) => { ev.stopPropagation(); handleDeleteAccount(a.account_id); }} />
                 )}
