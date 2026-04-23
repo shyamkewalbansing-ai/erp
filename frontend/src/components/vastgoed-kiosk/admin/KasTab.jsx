@@ -997,42 +997,45 @@ function KasTab({ token, tenants }) {
 
               {/* Add holder form */}
               {showAddHolder && (
-                <div className="p-4 border-b border-slate-200 bg-blue-50/50">
-                  <div className="flex items-end gap-3">
+                <div className="p-3 sm:p-4 border-b border-slate-200 bg-blue-50/50">
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-2 sm:gap-3">
                     <div className="flex-1">
                       <label className="block text-xs font-medium text-slate-600 mb-1">Naam</label>
                       <input
                         value={newHolderName}
                         onChange={e => setNewHolderName(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm"
+                        className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm"
                         placeholder="Bijv. Sardha"
                         data-testid="holder-name-input"
                         autoFocus
                       />
                     </div>
-                    <div className="w-32">
+                    <div className="sm:w-32">
                       <label className="block text-xs font-medium text-slate-600 mb-1">Percentage</label>
                       <div className="relative">
                         <input
                           type="number"
+                          inputMode="decimal"
                           step="0.1"
                           min="0.1"
                           max={100 - totalPct}
                           value={newHolderPct}
                           onChange={e => setNewHolderPct(e.target.value)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm pr-8"
+                          className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm pr-8"
                           placeholder="0"
                           data-testid="holder-pct-input"
                         />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">%</span>
                       </div>
                     </div>
-                    <button onClick={handleAddHolder} disabled={saving} className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 disabled:opacity-50" data-testid="holder-save-btn">
-                      {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                    </button>
-                    <button onClick={() => { setShowAddHolder(false); setNewHolderName(''); setNewHolderPct(''); }} className="px-4 py-2 bg-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-300">
-                      <X className="w-4 h-4" />
-                    </button>
+                    <div className="flex gap-2">
+                      <button onClick={handleAddHolder} disabled={saving} className="flex-1 sm:flex-none px-4 py-2.5 bg-blue-500 text-white rounded-lg text-sm font-bold hover:bg-blue-600 disabled:opacity-50 flex items-center justify-center gap-1 active:scale-95" data-testid="holder-save-btn">
+                        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Check className="w-4 h-4" /> <span className="sm:hidden">Opslaan</span></>}
+                      </button>
+                      <button onClick={() => { setShowAddHolder(false); setNewHolderName(''); setNewHolderPct(''); }} className="flex-1 sm:flex-none px-4 py-2.5 bg-slate-200 text-slate-600 rounded-lg text-sm font-medium hover:bg-slate-300 flex items-center justify-center gap-1 active:scale-95">
+                        <X className="w-4 h-4" /> <span className="sm:hidden">Annuleer</span>
+                      </button>
+                    </div>
                   </div>
                   <p className="text-xs text-slate-400 mt-2">Beschikbaar: {(100 - totalPct).toFixed(1)}%</p>
                 </div>
@@ -1045,7 +1048,79 @@ function KasTab({ token, tenants }) {
                   <p className="text-xs text-slate-300 mt-1">Voeg rekeninghouders toe om huurinkomsten te verdelen</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
+                <>
+                  {/* Mobile card layout */}
+                  <div className="md:hidden divide-y divide-slate-100">
+                    {holders.map(h => {
+                      const matchOvz = overzicht?.verdeling?.find(v => v.holder_id === h.holder_id);
+                      const isEditing = editingHolder === h.holder_id;
+                      const pct = parseFloat(h.percentage) || 0;
+                      const circumference = 2 * Math.PI * 18;
+                      const dash = (pct / 100) * circumference;
+                      return (
+                        <div key={h.holder_id} className="p-3">
+                          {isEditing ? (
+                            <div className="space-y-2">
+                              <input value={editName} onChange={e => setEditName(e.target.value)} className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm" data-testid={`edit-name-m-${h.holder_id}`} placeholder="Naam" />
+                              <div className="flex items-center gap-2">
+                                <div className="relative flex-1">
+                                  <input type="number" inputMode="decimal" step="0.1" min="0.1" value={editPct} onChange={e => setEditPct(e.target.value)} className="w-full px-3 py-2.5 border border-slate-300 rounded-lg text-sm pr-8" data-testid={`edit-pct-m-${h.holder_id}`} placeholder="0" />
+                                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm">%</span>
+                                </div>
+                                <button onClick={() => handleUpdateHolder(h.holder_id)} disabled={saving} className="px-4 py-2.5 bg-green-500 text-white rounded-lg active:scale-95" data-testid={`save-edit-m-${h.holder_id}`}>
+                                  <Check className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => setEditingHolder(null)} className="px-4 py-2.5 bg-slate-200 text-slate-600 rounded-lg active:scale-95">
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-3">
+                              {/* Circular percentage chart */}
+                              <div className="relative w-11 h-11 flex-shrink-0">
+                                <svg className="w-11 h-11 -rotate-90" viewBox="0 0 44 44">
+                                  <circle cx="22" cy="22" r="18" fill="none" stroke="#dbeafe" strokeWidth="4" />
+                                  <circle cx="22" cy="22" r="18" fill="none" stroke="#3b82f6" strokeWidth="4" strokeDasharray={`${dash} ${circumference}`} strokeLinecap="round" />
+                                </svg>
+                                <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-blue-700">{pct}%</span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-slate-900 truncate">{h.name}</p>
+                                <p className="text-sm font-bold text-slate-700 truncate">{matchOvz ? formatSRD(matchOvz.bedrag) : '—'}</p>
+                              </div>
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                <button onClick={() => { setEditingHolder(h.holder_id); setEditName(h.name); setEditPct(String(h.percentage)); }} className="p-2 text-slate-400 hover:text-blue-500 active:scale-95" title="Bewerken" data-testid={`edit-holder-m-${h.holder_id}`}>
+                                  <Pencil className="w-4 h-4" />
+                                </button>
+                                <button onClick={() => handleDeleteHolder(h.holder_id)} className="p-2 text-slate-400 hover:text-red-500 active:scale-95" title="Verwijderen" data-testid={`delete-holder-m-${h.holder_id}`}>
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {/* Restant + Total summary */}
+                    <div className="p-3 bg-orange-50/50 border-t-2 border-orange-200 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-orange-700">Kassaldo (restant)</p>
+                        <p className="text-sm font-bold text-orange-700 truncate">{overzicht ? formatSRD(overzicht.restant_bedrag) : '—'}</p>
+                      </div>
+                      <span className="px-2.5 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-bold flex-shrink-0">{restPct.toFixed(1)}%</span>
+                    </div>
+                    <div className="p-3 bg-slate-50 flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-900">Totaal</p>
+                        <p className="text-sm font-bold text-slate-900 truncate">{overzicht ? formatSRD(overzicht.huurinkomsten) : '—'}</p>
+                      </div>
+                      <span className="px-2.5 py-1 bg-slate-200 text-slate-700 rounded-full text-xs font-bold flex-shrink-0">100%</span>
+                    </div>
+                  </div>
+
+                  {/* Desktop table layout */}
+                  <div className="hidden md:block overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-slate-50">
                       <tr>
@@ -1132,7 +1207,8 @@ function KasTab({ token, tenants }) {
                       </tr>
                     </tbody>
                   </table>
-                </div>
+                  </div>
+                </>
               )}
             </div>
 
