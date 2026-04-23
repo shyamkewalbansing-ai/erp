@@ -319,7 +319,7 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/60 z-[70] flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
       <div
         className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-2xl h-[100dvh] sm:h-auto sm:max-h-[92vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -612,7 +612,10 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
         </form>
 
         {/* Sticky footer with action buttons */}
-        <div className="flex gap-2 p-3 border-t border-slate-100 flex-shrink-0 bg-white sm:bg-slate-50">
+        <div
+          className="flex gap-2 p-3 border-t border-slate-100 flex-shrink-0 bg-white sm:bg-slate-50"
+          style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}
+        >
           <button
             type="button"
             onClick={onClose}
