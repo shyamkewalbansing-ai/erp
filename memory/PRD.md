@@ -1,5 +1,26 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 58 (23 apr 2026) — Mobile-friendly AddRentModal (Maandhuur actie)
+
+### Verzoek
+De "Maandhuur toevoegen" actie bij Huurders opende een klein gecentreerd modal dat op telefoon onhandig was. Gebruiker wilde dezelfde mobile-friendly layout als "Nieuwe huurder" (fullscreen op mobile, sticky header/footer, close-knop, safe-area padding).
+
+### Implementatie
+**Frontend (`AddRentModal.jsx`):**
+- Layout herbouwd conform TenantModal patroon: `fixed inset-0 items-stretch sm:items-center`, `h-[100dvh] sm:h-auto sm:max-w-md`, `flex flex-col` met drie zones
+- Sticky header met X-sluitknop + title + tenant/appt/currency badge (inline)
+- Scrollbare body (`flex-1 overflow-y-auto min-h-0`) met form-content
+- Sticky footer met `env(safe-area-inset-bottom)` padding voor iOS home-indicator
+- Annuleren + primaire actie-knop met Check/Loader2 icon
+- "Betaling Registreren" button spans beide kolommen (col-span-2) voor betere visuele hiërarchie
+- `inputMode="decimal"` toegevoegd op bedrag-inputs voor numeriek mobile toetsenbord
+- Identieke layout toegepast op success-screen (na betaling)
+
+### Tested ✅
+- Screenshot E2E in `/vastgoed` dashboard: modal opent correct, alle velden zichtbaar, sticky footer met "Huur mei 2026" knop werkt
+
+---
+
 ## Sprint 57 (23 apr 2026) — KasTab UI polish: volledige verwijdering valutafilter + accountlabels schoon
 
 ### Verzoek

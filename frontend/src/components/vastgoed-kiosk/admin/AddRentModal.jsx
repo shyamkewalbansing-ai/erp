@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, X, Loader2, Check } from 'lucide-react';
 import { API, axios, formatAmount } from './utils';
 
 function AddRentModal({ tenant, onClose, onSave, token }) {
@@ -122,27 +122,35 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
   // Payment success screen
   if (paymentResult) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-2xl w-full max-w-md mx-4 p-4 sm:p-6 text-center">
-          <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-orange-600" />
-          </div>
-          <h3 className="text-xl font-bold text-orange-700 mb-2">Betaling Geregistreerd!</h3>
-          <p className="text-slate-600 mb-1">Kwitantie: <span className="font-bold">{paymentResult.kwitantie_nummer}</span></p>
-          <p className="text-slate-600 mb-1">Bedrag: <span className="font-bold">{fmt(paymentResult.amount)}</span></p>
-          <p className="text-slate-600 mb-4">{tenant.name} - Appt. {tenant.apartment_number}</p>
-          {paymentResult.whatsapp_sent && (
-            <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 mb-4">
-              <p className="text-sm text-orange-700 font-medium">WhatsApp bon automatisch verstuurd</p>
+      <div className="fixed inset-0 bg-black/60 z-[70] flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+        <div
+          className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-md h-[100dvh] sm:h-auto sm:max-h-[92vh] flex flex-col"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex-1 overflow-y-auto min-h-0 p-4 sm:p-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4 mt-4">
+              <CheckCircle className="w-8 h-8 text-orange-600" />
             </div>
-          )}
-          <div className="bg-slate-50 rounded-lg px-3 py-2 mb-4">
-            <p className="text-xs text-slate-500 mb-1">Resterende saldi na betaling:</p>
-            <p className="text-sm text-slate-700">Huur: {fmt(paymentResult.remaining_rent || 0)}</p>
-            <p className="text-sm text-slate-700">Servicekosten: {fmt(paymentResult.remaining_service || 0)}</p>
-            <p className="text-sm text-slate-700">Boetes: {fmt(paymentResult.remaining_fines || 0)}</p>
+            <h3 className="text-xl font-bold text-orange-700 mb-2">Betaling Geregistreerd!</h3>
+            <p className="text-slate-600 mb-1">Kwitantie: <span className="font-bold">{paymentResult.kwitantie_nummer}</span></p>
+            <p className="text-slate-600 mb-1">Bedrag: <span className="font-bold">{fmt(paymentResult.amount)}</span></p>
+            <p className="text-slate-600 mb-4">{tenant.name} - Appt. {tenant.apartment_number}</p>
+            {paymentResult.whatsapp_sent && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 mb-4">
+                <p className="text-sm text-orange-700 font-medium">WhatsApp bon automatisch verstuurd</p>
+              </div>
+            )}
+            <div className="bg-slate-50 rounded-lg px-3 py-2 mb-4 text-left">
+              <p className="text-xs text-slate-500 mb-1">Resterende saldi na betaling:</p>
+              <p className="text-sm text-slate-700">Huur: {fmt(paymentResult.remaining_rent || 0)}</p>
+              <p className="text-sm text-slate-700">Servicekosten: {fmt(paymentResult.remaining_service || 0)}</p>
+              <p className="text-sm text-slate-700">Boetes: {fmt(paymentResult.remaining_fines || 0)}</p>
+            </div>
           </div>
-          <div className="flex gap-3">
+          <div
+            className="flex gap-2 p-3 border-t border-slate-100 flex-shrink-0 bg-white sm:bg-slate-50"
+            style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}
+          >
             <button onClick={async () => {
                 const PRINT_URL = 'http://localhost:5555';
                 const printData = {
@@ -164,11 +172,11 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
                   else { alert('Bonprinter niet bereikbaar'); }
                 } catch { alert('Bonprinter niet bereikbaar'); }
               }}
-              className="flex-1 py-3 border rounded-xl text-sm font-medium hover:bg-slate-50">
+              className="flex-1 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 active:scale-[0.98] transition">
               Opnieuw Printen
             </button>
             <button onClick={() => { setPaymentResult(null); onSave(); }}
-              className="flex-1 py-3 bg-orange-500 text-white rounded-xl text-sm font-medium">
+              className="flex-1 py-3 bg-orange-500 text-white rounded-xl text-sm font-bold active:scale-[0.98] transition">
               Sluiten
             </button>
           </div>
@@ -178,114 +186,153 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl w-full max-w-md mx-4 p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
-        <h3 className="text-xl font-bold mb-2">Bedrag Toevoegen / Betaling</h3>
-          <p className="text-slate-500 mb-4">{tenant.name} - Appt. {tenant.apartment_number} <span className="ml-1 text-[10px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{cur}</span></p>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Type</label>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { id: 'rent', label: 'Maandhuur' },
-                { id: 'service', label: 'Servicekosten' },
-                { id: 'fine', label: 'Boete' },
-                { id: 'internet', label: 'Internet' },
-                { id: 'payment', label: 'Betaling Registreren' },
-              ].map(t => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setType(t.id)}
-                  className={`py-2 rounded-lg text-sm font-medium transition ${
-                    type === t.id
-                      ? t.id === 'payment' ? 'bg-orange-600 text-white' : 'bg-orange-500 text-white'
-                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                  }`}
-                >
-                  {t.label}
-                </button>
-              ))}
-            </div>
+    <div className="fixed inset-0 bg-black/60 z-[70] flex items-stretch sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
+      <div
+        className="bg-white sm:rounded-2xl shadow-2xl w-full sm:max-w-md h-[100dvh] sm:h-auto sm:max-h-[92vh] flex flex-col"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Sticky header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 flex-shrink-0">
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base sm:text-lg font-bold text-slate-900 truncate">Bedrag Toevoegen / Betaling</h3>
+            <p className="text-[11px] text-slate-400 truncate">
+              {tenant.name} · Appt. {tenant.apartment_number}
+              <span className="ml-1.5 text-[10px] font-bold bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">{cur}</span>
+            </p>
           </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center active:scale-95 flex-shrink-0 ml-2"
+            data-testid="add-rent-modal-close"
+          >
+            <X className="w-4 h-4 text-slate-500" />
+          </button>
+        </div>
 
-          {type === 'rent' ? (
-            <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-              <p className="text-sm text-slate-700 mb-2">
-                Gefactureerd t/m: <span className="font-bold">{billedThroughLabel || '-'}</span>
-              </p>
-              <p className="text-sm text-slate-700 mb-2">
-                Openstaand saldo: <span className="font-bold text-red-600">{fmt(tenant.outstanding_rent || 0)}</span>
-              </p>
-              <div className="border-t border-orange-200 pt-2 mt-2">
-                <p className="text-sm text-slate-700">
-                  Volgende te factureren maand: <span className="font-bold text-orange-700">{nextMonthLabel}</span>
-                </p>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  Door te bevestigen wordt <span className="font-semibold">{nextMonthLabel}</span> aan het openstaand saldo toegevoegd.
-                </p>
-                <p className="text-sm text-slate-700 mt-2">
-                  Maandhuur: <span className="font-bold">{fmt(tenant.monthly_rent || 0)}</span>
-                </p>
-                <p className="text-sm font-bold text-slate-900 mt-1">
-                  Nieuw totaal: {fmt((tenant.outstanding_rent || 0) + (tenant.monthly_rent || 0))}
-                </p>
+        {/* Scrollable body */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto min-h-0">
+          <div className="p-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Type</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: 'rent', label: 'Maandhuur' },
+                  { id: 'service', label: 'Servicekosten' },
+                  { id: 'fine', label: 'Boete' },
+                  { id: 'internet', label: 'Internet' },
+                  { id: 'payment', label: 'Betaling Registreren' },
+                ].map(t => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setType(t.id)}
+                    data-testid={`add-rent-type-${t.id}`}
+                    className={`py-2.5 rounded-lg text-sm font-medium transition active:scale-95 ${
+                      type === t.id
+                        ? t.id === 'payment' ? 'bg-orange-600 text-white' : 'bg-orange-500 text-white'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                    } ${t.id === 'payment' ? 'col-span-2' : ''}`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
               </div>
             </div>
-          ) : type === 'payment' ? (
-            <div className="space-y-3">
+
+            {type === 'rent' ? (
               <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-                <p className="text-sm font-bold text-orange-800 mb-2">Openstaande schuld</p>
-                {tenant.outstanding_rent > 0 && <p className="text-sm text-slate-700">Huur: {fmt(tenant.outstanding_rent)}</p>}
-                {tenant.service_costs > 0 && <p className="text-sm text-slate-700">Servicekosten: {fmt(tenant.service_costs)}</p>}
-                {tenant.fines > 0 && <p className="text-sm text-slate-700">Boetes: {fmt(tenant.fines)}</p>}
-                {(tenant.internet_outstanding || tenant.internet_cost || 0) > 0 && <p className="text-sm text-slate-700">Internet: {fmt(tenant.internet_outstanding || tenant.internet_cost || 0)}</p>}
-                <p className="text-sm font-bold text-slate-900 mt-1 border-t border-orange-200 pt-1">
-                  Totaal: {fmt(totalDebt)}
+                <p className="text-sm text-slate-700 mb-2">
+                  Gefactureerd t/m: <span className="font-bold">{billedThroughLabel || '-'}</span>
                 </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Betaalmethode</label>
-                <div className="flex gap-2">
-                  {[{id:'cash',label:'Contant'},{id:'bank',label:'Bank'},{id:'pin',label:'PIN'}].map(m => (
-                    <button key={m.id} type="button" onClick={() => setPaymentMethod(m.id)}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition ${paymentMethod === m.id ? 'bg-orange-500 text-white' : 'bg-slate-100 text-slate-600'}`}>
-                      {m.label}
-                    </button>
-                  ))}
+                <p className="text-sm text-slate-700 mb-2">
+                  Openstaand saldo: <span className="font-bold text-red-600">{fmt(tenant.outstanding_rent || 0)}</span>
+                </p>
+                <div className="border-t border-orange-200 pt-2 mt-2">
+                  <p className="text-sm text-slate-700">
+                    Volgende te factureren maand: <span className="font-bold text-orange-700">{nextMonthLabel}</span>
+                  </p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Door te bevestigen wordt <span className="font-semibold">{nextMonthLabel}</span> aan het openstaand saldo toegevoegd.
+                  </p>
+                  <p className="text-sm text-slate-700 mt-2">
+                    Maandhuur: <span className="font-bold">{fmt(tenant.monthly_rent || 0)}</span>
+                  </p>
+                  <p className="text-sm font-bold text-slate-900 mt-1">
+                    Nieuw totaal: {fmt((tenant.outstanding_rent || 0) + (tenant.monthly_rent || 0))}
+                  </p>
                 </div>
               </div>
+            ) : type === 'payment' ? (
+              <div className="space-y-3">
+                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                  <p className="text-sm font-bold text-orange-800 mb-2">Openstaande schuld</p>
+                  {tenant.outstanding_rent > 0 && <p className="text-sm text-slate-700">Huur: {fmt(tenant.outstanding_rent)}</p>}
+                  {tenant.service_costs > 0 && <p className="text-sm text-slate-700">Servicekosten: {fmt(tenant.service_costs)}</p>}
+                  {tenant.fines > 0 && <p className="text-sm text-slate-700">Boetes: {fmt(tenant.fines)}</p>}
+                  {(tenant.internet_outstanding || tenant.internet_cost || 0) > 0 && <p className="text-sm text-slate-700">Internet: {fmt(tenant.internet_outstanding || tenant.internet_cost || 0)}</p>}
+                  <p className="text-sm font-bold text-slate-900 mt-1 border-t border-orange-200 pt-1">
+                    Totaal: {fmt(totalDebt)}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Betaalmethode</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[{id:'cash',label:'Contant'},{id:'bank',label:'Bank'},{id:'pin',label:'PIN'}].map(m => (
+                      <button key={m.id} type="button" onClick={() => setPaymentMethod(m.id)}
+                        data-testid={`add-rent-pm-${m.id}`}
+                        className={`py-2.5 rounded-lg text-sm font-medium transition active:scale-95 ${paymentMethod === m.id ? 'bg-orange-500 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Bedrag ({cur})</label>
+                  <input type="number" step="0.01" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)}
+                    placeholder="0.00" className="w-full px-4 py-3 border border-slate-200 rounded-xl text-2xl font-bold text-center focus:outline-none focus:border-orange-400" required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Omschrijving (optioneel)</label>
+                  <input type="text" value={description} onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Handmatige betaling" className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-orange-400" />
+                </div>
+                <p className="text-xs text-slate-400">Kwitantie wordt automatisch geprint en WhatsApp bon verstuurd</p>
+              </div>
+            ) : (
               <div>
                 <label className="block text-sm font-medium mb-1">Bedrag ({cur})</label>
-                <input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)}
-                  placeholder="0.00" className="w-full px-4 py-3 border rounded-xl text-2xl font-bold text-center" required />
+                <input type="number" step="0.01" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00" className="w-full px-4 py-3 border border-slate-200 rounded-xl text-2xl font-bold text-center focus:outline-none focus:border-orange-400" required />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Omschrijving (optioneel)</label>
-                <input type="text" value={description} onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Handmatige betaling" className="w-full px-3 py-2 border rounded-lg text-sm" />
-              </div>
-              <p className="text-xs text-slate-400">Kwitantie wordt automatisch geprint en WhatsApp bon verstuurd</p>
-            </div>
-          ) : (
-            <div>
-              <label className="block text-sm font-medium mb-1">Bedrag (SRD)</label>
-              <input type="number" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00" className="w-full px-4 py-3 border rounded-xl text-2xl font-bold text-center" required />
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <button type="button" onClick={onClose} className="flex-1 py-3 border rounded-xl">
-              Annuleren
-            </button>
-            <button type="submit" disabled={loading}
-              className={`flex-1 py-3 text-white rounded-xl disabled:opacity-50 ${type === 'payment' ? 'bg-orange-600' : 'bg-orange-500'}`}>
-              {loading ? 'Bezig...' : type === 'rent' ? `Huur ${nextMonthLabel} toevoegen` : type === 'payment' ? 'Betaling Registreren' : 'Toevoegen'}
-            </button>
+            )}
           </div>
         </form>
+
+        {/* Sticky footer */}
+        <div
+          className="flex gap-2 p-3 border-t border-slate-100 flex-shrink-0 bg-white sm:bg-slate-50"
+          style={{ paddingBottom: 'max(12px, env(safe-area-inset-bottom, 0px))' }}
+        >
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-3 border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 active:scale-[0.98] transition"
+            data-testid="add-rent-cancel-btn"
+          >
+            Annuleren
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            data-testid="add-rent-save-btn"
+            className={`flex-1 py-3 text-white rounded-xl text-sm font-bold disabled:opacity-50 active:scale-[0.98] transition flex items-center justify-center gap-1.5 ${type === 'payment' ? 'bg-orange-600' : 'bg-orange-500'}`}
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+            {loading ? 'Bezig...' : type === 'rent' ? `Huur ${nextMonthLabel}` : type === 'payment' ? 'Registreren' : 'Toevoegen'}
+          </button>
+        </div>
       </div>
     </div>
   );
