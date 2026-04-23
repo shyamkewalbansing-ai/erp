@@ -4,6 +4,7 @@ import { API, axios } from './utils';
 import FreelancerPayments from './FreelancerPayments';
 import Loonstroken from './Loonstroken';
 import PayrollCalendar from './PayrollCalendar';
+import MobileModalShell from './MobileModalShell';
 
 function EmployeesTab({ token, formatSRD }) {
   const [employees, setEmployees] = useState([]);
@@ -139,48 +140,65 @@ function EmployeesTab({ token, formatSRD }) {
           </button>
         </div>
 
-        {/* Form */}
+        {/* Form (mobile-friendly modal) */}
         {showForm && (
-          <form onSubmit={handleSubmit} className="p-4 border-b border-slate-200 bg-slate-50">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Naam *</label>
-                <input value={name} onChange={e => setName(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" required data-testid="emp-name-input" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Functie</label>
-                <input value={functie} onChange={e => setFunctie(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" data-testid="emp-functie-input" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Maandloon (SRD)</label>
-                <input type="number" step="0.01" value={maandloon} onChange={e => setMaandloon(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" data-testid="emp-loon-input" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Telefoon</label>
-                <input value={telefoon} onChange={e => setTelefoon(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Rol</label>
-                <select value={role} onChange={e => setRole(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" data-testid="emp-role-select">
-                  <option value="beheerder">Beheerder</option>
-                  <option value="boekhouder">Boekhouder</option>
-                  <option value="kiosk_medewerker">Kiosk Medewerker</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">PIN code (4 cijfers) {editingEmp?.has_pin ? '(laat leeg om niet te wijzigen)' : ''}</label>
-                <input type="text" inputMode="numeric" maxLength={4} pattern="[0-9]*" value={pin} onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0,4))} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm" placeholder="bijv. 1234" data-testid="emp-pin-input" />
-              </div>
+          <MobileModalShell
+            title={editingEmp ? 'Werknemer bewerken' : 'Nieuwe Werknemer'}
+            subtitle={editingEmp ? editingEmp.name : 'Vul onderstaande velden in'}
+            onClose={resetForm}
+            onSubmit={() => { if (!name.trim() || saving) return; handleSubmit({ preventDefault: () => {} }); }}
+            loading={saving}
+            submitLabel={editingEmp ? 'Bijwerken' : 'Opslaan'}
+            testIdPrefix="emp-modal"
+          >
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Naam *</label>
+              <input value={name} onChange={e => setName(e.target.value)}
+                className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                required data-testid="emp-name-input" placeholder="Volledige naam" />
             </div>
-            <div className="flex gap-2">
-              <button type="submit" disabled={saving} className="px-4 py-2 bg-orange-500 text-white rounded-lg text-sm hover:bg-orange-600 disabled:opacity-50" data-testid="emp-submit-btn">
-                {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : (editingEmp ? 'Bijwerken' : 'Opslaan')}
-              </button>
-              <button type="button" onClick={resetForm} className="px-4 py-2 bg-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-300">
-                Annuleer
-              </button>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Functie</label>
+              <input value={functie} onChange={e => setFunctie(e.target.value)}
+                className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                data-testid="emp-functie-input" placeholder="bijv. Schoonmaker" />
             </div>
-          </form>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Maandloon (SRD)</label>
+              <input type="number" inputMode="decimal" step="0.01" value={maandloon} onChange={e => setMaandloon(e.target.value)}
+                className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                data-testid="emp-loon-input" placeholder="0.00" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Telefoon</label>
+              <input type="tel" value={telefoon} onChange={e => setTelefoon(e.target.value)}
+                className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                placeholder="+597 ..." />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">E-mail</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+                className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                placeholder="naam@email.com" />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">Rol</label>
+              <select value={role} onChange={e => setRole(e.target.value)}
+                className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm bg-white focus:outline-none focus:border-orange-400"
+                data-testid="emp-role-select">
+                <option value="beheerder">Beheerder</option>
+                <option value="boekhouder">Boekhouder</option>
+                <option value="kiosk_medewerker">Kiosk Medewerker</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">PIN code (4 cijfers) {editingEmp?.has_pin ? '(laat leeg om niet te wijzigen)' : ''}</label>
+              <input type="text" inputMode="numeric" maxLength={4} pattern="[0-9]*" value={pin}
+                onChange={e => setPin(e.target.value.replace(/\D/g, '').slice(0,4))}
+                className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                placeholder="bijv. 1234" data-testid="emp-pin-input" />
+            </div>
+          </MobileModalShell>
         )}
 
         {activeEmps.length === 0 ? (
