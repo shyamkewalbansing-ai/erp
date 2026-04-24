@@ -429,7 +429,11 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
       )}
 
       {showQRScanner && (
-        <QRScannerModal onClose={() => setShowQRScanner(false)} />
+        <QRScannerModal
+          onClose={() => setShowQRScanner(false)}
+          token={token}
+          onRefresh={loadData}
+        />
       )}
 
       {loanDetailData && (

@@ -885,12 +885,32 @@ async def get_payment(payment_id: str, company: dict = Depends(get_current_compa
     if not payment:
         raise HTTPException(status_code=404, detail="Betaling niet gevonden")
     
+    # Backfill tenant_id if missing by looking up on apartment_number / tenant_code.
+    resolved_tenant_id = payment.get("tenant_id")
+    if not resolved_tenant_id:
+        tenant_doc = None
+        if payment.get("apartment_number"):
+            tenant_doc = await db.kiosk_tenants.find_one({
+                "company_id": company["company_id"],
+                "apartment_number": payment["apartment_number"],
+                "status": "active",
+            })
+        if not tenant_doc and payment.get("tenant_code"):
+            tenant_doc = await db.kiosk_tenants.find_one({
+                "company_id": company["company_id"],
+                "code": payment["tenant_code"],
+            })
+        if tenant_doc:
+            resolved_tenant_id = tenant_doc.get("tenant_id")
+
     return {
         "payment_id": payment["payment_id"],
+        "tenant_id": resolved_tenant_id,
         "tenant_name": payment.get("tenant_name"),
         "tenant_code": payment.get("tenant_code"),
         "apartment_number": payment.get("apartment_number"),
         "amount": payment["amount"],
+        "currency": payment.get("currency", "SRD"),
         "payment_type": payment["payment_type"],
         "payment_method": payment.get("payment_method", "cash"),
         "description": payment.get("description"),
@@ -901,7 +921,8 @@ async def get_payment(payment_id: str, company: dict = Depends(get_current_compa
         "remaining_fines": payment.get("remaining_fines"),
         "remaining_internet": payment.get("remaining_internet"),
         "kwitantie_nummer": payment.get("kwitantie_nummer"),
-        "created_at": payment["created_at"]
+        "created_at": payment["created_at"],
+        "status": payment.get("status"),
     }
 
 
