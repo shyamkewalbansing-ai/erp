@@ -733,8 +733,10 @@ def _build_a4_receipt_html(
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   html, body {{ width: 210mm; }}
   body {{ font-family: 'Georgia', 'Times New Roman', serif; font-size: 9pt; line-height: 1.3; color: #000; background: #fff; position: relative; }}
-  body::before {{ content: "ORIGINEEL"; position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 90pt; font-weight: bold; color: rgba(0,0,0,0.05); letter-spacing: 12px; z-index: 0; pointer-events: none; white-space: nowrap; }}
-  .page {{ width: 210mm; margin: 0 auto; padding: 10mm 14mm 8mm; background: #fff; position: relative; z-index: 1; }}
+  /* Tamper-proof diagonal watermark — identical across ALL receipt types */
+  .page {{ width: 210mm; min-height: 287mm; margin: 0 auto; padding: 10mm 14mm 8mm; background: #fff; position: relative; z-index: 1; overflow: hidden; }}
+  .page::before {{ content: "ORIGINEEL"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 90pt; font-weight: bold; color: rgba(0, 0, 0, 0.08); letter-spacing: 12px; z-index: 0; pointer-events: none; white-space: nowrap; font-family: 'Georgia', 'Times New Roman', serif; }}
+  .page > * {{ position: relative; z-index: 1; }}
   .header {{ border-bottom: 1.5px solid #000; padding-bottom: 6px; margin-bottom: 8px; text-align: center; }}
   .company-name {{ font-size: 13pt; font-weight: bold; color: #000; text-transform: uppercase; letter-spacing: 0.5px; }}
   .company-info {{ font-size: 7pt; color: #000; margin-top: 2px; line-height: 1.3; }}

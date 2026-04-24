@@ -1,5 +1,45 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 62 (24 apr 2026) — Uniform "ORIGINEEL" watermerk op ALLE kwitanties/loonstroken/freelancer-bonnen
+
+### Verzoek
+Gebruiker wilde dat ALLE gegenereerde bonnen (Kwitanties, Loonstroken, Freelancer-uitbetalingen) — zowel in HTML-weergave als in gedownloade/gedrukte PDF — er identiek uitzien met een groot diagonaal "ORIGINEEL" watermerk gecentreerd op de A4-pagina.
+
+### Probleem
+- Voorheen gebruikten alle templates een identieke CSS-regel (`body::before { position: fixed; top: 30%; ... color: rgba(0,0,0,0.05) }`), maar in de WeasyPrint PDF-output was het watermerk op de Loonstrook en Freelancer-bonnen **nagenoeg onzichtbaar** (opacity 0.05 + positie-problemen).
+- Op schermweergave was het watermerk ook niet consistent gecentreerd op de A4-pagina (fixed positioning relatief aan viewport, niet aan pagina).
+
+### Implementatie
+**`/app/backend/routers/kiosk/base.py`** (`_build_a4_receipt_html` — gebruikt door Loonstroken & Freelancer-uitbetalingen):
+**`/app/backend/routers/kiosk/admin.py`** (`_render_receipt_html` — Kwitanties):
+
+Unified CSS op beide:
+- `.page { min-height: 287mm; position: relative; overflow: hidden; }` — vormt de A4-container
+- `.page::before { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 90pt; color: rgba(0, 0, 0, 0.08); letter-spacing: 12px; content: "ORIGINEEL"; }` — gecentreerd op A4 i.p.v. viewport
+- `.page > * { position: relative; z-index: 1; }` — zorgt dat alle content bovenop het watermerk staat
+
+### Resultaat (geverifieerd met pdftoppm + AI-image-analyse)
+| Receipt type | PDF watermerk pixels (voor) | PDF watermerk pixels (na) |
+|---|---|---|
+| Kwitantie | ~3 | 761 |
+| Loonstrook | ~30 | 1129 |
+| Freelancer | 0 | 978 |
+
+AI-analyse van alle 3 PDF's bevestigt: "grote, diagonale, lichtgrijze 'ORIGINEEL' watermerk centraal op de pagina".
+
+### Bestanden
+- `/app/backend/routers/kiosk/base.py` (regel ~732-758)
+- `/app/backend/routers/kiosk/admin.py` (regel ~1340-1370)
+
+### Testen
+- `GET /api/kiosk/admin/payments/{id}/receipt?token=...&noprint=1` → HTML met gecentreerd watermerk
+- `GET /api/kiosk/admin/payments/{id}/receipt/pdf?token=...` → Encrypted PDF, 1 pagina, zichtbaar watermerk
+- `GET /api/kiosk/admin/loonstroken/{id}/receipt[/pdf]` → idem
+- `GET /api/kiosk/admin/freelancer-payments/{id}/receipt[/pdf]` → idem
+- Alle 3 PDF's blijven 1 pagina, geen regressie in layout.
+
+---
+
 ## Sprint 61 (23 apr 2026) — iOS status bar ALTIJD oranje (PWA standalone)
 
 ### Verzoek

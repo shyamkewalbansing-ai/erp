@@ -1345,29 +1345,33 @@ window.addEventListener('load', function() {
     background: #fff;
     position: relative;
   }}
-  /* Tamper-proof diagonal watermark */
-  body::before {{
-    content: "ORIGINEEL";
-    position: fixed;
-    top: 30%;
-    left: 50%;
-    transform: translate(-50%, -50%) rotate(-30deg);
-    font-size: 90pt;
-    font-weight: bold;
-    color: rgba(0, 0, 0, 0.05);
-    letter-spacing: 12px;
-    z-index: 0;
-    pointer-events: none;
-    white-space: nowrap;
-  }}
+  /* Tamper-proof diagonal watermark — identical across ALL receipt types */
   .page {{
     width: 210mm;
+    min-height: 287mm;
     margin: 0 auto;
     padding: 10mm 14mm 8mm;
     page-break-inside: avoid;
     position: relative;
     z-index: 1;
+    overflow: hidden;
   }}
+  .page::before {{
+    content: "ORIGINEEL";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    font-size: 90pt;
+    font-weight: bold;
+    color: rgba(0, 0, 0, 0.08);
+    letter-spacing: 12px;
+    z-index: 0;
+    pointer-events: none;
+    white-space: nowrap;
+    font-family: 'Georgia', 'Times New Roman', serif;
+  }}
+  .page > * {{ position: relative; z-index: 1; }}
   .header {{
     border-bottom: 1.5px solid #000;
     padding-bottom: 5px;
