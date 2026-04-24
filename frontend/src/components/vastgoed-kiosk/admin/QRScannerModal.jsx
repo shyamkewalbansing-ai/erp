@@ -31,6 +31,26 @@ function QRScannerModal({ onClose, token, onRefresh }) {
       }
     } catch { /* already stopped — ignore */ }
     try { instance.clear(); } catch { /* noop */ }
+    // Force-remove any leftover DOM nodes html5-qrcode may have injected.
+    // This prevents the orange strip / ghost video element from persisting
+    // in the page background after the modal closes.
+    try {
+      const el = document.getElementById(scannerElId);
+      if (el) {
+        // Stop all video tracks still active inside the region
+        el.querySelectorAll('video').forEach(v => {
+          try {
+            const stream = v.srcObject;
+            if (stream && stream.getTracks) {
+              stream.getTracks().forEach(t => t.stop());
+            }
+            v.srcObject = null;
+            v.pause();
+          } catch { /* ignore */ }
+        });
+        el.innerHTML = '';
+      }
+    } catch { /* noop */ }
   };
 
   useEffect(() => {
@@ -66,6 +86,14 @@ function QRScannerModal({ onClose, token, onRefresh }) {
 
     return () => { cancelled = true; safeStop(scannerRef.current); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Wrap onClose so the scanner is guaranteed stopped and DOM nodes are
+  // removed BEFORE the parent unmounts the modal. This prevents leftover
+  // video elements from creating an orange ghost strip at the bottom.
+  const handleClose = async () => {
+    await safeStop(scannerRef.current);
+    onClose();
+  };
 
   const handleScan = async (text) => {
     const uuidRegex = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
@@ -138,9 +166,10 @@ function QRScannerModal({ onClose, token, onRefresh }) {
         tenant={tenant}
         token={token}
         onClose={() => { setShowAddRent(false); }}
-        onSave={() => {
+        onSave={async () => {
           setShowAddRent(false);
           onRefresh?.();
+          await safeStop(scannerRef.current);
           onClose(); // Close everything — user has registered a new payment
         }}
       />
@@ -151,7 +180,7 @@ function QRScannerModal({ onClose, token, onRefresh }) {
     <MobileModalShell
       title="QR Code Scannen"
       subtitle={status === 'found' ? 'Kwitantie gevonden' : 'Scan kwitantie QR code'}
-      onClose={onClose}
+      onClose={handleClose}
       hideFooter={true}
       testIdPrefix="qr-scanner"
     >
@@ -165,7 +194,7 @@ function QRScannerModal({ onClose, token, onRefresh }) {
           {scannedUrl && (
             <p className="text-[10px] text-slate-400 mt-3 font-mono break-all bg-slate-50 p-2 rounded">{scannedUrl}</p>
           )}
-          <button onClick={onClose} className="mt-6 px-6 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-semibold text-slate-700 transition">
+          <button onClick={handleClose} className="mt-6 px-6 py-2.5 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-semibold text-slate-700 transition">
             Sluiten
           </button>
         </div>
@@ -268,7 +297,7 @@ function QRScannerModal({ onClose, token, onRefresh }) {
                 Afdrukken
               </button>
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="px-3 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 rounded-xl text-sm font-semibold transition"
               >
                 Sluiten
