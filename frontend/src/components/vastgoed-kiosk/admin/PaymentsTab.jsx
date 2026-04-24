@@ -104,7 +104,15 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
 
   const handlePrintDirect = (payment) => {
     const origin = getKioskOriginAPI();
-    window.open(`${origin}/admin/payments/${payment.payment_id}/receipt/pdf?token=${token}`, '_blank');
+    // Use the receipt HTML endpoint with autoprint=1 — works reliably on both desktop and mobile.
+    // The HTML auto-triggers the browser's native print dialog once loaded.
+    const url = `${origin}/admin/payments/${payment.payment_id}/receipt?token=${encodeURIComponent(token)}&autoprint=1`;
+    // Try to open in new window. If blocked (iOS PWA), fall back to navigating current window.
+    const w = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!w || w.closed || typeof w.closed === 'undefined') {
+      // Popup blocked — navigate current window instead (user can hit back after printing)
+      window.location.href = url;
+    }
   };
 
   // Fetch receipt HTML when preview modal opens

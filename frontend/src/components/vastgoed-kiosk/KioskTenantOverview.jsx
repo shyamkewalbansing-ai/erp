@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, User, CreditCard, Wallet, FileText, CheckCircle, Home, Clock, X, Wifi } from 'lucide-react';
+import { ArrowLeft, ArrowRight, User, CreditCard, Wallet, FileText, CheckCircle, Home, Clock, X, Wifi, Printer } from 'lucide-react';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
@@ -10,6 +10,22 @@ function formatSRD(amount) {
 function formatMoney(amount, currency) {
   const cur = (currency || 'SRD').toString().toUpperCase();
   return `${cur} ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+// Open a payment's receipt in a new window and trigger print/download.
+// Uses the public receipt endpoint (works without auth, only for approved payments).
+function printPaymentReceipt(payment) {
+  if (!payment?.payment_id) return;
+  const url = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk/public/receipt/${payment.payment_id}?autoprint=1`;
+  // Try popup first. If blocked (iOS PWA), navigate current window instead.
+  try {
+    const w = window.open(url, '_blank', 'noopener,noreferrer');
+    if (!w || w.closed || typeof w.closed === 'undefined') {
+      window.location.href = url;
+    }
+  } catch {
+    window.location.href = url;
+  }
 }
 
 const TYPE_LABELS = { rent: 'Huur', partial_rent: 'Gedeeltelijk', service_costs: 'Servicekosten', fines: 'Boetes', deposit: 'Borg' };
@@ -167,7 +183,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                 ) : payments.length === 0 ? (
                   <div className="text-center" style={{ padding: '4vh 0' }}><p className="kiosk-subtitle text-slate-400">Geen betalingen gevonden</p></div>
                 ) : (
-                  <div>{payments.map((p, i) => { const date = p.created_at ? new Date(p.created_at) : null; const dateStr = date ? date.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : ''; const periode = p.covered_months?.length > 0 ? p.covered_months.join(', ') : ''; const ontvangen = p.processed_by || ''; const goedgekeurd = p.approved_by && p.approved_by !== p.processed_by ? p.approved_by : ''; return (<div key={p.payment_id || i} className="kiosk-card-row flex items-center justify-between"><div className="flex items-center gap-3 min-w-0"><CheckCircle style={{ width: '2vh', height: '2vh' }} className="text-green-500 flex-shrink-0" /><div className="min-w-0"><div className="flex items-center gap-2 flex-wrap"><span className="kiosk-body font-bold text-slate-900">{formatMoney(p.amount, p.currency || cur)}</span><span className="kiosk-small px-2 py-0.5 rounded bg-orange-100 text-orange-600 font-semibold">{TYPE_LABELS[p.payment_type] || p.payment_type}</span></div><p className="kiosk-small text-slate-400">{dateStr} · {p.kwitantie_nummer || ''}</p>{periode && <p className="kiosk-small text-slate-500 font-medium">Periode: {periode}</p>}{ontvangen && <p className="kiosk-small text-slate-500 font-medium">Ontvangen door: <span className="text-slate-700 font-semibold">{ontvangen}</span></p>}{goedgekeurd && <p className="kiosk-small text-slate-500 font-medium">Goedgekeurd door: <span className="text-slate-700 font-semibold">{goedgekeurd}</span></p>}</div></div></div>); })}</div>
+                  <div>{payments.map((p, i) => { const date = p.created_at ? new Date(p.created_at) : null; const dateStr = date ? date.toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : ''; const periode = p.covered_months?.length > 0 ? p.covered_months.join(', ') : ''; const ontvangen = p.processed_by || ''; const goedgekeurd = p.approved_by && p.approved_by !== p.processed_by ? p.approved_by : ''; return (<div key={p.payment_id || i} className="kiosk-card-row flex items-center justify-between gap-2"><div className="flex items-center gap-3 min-w-0 flex-1"><CheckCircle style={{ width: '2vh', height: '2vh' }} className="text-green-500 flex-shrink-0" /><div className="min-w-0"><div className="flex items-center gap-2 flex-wrap"><span className="kiosk-body font-bold text-slate-900">{formatMoney(p.amount, p.currency || cur)}</span><span className="kiosk-small px-2 py-0.5 rounded bg-orange-100 text-orange-600 font-semibold">{TYPE_LABELS[p.payment_type] || p.payment_type}</span></div><p className="kiosk-small text-slate-400">{dateStr} · {p.kwitantie_nummer || ''}</p>{periode && <p className="kiosk-small text-slate-500 font-medium">Periode: {periode}</p>}{ontvangen && <p className="kiosk-small text-slate-500 font-medium">Ontvangen door: <span className="text-slate-700 font-semibold">{ontvangen}</span></p>}{goedgekeurd && <p className="kiosk-small text-slate-500 font-medium">Goedgekeurd door: <span className="text-slate-700 font-semibold">{goedgekeurd}</span></p>}</div></div><button onClick={(e) => { e.stopPropagation(); printPaymentReceipt(p); }} data-testid={`h-huurder-print-${i}`} title="Kwitantie afdrukken" className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-bold transition active:scale-95 flex-shrink-0"><Printer className="w-3.5 h-3.5" /><span className="hidden sm:inline">Afdruk</span></button></div>); })}</div>
                 )}
               </div>
               <div style={{ padding: 'clamp(8px, 1.5vh, 16px) clamp(12px, 1.5vw, 24px)', borderTop: '1px solid #f1f5f9' }}>
@@ -306,8 +322,8 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                     const ontvangen = p.processed_by || '';
                     const goedgekeurd = p.approved_by && p.approved_by !== p.processed_by ? p.approved_by : '';
                     return (
-                      <div key={p.payment_id || i} className="kiosk-card-row flex items-center justify-between" data-testid={`history-item-${i}`}>
-                        <div className="flex items-center gap-3 min-w-0">
+                      <div key={p.payment_id || i} className="kiosk-card-row flex items-center justify-between gap-2" data-testid={`history-item-${i}`}>
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
                           <CheckCircle style={{ width: '2vh', height: '2vh' }} className="text-green-500 flex-shrink-0" />
                           <div className="min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
@@ -321,6 +337,15 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                             {goedgekeurd && <p className="kiosk-small text-slate-500 font-medium">Goedgekeurd door: <span className="text-slate-700 font-semibold">{goedgekeurd}</span></p>}
                           </div>
                         </div>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); printPaymentReceipt(p); }}
+                          data-testid={`history-print-${i}`}
+                          title="Kwitantie afdrukken"
+                          className="flex items-center gap-1.5 px-3 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-bold transition active:scale-95 flex-shrink-0"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          <span className="hidden sm:inline">Afdruk</span>
+                        </button>
                       </div>
                     );
                   })}

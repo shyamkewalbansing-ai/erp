@@ -906,8 +906,8 @@ async def get_payment(payment_id: str, company: dict = Depends(get_current_compa
 
 
 @router.get("/admin/payments/{payment_id}/receipt")
-async def generate_receipt(payment_id: str, request: Request, token: Optional[str] = None, noprint: Optional[str] = None):
-    """Generate printable receipt/kwitantie HTML. Pass ?noprint=1 to disable auto-print (for iframe preview)."""
+async def generate_receipt(payment_id: str, request: Request, token: Optional[str] = None, noprint: Optional[str] = None, autoprint: Optional[str] = None):
+    """Generate printable receipt/kwitantie HTML. ?noprint=1 for iframe preview, ?autoprint=1 to auto-print."""
     if not token:
         raise HTTPException(status_code=401, detail="Token vereist")
     try:
@@ -919,24 +919,24 @@ async def generate_receipt(payment_id: str, request: Request, token: Optional[st
     payment = await db.kiosk_payments.find_one({"payment_id": payment_id, "company_id": company_id})
     if not payment:
         raise HTTPException(status_code=404, detail="Betaling niet gevonden")
-    return await _render_receipt_html(payment, company_id, noprint=bool(noprint), request=request)
+    return await _render_receipt_html(payment, company_id, noprint=bool(noprint), autoprint=bool(autoprint), request=request)
 
 
 @router.get("/public/receipt/{payment_id}")
-async def public_receipt(payment_id: str, request: Request):
-    """Publicly accessible receipt view (for QR code scanning). 
+async def public_receipt(payment_id: str, request: Request, autoprint: Optional[str] = None):
+    """Publicly accessible receipt view (for QR code scanning or mobile print).
     Payment_id is a UUID, non-guessable. Only shows approved payments."""
     payment = await db.kiosk_payments.find_one({"payment_id": payment_id})
     if not payment:
         raise HTTPException(status_code=404, detail="Kwitantie niet gevonden")
     if payment.get("status") not in ("approved", "completed"):
         raise HTTPException(status_code=404, detail="Kwitantie niet beschikbaar")
-    return await _render_receipt_html(payment, payment["company_id"], noprint=True, public_view=True, request=request)
+    return await _render_receipt_html(payment, payment["company_id"], noprint=True, autoprint=bool(autoprint), public_view=True, request=request)
 
 
 async def _render_receipt_pdf_bytes(payment: dict, company_id: str, public_view: bool = False, request=None) -> bytes:
     """Render the kwitantie as a tamper-protected, encrypted PDF (A5 compact)."""
-    html_resp = await _render_receipt_html(payment, company_id, noprint=True, public_view=public_view, request=request)
+    html_resp = await _render_receipt_html(payment, company_id, noprint=True, autoprint=False, public_view=public_view, request=request)
     html_bytes = html_resp.body if hasattr(html_resp, "body") else html_resp
     html_str = html_bytes.decode("utf-8", errors="ignore") if isinstance(html_bytes, bytes) else str(html_bytes)
     return await _encrypt_receipt_pdf(html_str)
@@ -999,7 +999,7 @@ def _get_request_base_url(request) -> str:
     return _os.environ.get("APP_URL", "https://facturatie.sr").rstrip("/")
 
 
-async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = False, public_view: bool = False, request=None):
+async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = False, autoprint: bool = False, public_view: bool = False, request=None):
     """Render the kwitantie HTML. Shared between /admin/.../receipt and /public/receipt/..."""
 
     # Build public QR URL (authentic kwitantie link) for this payment
@@ -1258,6 +1258,19 @@ function verifyHash(){{
             '<button onclick="window.close()">Sluiten</button>'
             '</div>'
         )
+
+    # Auto-print script — triggers browser print dialog when ?autoprint=1 is set.
+    # Works even in public/noprint view: we skip the print-bar UI but still trigger the print dialog.
+    if autoprint:
+        autoprint_script = """<script>
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    try { window.focus(); window.print(); } catch(e) {}
+  }, 400);
+});
+</script>"""
+    else:
+        autoprint_script = ""
 
     # QR inline rendered inside the receipt title (right side, no text)
     qr_inline = ""
@@ -1625,6 +1638,7 @@ function verifyHash(){{
 {hash_verify_html}
 
 </div>
+{autoprint_script}
 </body>
 </html>"""
     
