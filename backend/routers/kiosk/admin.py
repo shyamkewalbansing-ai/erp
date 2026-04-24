@@ -928,7 +928,9 @@ async def get_payment(payment_id: str, company: dict = Depends(get_current_compa
 
 @router.get("/admin/payments/{payment_id}/receipt")
 async def generate_receipt(payment_id: str, request: Request, token: Optional[str] = None, noprint: Optional[str] = None, autoprint: Optional[str] = None):
-    """Generate printable receipt/kwitantie HTML. ?noprint=1 for iframe preview, ?autoprint=1 to auto-print."""
+    """Generate printable receipt/kwitantie HTML with the OFFICIAL verified layout
+    (watermark + geverifieerd banner + hash-check widget). Same format as /public/receipt
+    so users see identical output on screen, PDF and print."""
     if not token:
         raise HTTPException(status_code=401, detail="Token vereist")
     try:
@@ -940,33 +942,30 @@ async def generate_receipt(payment_id: str, request: Request, token: Optional[st
     payment = await db.kiosk_payments.find_one({"payment_id": payment_id, "company_id": company_id})
     if not payment:
         raise HTTPException(status_code=404, detail="Betaling niet gevonden")
-    return await _render_receipt_html(payment, company_id, noprint=bool(noprint), autoprint=bool(autoprint), request=request)
+    # ALWAYS render in public_view=True so watermark + banner + hash widget are present.
+    # The hash-widget has .no-print class so it's automatically hidden when printing to paper/PDF.
+    return await _render_receipt_html(
+        payment, company_id,
+        noprint=bool(noprint), autoprint=bool(autoprint),
+        public_view=True,
+        request=request,
+    )
 
 
 @router.get("/public/receipt/{payment_id}")
 async def public_receipt(payment_id: str, request: Request, autoprint: Optional[str] = None):
     """Publicly accessible receipt view (for QR code scanning or mobile print).
-    Payment_id is a UUID, non-guessable. Only shows approved payments.
-    When autoprint=1 is set, renders the IDENTICAL HTML as /vastgoed → Kwitanties → Afdrukken
-    (same print-bar, same layout, same margins) — just using the public PDF URL instead of admin."""
+    Renders the SAME verified HTML layout as the admin receipt — identical output
+    on screen, PDF and print. Only shows approved payments."""
     payment = await db.kiosk_payments.find_one({"payment_id": payment_id})
     if not payment:
         raise HTTPException(status_code=404, detail="Kwitantie niet gevonden")
     if payment.get("status") not in ("approved", "completed"):
         raise HTTPException(status_code=404, detail="Kwitantie niet beschikbaar")
-    if autoprint:
-        # Mobile print flow from Kiosk Betalingsgeschiedenis — mirror admin Kwitanties output exactly.
-        return await _render_receipt_html(
-            payment, payment["company_id"],
-            noprint=False, autoprint=True,
-            public_view=False, public_pdf_url=True,
-            request=request,
-        )
-    # Default QR scan / verification flow: show verification banner + hash widget.
     return await _render_receipt_html(
         payment, payment["company_id"],
-        noprint=True, autoprint=False,
-        public_view=True,
+        noprint=True, autoprint=bool(autoprint),
+        public_view=True, public_pdf_url=True,
         request=request,
     )
 
