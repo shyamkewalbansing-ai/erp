@@ -363,6 +363,7 @@ export default function KioskLayout() {
           exit="exit"
           transition={{ duration: 0.3, ease: 'easeInOut' }}
           className={`absolute inset-0 overflow-y-auto overflow-x-hidden md:pb-16`}
+          style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
         >
           {renderStep()}
         </motion.div>

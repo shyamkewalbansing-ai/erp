@@ -73,27 +73,31 @@ export default function ApartmentSelect({ onBack, onSelect, companyId }) {
   return (
     <div className="bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[700px] flex flex-col">
       {/* Top bar */}
-      <div className="bg-[#1e293b] text-white p-6 flex items-center justify-between">
-        <button onClick={onBack} className="flex items-center gap-2 text-[#94a3b8] hover:text-white transition">
-          <ArrowLeft className="w-5 h-5" />
-          Terug
-        </button>
-        <h2 className="text-2xl font-bold">Kies uw appartement</h2>
+      <div className="bg-[#1e293b] text-white p-3 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+        <div className="flex items-center justify-between sm:justify-start sm:gap-6 flex-wrap">
+          <button onClick={onBack} className="flex items-center gap-2 text-[#94a3b8] hover:text-white transition" data-testid="apt-select-back-btn">
+            <ArrowLeft className="w-5 h-5" />
+            <span className="text-sm sm:text-base">Terug</span>
+          </button>
+          <h2 className="text-base sm:text-2xl font-bold">Kies uw appartement</h2>
+        </div>
         {/* Mode toggle */}
         <div className="flex gap-2">
           <button
             onClick={() => { setMode('grid'); setError(''); }}
-            className={`kiosk-tab ${mode === 'grid' ? 'kiosk-tab-active' : ''}`}
+            className={`kiosk-tab flex-1 sm:flex-none justify-center ${mode === 'grid' ? 'kiosk-tab-active' : ''}`}
           >
             <Building2 className="w-4 h-4" />
-            Appartement
+            <span className="hidden sm:inline">Appartement</span>
+            <span className="sm:hidden">Appt.</span>
           </button>
           <button
             onClick={() => { setMode('code'); setError(''); }}
-            className={`kiosk-tab ${mode === 'code' ? 'kiosk-tab-active' : ''}`}
+            className={`kiosk-tab flex-1 sm:flex-none justify-center ${mode === 'code' ? 'kiosk-tab-active' : ''}`}
           >
             <Keyboard className="w-4 h-4" />
-            Huurderscode
+            <span className="hidden sm:inline">Huurderscode</span>
+            <span className="sm:hidden">Code</span>
           </button>
         </div>
       </div>
