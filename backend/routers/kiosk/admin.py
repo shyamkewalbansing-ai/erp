@@ -925,13 +925,25 @@ async def generate_receipt(payment_id: str, request: Request, token: Optional[st
 @router.get("/public/receipt/{payment_id}")
 async def public_receipt(payment_id: str, request: Request, autoprint: Optional[str] = None):
     """Publicly accessible receipt view (for QR code scanning or mobile print).
-    Payment_id is a UUID, non-guessable. Only shows approved payments."""
+    Payment_id is a UUID, non-guessable. Only shows approved payments.
+    When autoprint=1 is set, renders the clean admin-style receipt (no verification banner/widget)
+    so printed output is IDENTICAL to the one printed from the admin Kwitanties tab."""
     payment = await db.kiosk_payments.find_one({"payment_id": payment_id})
     if not payment:
         raise HTTPException(status_code=404, detail="Kwitantie niet gevonden")
     if payment.get("status") not in ("approved", "completed"):
         raise HTTPException(status_code=404, detail="Kwitantie niet beschikbaar")
-    return await _render_receipt_html(payment, payment["company_id"], noprint=True, autoprint=bool(autoprint), public_view=True, request=request)
+    # For print flow: use public_view=False to match the admin Kwitanties format exactly.
+    # For normal QR scan / verification flow: keep public_view=True (shows banner + hash widget).
+    use_public_view = not bool(autoprint)
+    return await _render_receipt_html(
+        payment,
+        payment["company_id"],
+        noprint=True,
+        autoprint=bool(autoprint),
+        public_view=use_public_view,
+        request=request,
+    )
 
 
 async def _render_receipt_pdf_bytes(payment: dict, company_id: str, public_view: bool = False, request=None) -> bytes:
