@@ -3,7 +3,10 @@
  * BELANGRIJK: Cache index.html tijdens install en serveer bij navigatie
  */
 
-const CACHE_NAME = 'boekhouding-v4';
+// NOTE: Bump this version on every production release to force clients to
+// invalidate the old cache and fetch the new build. The activate handler
+// automatically deletes all caches that don't match CACHE_NAME.
+const CACHE_NAME = 'boekhouding-v5-2026-04-24';
 
 // Bestanden die ALTIJD gecached moeten worden
 const PRECACHE_FILES = [
@@ -286,7 +289,7 @@ async function cacheIndexNow() {
   }
 }
 
-console.log('[SW] Service Worker loaded - Boekhouding Offline v3');
+console.log('[SW] Service Worker loaded - boekhouding-v5-2026-04-24');
 
 // ============== WEB PUSH NOTIFICATIONS ==============
 // IndexedDB helpers (SW has no access to localStorage)
