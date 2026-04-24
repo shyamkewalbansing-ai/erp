@@ -675,7 +675,6 @@ def _build_a4_receipt_html(
     include_sig_line: bool = True,
     pdf_download_path: Optional[str] = None,   # relative path for PDF button (e.g. "./pdf")
     doc_hash: Optional[str] = None,            # full SHA-256 hash of the document
-    is_copy: bool = False,                     # if True, render red "KOPIE" badge (2de+ afdruk/download)
 ) -> str:
     """Build a consistent A5-compact HTML receipt. Used for kwitantie, freelancer uitbetaling, loonstrook."""
     # Basic HTML escaping for values
@@ -724,10 +723,6 @@ def _build_a4_receipt_html(
     if doc_hash:
         hash_html = f'<div class="doc-hash">Document-hash (SHA-256): {esc(doc_hash[:16].upper())} &middot; {esc(doc_hash)}</div>'
 
-    copy_badge_html = ""
-    if is_copy:
-        copy_badge_html = '<div class="copy-badge">KOPIE</div>'
-
     return f"""<!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -743,7 +738,6 @@ def _build_a4_receipt_html(
   .receipt-body {{ position: relative; min-height: 110mm; overflow: hidden; }}
   .receipt-body::before {{ content: "ORIGINEEL"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 72pt; font-weight: bold; color: rgba(0, 0, 0, 0.09); letter-spacing: 10px; z-index: 0; pointer-events: none; white-space: nowrap; font-family: 'Georgia', 'Times New Roman', serif; }}
   .receipt-body > * {{ position: relative; z-index: 1; }}
-  .copy-badge {{ position: absolute; top: 8mm; right: 8mm; transform: rotate(12deg); border: 3px solid #b91c1c; color: #b91c1c; padding: 4px 14px; font-size: 16pt; font-weight: 900; letter-spacing: 3px; background: rgba(255,255,255,0.7); z-index: 5; font-family: 'Georgia', 'Times New Roman', serif; }}
   .header {{ border-bottom: 1.5px solid #000; padding-bottom: 6px; margin-bottom: 8px; text-align: center; }}
   .company-name {{ font-size: 13pt; font-weight: bold; color: #000; text-transform: uppercase; letter-spacing: 0.5px; }}
   .company-info {{ font-size: 7pt; color: #000; margin-top: 2px; line-height: 1.3; }}
@@ -779,7 +773,6 @@ def _build_a4_receipt_html(
 {print_bar}
 <div class="page" style="margin-top: {'0' if noprint else '40px'};">
   <div class="receipt-body">
-  {copy_badge_html}
   <div class="header">
     <div class="company-name">{esc(stamp_name)}</div>
     <div class="company-info">{esc(stamp_address)}{(' | Tel: ' + esc(stamp_phone)) if stamp_phone else ''}{(' | WhatsApp: ' + esc(stamp_whatsapp)) if stamp_whatsapp else ''}{(' | ' + esc(company_email)) if company_email else ''}</div>
