@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Building2, Users, Home, ArrowLeft, Loader2, Settings, ExternalLink,
   Copy, Check, Receipt, Zap, LogIn, Landmark, Briefcase, Wallet, Wifi,
-  AlertTriangle, MapPin, Shield
+  AlertTriangle, MapPin, Shield, QrCode
 } from 'lucide-react';
 import axios from 'axios';
 
@@ -22,6 +22,7 @@ import InternetTab from './admin/InternetTab';
 import ApartmentModal from './admin/ApartmentModal';
 import TenantModal from './admin/TenantModal';
 import AddRentModal from './admin/AddRentModal';
+import QRScannerModal from './admin/QRScannerModal';
 import PWAInstallPrompt from './PWAInstallPrompt';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
@@ -55,6 +56,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   const [selectedTenant, setSelectedTenant] = useState(null);
   const [loanDetailData, setLoanDetailData] = useState(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [showQRScanner, setShowQRScanner] = useState(false);
 
   // Search & Filter
   const [searchTerm, setSearchTerm] = useState('');
@@ -426,6 +428,10 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
         />
       )}
 
+      {showQRScanner && (
+        <QRScannerModal onClose={() => setShowQRScanner(false)} />
+      )}
+
       {loanDetailData && (
         <LoanDetailModal
           loan={loanDetailData}
@@ -471,6 +477,15 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
         <div className="md:hidden fixed inset-0 z-[60]" onClick={() => setShowMoreMenu(false)}>
           <div className="absolute bottom-[56px] left-3 right-3 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="p-3 grid grid-cols-3 gap-2">
+              {/* Special action: QR Scanner */}
+              <button
+                onClick={() => { setShowQRScanner(true); setShowMoreMenu(false); }}
+                data-testid="mobile-qr-scanner-btn"
+                className="flex flex-col items-center gap-1.5 p-3 rounded-xl transition-colors active:scale-95 text-orange-600 bg-orange-50 border border-orange-200"
+              >
+                <QrCode className="w-5 h-5" />
+                <span className="text-[11px] font-bold">QR Scan</span>
+              </button>
               {MOBILE_MORE_TABS.map(tab => {
                 const isActive = activeTab === tab.id;
                 return (
