@@ -1584,7 +1584,7 @@ window.addEventListener('load', function() {
   @media print {{
     .print-bar {{ display: none !important; }}
     body {{ padding: 0; margin: 0; }}
-    .page {{ padding: 8mm 14mm 6mm; margin: 0; }}
+    .page {{ padding: 8mm 14mm 6mm !important; margin: 0 !important; margin-top: 0 !important; }}
     @page {{ size: A4 portrait; margin: 0 !important; }}
   }}
 </style>

@@ -12,12 +12,14 @@ function formatMoney(amount, currency) {
   return `${cur} ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-// Open a payment's receipt in a new window and trigger print/download.
-// Uses the public receipt endpoint (works without auth, only for approved payments).
+// Open a payment's receipt and trigger print/download.
+// Uses window.location.origin to stay on the CURRENT subdomain (so users on custom subdomains
+// don't get redirected to the primary facturatie.sr origin). The /api/kiosk/public/receipt/
+// endpoint is routed through nginx on every custom subdomain.
 function printPaymentReceipt(payment) {
   if (!payment?.payment_id) return;
-  const url = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk/public/receipt/${payment.payment_id}?autoprint=1`;
-  // Try popup first. If blocked (iOS PWA), navigate current window instead.
+  const origin = window.location.origin;
+  const url = `${origin}/api/kiosk/public/receipt/${payment.payment_id}?autoprint=1`;
   try {
     const w = window.open(url, '_blank', 'noopener,noreferrer');
     if (!w || w.closed || typeof w.closed === 'undefined') {
