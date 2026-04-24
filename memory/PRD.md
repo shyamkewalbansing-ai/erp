@@ -1,6 +1,52 @@
 # Vastgoed Kiosk ERP — PRD
 
-## Sprint 63 (24 apr 2026) — "KOPIE" stempel op herprints/herdownloads
+## Sprint 64 (24 apr 2026) — FIFO-betalingstoewijzing op huurmaanden (oudste maand eerst)
+
+### Verzoek
+"Op /vastgoed huurders had een huurder openstaand van 14000, huur 7000 → 2 maanden achter (Feb + Maart). Maar bij betaling staat 'maart betaald' op de kwitantie terwijl het 'feb betaald' moet zijn (oudste maand eerst)."
+
+### Root cause
+De oude `register_manual_payment` logica berekende onbetaalde maanden via `outstanding / monthly_rent` en telde dan `months_owed` maanden terug vanaf `rent_billed_through`. Dit faalde wanneer:
+- `rent_billed_through` al een maand vooruit stond door automatische facturatie
+- Tenant historie deelbetalingen bevatte die de "echte" oudste onbetaalde maand verschoof
+
+Hierdoor werd soms de NIEUWSTE achterstand toegewezen i.p.v. de oudste.
+
+### Implementatie
+**`/app/backend/routers/kiosk/admin.py`:**
+
+1. **Nieuwe helper `_compute_unpaid_months()`** — bepaalt onbetaalde maanden o.b.v. werkelijke betalingsgeschiedenis:
+   - Loopt alle past `kiosk_payments` voor deze tenant af
+   - Accumuleert `paid_per_month` (totaal betaald per maand) door bedrag te verdelen over `covered_months` entries
+   - Loopt vanaf `billed_through` terug en stopt bij eerste **volledig betaalde** maand
+   - Stopt ook zodra het verzamelde "remaining" gelijk is aan `outstanding`
+   - Resultaat: lijst van `{ym, label, already_paid, remaining}` — oudste eerst
+
+2. **`register_manual_payment`** gebruikt deze helper om FIFO-toewijzing te doen:
+   - Verdeelt het betaalde bedrag over de onbetaalde maanden van oud naar nieuw
+   - Markeert volledig betaalde maanden zonder "(gedeeltelijk)", anders met
+
+3. **`list_tenants`** `overdue_months` veld gebruikt dezelfde helper voor consistentie tussen UI-overzicht en kwitantie.
+
+### Resultaat (live getest)
+Scenario: Yashveer — huur 7000/m, openstaand 14000, billed_through=2026-03.
+
+| Actie | Voor fix | Na fix |
+|---|---|---|
+| `overdue_months` in UI | maart, februari (verkeerde volgorde) | februari, maart ✓ |
+| Pay 7000 → covered | maart 2026 | **februari 2026** ✓ |
+| 2de pay 7000 → covered | februari 2026 | **maart 2026** ✓ |
+| Pay 100 partial → covered | maart (gedeeltelijk) | **februari (gedeeltelijk)** ✓ |
+| Pay 6900 na partial → covered | nieuwe maand | **februari** (volledig) ✓ |
+| Pay 14000 alles → covered | februari, maart | **februari, maart** ✓ |
+| Bharat 7B (complex history) overdue | onnauwkeurig | maart, april ✓ (matched outstanding 9900) |
+
+### Bestanden gewijzigd
+- `/app/backend/routers/kiosk/admin.py` — `_compute_unpaid_months()` helper + `_parse_dutch_month_label()` + refactor van 2 plekken die overdue/covered berekenen
+
+---
+
+## Sprint 63 (24 apr 2026) — "KOPIE" stempel (verwijderd op verzoek)
 
 ### Verzoek
 Gebruiker: "Gezien je net het ORIGINEEL-watermerk hebt toegevoegd als anti-fraude-maatregel: wil je er een visuele 'COPY'-badge overheen zetten wanneer een bon voor de 2de keer wordt afgedrukt of gedownload?"

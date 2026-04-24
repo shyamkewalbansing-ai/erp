@@ -400,6 +400,80 @@ async def delete_location(location_id: str, company: dict = Depends(get_current_
 
 
 # Tenants CRUD
+_MONTH_NAMES_NL = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+
+
+def _parse_dutch_month_label(label: str):
+    """Parse 'februari 2026' or 'februari 2026 (gedeeltelijk)' → (year, month) tuple, or None."""
+    clean = (label or "").replace(" (gedeeltelijk)", "").strip().lower()
+    parts = clean.split()
+    if len(parts) != 2:
+        return None
+    mname, yr = parts[0], parts[1]
+    if mname not in _MONTH_NAMES_NL:
+        return None
+    try:
+        return (int(yr), _MONTH_NAMES_NL.index(mname) + 1)
+    except ValueError:
+        return None
+
+
+async def _compute_unpaid_months(company_id: str, tenant_id: str, billed_through: str, monthly_rent: float, outstanding: float):
+    """Compute the list of unpaid months for a tenant, oldest first.
+    Uses past payment history (covered_months entries) to identify partially-paid months
+    and stops at the most recent FULLY-paid month so we never go further back than necessary.
+    Returns list of dicts: [{ym, label, already_paid, remaining}, ...]
+    """
+    if not billed_through or monthly_rent <= 0 or outstanding <= 0:
+        return []
+
+    past_payments = await db.kiosk_payments.find({
+        "company_id": company_id,
+        "tenant_id": tenant_id,
+        "payment_type": {"$in": ["rent", "partial_rent", "monthly_rent"]},
+        "status": {"$in": ["approved", "completed"]},
+    }, {"_id": 0, "amount": 1, "covered_months": 1}).to_list(2000)
+
+    paid_per_month: dict = {}
+    for pp in past_payments:
+        cms = pp.get("covered_months") or []
+        if not cms:
+            continue
+        per = float(pp.get("amount", 0) or 0) / len(cms)
+        for cm in cms:
+            ym = _parse_dutch_month_label(cm)
+            if ym is None:
+                continue
+            paid_per_month[ym] = paid_per_month.get(ym, 0.0) + per
+
+    bt_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
+    months_owed_est = int(outstanding / monthly_rent) if monthly_rent > 0 else 0
+    if outstanding - (months_owed_est * monthly_rent) > 0:
+        months_owed_est += 1
+
+    months_backward: list = []
+    i = 0
+    max_lookback = max(months_owed_est + 6, 24)
+    while i < max_lookback:
+        m_date = bt_date - relativedelta(months=i)
+        ym = (m_date.year, m_date.month)
+        already_paid = paid_per_month.get(ym, 0.0)
+        if already_paid >= monthly_rent - 0.01:
+            break
+        months_backward.append({
+            "ym": ym,
+            "label": f"{_MONTH_NAMES_NL[m_date.month - 1]} {m_date.year}",
+            "already_paid": already_paid,
+            "remaining": max(0.0, monthly_rent - already_paid),
+        })
+        total_remaining = sum(m["remaining"] for m in months_backward)
+        if total_remaining >= outstanding - 0.01:
+            break
+        i += 1
+    months_backward.reverse()  # oldest first
+    return months_backward
+
+
 @router.get("/admin/tenants")
 async def list_tenants(company: dict = Depends(get_current_company)):
     """List all tenants - auto-bills new months based on billing_day setting"""
@@ -582,22 +656,11 @@ async def list_tenants(company: dict = Depends(get_current_company)):
         overdue_months = []
         current_billing_month = ""
         if billed_through and monthly_rent > 0:
-            bt_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
             current_billing_month = billed_through
             if outstanding > 0:
-                months_owed = int(outstanding / monthly_rent) if monthly_rent > 0 else 0
-                remainder_amt = outstanding - (months_owed * monthly_rent)
-                if remainder_amt > 0:
-                    months_owed += 1
-                # Overdue months: count backward from billed_through INCLUSIVE
-                # In advance mode: billed_through is the last month added to outstanding.
-                # If outstanding > 0, billed_through itself is the most recent overdue month.
-                month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
-                for i in range(months_owed):
-                    m_date = bt_date - relativedelta(months=i)
-                    m_name = month_names_nl[m_date.month - 1]
-                    overdue_months.append(f"{m_name} {m_date.year}")
-                overdue_months.reverse()
+                # Use the same payment-history-aware logic as register_manual_payment
+                unpaid_list = await _compute_unpaid_months(company_id, t["tenant_id"], billed_through, monthly_rent, outstanding)
+                overdue_months = [m["label"] for m in unpaid_list]
 
         result.append({
             "tenant_id": t["tenant_id"],
@@ -1823,36 +1886,28 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
     count = await db.kiosk_payments.count_documents({"company_id": company_id})
     kwitantie_nummer = f"KW{now.year}-{str(count + 1).zfill(5)}"
 
-    # Covered months calculation for rent
+    # Covered months calculation for rent — uses payment-history-aware helper
     covered_months = []
     if data.payment_type in ["rent", "partial_rent", "monthly_rent"]:
         monthly_rent = tenant.get("monthly_rent", 0)
         outstanding = tenant.get("outstanding_rent", 0)
         billed_through = tenant.get("rent_billed_through", "")
-        if billed_through and monthly_rent > 0 and outstanding > 0:
-            # Get billing settings to determine due dates
-            
-            bt_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
-            months_owed = int(outstanding / monthly_rent) if monthly_rent > 0 else 0
-            remainder = outstanding - (months_owed * monthly_rent)
-            if remainder > 0:
-                months_owed += 1
-            month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
-            # Build list of unpaid months: include billed_through itself (most recent overdue)
-            all_unpaid = []
-            for i in range(months_owed):
-                m_date = bt_date - relativedelta(months=i)
-                all_unpaid.append({"label": f"{month_names_nl[m_date.month - 1]} {m_date.year}"})
-            all_unpaid.reverse()
-            # Map payment amount to months (oldest/overdue first)
-            pay_amount = data.amount
-            for m in all_unpaid:
-                if pay_amount >= monthly_rent:
-                    covered_months.append(m["label"])
-                    pay_amount -= monthly_rent
-                elif pay_amount > 0:
-                    covered_months.append(m["label"] + " (gedeeltelijk)")
-                    pay_amount = 0
+        months_backward = await _compute_unpaid_months(company_id, data.tenant_id, billed_through, monthly_rent, outstanding)
+
+        # Allocate payment across months, oldest first
+        pay_amount = float(data.amount)
+        for m in months_backward:
+            if pay_amount <= 0:
+                break
+            needed = m["remaining"]
+            if needed <= 0:
+                continue
+            if pay_amount >= needed - 0.01:
+                covered_months.append(m["label"])
+                pay_amount -= needed
+            else:
+                covered_months.append(m["label"] + " (gedeeltelijk)")
+                pay_amount = 0
 
     payment = {
         "payment_id": payment_id,
