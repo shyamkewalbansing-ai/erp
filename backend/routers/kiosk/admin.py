@@ -942,6 +942,16 @@ async def generate_receipt(payment_id: str, request: Request, token: Optional[st
     payment = await db.kiosk_payments.find_one({"payment_id": payment_id, "company_id": company_id})
     if not payment:
         raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    # KOPIE detection: only if user actively prints (autoprint=1). Count BEFORE increment,
+    # then increment atomically so the 2nd+ print is flagged as KOPIE.
+    is_copy = False
+    if autoprint:
+        prev_count = int(payment.get("print_count", 0) or 0)
+        is_copy = prev_count >= 1
+        await db.kiosk_payments.update_one(
+            {"payment_id": payment_id, "company_id": company_id},
+            {"$inc": {"print_count": 1}, "$set": {"last_print_at": datetime.now(timezone.utc)}},
+        )
     # ALWAYS render in public_view=True so watermark + banner + hash widget are present.
     # The hash-widget has .no-print class so it's automatically hidden when printing to paper/PDF.
     return await _render_receipt_html(
@@ -949,6 +959,7 @@ async def generate_receipt(payment_id: str, request: Request, token: Optional[st
         noprint=bool(noprint), autoprint=bool(autoprint),
         public_view=True,
         request=request,
+        is_copy=is_copy,
     )
 
 
@@ -962,17 +973,27 @@ async def public_receipt(payment_id: str, request: Request, autoprint: Optional[
         raise HTTPException(status_code=404, detail="Kwitantie niet gevonden")
     if payment.get("status") not in ("approved", "completed"):
         raise HTTPException(status_code=404, detail="Kwitantie niet beschikbaar")
+    # Only count KOPIE when user actively prints (autoprint)
+    is_copy = False
+    if autoprint:
+        prev_count = int(payment.get("print_count", 0) or 0)
+        is_copy = prev_count >= 1
+        await db.kiosk_payments.update_one(
+            {"payment_id": payment_id},
+            {"$inc": {"print_count": 1}, "$set": {"last_print_at": datetime.now(timezone.utc)}},
+        )
     return await _render_receipt_html(
         payment, payment["company_id"],
         noprint=True, autoprint=bool(autoprint),
         public_view=True, public_pdf_url=True,
         request=request,
+        is_copy=is_copy,
     )
 
 
-async def _render_receipt_pdf_bytes(payment: dict, company_id: str, public_view: bool = False, request=None) -> bytes:
+async def _render_receipt_pdf_bytes(payment: dict, company_id: str, public_view: bool = False, request=None, is_copy: bool = False) -> bytes:
     """Render the kwitantie as a tamper-protected, encrypted PDF (A5 compact)."""
-    html_resp = await _render_receipt_html(payment, company_id, noprint=True, autoprint=False, public_view=public_view, request=request)
+    html_resp = await _render_receipt_html(payment, company_id, noprint=True, autoprint=False, public_view=public_view, request=request, is_copy=is_copy)
     html_bytes = html_resp.body if hasattr(html_resp, "body") else html_resp
     html_str = html_bytes.decode("utf-8", errors="ignore") if isinstance(html_bytes, bytes) else str(html_bytes)
     return await _encrypt_receipt_pdf(html_str)
@@ -991,7 +1012,14 @@ async def generate_receipt_pdf(payment_id: str, request: Request, token: Optiona
     payment = await db.kiosk_payments.find_one({"payment_id": payment_id, "company_id": company_id})
     if not payment:
         raise HTTPException(status_code=404, detail="Betaling niet gevonden")
-    pdf_bytes = await _render_receipt_pdf_bytes(payment, company_id, public_view=False, request=request)
+    # PDF download always counts: 2de+ download krijgt KOPIE badge
+    prev_count = int(payment.get("print_count", 0) or 0)
+    is_copy = prev_count >= 1
+    await db.kiosk_payments.update_one(
+        {"payment_id": payment_id, "company_id": company_id},
+        {"$inc": {"print_count": 1}, "$set": {"last_print_at": datetime.now(timezone.utc)}},
+    )
+    pdf_bytes = await _render_receipt_pdf_bytes(payment, company_id, public_view=False, request=request, is_copy=is_copy)
     filename = f"Kwitantie_{payment.get('kwitantie_nummer', payment_id)}.pdf"
     return Response(
         content=pdf_bytes,
@@ -1008,7 +1036,13 @@ async def public_receipt_pdf(payment_id: str, request: Request):
         raise HTTPException(status_code=404, detail="Kwitantie niet gevonden")
     if payment.get("status") not in ("approved", "completed"):
         raise HTTPException(status_code=404, detail="Kwitantie niet beschikbaar")
-    pdf_bytes = await _render_receipt_pdf_bytes(payment, payment["company_id"], public_view=True, request=request)
+    prev_count = int(payment.get("print_count", 0) or 0)
+    is_copy = prev_count >= 1
+    await db.kiosk_payments.update_one(
+        {"payment_id": payment_id},
+        {"$inc": {"print_count": 1}, "$set": {"last_print_at": datetime.now(timezone.utc)}},
+    )
+    pdf_bytes = await _render_receipt_pdf_bytes(payment, payment["company_id"], public_view=True, request=request, is_copy=is_copy)
     filename = f"Kwitantie_{payment.get('kwitantie_nummer', payment_id)}.pdf"
     return Response(
         content=pdf_bytes,
@@ -1035,7 +1069,7 @@ def _get_request_base_url(request) -> str:
     return _os.environ.get("APP_URL", "https://facturatie.sr").rstrip("/")
 
 
-async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = False, autoprint: bool = False, public_view: bool = False, public_pdf_url: bool = False, request=None):
+async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = False, autoprint: bool = False, public_view: bool = False, public_pdf_url: bool = False, request=None, is_copy: bool = False):
     """Render the kwitantie HTML. Shared between /admin/.../receipt and /public/receipt/..."""
 
     # Build public QR URL (authentic kwitantie link) for this payment
@@ -1345,33 +1379,51 @@ window.addEventListener('load', function() {
     background: #fff;
     position: relative;
   }}
-  /* Tamper-proof diagonal watermark — identical across ALL receipt types */
   .page {{
     width: 210mm;
-    min-height: 287mm;
     margin: 0 auto;
     padding: 10mm 14mm 8mm;
     page-break-inside: avoid;
     position: relative;
     z-index: 1;
+  }}
+  /* Tamper-proof diagonal watermark — identical across ALL receipt types, centered WITHIN the receipt body */
+  .receipt-body {{
+    position: relative;
+    min-height: 110mm;
     overflow: hidden;
   }}
-  .page::before {{
+  .receipt-body::before {{
     content: "ORIGINEEL";
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(-30deg);
-    font-size: 90pt;
+    font-size: 72pt;
     font-weight: bold;
-    color: rgba(0, 0, 0, 0.08);
-    letter-spacing: 12px;
+    color: rgba(0, 0, 0, 0.09);
+    letter-spacing: 10px;
     z-index: 0;
     pointer-events: none;
     white-space: nowrap;
     font-family: 'Georgia', 'Times New Roman', serif;
   }}
-  .page > * {{ position: relative; z-index: 1; }}
+  .receipt-body > * {{ position: relative; z-index: 1; }}
+  .copy-badge {{
+    position: absolute;
+    top: 8mm;
+    right: 8mm;
+    transform: rotate(12deg);
+    border: 3px solid #b91c1c;
+    color: #b91c1c;
+    padding: 4px 14px;
+    font-size: 16pt;
+    font-weight: 900;
+    letter-spacing: 3px;
+    background: rgba(255, 255, 255, 0.7);
+    z-index: 5;
+    font-family: 'Georgia', 'Times New Roman', serif;
+  }}
   .header {{
     border-bottom: 1.5px solid #000;
     padding-bottom: 5px;
@@ -1627,6 +1679,8 @@ window.addEventListener('load', function() {
 
 <div class="page" style="{'margin-top: 0' if noprint else 'margin-top: 40px'}; position: relative;">
 
+<div class="receipt-body">
+{'<div class="copy-badge">KOPIE</div>' if is_copy else ''}
 <div class="header">
   <div class="company-name">{stamp_name}</div>
   <div class="company-info">
@@ -1687,6 +1741,7 @@ window.addEventListener('load', function() {
 
 <div class="footer">
   {stamp_name} &bull; {stamp_address} &bull; {kwitantie_nummer}
+</div>
 </div>
 
 {hash_verify_html}

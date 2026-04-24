@@ -1524,11 +1524,20 @@ async def delete_freelancer_payment(payment_id: str, company: dict = Depends(get
 
 
 @router.get("/admin/freelancer-payments/{payment_id}/receipt")
-async def get_freelancer_receipt(payment_id: str, company: dict = Depends(get_current_company), noprint: Optional[str] = None):
+async def get_freelancer_receipt(payment_id: str, company: dict = Depends(get_current_company), noprint: Optional[str] = None, autoprint: Optional[str] = None):
     """Return A5-styled HTML receipt for a freelancer payment (same style as main kwitantie)"""
     p = await db.kiosk_freelancer_payments.find_one({"payment_id": payment_id, "company_id": company["company_id"]}, {"_id": 0})
     if not p:
         raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    # KOPIE detection: only when user actively prints (autoprint)
+    is_copy = False
+    if autoprint:
+        prev_count = int(p.get("print_count", 0) or 0)
+        is_copy = prev_count >= 1
+        await db.kiosk_freelancer_payments.update_one(
+            {"payment_id": payment_id, "company_id": company["company_id"]},
+            {"$inc": {"print_count": 1}, "$set": {"last_print_at": datetime.now(timezone.utc)}},
+        )
     stamp_name = company.get("stamp_company_name") or company.get("name", "")
     stamp_address = company.get("stamp_address", "")
     stamp_phone = company.get("stamp_phone", "")
@@ -1565,6 +1574,7 @@ async def get_freelancer_receipt(payment_id: str, company: dict = Depends(get_cu
         include_sig_line=True,
         pdf_download_path=f"./{payment_id}/receipt/pdf",
         doc_hash=doc_hash,
+        is_copy=is_copy,
     )
     from fastapi.responses import HTMLResponse
     return HTMLResponse(content=html)
@@ -1576,6 +1586,13 @@ async def get_freelancer_receipt_pdf(payment_id: str, company: dict = Depends(ge
     p = await db.kiosk_freelancer_payments.find_one({"payment_id": payment_id, "company_id": company["company_id"]}, {"_id": 0})
     if not p:
         raise HTTPException(status_code=404, detail="Betaling niet gevonden")
+    # PDF download counts: 2de+ download krijgt KOPIE badge
+    prev_count = int(p.get("print_count", 0) or 0)
+    is_copy = prev_count >= 1
+    await db.kiosk_freelancer_payments.update_one(
+        {"payment_id": payment_id, "company_id": company["company_id"]},
+        {"$inc": {"print_count": 1}, "$set": {"last_print_at": datetime.now(timezone.utc)}},
+    )
     stamp_name = company.get("stamp_company_name") or company.get("name", "")
     stamp_address = company.get("stamp_address", "")
     stamp_phone = company.get("stamp_phone", "")
@@ -1607,6 +1624,7 @@ async def get_freelancer_receipt_pdf(payment_id: str, company: dict = Depends(ge
         noprint=True,
         include_sig_line=True,
         doc_hash=doc_hash,
+        is_copy=is_copy,
     )
     pdf_bytes = await _encrypt_receipt_pdf(html)
     filename = f"Kwitantie_{p['kwitantie_nummer']}.pdf"
@@ -1760,11 +1778,20 @@ async def delete_loonstrook(loonstrook_id: str, company: dict = Depends(get_curr
 
 
 @router.get("/admin/loonstroken/{loonstrook_id}/receipt")
-async def get_loonstrook_receipt(loonstrook_id: str, company: dict = Depends(get_current_company), noprint: Optional[str] = None):
+async def get_loonstrook_receipt(loonstrook_id: str, company: dict = Depends(get_current_company), noprint: Optional[str] = None, autoprint: Optional[str] = None):
     """Return A5-styled Loonstrook HTML"""
     p = await db.kiosk_loonstroken.find_one({"loonstrook_id": loonstrook_id, "company_id": company["company_id"]}, {"_id": 0})
     if not p:
         raise HTTPException(status_code=404, detail="Loonstrook niet gevonden")
+    # KOPIE detection: only when user actively prints (autoprint)
+    is_copy = False
+    if autoprint:
+        prev_count = int(p.get("print_count", 0) or 0)
+        is_copy = prev_count >= 1
+        await db.kiosk_loonstroken.update_one(
+            {"loonstrook_id": loonstrook_id, "company_id": company["company_id"]},
+            {"$inc": {"print_count": 1}, "$set": {"last_print_at": datetime.now(timezone.utc)}},
+        )
     stamp_name = company.get("stamp_company_name") or company.get("name", "")
     stamp_address = company.get("stamp_address", "")
     stamp_phone = company.get("stamp_phone", "")
@@ -1817,6 +1844,7 @@ async def get_loonstrook_receipt(loonstrook_id: str, company: dict = Depends(get
         include_sig_line=True,
         pdf_download_path=f"./{loonstrook_id}/receipt/pdf",
         doc_hash=doc_hash,
+        is_copy=is_copy,
     )
     from fastapi.responses import HTMLResponse
     return HTMLResponse(content=html)
@@ -1828,6 +1856,13 @@ async def get_loonstrook_receipt_pdf(loonstrook_id: str, company: dict = Depends
     p = await db.kiosk_loonstroken.find_one({"loonstrook_id": loonstrook_id, "company_id": company["company_id"]}, {"_id": 0})
     if not p:
         raise HTTPException(status_code=404, detail="Loonstrook niet gevonden")
+    # PDF download counts: 2de+ download krijgt KOPIE badge
+    prev_count = int(p.get("print_count", 0) or 0)
+    is_copy = prev_count >= 1
+    await db.kiosk_loonstroken.update_one(
+        {"loonstrook_id": loonstrook_id, "company_id": company["company_id"]},
+        {"$inc": {"print_count": 1}, "$set": {"last_print_at": datetime.now(timezone.utc)}},
+    )
     stamp_name = company.get("stamp_company_name") or company.get("name", "")
     stamp_address = company.get("stamp_address", "")
     stamp_phone = company.get("stamp_phone", "")
@@ -1879,6 +1914,7 @@ async def get_loonstrook_receipt_pdf(loonstrook_id: str, company: dict = Depends
         noprint=True,
         include_sig_line=True,
         doc_hash=doc_hash,
+        is_copy=is_copy,
     )
     pdf_bytes = await _encrypt_receipt_pdf(html)
     filename = f"Loonstrook_{p['strook_nummer']}.pdf"

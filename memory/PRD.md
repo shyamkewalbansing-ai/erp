@@ -1,5 +1,54 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 63 (24 apr 2026) — "KOPIE" stempel op herprints/herdownloads
+
+### Verzoek
+Gebruiker: "Gezien je net het ORIGINEEL-watermerk hebt toegevoegd als anti-fraude-maatregel: wil je er een visuele 'COPY'-badge overheen zetten wanneer een bon voor de 2de keer wordt afgedrukt of gedownload?"
+
+Bijkomende visuele correctie: het ORIGINEEL watermerk stond (met min-height: 287mm) ONDER de content. Gebruiker: "moet binnen in zijn en center (in de kader van de kwitantie)".
+
+### Implementatie
+
+**1. Watermerk binnen kwitantie-kader gecentreerd**
+Wrappen van alle content in een nieuwe `<div class="receipt-body">` met `position: relative; min-height: 110mm; overflow: hidden`. Watermerk via `.receipt-body::before` → `position: absolute; top: 50%; left: 50%` → gecentreerd **binnen de kwitantie-content**, niet over de hele A4-pagina.
+- Font-size verlaagd van 90pt → 72pt zodat het netjes binnen het kader past
+- Opacity 0.09 (iets donkerder dan eerder 0.08)
+
+**2. KOPIE-stempel voor 2de+ afdruk/download**
+
+DB-schema:
+- Nieuw veld `print_count` (int, default 0) en `last_print_at` (datetime) op:
+  - `kiosk_payments`
+  - `kiosk_loonstroken`
+  - `kiosk_freelancer_payments`
+
+Tel-logica:
+- **HTML `?autoprint=1`**: increment + `is_copy = (prev_count >= 1)`
+- **HTML zonder autoprint** (in-app viewen): NIETS — alleen bekijken telt niet
+- **PDF download (admin + public)**: altijd increment + `is_copy = (prev_count >= 1)`
+
+Visueel:
+- `.copy-badge` → absolute top-right, rode border (#b91c1c), rode tekst, 12° rotatie, semi-transparante witte achtergrond → stempel-effect
+
+Code:
+- `_build_a4_receipt_html(... is_copy=False)` — nieuwe parameter in `/app/backend/routers/kiosk/base.py`
+- `_render_receipt_html(... is_copy=False)` — idem in `/app/backend/routers/kiosk/admin.py`
+- Endpoints aangepast in `admin.py` (kwitantie HTML/PDF admin + public) en `admin_operations.py` (loonstrook + freelancer HTML/PDF)
+
+### Resultaat (end-to-end getest met curl + pdftoppm + AI image analysis)
+| Document | 1ste download | 2de+ download |
+|---|---|---|
+| Kwitantie | ORIGINEEL alleen | ORIGINEEL + rode KOPIE rechtsboven |
+| Loonstrook | ORIGINEEL alleen | ORIGINEEL + rode KOPIE rechtsboven |
+| Freelancer | ORIGINEEL alleen | ORIGINEEL + rode KOPIE rechtsboven |
+
+### Bestanden gewijzigd
+- `/app/backend/routers/kiosk/base.py` (CSS + template + `is_copy` param)
+- `/app/backend/routers/kiosk/admin.py` (CSS + template + print_count increment op 4 endpoints)
+- `/app/backend/routers/kiosk/admin_operations.py` (print_count increment op 4 endpoints)
+
+---
+
 ## Sprint 62 (24 apr 2026) — Uniform "ORIGINEEL" watermerk op ALLE kwitanties/loonstroken/freelancer-bonnen
 
 ### Verzoek
