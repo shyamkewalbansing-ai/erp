@@ -13,12 +13,12 @@ function KioskClock() {
     const interval = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
-  const dateStr = time.toLocaleDateString('nl-NL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const dateStr = time.toLocaleDateString('nl-NL', { weekday: 'short', day: 'numeric', month: 'short' });
   const timeStr = time.toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
   return (
     <div className="text-right" data-testid="kiosk-clock">
-      <p className="text-lg sm:text-2xl font-bold text-white tracking-tight" style={{ fontFamily: 'Outfit, sans-serif' }}>{timeStr}</p>
-      <p className="hidden sm:block text-sm text-white/80 capitalize">{dateStr}</p>
+      <p className="text-base sm:text-2xl font-bold text-white tracking-tight leading-none" style={{ fontFamily: 'Outfit, sans-serif' }}>{timeStr}</p>
+      <p className="text-[10px] sm:text-sm text-white/80 capitalize mt-0.5">{dateStr}</p>
     </div>
   );
 }
