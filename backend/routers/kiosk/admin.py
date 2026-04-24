@@ -926,22 +926,26 @@ async def generate_receipt(payment_id: str, request: Request, token: Optional[st
 async def public_receipt(payment_id: str, request: Request, autoprint: Optional[str] = None):
     """Publicly accessible receipt view (for QR code scanning or mobile print).
     Payment_id is a UUID, non-guessable. Only shows approved payments.
-    When autoprint=1 is set, renders the clean admin-style receipt (no verification banner/widget)
-    so printed output is IDENTICAL to the one printed from the admin Kwitanties tab."""
+    When autoprint=1 is set, renders the IDENTICAL HTML as /vastgoed → Kwitanties → Afdrukken
+    (same print-bar, same layout, same margins) — just using the public PDF URL instead of admin."""
     payment = await db.kiosk_payments.find_one({"payment_id": payment_id})
     if not payment:
         raise HTTPException(status_code=404, detail="Kwitantie niet gevonden")
     if payment.get("status") not in ("approved", "completed"):
         raise HTTPException(status_code=404, detail="Kwitantie niet beschikbaar")
-    # For print flow: use public_view=False to match the admin Kwitanties format exactly.
-    # For normal QR scan / verification flow: keep public_view=True (shows banner + hash widget).
-    use_public_view = not bool(autoprint)
+    if autoprint:
+        # Mobile print flow from Kiosk Betalingsgeschiedenis — mirror admin Kwitanties output exactly.
+        return await _render_receipt_html(
+            payment, payment["company_id"],
+            noprint=False, autoprint=True,
+            public_view=False, public_pdf_url=True,
+            request=request,
+        )
+    # Default QR scan / verification flow: show verification banner + hash widget.
     return await _render_receipt_html(
-        payment,
-        payment["company_id"],
-        noprint=True,
-        autoprint=bool(autoprint),
-        public_view=use_public_view,
+        payment, payment["company_id"],
+        noprint=True, autoprint=False,
+        public_view=True,
         request=request,
     )
 
@@ -1011,7 +1015,7 @@ def _get_request_base_url(request) -> str:
     return _os.environ.get("APP_URL", "https://facturatie.sr").rstrip("/")
 
 
-async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = False, autoprint: bool = False, public_view: bool = False, request=None):
+async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = False, autoprint: bool = False, public_view: bool = False, public_pdf_url: bool = False, request=None):
     """Render the kwitantie HTML. Shared between /admin/.../receipt and /public/receipt/..."""
 
     # Build public QR URL (authentic kwitantie link) for this payment
@@ -1250,11 +1254,16 @@ function verifyHash(){{
 }}
 </script>'''
 
-    # PDF button (only in non-public admin view, not noprint preview)
+    # PDF button (only shown in non-public admin view, not noprint preview)
     pdf_download_url = ""
     if not public_view:
-        # Token for admin PDF endpoint - use same token passed to generate_receipt if available via query param
-        pdf_download_url = f"./{payment['payment_id']}/receipt/pdf"
+        if public_pdf_url:
+            # Public mobile print flow: use the publicly-accessible PDF endpoint (no token).
+            # Current URL is /api/kiosk/public/receipt/<id>, so "./pdf" resolves to /api/kiosk/public/receipt/<id>/pdf.
+            pdf_download_url = f"./{payment['payment_id']}/pdf"
+        else:
+            # Admin view: relative URL resolves to /api/kiosk/admin/payments/<id>/receipt/pdf.
+            pdf_download_url = f"./{payment['payment_id']}/receipt/pdf"
 
     # Build print bar HTML outside f-string (backslashes not allowed in f-expressions)
     if noprint:
