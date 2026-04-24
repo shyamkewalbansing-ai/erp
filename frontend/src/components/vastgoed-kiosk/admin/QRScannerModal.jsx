@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { Html5Qrcode } from 'html5-qrcode';
-import { QrCode, XCircle, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { Html5Qrcode, Html5QrcodeScannerState } from 'html5-qrcode';
+import { QrCode, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import MobileModalShell from './MobileModalShell';
 
 /**
@@ -22,6 +22,18 @@ function QRScannerModal({ onClose }) {
   useEffect(() => {
     let qr;
     let cancelled = false;
+
+    // Helper to safely stop the scanner (only if it's actually running).
+    const safeStop = async (instance) => {
+      if (!instance) return;
+      try {
+        const state = instance.getState?.();
+        if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
+          await instance.stop();
+        }
+      } catch { /* already stopped or never started — ignore */ }
+      try { instance.clear(); } catch { /* noop */ }
+    };
 
     (async () => {
       try {
@@ -53,11 +65,7 @@ function QRScannerModal({ onClose }) {
 
     return () => {
       cancelled = true;
-      if (scannerRef.current) {
-        scannerRef.current.stop().catch(() => {}).finally(() => {
-          try { scannerRef.current.clear(); } catch { /* noop */ }
-        });
-      }
+      safeStop(scannerRef.current);
     };
   }, []);
 
@@ -78,9 +86,14 @@ function QRScannerModal({ onClose }) {
     setPaymentId(pid);
     setScannedUrl(text);
     setStatus('found');
-    // Stop the scanner
+    // Stop the scanner safely — only if still running.
     if (scannerRef.current) {
-      scannerRef.current.stop().catch(() => {});
+      try {
+        const state = scannerRef.current.getState?.();
+        if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
+          scannerRef.current.stop().catch(() => {});
+        }
+      } catch { /* ignore */ }
     }
   };
 
