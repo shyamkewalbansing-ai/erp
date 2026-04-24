@@ -6,7 +6,7 @@
 // NOTE: Bump this version on every production release to force clients to
 // invalidate the old cache and fetch the new build. The activate handler
 // automatically deletes all caches that don't match CACHE_NAME.
-const CACHE_NAME = 'boekhouding-v8-2026-04-24';
+const CACHE_NAME = 'boekhouding-v9-2026-04-24';
 
 // Bestanden die ALTIJD gecached moeten worden
 const PRECACHE_FILES = [

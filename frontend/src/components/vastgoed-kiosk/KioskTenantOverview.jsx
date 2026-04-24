@@ -164,8 +164,11 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
 
         {showHistory && (
           <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-            style={{ padding: 'max(4vh, calc(env(safe-area-inset-top, 0px) + 12px)) 4vw 4vh' }}
+            className="fixed left-0 right-0 bottom-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+            style={{
+              top: 'max(0px, env(safe-area-inset-top, 0px))',
+              padding: '3vh 4vw 4vh',
+            }}
             onClick={() => setShowHistory(false)}
           >
             <div className="kiosk-card w-full max-w-2xl flex flex-col" style={{ maxHeight: '80vh' }} onClick={e => e.stopPropagation()} data-testid="history-popup">
@@ -294,8 +297,11 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
       {/* Payment History Overlay */}
       {showHistory && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
-          style={{ padding: 'max(4vh, calc(env(safe-area-inset-top, 0px) + 12px)) 4vw 4vh' }}
+          className="fixed left-0 right-0 bottom-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          style={{
+            top: 'max(0px, env(safe-area-inset-top, 0px))',
+            padding: '3vh 4vw 4vh',
+          }}
           onClick={() => setShowHistory(false)}
         >
           <div className="kiosk-card w-full max-w-2xl flex flex-col" style={{ maxHeight: '80vh' }} onClick={e => e.stopPropagation()} data-testid="history-popup">
