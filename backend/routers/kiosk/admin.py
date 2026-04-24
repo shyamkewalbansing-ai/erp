@@ -1079,13 +1079,22 @@ async def _render_receipt_html(payment: dict, company_id: str, noprint: bool = F
     kwitantie_nummer = payment.get("kwitantie_nummer", "")
     created_at = payment.get("created_at")
     
-    # Format date
+    # Format date in Suriname time (America/Paramaribo, UTC-3)
     if created_at:
         if isinstance(created_at, str):
             created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+        # Ensure we have a TZ-aware datetime, then convert to Suriname time
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        try:
+            from zoneinfo import ZoneInfo
+            created_at_sr = created_at.astimezone(ZoneInfo("America/Paramaribo"))
+        except Exception:
+            # Fallback: fixed UTC-3 offset
+            created_at_sr = created_at.astimezone(timezone(timedelta(hours=-3)))
         months_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
-        date_fmt = f"{created_at.day} {months_nl[created_at.month-1]} {created_at.year}"
-        time_fmt = created_at.strftime("%H:%M")
+        date_fmt = f"{created_at_sr.day} {months_nl[created_at_sr.month-1]} {created_at_sr.year}"
+        time_fmt = created_at_sr.strftime("%H:%M")
     else:
         date_fmt = "-"
         time_fmt = ""

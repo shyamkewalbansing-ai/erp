@@ -1,6 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import "@/index.css";
+// Patch Date.prototype so all toLocale*String calls default to Suriname timezone
+// (America/Paramaribo, UTC-3). Must run BEFORE any component imports.
+import "@/utils/surinameTime";
 import App from "@/App";
 
 // Register Service Worker (only in production or when explicitly needed)
