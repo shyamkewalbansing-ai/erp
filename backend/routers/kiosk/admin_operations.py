@@ -1774,6 +1774,17 @@ async def create_loonstrook(data: LoonstrookCreate, company: dict = Depends(get_
 
     bruto_totaal = data.bruto_loon + data.overuren_bedrag + data.bonus
     totale_aftrek = data.belasting_aftrek + data.overige_aftrek
+    # Auto-deduct any unconsumed voorschotten for this employee + period
+    voorschot_entries = await db.kiosk_kas.find({
+        "company_id": company_id,
+        "category": "voorschot",
+        "related_employee_id": data.employee_id,
+        "voorschot_period": data.period_label,
+        "consumed_by_loonstrook_id": {"$in": [None, ""]},
+    }, {"_id": 0, "entry_id": 1, "amount": 1, "created_at": 1}).to_list(500)
+    voorschot_total = round(sum(v.get("amount", 0) or 0 for v in voorschot_entries), 2)
+    if voorschot_total > 0:
+        totale_aftrek += voorschot_total
     netto_loon = bruto_totaal - totale_aftrek
     if netto_loon <= 0:
         raise HTTPException(status_code=400, detail="Netto loon moet positief zijn")
@@ -1807,6 +1818,8 @@ async def create_loonstrook(data: LoonstrookCreate, company: dict = Depends(get_
         "bonus": data.bonus,
         "belasting_aftrek": data.belasting_aftrek,
         "overige_aftrek": data.overige_aftrek,
+        "voorschot_aftrek": voorschot_total,
+        "voorschot_entry_ids": [v["entry_id"] for v in voorschot_entries],
         "netto_loon": netto_loon,
         "dagen_gewerkt": data.dagen_gewerkt,
         "uren_gewerkt": data.uren_gewerkt,
@@ -1840,6 +1853,13 @@ async def create_loonstrook(data: LoonstrookCreate, company: dict = Depends(get_
     except Exception:
         pass
 
+    # Mark consumed voorschotten so they aren't deducted twice
+    if voorschot_entries:
+        await db.kiosk_kas.update_many(
+            {"company_id": company_id, "entry_id": {"$in": [v["entry_id"] for v in voorschot_entries]}},
+            {"$set": {"consumed_by_loonstrook_id": loon_id}},
+        )
+
     # === Web Push: Loonstrook aangemaakt ===
     try:
         from .push import send_push_to_company
@@ -1857,6 +1877,11 @@ async def create_loonstrook(data: LoonstrookCreate, company: dict = Depends(get_
         "loonstrook_id": loon_id,
         "strook_nummer": strook_nummer,
         "employee_name": emp["name"],
+        "bruto_loon": data.bruto_loon,
+        "belasting_aftrek": data.belasting_aftrek,
+        "overige_aftrek": data.overige_aftrek,
+        "voorschot_aftrek": voorschot_total,
+        "voorschot_entry_ids": [v["entry_id"] for v in voorschot_entries],
         "netto_loon": netto_loon,
         "created_at": now.isoformat()
     }
@@ -1873,10 +1898,18 @@ async def list_loonstroken(company: dict = Depends(get_current_company), employe
 
 @router.delete("/admin/loonstroken/{loonstrook_id}")
 async def delete_loonstrook(loonstrook_id: str, company: dict = Depends(get_current_company)):
+    # Find loonstrook first to know which voorschotten to release
+    loon = await db.kiosk_loonstroken.find_one({"loonstrook_id": loonstrook_id, "company_id": company["company_id"]}, {"_id": 0, "voorschot_entry_ids": 1})
     result = await db.kiosk_loonstroken.delete_one({"loonstrook_id": loonstrook_id, "company_id": company["company_id"]})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Loonstrook niet gevonden")
     await db.kiosk_kas.delete_many({"company_id": company["company_id"], "reference_id": loonstrook_id})
+    # Release linked voorschotten so they can be deducted by a future loonstrook
+    if loon and loon.get("voorschot_entry_ids"):
+        await db.kiosk_kas.update_many(
+            {"company_id": company["company_id"], "entry_id": {"$in": loon["voorschot_entry_ids"]}},
+            {"$set": {"consumed_by_loonstrook_id": None}},
+        )
     return {"message": "Loonstrook verwijderd"}
 
 
@@ -1910,6 +1943,8 @@ async def get_loonstrook_receipt(loonstrook_id: str, company: dict = Depends(get
         breakdown.append(("Belasting aftrek", f"- SRD {p['belasting_aftrek']:,.2f}"))
     if p.get("overige_aftrek", 0) > 0:
         breakdown.append(("Overige aftrek", f"- SRD {p['overige_aftrek']:,.2f}"))
+    if p.get("voorschot_aftrek", 0) > 0:
+        breakdown.append(("Voorschot aftrek", f"- SRD {p['voorschot_aftrek']:,.2f}"))
 
     doc_hash = _hashlib.sha256(
         f"LOONSTROOK|{p['loonstrook_id']}|{p['strook_nummer']}|{company['company_id']}|{p['employee_name']}|{float(p['netto_loon']):.2f}|{date_fmt}".encode("utf-8")
@@ -1973,6 +2008,8 @@ async def get_loonstrook_receipt_pdf(loonstrook_id: str, company: dict = Depends
         breakdown.append(("Belasting aftrek", f"- SRD {p['belasting_aftrek']:,.2f}"))
     if p.get("overige_aftrek", 0) > 0:
         breakdown.append(("Overige aftrek", f"- SRD {p['overige_aftrek']:,.2f}"))
+    if p.get("voorschot_aftrek", 0) > 0:
+        breakdown.append(("Voorschot aftrek", f"- SRD {p['voorschot_aftrek']:,.2f}"))
 
     doc_hash = _hashlib.sha256(
         f"LOONSTROOK|{p['loonstrook_id']}|{p['strook_nummer']}|{company['company_id']}|{p['employee_name']}|{float(p['netto_loon']):.2f}|{date_fmt}".encode("utf-8")

@@ -1,5 +1,43 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 70 (25 apr 2026) — Voorschot wordt automatisch afgetrokken op volgende loonstrook
+
+### Verzoek
+"Wil je dat de volgende loonstrook automatisch het voorschot aftrekt van het netto bedrag? JAH"
+
+### Implementatie
+
+**Backend** — `/app/backend/routers/kiosk/admin_operations.py`:
+1. `create_loonstrook` zoekt nu alle `kiosk_kas` entries met `category=voorschot`, `related_employee_id=X`, `voorschot_period=Y` waar `consumed_by_loonstrook_id` leeg is
+2. `voorschot_total = som van bedragen` wordt opgeteld bij `totale_aftrek`, dus `netto = bruto - belasting - overige - voorschot`
+3. Loonstrook-document slaat extra velden op:  
+   - `voorschot_aftrek` (totaal)
+   - `voorschot_entry_ids` (lijst van consumed kas entry_ids)
+4. Na insert worden alle voorschot kas-entries gemarkeerd: `consumed_by_loonstrook_id = loon_id` → kunnen niet dubbel worden afgetrokken
+5. `delete_loonstrook` reverse't: zet `consumed_by_loonstrook_id` weer op `null` zodat voorschotten beschikbaar blijven voor een nieuwe loonstrook
+6. PDF/HTML kwitantie toont nieuwe regel: **"Voorschot aftrek: - SRD x,xx"** in de breakdown
+
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/admin/Loonstroken.jsx`:
+- LoonstrookModal fetcht openstaande voorschotten via `GET /admin/employees/{id}/voorschotten?period_label=...`
+- Filter op `consumed_by_loonstrook_id == null` (alleen nog niet verbruikt)
+- Live preview-blok in Aftrek-sectie: oranje strip met "Voorschot (1× deze periode) — wordt automatisch afgetrokken — - SRD 800,00"
+- Netto-preview rekent automatisch: `bruto + overuren + bonus − belasting − overige − voorschot`
+
+### Resultaat (live getest)
+- Voorschot SRD 800 voor november 2025 → open Loonstrook modal voor dezelfde periode
+- Aftrek-blok toont automatisch oranje "Voorschot (1× deze periode) — - SRD 800,00"
+- Netto Loon update naar SRD 4.200 (was zonder voorschot SRD 5.000)
+- Bij submit: loonstrook opgeslagen met `voorschot_aftrek=800`, voorschot kas-entry gemarkeerd als `consumed_by_loonstrook_id=...`
+- Tweede voorschot toevoegen + tweede loonstrook maken → alleen het *nieuwe* voorschot wordt afgetrokken (niet dubbel) ✓
+- Loonstrook verwijderen → voorschot weer beschikbaar ✓
+- Boekhouding klopt: kas-uitgaven = voorschot 800 + netto loon 4200 = 5000 (= bruto, want geen ander aftrek) ✓
+
+### Bestanden
+- `/app/backend/routers/kiosk/admin_operations.py` — `create_loonstrook` + `delete_loonstrook` + voorschot breakdown rij in PDF
+- `/app/frontend/src/components/vastgoed-kiosk/admin/Loonstroken.jsx` — voorschot fetch + preview + automatische netto-berekening
+
+---
+
 ## Sprint 69 (25 apr 2026) — Werknemers ↔ Payroll Kalender koppeling + Voorschot
 
 ### Verzoek

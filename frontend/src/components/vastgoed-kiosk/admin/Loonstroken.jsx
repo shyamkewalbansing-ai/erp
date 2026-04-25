@@ -259,7 +259,31 @@ function LoonstrookModal({ token, employees, onClose, onCreated, initialValues }
   const selectedEmp = employees.find(e => e.employee_id === employeeId);
   const brutoTotaal = (parseFloat(bruto) || 0) + (parseFloat(overuren) || 0) + (parseFloat(bonus) || 0);
   const totaleAftrek = (parseFloat(belasting) || 0) + (parseFloat(overigeAftrek) || 0);
-  const netto = brutoTotaal - totaleAftrek;
+
+  // Auto-load openstaande voorschotten voor employee + period (informational preview)
+  const [voorschotPreview, setVoorschotPreview] = useState({ total: 0, count: 0 });
+  useEffect(() => {
+    let cancelled = false;
+    if (!employeeId || !period) {
+      setVoorschotPreview({ total: 0, count: 0 });
+      return undefined;
+    }
+    (async () => {
+      try {
+        const r = await axios.get(`${API}/admin/employees/${employeeId}/voorschotten`, {
+          params: { period_label: period },
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (cancelled) return;
+        const open = (r.data || []).filter(v => !v.consumed_by_loonstrook_id);
+        const total = open.reduce((s, v) => s + (v.amount || 0), 0);
+        setVoorschotPreview({ total, count: open.length });
+      } catch { /* skip */ }
+    })();
+    return () => { cancelled = true; };
+  }, [employeeId, period, token]);
+
+  const netto = brutoTotaal - totaleAftrek - voorschotPreview.total;
 
   useEffect(() => {
     if (selectedEmp && !bruto) setBruto(selectedEmp.maandloon?.toString() || '');
@@ -340,6 +364,15 @@ function LoonstrookModal({ token, employees, onClose, onCreated, initialValues }
           <div><label className="block text-xs font-medium mb-1">Overige</label>
             <input type="number" inputMode="decimal" step="0.01" value={overigeAftrek} onChange={e => setOverigeAftrek(e.target.value)} className="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-sm" /></div>
         </div>
+        {voorschotPreview.total > 0 && (
+          <div className="flex items-center justify-between gap-2 bg-orange-100 border border-orange-200 rounded-lg px-3 py-2 text-xs" data-testid="voorschot-deduction-preview">
+            <div>
+              <p className="font-bold text-orange-800">Voorschot ({voorschotPreview.count}× deze periode)</p>
+              <p className="text-[10px] text-orange-600">wordt automatisch afgetrokken</p>
+            </div>
+            <span className="font-black text-orange-700">- SRD {voorschotPreview.total.toLocaleString('nl-NL', { minimumFractionDigits: 2 })}</span>
+          </div>
+        )}
       </div>
       <div className="bg-green-50 border-2 border-green-300 rounded-lg p-3 text-center">
         <p className="text-xs text-slate-600">NETTO LOON</p>
