@@ -59,10 +59,9 @@ function NumCell({ value, onChange, onCommit, decimal = false, dim = false, test
 }
 
 /**
- * Single Periode-tabel: een lijst datums × beide machines + 2 SUR rijen onderaan
+ * Single Periode-grid: kaarten per (datum × machine) + SUR kaarten onderaan
  */
-function PeriodeTable({ title, dates, machines, balancesMap, onSave, savingKey, machineCommissieMap }) {
-  // Build rows: per date, per machine in order
+function PeriodeTable({ title, dates, machines, balancesMap, onSave, savingKey }) {
   const rows = useMemo(() => {
     const list = [];
     dates.forEach((iso) => {
@@ -79,12 +78,10 @@ function PeriodeTable({ title, dates, machines, balancesMap, onSave, savingKey, 
     return list;
   }, [dates, machines, balancesMap]);
 
-  // Local state for unsaved counts/values
   const [localState, setLocalState] = useState({});
   const stateRef = useRef({});
   useEffect(() => { stateRef.current = localState; }, [localState]);
 
-  // When existing balances refresh, sync local
   useEffect(() => {
     const next = {};
     rows.forEach((r) => {
@@ -98,6 +95,7 @@ function PeriodeTable({ title, dates, machines, balancesMap, onSave, savingKey, 
       };
     });
     setLocalState(next);
+    stateRef.current = next;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rows.map(r => r.key + (r.existing?.balance_id || 'new')).join('|')]);
 
@@ -126,11 +124,11 @@ function PeriodeTable({ title, dates, machines, balancesMap, onSave, savingKey, 
     const com = parseFloat(s.commissie_amount) || 0;
     const totalCounts = SRD_DENOMS.reduce((sum, d) => sum + (counts[String(d)] || 0), 0);
     const hasData = totalCounts > 0 || eur > 0 || usd > 0 || bon > 0 || com > 0;
-    if (!row.existing && !hasData) return; // no need to create empty
+    if (!row.existing && !hasData) return;
     await onSave(row, { counts, eur_amount: eur, usd_amount: usd, balance_from_bon: bon, commissie_amount: com });
   };
 
-  // Compute SUR (per machine total) over the period using localState values for live preview
+  // Compute SUR (per machine total) using localState values for live preview
   const sur = useMemo(() => {
     const byMachine = {};
     machines.forEach((m) => {
@@ -160,98 +158,171 @@ function PeriodeTable({ title, dates, machines, balancesMap, onSave, savingKey, 
         <h3 className="text-sm font-black text-slate-900">{title}</h3>
         <span className="text-[10px] text-slate-500">{dates.length} dagen × {machines.length} machines</span>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs" data-testid={`werkblad-table-${title.toLowerCase().replace(/\s+/g, '-')}`}>
-          <thead className="bg-slate-100 text-[10px] uppercase tracking-wider text-slate-600">
-            <tr>
-              <th className="text-left px-2 py-1.5 font-bold sticky left-0 bg-slate-100 w-20">Datum</th>
-              <th className="text-left px-2 py-1.5 font-bold w-16">Machine</th>
-              {SRD_DENOMS.map(d => (
-                <th key={d} className="text-right px-1 py-1.5 font-bold w-16">{d}</th>
-              ))}
-              <th className="text-right px-1 py-1.5 font-bold w-20">EUR</th>
-              <th className="text-right px-1 py-1.5 font-bold w-20">USD</th>
-              <th className="text-right px-1 py-1.5 font-bold bg-blue-100 text-blue-700 w-24">Bon</th>
-              <th className="text-right px-1 py-1.5 font-bold bg-orange-100 text-orange-700 w-24">Totaal SRD</th>
-              <th className="text-right px-1 py-1.5 font-bold bg-violet-100 text-violet-700 w-24">Commissie</th>
-              <th className="text-right px-1 py-1.5 font-bold bg-emerald-100 text-emerald-700 w-24">Verschil</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {rows.map((r) => {
-              const s = localState[r.key] || {};
-              const counts = s.counts || {};
-              const srd = SRD_DENOMS.reduce((sum, d) => sum + ((parseInt(counts[String(d)] || 0) || 0) * d), 0);
-              const bon = parseFloat(s.balance_from_bon) || 0;
-              const com = parseFloat(s.commissie_amount) || 0;
-              const v = bon > 0 ? bon - srd : 0;
-              const winst = bon > 0 && v < 0;
-              const isSaving = savingKey === r.key;
-              return (
-                <tr key={r.key} className="hover:bg-orange-50/20" data-testid={`werkblad-row-${r.key}`}>
-                  <td className="px-2 py-1 text-[10px] font-bold text-slate-700 whitespace-nowrap sticky left-0 bg-white">
-                    {dayLabel(r.balance_date)}
-                    {isSaving && <Loader2 className="inline-block w-3 h-3 ml-1 animate-spin text-orange-500" />}
-                  </td>
-                  <td className="px-2 py-1">
-                    <span className="inline-block px-1.5 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-black rounded">{r.machine.name}</span>
-                  </td>
-                  {SRD_DENOMS.map(d => (
-                    <td key={d} className="px-0.5 py-0.5">
-                      <NumCell
-                        value={counts[String(d)] || 0}
-                        onChange={(v) => updateCount(r.key, d, v)}
-                        onCommit={() => commitRow(r)}
-                        testId={`werkblad-cell-${r.key}-${d}`}
-                      />
-                    </td>
-                  ))}
-                  <td className="px-0.5 py-0.5">
-                    <NumCell decimal value={s.eur_amount || 0} onChange={(v) => updateField(r.key, 'eur_amount', v)} onCommit={() => commitRow(r)} width="w-16" />
-                  </td>
-                  <td className="px-0.5 py-0.5">
-                    <NumCell decimal value={s.usd_amount || 0} onChange={(v) => updateField(r.key, 'usd_amount', v)} onCommit={() => commitRow(r)} width="w-16" />
-                  </td>
-                  <td className="px-0.5 py-0.5 bg-blue-50/40">
-                    <NumCell decimal value={s.balance_from_bon || 0} onChange={(v) => updateField(r.key, 'balance_from_bon', v)} onCommit={() => commitRow(r)} width="w-20" testId={`werkblad-bon-${r.key}`} />
-                  </td>
-                  <td className="px-1 py-1 text-right font-black bg-orange-50/40 text-orange-700 tabular-nums">
-                    {srd > 0 ? fmtSRD(srd) : <span className="text-slate-300">—</span>}
-                  </td>
-                  <td className="px-0.5 py-0.5 bg-violet-50/40">
-                    <NumCell decimal value={s.commissie_amount || 0} onChange={(v) => updateField(r.key, 'commissie_amount', v)} onCommit={() => commitRow(r)} width="w-20" testId={`werkblad-com-${r.key}`} />
-                  </td>
-                  <td className={`px-1 py-1 text-right font-black tabular-nums ${bon > 0 ? (winst ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700') : 'text-slate-300'}`}>
-                    {bon > 0 ? `${winst ? '−' : ''}${fmtSRD(Math.abs(v))}` : '—'}
-                  </td>
-                </tr>
-              );
-            })}
-            {/* SUR rijen onderaan */}
-            {machines.map((m) => {
-              const s = sur[m.machine_id];
-              if (!s) return null;
-              const v = s.bon > 0 ? s.bon - s.srd : 0;
-              const winst = s.bon > 0 && v < 0;
-              return (
-                <tr key={`sur-${m.machine_id}`} className="bg-gradient-to-r from-orange-100 to-amber-100 border-t-2 border-orange-300" data-testid={`werkblad-sur-${m.machine_id}`}>
-                  <td className="px-2 py-1.5 font-black text-orange-800 sticky left-0 bg-orange-100 text-xs" colSpan={2}>SUR {m.name}</td>
-                  {SRD_DENOMS.map(d => (
-                    <td key={d} className="px-1 py-1.5 text-right font-black text-orange-800 tabular-nums">{fmtInt(s.counts[String(d)])}</td>
-                  ))}
-                  <td className="px-1 py-1.5 text-right font-black text-orange-800 tabular-nums">{s.eur > 0 ? fmtSRD(s.eur) : '—'}</td>
-                  <td className="px-1 py-1.5 text-right font-black text-orange-800 tabular-nums">{s.usd > 0 ? fmtSRD(s.usd) : '—'}</td>
-                  <td className="px-1 py-1.5 text-right font-black bg-blue-200 text-blue-900 tabular-nums">{s.bon > 0 ? fmtSRD(s.bon) : '—'}</td>
-                  <td className="px-1 py-1.5 text-right font-black bg-orange-200 text-orange-900 tabular-nums">{fmtSRD(s.srd)}</td>
-                  <td className="px-1 py-1.5 text-right font-black bg-violet-200 text-violet-900 tabular-nums">{s.commissie > 0 ? fmtSRD(s.commissie) : '—'}</td>
-                  <td className={`px-1 py-1.5 text-right font-black tabular-nums ${s.bon > 0 ? (winst ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900') : 'text-orange-800'}`} data-testid={`werkblad-sur-verschil-${m.machine_id}`}>
-                    {s.bon > 0 ? `${winst ? '−' : ''}${fmtSRD(Math.abs(v))}` : '—'}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3" data-testid={`werkblad-grid-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+        {rows.map((r) => {
+          const s = localState[r.key] || {};
+          const counts = s.counts || {};
+          const srd = SRD_DENOMS.reduce((sum, d) => sum + ((parseInt(counts[String(d)] || 0) || 0) * d), 0);
+          const bon = parseFloat(s.balance_from_bon) || 0;
+          const v = bon > 0 ? bon - srd : 0;
+          const winst = bon > 0 && v < 0;
+          const isSaving = savingKey === r.key;
+          return (
+            <div
+              key={r.key}
+              data-testid={`werkblad-card-${r.key}`}
+              className="rounded-xl border-2 border-slate-200 bg-white overflow-hidden hover:border-orange-300 transition flex flex-col"
+            >
+              {/* Header */}
+              <div className="px-3 py-1.5 bg-gradient-to-r from-orange-50 to-amber-50 border-b border-orange-100 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block px-2 py-0.5 bg-orange-500 text-white text-[10px] font-black rounded-full uppercase tracking-wider">{r.machine.name}</span>
+                  <span className="text-[11px] font-bold text-slate-700">{dayLabel(r.balance_date)}</span>
+                </div>
+                {isSaving && <Loader2 className="w-3 h-3 animate-spin text-orange-500" />}
+              </div>
+
+              {/* Denominations */}
+              <div className="px-3 py-2">
+                <div className="grid grid-cols-[auto_1fr_auto] gap-x-2 gap-y-0.5 items-center text-[11px]">
+                  <div className="text-[9px] uppercase tracking-wider font-bold text-slate-400">Denom</div>
+                  <div className="text-[9px] uppercase tracking-wider font-bold text-slate-400 text-center">Aantal</div>
+                  <div className="text-[9px] uppercase tracking-wider font-bold text-slate-400 text-right">Totaal</div>
+                  {SRD_DENOMS.map(d => {
+                    const c = parseInt(counts[String(d)] || 0) || 0;
+                    return (
+                      <React.Fragment key={d}>
+                        <div className="text-slate-500 font-bold tabular-nums">{d}</div>
+                        <NumCell
+                          value={counts[String(d)] || 0}
+                          onChange={(val) => updateCount(r.key, d, val)}
+                          onCommit={() => commitRow(r)}
+                          width="w-full"
+                          testId={`werkblad-cell-${r.key}-${d}`}
+                        />
+                        <div className={`tabular-nums text-right text-[11px] ${c > 0 ? 'text-slate-700 font-bold' : 'text-slate-300'}`}>
+                          {c > 0 ? fmtInt(c * d) : '—'}
+                        </div>
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* EUR / USD / Bon / Commissie inputs */}
+              <div className="px-3 pb-2 grid grid-cols-2 gap-2 border-t border-slate-100 pt-2">
+                <div>
+                  <label className="block text-[9px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">EUR</label>
+                  <NumCell decimal value={s.eur_amount || 0} onChange={(v) => updateField(r.key, 'eur_amount', v)} onCommit={() => commitRow(r)} width="w-full" />
+                </div>
+                <div>
+                  <label className="block text-[9px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">USD</label>
+                  <NumCell decimal value={s.usd_amount || 0} onChange={(v) => updateField(r.key, 'usd_amount', v)} onCommit={() => commitRow(r)} width="w-full" />
+                </div>
+                <div>
+                  <label className="block text-[9px] uppercase tracking-wider font-bold text-blue-700 mb-0.5">Bon Balance</label>
+                  <NumCell decimal value={s.balance_from_bon || 0} onChange={(v) => updateField(r.key, 'balance_from_bon', v)} onCommit={() => commitRow(r)} width="w-full" testId={`werkblad-bon-${r.key}`} />
+                </div>
+                <div>
+                  <label className="block text-[9px] uppercase tracking-wider font-bold text-violet-700 mb-0.5">Commissie</label>
+                  <NumCell decimal value={s.commissie_amount || 0} onChange={(v) => updateField(r.key, 'commissie_amount', v)} onCommit={() => commitRow(r)} width="w-full" testId={`werkblad-com-${r.key}`} />
+                </div>
+              </div>
+
+              {/* Footer totals */}
+              <div className="mt-auto border-t border-slate-100">
+                <div className="px-3 py-1.5 flex items-center justify-between text-[11px] bg-orange-50">
+                  <span className="font-bold text-orange-700">Totaal SRD</span>
+                  <span className="font-black text-orange-700 tabular-nums">{srd > 0 ? fmtSRD(srd) : '—'}</span>
+                </div>
+                {bon > 0 && (
+                  <div className={`px-3 py-2 flex items-center justify-between text-xs border-t-2 ${winst ? 'bg-emerald-100 border-emerald-300' : 'bg-rose-100 border-rose-300'}`} data-testid={`werkblad-card-verschil-${r.key}`}>
+                    <span className={`font-black uppercase tracking-wider text-[10px] ${winst ? 'text-emerald-800' : 'text-rose-800'}`}>
+                      {winst ? '✓ Winst' : '⚠ Bijzetten'}
+                    </span>
+                    <span className={`font-black tabular-nums ${winst ? 'text-emerald-800' : 'text-rose-800'}`}>
+                      {winst ? '−' : ''}{fmtSRD(Math.abs(v))}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* SUR cards onderaan */}
+        {machines.map((m) => {
+          const s = sur[m.machine_id];
+          if (!s) return null;
+          const v = s.bon > 0 ? s.bon - s.srd : 0;
+          const winst = s.bon > 0 && v < 0;
+          return (
+            <div
+              key={`sur-${m.machine_id}`}
+              data-testid={`werkblad-sur-card-${m.machine_id}`}
+              className="rounded-xl border-2 border-orange-400 bg-gradient-to-br from-orange-50 to-amber-100 overflow-hidden shadow-md flex flex-col"
+            >
+              <div className="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-600 border-b border-orange-600 flex items-center justify-between">
+                <span className="text-white font-black uppercase tracking-wider text-xs">SUR {m.name}</span>
+                <span className="text-[10px] font-bold text-orange-100">{dates.length} dagen</span>
+              </div>
+
+              <div className="px-3 py-2">
+                <div className="grid grid-cols-[auto_auto_1fr] gap-x-2 gap-y-0.5 items-center text-[11px]">
+                  <div className="text-[9px] uppercase tracking-wider font-bold text-orange-700">Denom</div>
+                  <div className="text-[9px] uppercase tracking-wider font-bold text-orange-700 text-center">Aantal</div>
+                  <div className="text-[9px] uppercase tracking-wider font-bold text-orange-700 text-right">Totaal</div>
+                  {SRD_DENOMS.map(d => {
+                    const c = s.counts[String(d)] || 0;
+                    return (
+                      <React.Fragment key={d}>
+                        <div className="text-orange-600 font-bold tabular-nums">{d}</div>
+                        <div className={`tabular-nums text-center font-black ${c > 0 ? 'text-orange-900' : 'text-orange-300'}`}>{c}</div>
+                        <div className={`tabular-nums text-right font-bold ${c > 0 ? 'text-orange-800' : 'text-orange-300'}`}>{c > 0 ? fmtInt(c * d) : '—'}</div>
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {(s.eur > 0 || s.usd > 0) && (
+                <div className="px-3 pb-2 flex items-center gap-3 text-[11px] border-t border-orange-200 pt-2">
+                  {s.eur > 0 && <span><span className="text-orange-600 font-bold">EUR</span> <span className="font-black text-orange-800">{fmtSRD(s.eur)}</span></span>}
+                  {s.usd > 0 && <span><span className="text-orange-600 font-bold">USD</span> <span className="font-black text-orange-800">{fmtSRD(s.usd)}</span></span>}
+                </div>
+              )}
+
+              <div className="mt-auto border-t-2 border-orange-300">
+                <div className="px-3 py-1.5 flex items-center justify-between text-[11px] bg-orange-200">
+                  <span className="font-black text-orange-900">Totaal SRD</span>
+                  <span className="font-black text-orange-900 tabular-nums">{fmtSRD(s.srd)}</span>
+                </div>
+                {s.bon > 0 && (
+                  <div className="px-3 py-1.5 flex items-center justify-between text-[11px] bg-blue-200 border-t border-blue-300">
+                    <span className="font-black text-blue-900">Bon Balance</span>
+                    <span className="font-black text-blue-900 tabular-nums">{fmtSRD(s.bon)}</span>
+                  </div>
+                )}
+                {s.commissie > 0 && (
+                  <div className="px-3 py-1.5 flex items-center justify-between text-[11px] bg-violet-200 border-t border-violet-300">
+                    <span className="font-black text-violet-900">Commissie</span>
+                    <span className="font-black text-violet-900 tabular-nums">{fmtSRD(s.commissie)}</span>
+                  </div>
+                )}
+                {s.bon > 0 && (
+                  <div className={`px-3 py-2.5 flex items-center justify-between text-sm border-t-2 ${winst ? 'bg-emerald-200 border-emerald-400' : 'bg-rose-200 border-rose-400'}`} data-testid={`werkblad-sur-card-verschil-${m.machine_id}`}>
+                    <span className={`font-black uppercase tracking-wider text-xs ${winst ? 'text-emerald-900' : 'text-rose-900'}`}>
+                      {winst ? '✓ Winst' : '⚠ Bijzetten'}
+                    </span>
+                    <span className={`font-black tabular-nums ${winst ? 'text-emerald-900' : 'text-rose-900'}`}>
+                      {winst ? '−' : ''}{fmtSRD(Math.abs(v))}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
