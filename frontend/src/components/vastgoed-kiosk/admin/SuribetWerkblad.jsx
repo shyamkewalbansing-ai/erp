@@ -61,7 +61,7 @@ function NumCell({ value, onChange, onCommit, decimal = false, dim = false, test
 /**
  * Single Periode-grid: kaarten per (datum × machine) + SUR kaarten onderaan
  */
-function PeriodeTable({ title, dates, machines, balancesMap, onSave, savingKey }) {
+function PeriodeTable({ title, subtitle, dates, machines, balancesMap, onSave, savingKey }) {
   const rows = useMemo(() => {
     const list = [];
     dates.forEach((iso) => {
@@ -155,7 +155,10 @@ function PeriodeTable({ title, dates, machines, balancesMap, onSave, savingKey }
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className="px-4 py-2.5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
-        <h3 className="text-sm font-black text-slate-900">{title}</h3>
+        <div>
+          <h3 className="text-sm font-black text-slate-900">{title}</h3>
+          {subtitle && <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wider mt-0.5">{subtitle}</p>}
+        </div>
         <span className="text-[10px] text-slate-500">{dates.length} dagen × {machines.length} machines</span>
       </div>
       <div className="p-2 flex gap-2 overflow-x-auto" data-testid={`werkblad-grid-${title.toLowerCase().replace(/\s+/g, '-')}`}>
@@ -304,19 +307,30 @@ function PeriodeTable({ title, dates, machines, balancesMap, onSave, savingKey }
 }
 
 /**
- * Top-level Werkblad: 2 periodes (4 dagen + 3 dagen)
- * met week-navigatie (◀ ▶) en commissie-kolom.
+ * Top-level Werkblad: 2 periodes volgens Suribet ophaalschema
+ * - Periode 1: DO → VR → ZA → ZO (4 dagen, ophaaldag = MA)
+ * - Periode 2: MA → DI → WO (3 dagen, ophaaldag = DO)
+ * Met week-navigatie (◀ ▶) en commissie-kolom.
  */
 export default function SuribetWerkblad({ token, machines, balances, onRefresh }) {
-  // Anchor = donderdag van de huidige week (eerste dag van periode 1)
+  // Anchor = de meest recente donderdag (start van een Suribet-week)
   const [anchorDate, setAnchorDate] = useState(() => {
-    // start op vandaag - 6 dagen zodat we recente data zien op de eerste pagina
-    return addDaysISO(todayISO(), -6);
+    const today = new Date(todayISO() + 'T00:00:00');
+    const dow = today.getDay(); // 0=Zo, 1=Ma, ..., 4=Do
+    // Aantal dagen sinds laatste donderdag: 0 als do, 1 als vr, ..., 6 als wo
+    const daysSinceThu = (dow - 4 + 7) % 7;
+    return addDaysISO(todayISO(), -daysSinceThu);
   });
   const [savingKey, setSavingKey] = useState(null);
 
+  // Periode 1: DO + VR + ZA + ZO (4 dagen, ophaaldag = MA)
   const periode1Dates = useMemo(() => Array.from({ length: 4 }, (_, i) => addDaysISO(anchorDate, i)), [anchorDate]);
+  // Periode 2: MA + DI + WO (3 dagen, ophaaldag = DO)
   const periode2Dates = useMemo(() => Array.from({ length: 3 }, (_, i) => addDaysISO(anchorDate, 4 + i)), [anchorDate]);
+
+  // Ophaaldagen
+  const ophaalP1 = useMemo(() => addDaysISO(anchorDate, 4), [anchorDate]);
+  const ophaalP2 = useMemo(() => addDaysISO(anchorDate, 7), [anchorDate]);
 
   // Map balances by date+machine
   const balancesMap = useMemo(() => {
@@ -345,6 +359,13 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
     }
   };
 
+  const resetToCurrentWeek = () => {
+    const today = new Date(todayISO() + 'T00:00:00');
+    const dow = today.getDay();
+    const daysSinceThu = (dow - 4 + 7) % 7;
+    setAnchorDate(addDaysISO(todayISO(), -daysSinceThu));
+  };
+
   if (machines.length === 0) {
     return (
       <div className="bg-amber-50 border border-amber-300 rounded-xl p-6 text-center text-sm text-amber-800">
@@ -355,6 +376,8 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
 
   const periode1Title = `Periode 1 — ${dayLabel(periode1Dates[0])} t/m ${dayLabel(periode1Dates[periode1Dates.length - 1])}`;
   const periode2Title = `Periode 2 — ${dayLabel(periode2Dates[0])} t/m ${dayLabel(periode2Dates[periode2Dates.length - 1])}`;
+  const periode1Subtitle = `Ophaal: ${dayLabel(ophaalP1)}`;
+  const periode2Subtitle = `Ophaal: ${dayLabel(ophaalP2)}`;
 
   return (
     <div className="space-y-3">
@@ -368,8 +391,8 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <div className="flex items-center gap-2">
-          <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Start datum</label>
+        <div className="flex items-center gap-2 flex-wrap justify-center">
+          <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Start (DO)</label>
           <input
             type="date"
             value={anchorDate}
@@ -378,11 +401,14 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
             className="px-2 py-1 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-orange-400"
           />
           <button
-            onClick={() => setAnchorDate(addDaysISO(todayISO(), -6))}
+            onClick={resetToCurrentWeek}
             className="text-[10px] font-bold text-orange-600 hover:text-orange-700 ml-1"
           >
             Deze week
           </button>
+          <span className="text-[10px] text-slate-500 ml-2 hidden sm:inline">
+            Suribet ophaalt op MA &amp; DO
+          </span>
         </div>
         <button
           onClick={() => setAnchorDate(addDaysISO(anchorDate, 7))}
@@ -396,6 +422,7 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
 
       <PeriodeTable
         title={periode1Title}
+        subtitle={periode1Subtitle}
         dates={periode1Dates}
         machines={machines}
         balancesMap={balancesMap}
@@ -405,6 +432,7 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
 
       <PeriodeTable
         title={periode2Title}
+        subtitle={periode2Subtitle}
         dates={periode2Dates}
         machines={machines}
         balancesMap={balancesMap}
