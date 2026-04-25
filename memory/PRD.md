@@ -1,5 +1,47 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 65 (25 apr 2026) — Maand-overzicht popup per huurder
+
+### Verzoek
+"Maand-overzicht per huurder popup waarin je kan zien welke maand(en) van welke jaar volledig betaald zijn, gedeeltelijk, of nog open."
+
+### Implementatie
+
+**Backend** — `/app/backend/routers/kiosk/admin.py`:
+Nieuw endpoint `GET /api/kiosk/admin/tenants/{tenant_id}/payment-overview` dat:
+- Walk alle past `kiosk_payments` af voor deze tenant
+- Bouwt `paid_per_month` accumulator + `payments_per_month` (voor expand-detail)
+- Genereert maandlijst van *eerste betalingsmaand* of `created_at` t/m `rent_billed_through`
+- Status per maand: `paid` (≥ monthly_rent), `partial` (>0 < monthly_rent), `open` (=0)
+- Returnt summary met counts (paid/partial/open) + total_paid/total_due/outstanding
+
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/admin/MonthOverviewModal.jsx` (nieuw):
+- Oranje header met huurder + maandhuur
+- 3 telkaarten (groen/oranje/roze) — paid/deel/open counts
+- Totaalbox: totaal betaald / verschuldigd / achterstand
+- Lijst gegroepeerd per jaar met collapsable detail per maand → toont alle kwitanties (KW-nr, datum, bedrag)
+- Mobile-friendly via `MobileModalShell` (sluit op klik buiten/X)
+
+**Knop** — `/app/frontend/src/components/vastgoed-kiosk/admin/TenantsTab.jsx`:
+- Calendar-icoon naast `$` op zowel desktop tabel als mobiele kaart, opent modal voor die huurder
+
+### Bug die opgelost is tijdens implementatie
+De modal werd in eerste instantie per ongeluk in `LeasesTab` geplaatst i.p.v. `TenantsTab` (TenantsTab eindigde al op regel 421, niet 700). Hierdoor renderde de modal nooit. Modal is nu correct binnen `TenantsTab` rendering.
+
+### Resultaat (live getest met playwright)
+Maand-overzicht voor Bharat 7B toont correct:
+- 3 betaald (oktober 2025, november 2025, januari 2026)
+- 2 deel (september 2025, december 2025)
+- 3 open (februari, maart, april 2026)
+- Bij uitklappen van november 2025 zijn alle 5 deelbetalingen zichtbaar (KW00034: 4400, KW00073: 50, KW00102: 100, KW00103: 100, KW00104: 5000) met datums.
+
+### Bestanden
+- `/app/backend/routers/kiosk/admin.py` — `get_tenant_payment_overview()` endpoint
+- `/app/frontend/src/components/vastgoed-kiosk/admin/MonthOverviewModal.jsx` (nieuw)
+- `/app/frontend/src/components/vastgoed-kiosk/admin/TenantsTab.jsx` — Calendar knop + modal trigger
+
+---
+
 ## Sprint 64 (24 apr 2026) — FIFO-betalingstoewijzing op huurmaanden (oudste maand eerst)
 
 ### Verzoek

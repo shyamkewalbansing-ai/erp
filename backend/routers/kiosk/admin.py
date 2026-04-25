@@ -431,7 +431,11 @@ async def _compute_unpaid_months(company_id: str, tenant_id: str, billed_through
         "company_id": company_id,
         "tenant_id": tenant_id,
         "payment_type": {"$in": ["rent", "partial_rent", "monthly_rent"]},
-        "status": {"$in": ["approved", "completed"]},
+        "$or": [
+            {"status": {"$in": ["approved", "completed"]}},
+            {"status": {"$exists": False}},
+            {"status": None},
+        ],
     }, {"_id": 0, "amount": 1, "covered_months": 1}).to_list(2000)
 
     paid_per_month: dict = {}
@@ -694,6 +698,140 @@ async def list_tenants(company: dict = Depends(get_current_company)):
         })
     
     return result
+
+
+@router.get("/admin/tenants/{tenant_id}/payment-overview")
+async def get_tenant_payment_overview(tenant_id: str, company: dict = Depends(get_current_company)):
+    """Maand-per-maand overzicht van huurbetalingen voor één huurder.
+    Returnt voor elke gefactureerde maand vanaf de eerste tot rent_billed_through:
+    {year, month, label, ym, status ('paid'|'partial'|'open'), paid, due, remaining}.
+    Geeft ook samenvatting: totaal betaald, totaal verschuldigd, huidige achterstand.
+    """
+    company_id = company["company_id"]
+    tenant = await db.kiosk_tenants.find_one({"company_id": company_id, "tenant_id": tenant_id}, {"_id": 0})
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+
+    monthly_rent = float(tenant.get("monthly_rent", 0) or 0)
+    billed_through = tenant.get("rent_billed_through", "") or ""
+
+    # Build paid_per_month from all rent payments
+    past_payments = await db.kiosk_payments.find({
+        "company_id": company_id,
+        "tenant_id": tenant_id,
+        "payment_type": {"$in": ["rent", "partial_rent", "monthly_rent"]},
+        "$or": [
+            {"status": {"$in": ["approved", "completed"]}},
+            {"status": {"$exists": False}},
+            {"status": None},
+        ],
+    }, {"_id": 0, "amount": 1, "covered_months": 1, "kwitantie_nummer": 1, "created_at": 1}).to_list(5000)
+
+    paid_per_month: dict = {}
+    payments_per_month: dict = {}
+    for pp in past_payments:
+        cms = pp.get("covered_months") or []
+        if not cms:
+            continue
+        per = float(pp.get("amount", 0) or 0) / len(cms)
+        for cm in cms:
+            ym = _parse_dutch_month_label(cm)
+            if ym is None:
+                continue
+            paid_per_month[ym] = paid_per_month.get(ym, 0.0) + per
+            payments_per_month.setdefault(ym, []).append({
+                "kwitantie_nummer": pp.get("kwitantie_nummer"),
+                "amount": per,
+                "created_at": pp.get("created_at").isoformat() if pp.get("created_at") else None,
+                "partial": "(gedeeltelijk)" in cm,
+            })
+
+    # Determine range of months to display
+    # Start: earliest month in paid_per_month OR tenant.created_at OR billed_through
+    end_ym = None
+    if billed_through:
+        try:
+            y, m = billed_through.split("-")
+            end_ym = (int(y), int(m))
+        except Exception:
+            pass
+    if end_ym is None:
+        now = datetime.now(timezone.utc)
+        end_ym = (now.year, now.month)
+
+    start_ym = None
+    if paid_per_month:
+        start_ym = min(paid_per_month.keys())
+    created_at = tenant.get("created_at")
+    if created_at:
+        c_ym = (created_at.year, created_at.month)
+        if start_ym is None or c_ym < start_ym:
+            start_ym = c_ym
+    if start_ym is None:
+        start_ym = end_ym
+
+    # Generate months range start → end inclusive
+    months = []
+    sy, sm = start_ym
+    ey, em = end_ym
+    cy, cm_ = sy, sm
+    iters = 0
+    while (cy, cm_) <= (ey, em) and iters < 240:  # max 20 years safety
+        ym = (cy, cm_)
+        paid = paid_per_month.get(ym, 0.0)
+        due = monthly_rent
+        remaining = max(0.0, due - paid)
+        if paid <= 0.01:
+            status = "open"
+        elif paid >= due - 0.01:
+            status = "paid"
+        else:
+            status = "partial"
+        months.append({
+            "ym": f"{cy}-{cm_:02d}",
+            "year": cy,
+            "month": cm_,
+            "label": f"{_MONTH_NAMES_NL[cm_ - 1]} {cy}",
+            "status": status,
+            "paid": round(paid, 2),
+            "due": round(due, 2),
+            "remaining": round(remaining, 2),
+            "payments": payments_per_month.get(ym, []),
+        })
+        # Advance
+        if cm_ == 12:
+            cy += 1
+            cm_ = 1
+        else:
+            cm_ += 1
+        iters += 1
+
+    # Summary
+    total_paid = round(sum(m["paid"] for m in months), 2)
+    total_due = round(sum(m["due"] for m in months), 2)
+    outstanding_calc = round(sum(m["remaining"] for m in months), 2)
+    open_count = sum(1 for m in months if m["status"] == "open")
+    partial_count = sum(1 for m in months if m["status"] == "partial")
+    paid_count = sum(1 for m in months if m["status"] == "paid")
+
+    return {
+        "tenant_id": tenant_id,
+        "tenant_name": tenant.get("name"),
+        "tenant_code": tenant.get("tenant_code"),
+        "apartment_number": tenant.get("apartment_number"),
+        "monthly_rent": monthly_rent,
+        "currency": (tenant.get("currency") or "SRD").upper(),
+        "rent_billed_through": billed_through,
+        "outstanding_rent": float(tenant.get("outstanding_rent", 0) or 0),
+        "months": months,
+        "summary": {
+            "total_paid": total_paid,
+            "total_due": total_due,
+            "outstanding": outstanding_calc,
+            "counts": {"paid": paid_count, "partial": partial_count, "open": open_count},
+        },
+    }
+
 
 # ============== COMBINED DASHBOARD ENDPOINT (1 call instead of 6) ==============
 
