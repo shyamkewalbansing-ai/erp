@@ -151,6 +151,20 @@ export default function SuperAdminDashboard() {
     } catch { alert('Genereren mislukt'); }
   };
 
+  const handleToggleSuribet = async (company) => {
+    const newVal = !company?.features?.suribet;
+    const msg = newVal
+      ? `Suribet functie ACTIVEREN voor "${company.name}"?\n\nDit bedrijf krijgt toegang tot de Suribet/MAC Balance tab.`
+      : `Suribet functie DEACTIVEREN voor "${company.name}"?\n\nDe Suribet tab verdwijnt uit hun dashboard.`;
+    if (!window.confirm(msg)) return;
+    try {
+      await axios.put(`${API}/superadmin/companies/${company.company_id}/features/suribet`,
+        { enabled: newVal },
+        { headers: { Authorization: `Bearer ${token}` } });
+      loadData();
+    } catch (e) { alert('Suribet toggle mislukt: ' + (e?.response?.data?.detail || e.message)); }
+  };
+
   const handleToggleStatus = async (companyId) => {
     try {
       await axios.put(`${API}/superadmin/companies/${companyId}/status`, {}, { headers: { Authorization: `Bearer ${token}` } });

@@ -92,9 +92,26 @@ async def superadmin_companies(admin=Depends(get_superadmin)):
             "unpaid_invoices": unpaid_invoices,
             "tenant_count": tenant_count,
             "apartment_count": apt_count,
+            "features": c.get("features", {}) or {},
             "created_at": c.get("created_at")
         })
     return result
+
+
+@router.put("/superadmin/companies/{company_id}/features/{feature_key}")
+async def superadmin_toggle_feature(company_id: str, feature_key: str, body: dict, admin=Depends(get_superadmin)):
+    """Toggle a feature flag for a company. Body: { enabled: bool }."""
+    allowed_keys = {"suribet"}
+    if feature_key not in allowed_keys:
+        raise HTTPException(status_code=400, detail=f"Onbekende feature: {feature_key}")
+    enabled = bool(body.get("enabled", False))
+    res = await db.kiosk_companies.update_one(
+        {"company_id": company_id},
+        {"$set": {f"features.{feature_key}": enabled, "updated_at": datetime.now(timezone.utc)}},
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Bedrijf niet gevonden")
+    return {"company_id": company_id, "feature": feature_key, "enabled": enabled}
 
 @router.put("/superadmin/companies/{company_id}/status")
 async def superadmin_toggle_company(company_id: str, admin=Depends(get_superadmin)):

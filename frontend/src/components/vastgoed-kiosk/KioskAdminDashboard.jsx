@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Building2, Users, Home, ArrowLeft, Loader2, Settings, ExternalLink,
-  Copy, Check, Receipt, Zap, LogIn, Landmark, Briefcase, Wallet, Wifi,
+  Copy, Check, Receipt, Zap, LogIn, Landmark, Briefcase, Wallet, Wifi, Cpu,
   AlertTriangle, MapPin, Shield, QrCode
 } from 'lucide-react';
 import axios from 'axios';
@@ -17,6 +17,7 @@ import SettingsTab from './admin/SettingsTab';
 import KasTab from './admin/KasTab';
 import LoansTab, { LoanDetailModal } from './admin/LoansTab';
 import EmployeesTab from './admin/EmployeesTab';
+import SuribetTab from './admin/SuribetTab';
 import PowerTab from './admin/PowerTab';
 import InternetTab from './admin/InternetTab';
 import ApartmentModal from './admin/ApartmentModal';
@@ -179,12 +180,14 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     { id: 'kas', label: 'Bank/Kas', icon: Landmark },
     { id: 'loans', label: 'Leningen', icon: Wallet },
     { id: 'employees', label: 'Werknemers', icon: Briefcase },
+    { id: 'suribet', label: 'Suribet', icon: Cpu },
     { id: 'power', label: 'Stroom', icon: Zap },
     { id: 'internet', label: 'Internet', icon: Wifi },
     { id: 'settings', label: 'Instellingen', icon: Settings },
   ];
+  const featureSuribet = !!company?.features?.suribet;
   const ROLE_TABS = {
-    beheerder: ['dashboard', 'tenants', 'locations', 'apartments', 'payments', 'kas', 'loans', 'employees', 'power', 'internet', 'settings'],
+    beheerder: ['dashboard', 'tenants', 'locations', 'apartments', 'payments', 'kas', 'loans', 'employees', ...(featureSuribet ? ['suribet'] : []), 'power', 'internet', 'settings'],
     boekhouder: ['dashboard', 'tenants', 'payments', 'kas'],
     kiosk_medewerker: [], // No admin dashboard access - only kiosk
   };
@@ -386,6 +389,10 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
 
         {activeTab === 'employees' && (
           <EmployeesTab token={token} formatSRD={formatSRD} />
+        )}
+
+        {activeTab === 'suribet' && featureSuribet && (
+          <SuribetTab token={token} />
         )}
 
         {activeTab === 'power' && (

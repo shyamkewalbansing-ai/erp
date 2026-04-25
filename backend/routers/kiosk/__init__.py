@@ -18,6 +18,7 @@ from . import superadmin_domains  # noqa: F401
 from . import ocr  # noqa: F401
 from . import faceid
 from . import scheduler
+from . import suribet_balance  # noqa: F401
 
 # Push notifications are optional: if pywebpush / py-vapid / http-ece are not
 # yet installed (e.g. running on a production server where `pip install -r
