@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Plus, Trash2, Pencil, Save, X, Calculator, Cpu } from 'lucide-react';
 import { API, axios } from './utils';
 import MobileModalShell from './MobileModalShell';
@@ -318,7 +318,7 @@ export default function SuribetTab({ token }) {
         </div>
       )}
 
-      {/* Balance Table */}
+      {/* Balance Cards */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-200 flex items-center justify-between">
           <h3 className="text-sm font-black text-slate-900">Balance overzicht</h3>
@@ -338,76 +338,166 @@ export default function SuribetTab({ token }) {
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm" data-testid="suribet-balance-table">
-              <thead className="bg-slate-50 text-[11px] uppercase tracking-wider text-slate-500">
-                <tr>
-                  <th className="text-left px-3 py-2 font-bold sticky left-0 bg-slate-50">Datum</th>
-                  <th className="text-left px-3 py-2 font-bold">Machine</th>
-                  {SRD_DENOMS.map(d => (
-                    <th key={d} className="text-right px-2 py-2 font-bold">{d}</th>
-                  ))}
-                  <th className="text-right px-2 py-2 font-bold">EUR</th>
-                  <th className="text-right px-2 py-2 font-bold">USD</th>
-                  <th className="text-right px-3 py-2 font-bold bg-orange-100 text-orange-700">Totaal SRD</th>
-                  <th className="text-right px-3 py-2 font-bold bg-blue-100 text-blue-700">Bon Balance</th>
-                  <th className="text-right px-3 py-2 font-bold bg-violet-100 text-violet-700">Verschil</th>
-                  <th className="text-right px-2 py-2 font-bold w-16">Acties</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {balances.map(b => {
-                  const bon = Number(b.balance_from_bon || 0);
-                  const v = Number(b.verschil || 0);
-                  return (
-                  <tr key={b.balance_id} className="hover:bg-orange-50/30" data-testid={`suribet-row-${b.balance_id}`}>
-                    <td className="px-3 py-2 text-slate-700 font-medium whitespace-nowrap sticky left-0 bg-white">{fmtDate(b.balance_date)}</td>
-                    <td className="px-3 py-2"><span className="inline-block px-2 py-0.5 bg-orange-100 text-orange-700 text-[11px] font-bold rounded-full">{b.machine_name}</span></td>
-                    {SRD_DENOMS.map(d => {
-                      const c = b.counts?.[String(d)] || 0;
-                      return (
-                        <td key={d} className={`px-2 py-2 text-right ${c > 0 ? 'font-bold text-slate-900' : 'text-slate-300'}`}>{c}</td>
-                      );
-                    })}
-                    <td className="px-2 py-2 text-right text-slate-700">{b.eur_amount > 0 ? fmtSRD(b.eur_amount) : <span className="text-slate-300">—</span>}</td>
-                    <td className="px-2 py-2 text-right text-slate-700">{b.usd_amount > 0 ? fmtSRD(b.usd_amount) : <span className="text-slate-300">—</span>}</td>
-                    <td className="px-3 py-2 text-right font-black bg-orange-50/50 text-orange-700">{fmtSRD(b.srd_total)}</td>
-                    <td className="px-3 py-2 text-right font-bold bg-blue-50/50 text-blue-700">{bon > 0 ? fmtSRD(bon) : <span className="text-slate-300">—</span>}</td>
-                    <td className={`px-3 py-2 text-right font-black ${bon > 0 ? (v < 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700') : 'text-slate-300'}`} data-testid={`suribet-verschil-${b.balance_id}`}>
-                      {bon > 0 ? `${v < 0 ? '−' : ''}${fmtSRD(Math.abs(v))}` : '—'}
-                    </td>
-                    <td className="px-2 py-2 text-right whitespace-nowrap">
-                      <button onClick={() => { setEditBalance(b); setShowBalanceModal(true); }} className="p-1 text-slate-400 hover:text-orange-500" title="Bewerken"><Pencil className="w-3.5 h-3.5" /></button>
-                      <button onClick={() => removeBalance(b)} className="p-1 text-slate-400 hover:text-red-500" title="Verwijderen"><Trash2 className="w-3.5 h-3.5" /></button>
-                    </td>
-                  </tr>
-                  );
-                })}
-                {/* SUR rijen — totals per machine */}
-                {totals.per_machine.map(pm => {
-                  const bon = Number(pm.balance_from_bon || 0);
-                  const v = Number(pm.verschil || 0);
-                  return (
-                  <tr key={`sur-${pm.machine_id}`} className="bg-gradient-to-r from-orange-100 to-amber-100 border-t-2 border-orange-300" data-testid={`suribet-sur-${pm.machine_id}`}>
-                    <td className="px-3 py-2.5 font-black text-orange-800 sticky left-0 bg-orange-100" colSpan={2}>
-                      SUR {pm.machine_name}
-                    </td>
-                    {SRD_DENOMS.map(d => (
-                      <td key={d} className="px-2 py-2.5 text-right font-black text-orange-800">{pm.counts?.[String(d)] || 0}</td>
-                    ))}
-                    <td className="px-2 py-2.5 text-right font-black text-orange-800">{pm.eur_amount > 0 ? fmtSRD(pm.eur_amount) : '—'}</td>
-                    <td className="px-2 py-2.5 text-right font-black text-orange-800">{pm.usd_amount > 0 ? fmtSRD(pm.usd_amount) : '—'}</td>
-                    <td className="px-3 py-2.5 text-right font-black bg-orange-200 text-orange-900">{fmtSRD(pm.srd_total)}</td>
-                    <td className="px-3 py-2.5 text-right font-black bg-blue-200 text-blue-900">{bon > 0 ? fmtSRD(bon) : '—'}</td>
-                    <td className={`px-3 py-2.5 text-right font-black ${bon > 0 ? (v < 0 ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900') : 'text-orange-800'}`} data-testid={`suribet-sur-verschil-${pm.machine_id}`}>
-                      {bon > 0 ? `${v < 0 ? '−' : ''}${fmtSRD(Math.abs(v))}` : '—'}
-                    </td>
-                    <td className="px-2 py-2.5"></td>
-                  </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3" data-testid="suribet-balance-cards">
+            {balances.map(b => {
+              const bon = Number(b.balance_from_bon || 0);
+              const v = Number(b.verschil || 0);
+              const winst = bon > 0 && v < 0;
+              const bijzetten = bon > 0 && v > 0;
+              return (
+                <div
+                  key={b.balance_id}
+                  data-testid={`suribet-card-${b.balance_id}`}
+                  className="rounded-xl border-2 border-slate-200 bg-white overflow-hidden hover:shadow-md hover:border-orange-300 transition flex flex-col"
+                >
+                  {/* Card header */}
+                  <div className="px-3 py-2 bg-gradient-to-r from-orange-50 to-amber-50 border-b border-orange-100 flex items-center justify-between">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="inline-block px-2 py-0.5 bg-orange-500 text-white text-[10px] font-black rounded-full uppercase tracking-wider">{b.machine_name}</span>
+                        <span className="text-[11px] font-bold text-slate-700">{fmtDate(b.balance_date)}</span>
+                      </div>
+                      {b.notes && <p className="text-[10px] text-slate-500 truncate mt-0.5">{b.notes}</p>}
+                    </div>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <button onClick={() => { setEditBalance(b); setShowBalanceModal(true); }} className="p-1 text-slate-400 hover:text-orange-500" title="Bewerken" data-testid={`suribet-card-edit-${b.balance_id}`}><Pencil className="w-3.5 h-3.5" /></button>
+                      <button onClick={() => removeBalance(b)} className="p-1 text-slate-400 hover:text-red-500" title="Verwijderen" data-testid={`suribet-card-del-${b.balance_id}`}><Trash2 className="w-3.5 h-3.5" /></button>
+                    </div>
+                  </div>
+
+                  {/* Denominations grid: AANTAL × TOTAAL × DENOM */}
+                  <div className="px-3 py-2">
+                    <div className="grid grid-cols-[1fr_1fr_auto] gap-x-2 gap-y-0.5 text-[11px]">
+                      <div className="text-[9px] uppercase tracking-wider font-bold text-slate-400">Aantal</div>
+                      <div className="text-[9px] uppercase tracking-wider font-bold text-slate-400 text-right">Totaal</div>
+                      <div className="text-[9px] uppercase tracking-wider font-bold text-slate-400 text-right pl-2">SRD</div>
+                      {SRD_DENOMS.map(d => {
+                        const c = Number(b.counts?.[String(d)] || 0);
+                        const t = c * d;
+                        return (
+                          <React.Fragment key={d}>
+                            <div className={`tabular-nums ${c > 0 ? 'font-bold text-slate-900' : 'text-slate-300'}`}>{c}</div>
+                            <div className={`tabular-nums text-right ${c > 0 ? 'text-slate-700' : 'text-slate-300'}`}>{c > 0 ? t.toLocaleString('nl-NL') : '—'}</div>
+                            <div className="tabular-nums text-right pl-2 text-slate-400 font-medium">{d}</div>
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* EUR / USD if any */}
+                  {(b.eur_amount > 0 || b.usd_amount > 0) && (
+                    <div className="px-3 pb-2 flex items-center gap-3 text-[11px] border-t border-slate-100 pt-2">
+                      {b.eur_amount > 0 && <span><span className="text-slate-400 font-bold">EUR</span> <span className="font-bold text-slate-700">{fmtSRD(b.eur_amount)}</span></span>}
+                      {b.usd_amount > 0 && <span><span className="text-slate-400 font-bold">USD</span> <span className="font-bold text-slate-700">{fmtSRD(b.usd_amount)}</span></span>}
+                    </div>
+                  )}
+
+                  {/* Footer totals */}
+                  <div className="mt-auto border-t border-slate-100">
+                    <div className="px-3 py-1.5 flex items-center justify-between text-[11px] bg-orange-50">
+                      <span className="font-bold text-orange-700">Totaal SRD</span>
+                      <span className="font-black text-orange-700 tabular-nums">{fmtSRD(b.srd_total)}</span>
+                    </div>
+                    {bon > 0 && (
+                      <div className="px-3 py-1.5 flex items-center justify-between text-[11px] bg-blue-50 border-t border-blue-100">
+                        <span className="font-bold text-blue-700">Bon Balance</span>
+                        <span className="font-black text-blue-700 tabular-nums">{fmtSRD(bon)}</span>
+                      </div>
+                    )}
+                    {bon > 0 && (
+                      <div
+                        className={`px-3 py-2 flex items-center justify-between text-xs border-t-2 ${winst ? 'bg-emerald-100 border-emerald-300' : 'bg-rose-100 border-rose-300'}`}
+                        data-testid={`suribet-card-verschil-${b.balance_id}`}
+                      >
+                        <span className={`font-black uppercase tracking-wider text-[10px] ${winst ? 'text-emerald-800' : 'text-rose-800'}`}>
+                          {winst ? '✓ Winst' : '⚠ Bijzetten'}
+                        </span>
+                        <span className={`font-black tabular-nums ${winst ? 'text-emerald-800' : 'text-rose-800'}`}>
+                          {winst ? '−' : ''}{fmtSRD(Math.abs(v))}
+                        </span>
+                      </div>
+                    )}
+                    {bon === 0 && (
+                      <div className="px-3 py-1.5 text-[10px] text-slate-400 border-t border-slate-100 italic">
+                        Bon balance niet ingevuld
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* SUR (totaal) cards per machine */}
+            {totals.per_machine.map(pm => {
+              const bon = Number(pm.balance_from_bon || 0);
+              const v = Number(pm.verschil || 0);
+              const winst = bon > 0 && v < 0;
+              return (
+                <div
+                  key={`sur-${pm.machine_id}`}
+                  data-testid={`suribet-sur-card-${pm.machine_id}`}
+                  className="rounded-xl border-2 border-orange-400 bg-gradient-to-br from-orange-50 to-amber-100 overflow-hidden shadow-md flex flex-col"
+                >
+                  <div className="px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-600 border-b border-orange-600 flex items-center justify-between">
+                    <span className="text-white font-black uppercase tracking-wider text-xs">SUR {pm.machine_name}</span>
+                    <span className="text-[10px] font-bold text-orange-100">{pm.rows_count} dag{pm.rows_count === 1 ? '' : 'en'}</span>
+                  </div>
+
+                  <div className="px-3 py-2">
+                    <div className="grid grid-cols-[1fr_1fr_auto] gap-x-2 gap-y-0.5 text-[11px]">
+                      <div className="text-[9px] uppercase tracking-wider font-bold text-orange-700">Aantal</div>
+                      <div className="text-[9px] uppercase tracking-wider font-bold text-orange-700 text-right">Totaal</div>
+                      <div className="text-[9px] uppercase tracking-wider font-bold text-orange-700 text-right pl-2">SRD</div>
+                      {SRD_DENOMS.map(d => {
+                        const c = Number(pm.counts?.[String(d)] || 0);
+                        const t = c * d;
+                        return (
+                          <React.Fragment key={d}>
+                            <div className={`tabular-nums font-black ${c > 0 ? 'text-orange-900' : 'text-orange-300'}`}>{c}</div>
+                            <div className={`tabular-nums text-right font-bold ${c > 0 ? 'text-orange-800' : 'text-orange-300'}`}>{c > 0 ? t.toLocaleString('nl-NL') : '—'}</div>
+                            <div className="tabular-nums text-right pl-2 text-orange-500 font-medium">{d}</div>
+                          </React.Fragment>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {(pm.eur_amount > 0 || pm.usd_amount > 0) && (
+                    <div className="px-3 pb-2 flex items-center gap-3 text-[11px] border-t border-orange-200 pt-2">
+                      {pm.eur_amount > 0 && <span><span className="text-orange-600 font-bold">EUR</span> <span className="font-black text-orange-800">{fmtSRD(pm.eur_amount)}</span></span>}
+                      {pm.usd_amount > 0 && <span><span className="text-orange-600 font-bold">USD</span> <span className="font-black text-orange-800">{fmtSRD(pm.usd_amount)}</span></span>}
+                    </div>
+                  )}
+
+                  <div className="mt-auto border-t-2 border-orange-300">
+                    <div className="px-3 py-1.5 flex items-center justify-between text-[11px] bg-orange-200">
+                      <span className="font-black text-orange-900">Totaal SRD</span>
+                      <span className="font-black text-orange-900 tabular-nums">{fmtSRD(pm.srd_total)}</span>
+                    </div>
+                    {bon > 0 && (
+                      <div className="px-3 py-1.5 flex items-center justify-between text-[11px] bg-blue-200 border-t border-blue-300">
+                        <span className="font-black text-blue-900">Bon Balance</span>
+                        <span className="font-black text-blue-900 tabular-nums">{fmtSRD(bon)}</span>
+                      </div>
+                    )}
+                    {bon > 0 && (
+                      <div
+                        className={`px-3 py-2.5 flex items-center justify-between text-sm border-t-2 ${winst ? 'bg-emerald-200 border-emerald-400' : 'bg-rose-200 border-rose-400'}`}
+                        data-testid={`suribet-sur-card-verschil-${pm.machine_id}`}
+                      >
+                        <span className={`font-black uppercase tracking-wider text-xs ${winst ? 'text-emerald-900' : 'text-rose-900'}`}>
+                          {winst ? '✓ Winst' : '⚠ Bijzetten'}
+                        </span>
+                        <span className={`font-black tabular-nums ${winst ? 'text-emerald-900' : 'text-rose-900'}`}>
+                          {winst ? '−' : ''}{fmtSRD(Math.abs(v))}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
