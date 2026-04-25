@@ -1,5 +1,42 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 72 (25 apr 2026) — Suribet Werkblad (spreadsheet inline editing)
+
+### Verzoek
+Suribet card-view vervangen door een **kant-en-klare spreadsheet** waar je direct in cellen kunt klikken en typen. Twee tabellen onder elkaar: 
+- **Periode 1**: 4 dagen × 2 machines = 8 datarijen + 2 SUR rijen (SUR MAC 1, SUR MAC 2)
+- **Periode 2**: 3 dagen × 2 machines = 6 datarijen + 2 SUR rijen
+- Plus een **Commissie kolom** (handmatig invoer per rij)
+
+### Implementatie
+**Backend** — `/app/backend/routers/kiosk/suribet_balance.py`:
+- `commissie_amount` veld toegevoegd aan BalanceCreate, BalanceUpdate
+- Get balances retourneert `commissie_amount` per record
+- Totals endpoint sommeert `commissie_amount` per machine
+
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/admin/SuribetWerkblad.jsx` (nieuw, 296 lines):
+- `NumCell` component met inline editing + auto-save op blur (Tab/Enter)
+  - Focused-guard: useEffect resette `dirty.current` alleen als input niet gefocust is (anders zou save niet triggeren)
+- `PeriodeTable` rendert kolommen Datum · Machine · 7×denoms · EUR · USD · Bon · Totaal SRD · Commissie · Verschil
+- Live preview van Totaal SRD + Verschil (groen winst / rood bijzetten)
+- 2 SUR rijen onderaan elke periode aggregeren live mee
+- Week navigatie ◀ ▶ + datum picker + "Deze week" reset
+
+**Auto-save flow**:
+1. User typt → onChange update local + parent state (synchroon via stateRef.current)
+2. Tab/Enter → onBlur triggert commitRow(row)
+3. commitRow leest stateRef.current[row.key] (altijd actueel) → POST (nieuw) of PUT (bestaand)
+4. onRefresh → balances state → useEffect synct localState met server-values
+
+### Live getest
+- Cell inline edit + Tab → POST /admin/suribet/balances 200 OK ✓
+- Page reload → waarde 45 persistent ✓
+- Bon balance + commissie velden auto-saven correct ✓
+- Verschil colors: 25000 bon - 22500 SRD = 2500 → rood (bijzetten) ✓
+- SUR rijen aggregeren live tijdens typen ✓
+
+---
+
 ## Sprint 71 (25 apr 2026) — Suribet MAC Balance Tracking (voltooid)
 
 ### Verzoek

@@ -36,6 +36,7 @@ class BalanceCreate(BaseModel):
     eur_amount: float = 0
     usd_amount: float = 0
     balance_from_bon: float = 0  # Balance from the daily Suribet receipt (SRD)
+    commissie_amount: float = 0  # Manual commissie entry (SRD)
     notes: str = ""
 
 
@@ -45,6 +46,7 @@ class BalanceUpdate(BaseModel):
     eur_amount: Optional[float] = None
     usd_amount: Optional[float] = None
     balance_from_bon: Optional[float] = None
+    commissie_amount: Optional[float] = None
     notes: Optional[str] = None
 
 
@@ -154,9 +156,7 @@ async def list_suribet_balances(
         it["srd_total"] = srd
         bal = float(it.get("balance_from_bon", 0) or 0)
         it["balance_from_bon"] = bal
-        # Verschil = balance_from_bon - srd_total
-        # Negatief = winst (we hebben meer cash dan de bon zegt)
-        # Positief = bijzetten (we missen geld)
+        it["commissie_amount"] = float(it.get("commissie_amount", 0) or 0)
         it["verschil"] = bal - srd
     return items
 
@@ -183,6 +183,7 @@ async def create_suribet_balance(data: BalanceCreate, company: dict = Depends(ge
         "eur_amount": float(data.eur_amount or 0),
         "usd_amount": float(data.usd_amount or 0),
         "balance_from_bon": float(data.balance_from_bon or 0),
+        "commissie_amount": float(data.commissie_amount or 0),
         "notes": (data.notes or "").strip(),
         "created_at": datetime.now(timezone.utc),
     }
@@ -212,6 +213,8 @@ async def update_suribet_balance(balance_id: str, data: BalanceUpdate, company: 
         update["usd_amount"] = float(data.usd_amount or 0)
     if data.balance_from_bon is not None:
         update["balance_from_bon"] = float(data.balance_from_bon or 0)
+    if data.commissie_amount is not None:
+        update["commissie_amount"] = float(data.commissie_amount or 0)
     if data.notes is not None:
         update["notes"] = (data.notes or "").strip()
     res = await db.kiosk_suribet_balances.update_one(
@@ -264,6 +267,7 @@ async def get_suribet_totals(
                 "usd_amount": 0.0,
                 "srd_total": 0.0,
                 "balance_from_bon": 0.0,
+                "commissie_amount": 0.0,
                 "verschil": 0.0,
                 "rows_count": 0,
             }
@@ -273,6 +277,7 @@ async def get_suribet_totals(
         per_machine[mid]["usd_amount"] += float(it.get("usd_amount", 0) or 0)
         per_machine[mid]["srd_total"] += _calc_srd_total(it.get("counts", {}))
         per_machine[mid]["balance_from_bon"] += float(it.get("balance_from_bon", 0) or 0)
+        per_machine[mid]["commissie_amount"] += float(it.get("commissie_amount", 0) or 0)
         per_machine[mid]["rows_count"] += 1
 
     # Compute verschil per machine = balance_from_bon - srd_total (negatief = winst)
