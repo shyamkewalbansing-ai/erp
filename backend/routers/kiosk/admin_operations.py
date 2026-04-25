@@ -1208,25 +1208,61 @@ async def verdeling_uitvoeren(data: VerdelingUitvoeren, company: dict = Depends(
 
 @router.get("/admin/employees")
 async def list_employees(company: dict = Depends(get_current_company)):
-    """List all employees"""
+    """List all employees with paid + open balance per current month"""
     company_id = company["company_id"]
     employees = await db.kiosk_employees.find({"company_id": company_id}).to_list(1000)
-    
+
+    # Compute current Suriname month label (e.g. "april 2026")
+    from datetime import datetime as _dt
+    _MONTHS_NL = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
+    _now = _dt.now(timezone.utc)
+    # Approximate Suriname time (UTC-3) by subtracting 3 hours for month boundary check
+    _sur = _now - timedelta(hours=3)
+    current_period = f"{_MONTHS_NL[_sur.month - 1]} {_sur.year}"
+
     result = []
     for e in employees:
-        # Get total paid
+        emp_id = e["employee_id"]
+        # All salary-related kas entries (loonstrook + voorschot), linked by id (new) OR name (legacy)
         payments = await db.kiosk_kas.find({
             "company_id": company_id,
-            "related_employee_id": e["employee_id"],
-            "entry_type": "salary"
-        }).to_list(1000)
+            "$or": [
+                {"category": {"$in": ["loon", "voorschot"]}},
+                {"entry_type": "salary"},
+            ],
+            "$and": [{
+                "$or": [
+                    {"related_employee_id": emp_id},
+                    {"related_employee_name": e["name"]},
+                ]
+            }],
+        }, {"_id": 0, "amount": 1, "category": 1, "reference_id": 1, "created_at": 1}).to_list(2000)
         total_paid = sum(p.get("amount", 0) for p in payments)
-        
+
+        # Voorschotten this period (loaded separately so we can show open balance)
+        # Loonstroken for current period
+        ls_this_period = await db.kiosk_loonstroken.find({
+            "company_id": company_id,
+            "employee_id": emp_id,
+            "period_label": current_period,
+        }, {"_id": 0, "netto_loon": 1, "loonstrook_id": 1}).to_list(50)
+        loonstrook_paid_this_period = sum(ls.get("netto_loon", 0) for ls in ls_this_period)
+        voorschot_ids = await db.kiosk_kas.find({
+            "company_id": company_id,
+            "category": "voorschot",
+            "related_employee_id": emp_id,
+            "voorschot_period": current_period,
+        }, {"_id": 0, "amount": 1}).to_list(50)
+        voorschot_paid_this_period = sum(v.get("amount", 0) for v in voorschot_ids)
+        period_paid = loonstrook_paid_this_period + voorschot_paid_this_period
+        maandloon = e.get("maandloon", 0) or 0
+        period_open = max(0, maandloon - period_paid)
+
         result.append({
-            "employee_id": e["employee_id"],
+            "employee_id": emp_id,
             "name": e["name"],
             "functie": e.get("functie", ""),
-            "maandloon": e.get("maandloon", 0),
+            "maandloon": maandloon,
             "telefoon": e.get("telefoon", ""),
             "email": e.get("email", ""),
             "start_date": e.get("start_date", ""),
@@ -1236,9 +1272,12 @@ async def list_employees(company: dict = Depends(get_current_company)):
             "has_pin": bool(e.get("pin")),
             "has_signature": bool(e.get("signature")),
             "total_paid": total_paid,
-            "created_at": e.get("created_at")
+            "current_period": current_period,
+            "current_period_paid": period_paid,
+            "current_period_open": period_open,
+            "created_at": e.get("created_at"),
         })
-    
+
     return result
 
 @router.post("/admin/employees")
@@ -1305,6 +1344,87 @@ async def delete_employee(employee_id: str, company: dict = Depends(get_current_
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
     return {"message": "Werknemer verwijderd"}
+
+@router.post("/admin/employees/{employee_id}/voorschot")
+async def employee_voorschot(employee_id: str, body: dict, company: dict = Depends(get_current_company)):
+    """Quick voorschot (advance) payment for an employee — partial salary.
+    Body: { amount: float, period_label: str ("april 2026"), payment_method: 'cash'|'bank', notes?: str, payment_date?: 'YYYY-MM-DD' }
+    Creates a kas entry that counts toward total_paid + current_period_paid for the employee.
+    Does NOT generate a loonstrook — meant for quick partial advances.
+    """
+    company_id = company["company_id"]
+    emp = await db.kiosk_employees.find_one({"employee_id": employee_id, "company_id": company_id})
+    if not emp:
+        raise HTTPException(status_code=404, detail="Werknemer niet gevonden")
+    try:
+        amount = float(body.get("amount", 0))
+    except (TypeError, ValueError):
+        amount = 0
+    if amount <= 0:
+        raise HTTPException(status_code=400, detail="Bedrag moet groter zijn dan 0")
+    period_label = (body.get("period_label") or "").strip()
+    if not period_label:
+        raise HTTPException(status_code=400, detail="Periode is verplicht")
+    payment_method = body.get("payment_method", "cash")
+    notes = body.get("notes", "")
+    now = datetime.now(timezone.utc)
+    payment_date = now
+    if body.get("payment_date"):
+        try:
+            payment_date = datetime.fromisoformat(body["payment_date"]).replace(tzinfo=timezone.utc)
+        except Exception:
+            pass
+    source_label = "Kas" if payment_method == "cash" else "Bank"
+    entry_id = generate_uuid()
+    description_extra = f" - {notes}" if notes else ""
+    await db.kiosk_kas.insert_one({
+        "entry_id": entry_id,
+        "company_id": company_id,
+        "entry_type": "expense",
+        "amount": amount,
+        "description": f"Voorschot ({source_label}) - {emp['name']} ({period_label}){description_extra}",
+        "category": "voorschot",
+        "payment_method": payment_method,
+        "related_employee_id": employee_id,
+        "related_employee_name": emp["name"],
+        "voorschot_period": period_label,
+        "created_at": payment_date,
+    })
+    return {
+        "entry_id": entry_id,
+        "amount": amount,
+        "period_label": period_label,
+        "employee_name": emp["name"],
+    }
+
+
+@router.delete("/admin/employees/{employee_id}/voorschot/{entry_id}")
+async def delete_employee_voorschot(employee_id: str, entry_id: str, company: dict = Depends(get_current_company)):
+    """Delete a voorschot entry (admin)."""
+    res = await db.kiosk_kas.delete_one({
+        "entry_id": entry_id,
+        "company_id": company["company_id"],
+        "related_employee_id": employee_id,
+        "category": "voorschot",
+    })
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Voorschot niet gevonden")
+    return {"message": "Voorschot verwijderd"}
+
+
+@router.get("/admin/employees/{employee_id}/voorschotten")
+async def list_employee_voorschotten(employee_id: str, company: dict = Depends(get_current_company), period_label: Optional[str] = None):
+    """List voorschotten for an employee, optionally filtered by period_label (e.g. 'april 2026')."""
+    q: dict = {
+        "company_id": company["company_id"],
+        "related_employee_id": employee_id,
+        "category": "voorschot",
+    }
+    if period_label:
+        q["voorschot_period"] = period_label
+    items = await db.kiosk_kas.find(q, {"_id": 0}).sort("created_at", -1).to_list(500)
+    return items
+
 
 @router.post("/admin/employees/{employee_id}/pay")
 async def pay_employee(employee_id: str, body: dict = None, company: dict = Depends(get_current_company)):
@@ -1711,6 +1831,7 @@ async def create_loonstrook(data: LoonstrookCreate, company: dict = Depends(get_
             "description": f"Loonuitbetaling ({source_label}) - {emp['name']} ({data.period_label})",
             "category": "loon",
             "payment_method": data.payment_method,
+            "related_employee_id": data.employee_id,
             "related_employee_name": emp["name"],
             "reference_id": loon_id,
             "kwitantie_nummer": strook_nummer,

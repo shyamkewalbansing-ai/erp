@@ -1,5 +1,49 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 69 (25 apr 2026) — Werknemers ↔ Payroll Kalender koppeling + Voorschot
+
+### Verzoek
+1. "Bij Werknemers Totaal Betaald moet automatisch updaten als ik via Payroll Kalender een loonstrook uitbetaal."
+2. "En het maandloon-saldo moet eraf gaan (zien hoeveel nog open staat)."
+3. "Bij Payroll Kalender → Betalen mis ik een Voorschot functie — werknemers nemen soms een voorschot, niet het hele bedrag."
+
+### Implementatie
+
+**Backend** — `/app/backend/routers/kiosk/admin_operations.py`:
+- `create_loonstrook` voegt nu `related_employee_id` toe aan de `kiosk_kas` boeking (was er niet, daardoor werd `total_paid` niet correct geteld)
+- `list_employees` herschreven: telt nu kas-entries waar `category ∈ {loon, voorschot}` OF `entry_type=salary`, gekoppeld via `related_employee_id` of legacy `related_employee_name`. Voegt nieuwe velden toe: `current_period`, `current_period_paid`, `current_period_open`
+- 3 nieuwe endpoints:
+  - `POST /admin/employees/{id}/voorschot` — gedeeltelijke uitbetaling, schrijft kas-entry `category="voorschot"`, telt mee in `total_paid`
+  - `GET /admin/employees/{id}/voorschotten?period_label=...` — lijst voorschotten per periode
+  - `DELETE /admin/employees/{id}/voorschot/{entry_id}` — voorschot verwijderen
+
+**Frontend**:
+- **`VoorschotModal.jsx`** (nieuw): popup met maandloon/voorschot/open samenvatting, bedrag-input + "Vul resterend bedrag" snelknop, Kas/Bank, datum, notitie, en lijst van eerdere voorschotten dezelfde maand met delete-knop
+- **`PayrollCalendar.jsx`**: 
+  - Onder elke "+ Betalen" knop nu een tweede oranje "Voorschot" knop in onbetaalde cellen
+  - Cell met loonstrook toont "+vrs SRD x" als er ook voorschot was
+  - Voorschot-data wordt parallel ingeladen via `/admin/kas` (filter `category=voorschot`)
+  - Legend uitgebreid met "Voorschot — gedeeltelijke betaling"
+  - `onChange` callback prop zodat EmployeesTab kan refreshen
+- **`EmployeesTab.jsx`**:
+  - Nieuwe kolom **"Open Deze Maand"** tussen Maandloon en Totaal Betaald (rood/groen)
+  - Mobile cards: zelfde Open-veld toegevoegd
+  - Geeft `onChange={loadEmployees + payrollRefreshKey++}` door aan PayrollCalendar
+
+### Resultaat (live getest)
+- Bharat Kewalbansing: Totaal Betaald = SRD 29.500 (was SRD 0 vóór fix) — bestaande loonstrook van april (SRD 4.500) + bestaande historie nu correct meegeteld
+- Open Deze Maand (april 2026) = SRD 5.000 (rood, want geen loonstrook in april)
+- Klik op "Voorschot" → modal opent → bedrag 250 invullen → Uitbetalen → Totaal Betaald loopt op naar SRD 29.750 ✅
+- Loonstrook + voorschot in dezelfde maand: cell toont beide bedragen ✅
+
+### Bestanden
+- `/app/backend/routers/kiosk/admin_operations.py` — `list_employees` herschreven, voorschot endpoints toegevoegd, `create_loonstrook` voegt `related_employee_id` toe
+- `/app/frontend/src/components/vastgoed-kiosk/admin/VoorschotModal.jsx` (nieuw)
+- `/app/frontend/src/components/vastgoed-kiosk/admin/PayrollCalendar.jsx`
+- `/app/frontend/src/components/vastgoed-kiosk/admin/EmployeesTab.jsx`
+
+---
+
 ## Sprint 68 (25 apr 2026) — Bank/Kas: pijl-knoppen voor maand-navigatie
 
 ### Verzoek

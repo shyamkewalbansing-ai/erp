@@ -216,6 +216,7 @@ function EmployeesTab({ token, formatSRD }) {
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Functie</th>
                   <th className="text-left p-4 text-sm font-medium text-slate-500">Rol</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Maandloon</th>
+                  <th className="text-right p-4 text-sm font-medium text-slate-500">Open <span className="text-[10px] text-slate-400 font-normal capitalize">deze maand</span></th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Totaal Betaald</th>
                   <th className="text-right p-4 text-sm font-medium text-slate-500">Acties</th>
                 </tr>
@@ -245,6 +246,11 @@ function EmployeesTab({ token, formatSRD }) {
                       </span>
                     </td>
                     <td className="p-4 text-right font-bold text-slate-900">{formatSRD(emp.maandloon)}</td>
+                    <td className="p-4 text-right">
+                      <span className={`font-bold ${(emp.current_period_open || 0) > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                        {formatSRD(emp.current_period_open || 0)}
+                      </span>
+                    </td>
                     <td className="p-4 text-right font-bold text-slate-900">{formatSRD(emp.total_paid || 0)}</td>
                     <td className="p-4 text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -285,7 +291,8 @@ function EmployeesTab({ token, formatSRD }) {
                   </div>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs mb-2">
                     <div className="flex justify-between"><span className="text-slate-400">Maandloon</span><span className="font-bold text-slate-700">{formatSRD(emp.maandloon)}</span></div>
-                    <div className="flex justify-between"><span className="text-slate-400">Betaald</span><span className="font-bold text-slate-700">{formatSRD(emp.total_paid || 0)}</span></div>
+                    <div className="flex justify-between"><span className="text-slate-400">Open ({emp.current_period?.split(' ')[0] || 'maand'})</span><span className={`font-bold ${(emp.current_period_open || 0) > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{formatSRD(emp.current_period_open || 0)}</span></div>
+                    <div className="flex justify-between col-span-2"><span className="text-slate-400">Totaal Betaald</span><span className="font-bold text-slate-700">{formatSRD(emp.total_paid || 0)}</span></div>
                   </div>
                   <div className="flex items-center justify-end gap-0.5 pt-2 border-t border-slate-50">
                     <button onClick={() => openEdit(emp)} className="text-slate-400 hover:text-orange-500 p-1.5"><Pencil className="w-4 h-4" /></button>
@@ -300,7 +307,7 @@ function EmployeesTab({ token, formatSRD }) {
       </div>
 
       {/* Payroll Kalender */}
-      <PayrollCalendar token={token} employees={employees} formatSRD={formatSRD} refreshKey={payrollRefreshKey} onRequestPayslip={handleRequestPayslip} />
+      <PayrollCalendar token={token} employees={employees} formatSRD={formatSRD} refreshKey={payrollRefreshKey} onRequestPayslip={handleRequestPayslip} onChange={() => { loadEmployees(); setPayrollRefreshKey(k => k + 1); }} />
 
       {/* Loonstroken sectie */}
       <Loonstroken

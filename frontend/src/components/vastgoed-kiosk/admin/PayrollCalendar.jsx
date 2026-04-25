@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, CheckCircle2, Circle, Loader2 } from 'lucide-react';
+import { CalendarDays, CheckCircle2, Circle, Loader2, Banknote } from 'lucide-react';
 import { API, axios } from './utils';
+import VoorschotModal from './VoorschotModal';
 
 const NL_MONTHS_FULL = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
 const NL_MONTHS_SHORT = ['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
@@ -18,8 +19,11 @@ function parsePeriodLabel(label) {
   return null;
 }
 
-function PayrollCalendar({ token, employees, formatSRD, refreshKey, onRequestPayslip }) {
+function PayrollCalendar({ token, employees, formatSRD, refreshKey, onRequestPayslip, onChange }) {
   const [loonstroken, setLoonstroken] = useState([]);
+  const [voorschotKas, setVoorschotKas] = useState([]);
+  const [voorschotModal, setVoorschotModal] = useState(null); // { emp, year, month }
+  const [internalRefresh, setInternalRefresh] = useState(0);
   const [loading, setLoading] = useState(true);
   const [monthsToShow, setMonthsToShow] = useState(6);
 
@@ -28,14 +32,23 @@ function PayrollCalendar({ token, employees, formatSRD, refreshKey, onRequestPay
     const load = async () => {
       setLoading(true);
       try {
-        const resp = await axios.get(`${API}/admin/loonstroken`, { headers: { Authorization: `Bearer ${token}` } });
-        if (!cancelled) setLoonstroken(resp.data || []);
+        const [lsResp, kasResp] = await Promise.all([
+          axios.get(`${API}/admin/loonstroken`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API}/admin/kas`, { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        if (!cancelled) {
+          setLoonstroken(lsResp.data || []);
+          // Filter only voorschot entries (kas entries)
+          const kasList = Array.isArray(kasResp.data) ? kasResp.data : (kasResp.data?.entries || []);
+          const kas = kasList.filter(k => k.category === 'voorschot');
+          setVoorschotKas(kas);
+        }
       } catch { /* skip */ }
       if (!cancelled) setLoading(false);
     };
     load();
     return () => { cancelled = true; };
-  }, [token, refreshKey]);
+  }, [token, refreshKey, internalRefresh]);
 
   // Build list of last N months (including current)
   const months = useMemo(() => {
@@ -66,6 +79,21 @@ function PayrollCalendar({ token, employees, formatSRD, refreshKey, onRequestPay
     });
     return map;
   }, [loonstroken]);
+
+  // Map: employee_id -> "YYYY-M" -> { count, total }  (voorschotten)
+  const voorschotMap = useMemo(() => {
+    const map = {};
+    voorschotKas.forEach(v => {
+      const ym = parsePeriodLabel(v.voorschot_period || '');
+      if (!ym || !v.related_employee_id) return;
+      const key = `${ym.year}-${ym.month}`;
+      if (!map[v.related_employee_id]) map[v.related_employee_id] = {};
+      if (!map[v.related_employee_id][key]) map[v.related_employee_id][key] = { count: 0, total: 0 };
+      map[v.related_employee_id][key].count += 1;
+      map[v.related_employee_id][key].total += (v.amount || 0);
+    });
+    return map;
+  }, [voorschotKas]);
 
   const activeEmps = employees.filter(e => e.status === 'active');
 
@@ -147,6 +175,7 @@ function PayrollCalendar({ token, employees, formatSRD, refreshKey, onRequestPay
                   {months.map(m => {
                     const key = `${m.year}-${m.month}`;
                     const cell = payrollMap[emp.employee_id]?.[key];
+                    const voorschot = voorschotMap[emp.employee_id]?.[key];
                     const paid = !!cell;
                     return (
                       <td
@@ -155,7 +184,7 @@ function PayrollCalendar({ token, employees, formatSRD, refreshKey, onRequestPay
                         data-testid={`payroll-cell-${emp.employee_id}-${key}`}
                       >
                         {paid ? (
-                          <div className="bg-green-100 border border-green-200 rounded-lg py-1.5 px-1" title={`Betaald: ${formatSRD(cell.netto_total)}`}>
+                          <div className="bg-green-100 border border-green-200 rounded-lg py-1.5 px-1" title={`Betaald: ${formatSRD(cell.netto_total)}${voorschot ? ` + voorschot ${formatSRD(voorschot.total)}` : ''}`}>
                             <CheckCircle2 className="w-4 h-4 text-green-600 mx-auto mb-0.5" />
                             <div className="text-[10px] font-semibold text-green-700 leading-tight">
                               {formatSRD(cell.netto_total)}
@@ -163,20 +192,37 @@ function PayrollCalendar({ token, employees, formatSRD, refreshKey, onRequestPay
                             {cell.count > 1 && (
                               <div className="text-[9px] text-green-600">×{cell.count}</div>
                             )}
+                            {voorschot && (
+                              <div className="text-[9px] text-orange-600 mt-0.5 font-bold">+vrs {formatSRD(voorschot.total)}</div>
+                            )}
                           </div>
                         ) : (
-                          <button
-                            type="button"
-                            onClick={() => onRequestPayslip && onRequestPayslip(emp, m.year, m.month)}
-                            className="w-full bg-red-50 hover:bg-orange-50 hover:border-orange-300 border border-red-100 rounded-lg py-1.5 px-1 transition group cursor-pointer"
-                            title={`Klik om loonstrook aan te maken voor ${NL_MONTHS_FULL[m.month]} ${m.year}`}
-                            data-testid={`payroll-create-${emp.employee_id}-${key}`}
-                          >
-                            <Circle className="w-4 h-4 text-red-400 group-hover:text-orange-500 mx-auto mb-0.5" />
-                            <div className="text-[10px] font-medium text-red-400 group-hover:text-orange-600 leading-tight">
-                              + Betalen
-                            </div>
-                          </button>
+                          <div className="space-y-1">
+                            <button
+                              type="button"
+                              onClick={() => onRequestPayslip && onRequestPayslip(emp, m.year, m.month)}
+                              className="w-full bg-red-50 hover:bg-orange-50 hover:border-orange-300 border border-red-100 rounded-lg py-1.5 px-1 transition group cursor-pointer"
+                              title={`Klik om loonstrook aan te maken voor ${NL_MONTHS_FULL[m.month]} ${m.year}`}
+                              data-testid={`payroll-create-${emp.employee_id}-${key}`}
+                            >
+                              <Circle className="w-4 h-4 text-red-400 group-hover:text-orange-500 mx-auto mb-0.5" />
+                              <div className="text-[10px] font-medium text-red-400 group-hover:text-orange-600 leading-tight">
+                                + Betalen
+                              </div>
+                              {voorschot && (
+                                <div className="text-[9px] text-orange-600 mt-0.5 font-bold">vrs {formatSRD(voorschot.total)}</div>
+                              )}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setVoorschotModal({ emp, year: m.year, month: m.month })}
+                              className="w-full text-[9px] font-bold uppercase tracking-wide text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-md py-1 px-1 transition flex items-center justify-center gap-1"
+                              title={`Voorschot uitbetalen voor ${NL_MONTHS_FULL[m.month]} ${m.year}`}
+                              data-testid={`payroll-voorschot-${emp.employee_id}-${key}`}
+                            >
+                              <Banknote className="w-3 h-3" /> Voorschot
+                            </button>
+                          </div>
                         )}
                       </td>
                     );
@@ -199,7 +245,22 @@ function PayrollCalendar({ token, employees, formatSRD, refreshKey, onRequestPay
           <div className="w-3 h-3 rounded bg-red-50 border border-red-100" />
           <span>Nog niet uitbetaald — klik om loonstrook aan te maken</span>
         </div>
+        <div className="flex items-center gap-1.5">
+          <Banknote className="w-3 h-3 text-orange-600" />
+          <span>Voorschot — gedeeltelijke betaling</span>
+        </div>
       </div>
+
+      {voorschotModal && (
+        <VoorschotModal
+          token={token}
+          employee={voorschotModal.emp}
+          year={voorschotModal.year}
+          month={voorschotModal.month}
+          onClose={() => setVoorschotModal(null)}
+          onSaved={() => { setInternalRefresh(k => k + 1); if (onChange) onChange(); }}
+        />
+      )}
     </div>
   );
 }
