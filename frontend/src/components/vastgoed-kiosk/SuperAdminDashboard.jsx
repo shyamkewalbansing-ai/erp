@@ -4,7 +4,7 @@ import {
   Building2, Users, Home, CreditCard, Loader2, Search,
   Crown, ArrowLeft, TrendingUp, DollarSign, Shield,
   ToggleLeft, ToggleRight, Power, PowerOff, RefreshCw,
-  LogIn, Trash2, Globe
+  LogIn, Trash2, Globe, Cpu
 } from 'lucide-react';
 import axios from 'axios';
 import DomainsTab from './superadmin/DomainsTab';
@@ -504,6 +504,19 @@ export default function SuperAdminDashboard() {
                             >
                               <Crown className="w-3 h-3" />
                               {c.lifetime ? 'Lifetime' : 'Geen LT'}
+                            </button>
+                            {/* Toggle Suribet feature */}
+                            <button
+                              onClick={() => handleToggleSuribet(c)}
+                              data-testid={`toggle-suribet-${c.company_id}`}
+                              className={`p-1.5 rounded-lg transition flex items-center gap-1 ${
+                                c?.features?.suribet
+                                  ? 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                                  : 'text-slate-400 hover:bg-slate-100'
+                              }`}
+                              title={c?.features?.suribet ? 'Suribet uitzetten' : 'Suribet activeren'}
+                            >
+                              <Cpu className="w-4 h-4" />
                             </button>
                             {/* Add invoice */}
                             <button

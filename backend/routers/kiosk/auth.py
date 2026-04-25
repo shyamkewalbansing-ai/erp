@@ -191,6 +191,7 @@ async def get_current_company_info(company: dict = Depends(get_current_company))
         "smtp_email": company.get("smtp_email", ""),
         "smtp_password": company.get("smtp_password", ""),
         "smtp_enabled": company.get("smtp_enabled", False),
+        "features": company.get("features", {}) or {},
     }
 
 @router.put("/auth/settings")

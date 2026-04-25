@@ -1,5 +1,46 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 71 (25 apr 2026) — Suribet MAC Balance Tracking (voltooid)
+
+### Verzoek
+Suribet machine-balance feature toevoegen: dagelijkse biljet-telling per MAC machine, alternerende rijen MAC 1/MAC 2 per datum, kolommen voor SRD-denominaties (500/200/100/50/20/10/5), EUR & USD totalen, en SUR-totaalrijen onderaan. Feature moet aan/uit te zetten zijn per bedrijf door superadmin.
+
+### Implementatie
+**Backend** — `/app/backend/routers/kiosk/suribet_balance.py`:
+- CRUD endpoints voor machines: `GET/POST/PUT/DELETE /admin/suribet/machines`
+- CRUD endpoints voor balances: `GET/POST/PUT/DELETE /admin/suribet/balances`
+- `GET /admin/suribet/totals` — aggregaten per machine over alle records
+- Feature-gate via `_ensure_feature(company)` → kijkt naar `company.features.suribet`
+- Toggle endpoint (bestond al): `PUT /superadmin/companies/{id}/features/suribet { enabled: bool }`
+
+**Auth fix** — `/app/backend/routers/kiosk/auth.py`:
+- `/auth/me` retourneert nu ook `features` dict, zodat frontend kan controleren of feature actief is
+
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/admin/SuribetTab.jsx`:
+- Volledige UI: MAC-chips + balance-tabel + SUR-totaalrijen onderaan
+- BalanceModal met aantal-input voor SRD-biljetten + totaal-bedrag voor EUR/USD
+- Auto totaal SRD-berekening live tijdens invoer
+- Friendly "feature niet geactiveerd" state als feature uit staat
+
+**SuperAdmin UI** — `/app/frontend/src/components/vastgoed-kiosk/SuperAdminDashboard.jsx`:
+- Cpu icoon-knop in actieskolom, oranje wanneer Suribet aan, grijs wanneer uit
+- Klik → bevestig-prompt → toggle feature flag
+
+### Live getest
+- Backend: machines + balances + totals correct (curl) ✓
+- SuperAdmin: 14 toggle-knoppen zichtbaar, kewalbansing oranje (actief) ✓
+- Kiosk admin: 2 records (MAC 1 SRD 3.500 + MAC 2 SRD 2.300) + 2 SUR totaalrijen correct ✓
+
+### Bestanden
+- `/app/backend/routers/kiosk/suribet_balance.py` (262 lines, nieuw)
+- `/app/backend/routers/kiosk/auth.py` (features toegevoegd aan /auth/me)
+- `/app/backend/routers/kiosk/superadmin.py` (toggle endpoint, bestond al)
+- `/app/frontend/src/components/vastgoed-kiosk/admin/SuribetTab.jsx` (379 lines, nieuw)
+- `/app/frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx` (Suribet tab gewired)
+- `/app/frontend/src/components/vastgoed-kiosk/SuperAdminDashboard.jsx` (Cpu toggle-knop + handler)
+
+---
+
 ## Sprint 70 (25 apr 2026) — Voorschot wordt automatisch afgetrokken op volgende loonstrook
 
 ### Verzoek
