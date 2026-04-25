@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Trash2, Loader2, Landmark, TrendingUp, TrendingDown, PieChart, Plus, Pencil, Check, X, PlayCircle, Users, ArrowLeftRight, RefreshCw, Repeat } from 'lucide-react';
+import { Trash2, Loader2, Landmark, TrendingUp, TrendingDown, PieChart, Plus, Pencil, Check, X, PlayCircle, Users, ArrowLeftRight, RefreshCw, Repeat, ChevronLeft, ChevronRight } from 'lucide-react';
 import { API, axios, formatSRD } from './utils';
 
 const CURRENCY_SYMBOLS = { EUR: '€', USD: '$' };
@@ -739,40 +739,74 @@ function KasTab({ token, tenants }) {
             <div className="p-3 sm:p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="font-semibold text-slate-900 text-sm sm:text-base">Boekingen Overzicht</h2>
-                {(() => {
-                  // Build month options: 12 months back from today + any extra months found in entries
-                  const monthSet = new Set();
-                  const labelMap = {};
-                  for (let i = 0; i < 12; i++) {
-                    const d = new Date(); d.setMonth(d.getMonth() - i);
-                    const ym = getSurinameYM(d);
-                    if (!ym) continue;
-                    monthSet.add(ym);
-                    const [yy, mm] = ym.split('-');
-                    labelMap[ym] = `${MONTH_NAMES_NL[parseInt(mm) - 1]} ${yy}`;
-                  }
-                  for (const e of entries) {
-                    if (!e.created_at) continue;
-                    const ym = getSurinameYM(e.created_at);
-                    if (!ym) continue;
-                    monthSet.add(ym);
-                    const [yy, mm] = ym.split('-');
-                    labelMap[ym] = `${MONTH_NAMES_NL[parseInt(mm) - 1]} ${yy}`;
-                  }
-                  const opts = Array.from(monthSet).sort().reverse();
-                  return (
-                    <select
-                      value={selectedMonth}
-                      onChange={(e) => setSelectedMonth(e.target.value)}
-                      data-testid="kas-month-filter"
-                      className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs sm:text-sm focus:outline-none focus:border-orange-500 font-medium capitalize"
-                    >
-                      {opts.map(ym => (
-                        <option key={ym} value={ym}>{labelMap[ym]}</option>
-                      ))}
-                    </select>
-                  );
-                })()}
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => {
+                      const [y, m] = selectedMonth.split('-').map(Number);
+                      const d = new Date(y, m - 2, 1);  // previous month
+                      setSelectedMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+                    }}
+                    data-testid="kas-month-prev"
+                    className="p-1.5 sm:p-2 rounded-lg border border-slate-200 hover:bg-slate-50 active:scale-95 text-slate-600"
+                    title="Vorige maand"
+                    aria-label="Vorige maand"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  {(() => {
+                    // Build month options: 12 months back from today + any extra months found in entries
+                    const monthSet = new Set();
+                    const labelMap = {};
+                    for (let i = 0; i < 12; i++) {
+                      const d = new Date(); d.setMonth(d.getMonth() - i);
+                      const ym = getSurinameYM(d);
+                      if (!ym) continue;
+                      monthSet.add(ym);
+                      const [yy, mm] = ym.split('-');
+                      labelMap[ym] = `${MONTH_NAMES_NL[parseInt(mm) - 1]} ${yy}`;
+                    }
+                    for (const e of entries) {
+                      if (!e.created_at) continue;
+                      const ym = getSurinameYM(e.created_at);
+                      if (!ym) continue;
+                      monthSet.add(ym);
+                      const [yy, mm] = ym.split('-');
+                      labelMap[ym] = `${MONTH_NAMES_NL[parseInt(mm) - 1]} ${yy}`;
+                    }
+                    // Always include the currently selected month so it's never missing from the dropdown
+                    if (!monthSet.has(selectedMonth)) {
+                      const [yy, mm] = selectedMonth.split('-');
+                      monthSet.add(selectedMonth);
+                      labelMap[selectedMonth] = `${MONTH_NAMES_NL[parseInt(mm) - 1]} ${yy}`;
+                    }
+                    const opts = Array.from(monthSet).sort().reverse();
+                    return (
+                      <select
+                        value={selectedMonth}
+                        onChange={(e) => setSelectedMonth(e.target.value)}
+                        data-testid="kas-month-filter"
+                        className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs sm:text-sm focus:outline-none focus:border-orange-500 font-medium capitalize"
+                      >
+                        {opts.map(ym => (
+                          <option key={ym} value={ym}>{labelMap[ym]}</option>
+                        ))}
+                      </select>
+                    );
+                  })()}
+                  <button
+                    onClick={() => {
+                      const [y, m] = selectedMonth.split('-').map(Number);
+                      const d = new Date(y, m, 1);  // next month
+                      setSelectedMonth(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+                    }}
+                    data-testid="kas-month-next"
+                    className="p-1.5 sm:p-2 rounded-lg border border-slate-200 hover:bg-slate-50 active:scale-95 text-slate-600"
+                    title="Volgende maand"
+                    aria-label="Volgende maand"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
               <div className="grid grid-cols-3 sm:flex gap-1.5 sm:gap-2">
                 <button onClick={() => { setFormType('income'); setShowForm(true); }} className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-2 sm:px-4 py-2 bg-green-500 text-white rounded-lg text-[10px] sm:text-sm hover:bg-green-600 active:scale-95" data-testid="add-income-btn">

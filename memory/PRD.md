@@ -1,5 +1,27 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 68 (25 apr 2026) — Bank/Kas: pijl-knoppen voor maand-navigatie
+
+### Verzoek
+"Wil je naast de dropdown ook pijl-knoppen (◀ ▶) toevoegen om snel een maand vooruit/terug te springen — vooral handig op mobiel."
+
+### Implementatie
+**`/app/frontend/src/components/vastgoed-kiosk/admin/KasTab.jsx`:**
+- `<ChevronLeft>` knop **links** van dropdown → springt naar vorige maand
+- `<ChevronRight>` knop **rechts** van dropdown → springt naar volgende maand
+- Maand-berekening met `new Date(y, m-2, 1)` resp. `new Date(y, m, 1)` zodat jaarwissel automatisch correct gaat (b.v. januari → vorige = december vorig jaar)
+- Selecteer-state wordt automatisch toegevoegd aan dropdown opties als die nog niet bestaat (zodat navigeren naar oude maanden werkt)
+- `data-testid="kas-month-prev"` / `kas-month-next` voor automated tests
+
+### Resultaat (live getest)
+April 2026 → ◀ → Maart 2026 → ◀ → Februari 2026 → ▶ → Maart → ▶ → April ✓
+Stuk sneller dan dropdown openen op mobiel.
+
+### Bestand
+- `/app/frontend/src/components/vastgoed-kiosk/admin/KasTab.jsx`
+
+---
+
 ## Sprint 67 (25 apr 2026) — Bank/Kas: maand-filter (alleen huidige maand zichtbaar)
 
 ### Verzoek
