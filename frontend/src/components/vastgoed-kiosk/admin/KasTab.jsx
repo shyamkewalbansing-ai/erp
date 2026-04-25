@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Trash2, Loader2, Landmark, TrendingUp, TrendingDown, PieChart, Plus, Pencil, Check, X, PlayCircle, Users, ArrowLeftRight, RefreshCw, Repeat } from 'lucide-react';
 import { API, axios, formatSRD } from './utils';
 
@@ -11,6 +11,34 @@ function formatMoney(amount, currency = 'SRD') {
   const num = Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const sym = CURRENCY_SYMBOLS[currency] || currency;
   return `${sym} ${num}`;
+}
+
+const MONTH_NAMES_NL = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+
+function groupEntriesByMonth(entries, activeCurrency) {
+  // Returns array of { ym, label, items, totals: { income, expense } }, newest first.
+  const map = new Map();
+  for (const e of entries) {
+    const d = e.created_at ? new Date(e.created_at) : new Date();
+    const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    if (!map.has(ym)) {
+      map.set(ym, {
+        ym,
+        label: `${MONTH_NAMES_NL[d.getMonth()]} ${d.getFullYear()}`,
+        items: [],
+        totals: { income: 0, expense: 0, currency: activeCurrency },
+      });
+    }
+    const g = map.get(ym);
+    g.items.push(e);
+    if (!e.exchange_id) {
+      const amt = Number(e.amount || 0);
+      if (e.entry_type === 'income') g.totals.income += amt;
+      else if (e.entry_type === 'expense' || e.entry_type === 'salary') g.totals.expense += amt;
+    }
+  }
+  // Sort groups newest first
+  return Array.from(map.values()).sort((a, b) => (a.ym < b.ym ? 1 : -1));
 }
 
 function KasTab({ token, tenants }) {
@@ -748,9 +776,18 @@ function KasTab({ token, tenants }) {
               </div>
             ) : (
               <>
-                {/* Mobile card layout */}
+                {/* Mobile card layout - grouped by month */}
                 <div className="md:hidden divide-y divide-slate-100 overflow-hidden">
-                  {entries.map(e => {
+                  {groupEntriesByMonth(entries, activeCurrency).map(group => (
+                    <div key={group.ym} data-testid={`month-group-${group.ym}`}>
+                      <div className="sticky top-0 z-10 px-3 py-2 bg-gradient-to-r from-orange-50 to-amber-50 border-y border-orange-200 flex items-center justify-between gap-2">
+                        <h3 className="text-xs font-black text-orange-700 capitalize">{group.label}</h3>
+                        <div className="flex items-center gap-2 text-[10px] font-semibold">
+                          <span className="text-green-600">+ {formatMoney(group.totals.income, activeCurrency)}</span>
+                          <span className="text-red-500">- {formatMoney(group.totals.expense, activeCurrency)}</span>
+                        </div>
+                      </div>
+                      {group.items.map(e => {
                     const isExchange = !!e.exchange_id;
                     const dateStr = e.created_at ? new Date(e.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short' }) : '-';
                     const typeColorCls = isExchange
@@ -810,9 +847,11 @@ function KasTab({ token, tenants }) {
                       </div>
                     );
                   })}
+                    </div>
+                  ))}
                 </div>
 
-                {/* Desktop table layout */}
+                {/* Desktop table layout - grouped by month */}
                 <div className="hidden md:block overflow-x-auto">
                 <table className="w-full min-w-[600px]">
                   <thead className="bg-slate-50">
@@ -826,7 +865,24 @@ function KasTab({ token, tenants }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {entries.map(e => (
+                    {groupEntriesByMonth(entries, activeCurrency).map(group => (
+                      <React.Fragment key={group.ym}>
+                        <tr className="bg-gradient-to-r from-orange-50 to-amber-50 border-y-2 border-orange-200" data-testid={`desktop-month-group-${group.ym}`}>
+                          <td colSpan={6} className="px-4 py-2.5">
+                            <div className="flex items-center justify-between gap-3 flex-wrap">
+                              <h3 className="text-sm font-black text-orange-700 capitalize">{group.label}</h3>
+                              <div className="flex items-center gap-4 text-xs font-semibold">
+                                <span className="text-slate-500">{group.items.length} {group.items.length === 1 ? 'boeking' : 'boekingen'}</span>
+                                <span className="text-green-600">+ {formatMoney(group.totals.income, activeCurrency)}</span>
+                                <span className="text-red-500">- {formatMoney(group.totals.expense, activeCurrency)}</span>
+                                <span className={`font-black ${group.totals.income - group.totals.expense >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                  Netto: {formatMoney(group.totals.income - group.totals.expense, activeCurrency)}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                        {group.items.map(e => (
                       <tr key={e.entry_id} className="border-t border-slate-100 hover:bg-slate-50">
                         <td className="p-4 text-sm text-slate-600">
                           {e.created_at ? new Date(e.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
@@ -881,6 +937,8 @@ function KasTab({ token, tenants }) {
                           </button>
                         </td>
                       </tr>
+                        ))}
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>

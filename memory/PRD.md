@@ -1,5 +1,36 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 66 (25 apr 2026) — Bank/Kas Boekingen Overzicht gegroepeerd per maand
+
+### Verzoek
+"Bij Bank/Kas Boekingen Overzicht zie ik alles in een ik wil dat het elke maand nieuwe records te zien zijn dus elke maand nieuwe Boekingen Overzicht."
+
+### Implementatie
+**`/app/frontend/src/components/vastgoed-kiosk/admin/KasTab.jsx`:**
+
+Nieuwe helper `groupEntriesByMonth(entries, activeCurrency)`:
+- Groepeert entries op `YYYY-MM` van `created_at`
+- Berekent per maand: `items[]`, `totals.income`, `totals.expense` (wisseltransacties uitgesloten)
+- Sorteert nieuwste maand bovenaan
+
+Rendering aangepast voor zowel **mobile cards** als **desktop tabel**:
+- Per maand een oranje header (`bg-gradient-to-r from-orange-50 to-amber-50`) met maandnaam + jaar
+- Header toont: aantal boekingen, totaal `+ inkomsten`, totaal `- uitgaven`, en `Netto` (groen/rood)
+- Daaronder de individuele boekingen van die maand zoals voorheen
+- Desktop: maand-header is een tabelrij met `colSpan={6}` voor nette uitlijning
+- Mobile: `sticky top-0` zodat de huidige maand zichtbaar blijft tijdens scrollen
+
+### Resultaat (live getest)
+Bank/Kas → Hoofdkas:
+- **April 2026** — 12 boekingen, +SRD 500 / -SRD 81.977,04 / Netto -81.477,04
+- **Maart 2026** — 6 boekingen, +SRD 0 / -SRD 32.500,00 / Netto -32.500,00
+- Elke maand heeft eigen header en lijst van records ✓
+
+### Bestand
+- `/app/frontend/src/components/vastgoed-kiosk/admin/KasTab.jsx` — `groupEntriesByMonth` helper + nieuwe header + per-maand rendering (mobile + desktop)
+
+---
+
 ## Sprint 65 (25 apr 2026) — Maand-overzicht popup per huurder
 
 ### Verzoek
