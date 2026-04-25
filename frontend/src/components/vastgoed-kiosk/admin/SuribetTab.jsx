@@ -31,10 +31,13 @@ function BalanceModal({ token, machines, initial, onClose, onSaved }) {
   });
   const [eur, setEur] = useState(initial?.eur_amount ?? 0);
   const [usd, setUsd] = useState(initial?.usd_amount ?? 0);
+  const [balanceFromBon, setBalanceFromBon] = useState(initial?.balance_from_bon ?? 0);
   const [notes, setNotes] = useState(initial?.notes || '');
   const [saving, setSaving] = useState(false);
 
   const total = calcSrdTotal(counts);
+  const bonAmount = parseFloat(balanceFromBon) || 0;
+  const verschil = bonAmount - total; // negatief = winst, positief = bijzetten
 
   const submit = async () => {
     if (!machineId || !balanceDate) {
@@ -49,6 +52,7 @@ function BalanceModal({ token, machines, initial, onClose, onSaved }) {
         counts: Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, parseInt(v) || 0])),
         eur_amount: parseFloat(eur) || 0,
         usd_amount: parseFloat(usd) || 0,
+        balance_from_bon: parseFloat(balanceFromBon) || 0,
         notes: notes.trim(),
       };
       if (isEdit) {
@@ -123,6 +127,41 @@ function BalanceModal({ token, machines, initial, onClose, onSaved }) {
           <label className="block text-xs font-medium mb-1">USD bedrag</label>
           <input type="number" inputMode="decimal" step="0.01" min="0" value={usd} onChange={e => setUsd(e.target.value)} onFocus={e => e.target.select()} className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400" data-testid="suribet-usd" />
         </div>
+      </div>
+
+      {/* Balance van bon + verschil-preview */}
+      <div className="bg-slate-50 rounded-xl p-3 space-y-2">
+        <div>
+          <label className="block text-xs font-medium mb-1">Balance van bon (SRD)</label>
+          <input
+            type="number"
+            inputMode="decimal"
+            step="0.01"
+            min="0"
+            value={balanceFromBon}
+            onChange={e => setBalanceFromBon(e.target.value)}
+            onFocus={e => e.target.select()}
+            placeholder="bv. 68049.56"
+            data-testid="suribet-balance-from-bon"
+            className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+          />
+          <p className="text-[10px] text-slate-500 mt-1">Bedrag onderaan de Suribet bon onder &quot;Balance&quot;</p>
+        </div>
+        {bonAmount > 0 && (
+          <div className={`rounded-lg p-2.5 border-2 ${verschil < 0 ? 'bg-emerald-50 border-emerald-300' : 'bg-rose-50 border-rose-300'}`} data-testid="suribet-verschil-preview">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-[10px] uppercase tracking-wider font-bold ${verschil < 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  {verschil < 0 ? 'Winst gedraaid' : 'Bijzetten nodig'}
+                </p>
+                <p className="text-[10px] text-slate-500">Balance − getelde biljetten</p>
+              </div>
+              <p className={`text-base font-black ${verschil < 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                {verschil < 0 ? '−' : ''}SRD {fmtSRD(Math.abs(verschil))}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div>
@@ -311,11 +350,16 @@ export default function SuribetTab({ token }) {
                   <th className="text-right px-2 py-2 font-bold">EUR</th>
                   <th className="text-right px-2 py-2 font-bold">USD</th>
                   <th className="text-right px-3 py-2 font-bold bg-orange-100 text-orange-700">Totaal SRD</th>
+                  <th className="text-right px-3 py-2 font-bold bg-blue-100 text-blue-700">Bon Balance</th>
+                  <th className="text-right px-3 py-2 font-bold bg-violet-100 text-violet-700">Verschil</th>
                   <th className="text-right px-2 py-2 font-bold w-16">Acties</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {balances.map(b => (
+                {balances.map(b => {
+                  const bon = Number(b.balance_from_bon || 0);
+                  const v = Number(b.verschil || 0);
+                  return (
                   <tr key={b.balance_id} className="hover:bg-orange-50/30" data-testid={`suribet-row-${b.balance_id}`}>
                     <td className="px-3 py-2 text-slate-700 font-medium whitespace-nowrap sticky left-0 bg-white">{fmtDate(b.balance_date)}</td>
                     <td className="px-3 py-2"><span className="inline-block px-2 py-0.5 bg-orange-100 text-orange-700 text-[11px] font-bold rounded-full">{b.machine_name}</span></td>
@@ -328,14 +372,22 @@ export default function SuribetTab({ token }) {
                     <td className="px-2 py-2 text-right text-slate-700">{b.eur_amount > 0 ? fmtSRD(b.eur_amount) : <span className="text-slate-300">—</span>}</td>
                     <td className="px-2 py-2 text-right text-slate-700">{b.usd_amount > 0 ? fmtSRD(b.usd_amount) : <span className="text-slate-300">—</span>}</td>
                     <td className="px-3 py-2 text-right font-black bg-orange-50/50 text-orange-700">{fmtSRD(b.srd_total)}</td>
+                    <td className="px-3 py-2 text-right font-bold bg-blue-50/50 text-blue-700">{bon > 0 ? fmtSRD(bon) : <span className="text-slate-300">—</span>}</td>
+                    <td className={`px-3 py-2 text-right font-black ${bon > 0 ? (v < 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700') : 'text-slate-300'}`} data-testid={`suribet-verschil-${b.balance_id}`}>
+                      {bon > 0 ? `${v < 0 ? '−' : ''}${fmtSRD(Math.abs(v))}` : '—'}
+                    </td>
                     <td className="px-2 py-2 text-right whitespace-nowrap">
                       <button onClick={() => { setEditBalance(b); setShowBalanceModal(true); }} className="p-1 text-slate-400 hover:text-orange-500" title="Bewerken"><Pencil className="w-3.5 h-3.5" /></button>
                       <button onClick={() => removeBalance(b)} className="p-1 text-slate-400 hover:text-red-500" title="Verwijderen"><Trash2 className="w-3.5 h-3.5" /></button>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
                 {/* SUR rijen — totals per machine */}
-                {totals.per_machine.map(pm => (
+                {totals.per_machine.map(pm => {
+                  const bon = Number(pm.balance_from_bon || 0);
+                  const v = Number(pm.verschil || 0);
+                  return (
                   <tr key={`sur-${pm.machine_id}`} className="bg-gradient-to-r from-orange-100 to-amber-100 border-t-2 border-orange-300" data-testid={`suribet-sur-${pm.machine_id}`}>
                     <td className="px-3 py-2.5 font-black text-orange-800 sticky left-0 bg-orange-100" colSpan={2}>
                       SUR {pm.machine_name}
@@ -346,9 +398,14 @@ export default function SuribetTab({ token }) {
                     <td className="px-2 py-2.5 text-right font-black text-orange-800">{pm.eur_amount > 0 ? fmtSRD(pm.eur_amount) : '—'}</td>
                     <td className="px-2 py-2.5 text-right font-black text-orange-800">{pm.usd_amount > 0 ? fmtSRD(pm.usd_amount) : '—'}</td>
                     <td className="px-3 py-2.5 text-right font-black bg-orange-200 text-orange-900">{fmtSRD(pm.srd_total)}</td>
+                    <td className="px-3 py-2.5 text-right font-black bg-blue-200 text-blue-900">{bon > 0 ? fmtSRD(bon) : '—'}</td>
+                    <td className={`px-3 py-2.5 text-right font-black ${bon > 0 ? (v < 0 ? 'bg-emerald-200 text-emerald-900' : 'bg-rose-200 text-rose-900') : 'text-orange-800'}`} data-testid={`suribet-sur-verschil-${pm.machine_id}`}>
+                      {bon > 0 ? `${v < 0 ? '−' : ''}${fmtSRD(Math.abs(v))}` : '—'}
+                    </td>
                     <td className="px-2 py-2.5"></td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

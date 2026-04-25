@@ -35,6 +35,7 @@ class BalanceCreate(BaseModel):
     counts: dict = Field(default_factory=dict)  # {"500": int, "200": int, ...}
     eur_amount: float = 0
     usd_amount: float = 0
+    balance_from_bon: float = 0  # Balance from the daily Suribet receipt (SRD)
     notes: str = ""
 
 
@@ -43,6 +44,7 @@ class BalanceUpdate(BaseModel):
     counts: Optional[dict] = None
     eur_amount: Optional[float] = None
     usd_amount: Optional[float] = None
+    balance_from_bon: Optional[float] = None
     notes: Optional[str] = None
 
 
@@ -148,7 +150,14 @@ async def list_suribet_balances(
     items = await db.kiosk_suribet_balances.find(q, {"_id": 0}).sort([("balance_date", 1), ("machine_name", 1)]).to_list(2000)
     # Add computed total per row
     for it in items:
-        it["srd_total"] = _calc_srd_total(it.get("counts", {}))
+        srd = _calc_srd_total(it.get("counts", {}))
+        it["srd_total"] = srd
+        bal = float(it.get("balance_from_bon", 0) or 0)
+        it["balance_from_bon"] = bal
+        # Verschil = balance_from_bon - srd_total
+        # Negatief = winst (we hebben meer cash dan de bon zegt)
+        # Positief = bijzetten (we missen geld)
+        it["verschil"] = bal - srd
     return items
 
 
@@ -173,12 +182,15 @@ async def create_suribet_balance(data: BalanceCreate, company: dict = Depends(ge
         "counts": counts,
         "eur_amount": float(data.eur_amount or 0),
         "usd_amount": float(data.usd_amount or 0),
+        "balance_from_bon": float(data.balance_from_bon or 0),
         "notes": (data.notes or "").strip(),
         "created_at": datetime.now(timezone.utc),
     }
     await db.kiosk_suribet_balances.insert_one(dict(doc))
     doc.pop("_id", None)
-    doc["srd_total"] = _calc_srd_total(counts)
+    srd = _calc_srd_total(counts)
+    doc["srd_total"] = srd
+    doc["verschil"] = float(data.balance_from_bon or 0) - srd
     return doc
 
 
@@ -198,6 +210,8 @@ async def update_suribet_balance(balance_id: str, data: BalanceUpdate, company: 
         update["eur_amount"] = float(data.eur_amount or 0)
     if data.usd_amount is not None:
         update["usd_amount"] = float(data.usd_amount or 0)
+    if data.balance_from_bon is not None:
+        update["balance_from_bon"] = float(data.balance_from_bon or 0)
     if data.notes is not None:
         update["notes"] = (data.notes or "").strip()
     res = await db.kiosk_suribet_balances.update_one(
@@ -237,7 +251,7 @@ async def get_suribet_totals(
         q["balance_date"] = date_q
     items = await db.kiosk_suribet_balances.find(q, {"_id": 0}).to_list(5000)
 
-    # Per machine, sum counts per denom + EUR + USD + SRD total
+    # Per machine, sum counts per denom + EUR + USD + SRD total + balance_from_bon + verschil
     per_machine: dict = {}
     for it in items:
         mid = it.get("machine_id")
@@ -249,6 +263,8 @@ async def get_suribet_totals(
                 "eur_amount": 0.0,
                 "usd_amount": 0.0,
                 "srd_total": 0.0,
+                "balance_from_bon": 0.0,
+                "verschil": 0.0,
                 "rows_count": 0,
             }
         for d in SRD_DENOMS:
@@ -256,6 +272,11 @@ async def get_suribet_totals(
         per_machine[mid]["eur_amount"] += float(it.get("eur_amount", 0) or 0)
         per_machine[mid]["usd_amount"] += float(it.get("usd_amount", 0) or 0)
         per_machine[mid]["srd_total"] += _calc_srd_total(it.get("counts", {}))
+        per_machine[mid]["balance_from_bon"] += float(it.get("balance_from_bon", 0) or 0)
         per_machine[mid]["rows_count"] += 1
+
+    # Compute verschil per machine = balance_from_bon - srd_total (negatief = winst)
+    for pm in per_machine.values():
+        pm["verschil"] = pm["balance_from_bon"] - pm["srd_total"]
 
     return {"per_machine": list(per_machine.values()), "denominations": SRD_DENOMS}
