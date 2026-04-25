@@ -158,7 +158,7 @@ function PeriodeTable({ title, dates, machines, balancesMap, onSave, savingKey }
         <h3 className="text-sm font-black text-slate-900">{title}</h3>
         <span className="text-[10px] text-slate-500">{dates.length} dagen × {machines.length} machines</span>
       </div>
-      <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3" data-testid={`werkblad-grid-${title.toLowerCase().replace(/\s+/g, '-')}`}>
+      <div className="p-2 flex gap-2 overflow-x-auto" data-testid={`werkblad-grid-${title.toLowerCase().replace(/\s+/g, '-')}`}>
         {rows.map((r) => {
           const s = localState[r.key] || {};
           const counts = s.counts || {};
@@ -171,28 +171,25 @@ function PeriodeTable({ title, dates, machines, balancesMap, onSave, savingKey }
             <div
               key={r.key}
               data-testid={`werkblad-card-${r.key}`}
-              className="rounded-xl border-2 border-slate-200 bg-white overflow-hidden hover:border-orange-300 transition flex flex-col"
+              className="rounded-lg border border-slate-200 bg-white overflow-hidden hover:border-orange-300 transition flex flex-col shrink-0 w-40"
             >
               {/* Header */}
-              <div className="px-3 py-1.5 bg-gradient-to-r from-orange-50 to-amber-50 border-b border-orange-100 flex items-center justify-between">
-                <div className="flex items-center gap-1.5">
-                  <span className="inline-block px-2 py-0.5 bg-orange-500 text-white text-[10px] font-black rounded-full uppercase tracking-wider">{r.machine.name}</span>
-                  <span className="text-[11px] font-bold text-slate-700">{dayLabel(r.balance_date)}</span>
+              <div className="px-2 py-1 bg-gradient-to-r from-orange-50 to-amber-50 border-b border-orange-100 flex items-center justify-between">
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className="inline-block px-1.5 py-0.5 bg-orange-500 text-white text-[9px] font-black rounded uppercase">{r.machine.name}</span>
+                  <span className="text-[10px] font-bold text-slate-700 whitespace-nowrap">{dayLabel(r.balance_date)}</span>
                 </div>
-                {isSaving && <Loader2 className="w-3 h-3 animate-spin text-orange-500" />}
+                {isSaving && <Loader2 className="w-3 h-3 animate-spin text-orange-500 shrink-0" />}
               </div>
 
               {/* Denominations */}
-              <div className="px-3 py-2">
-                <div className="grid grid-cols-[auto_1fr_auto] gap-x-2 gap-y-0.5 items-center text-[11px]">
-                  <div className="text-[9px] uppercase tracking-wider font-bold text-slate-400">Denom</div>
-                  <div className="text-[9px] uppercase tracking-wider font-bold text-slate-400 text-center">Aantal</div>
-                  <div className="text-[9px] uppercase tracking-wider font-bold text-slate-400 text-right">Totaal</div>
+              <div className="px-1.5 py-1">
+                <div className="grid grid-cols-[auto_1fr] gap-x-1 gap-y-0 items-center">
                   {SRD_DENOMS.map(d => {
                     const c = parseInt(counts[String(d)] || 0) || 0;
                     return (
                       <React.Fragment key={d}>
-                        <div className="text-slate-500 font-bold tabular-nums">{d}</div>
+                        <div className={`text-[10px] tabular-nums font-bold ${c > 0 ? 'text-slate-700' : 'text-slate-400'}`}>{d}</div>
                         <NumCell
                           value={counts[String(d)] || 0}
                           onChange={(val) => updateCount(r.key, d, val)}
@@ -200,45 +197,34 @@ function PeriodeTable({ title, dates, machines, balancesMap, onSave, savingKey }
                           width="w-full"
                           testId={`werkblad-cell-${r.key}-${d}`}
                         />
-                        <div className={`tabular-nums text-right text-[11px] ${c > 0 ? 'text-slate-700 font-bold' : 'text-slate-300'}`}>
-                          {c > 0 ? fmtInt(c * d) : '—'}
-                        </div>
                       </React.Fragment>
                     );
                   })}
                 </div>
               </div>
 
-              {/* EUR / USD / Bon / Commissie inputs */}
-              <div className="px-3 pb-2 grid grid-cols-2 gap-2 border-t border-slate-100 pt-2">
-                <div>
-                  <label className="block text-[9px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">EUR</label>
-                  <NumCell decimal value={s.eur_amount || 0} onChange={(v) => updateField(r.key, 'eur_amount', v)} onCommit={() => commitRow(r)} width="w-full" />
-                </div>
-                <div>
-                  <label className="block text-[9px] uppercase tracking-wider font-bold text-slate-400 mb-0.5">USD</label>
-                  <NumCell decimal value={s.usd_amount || 0} onChange={(v) => updateField(r.key, 'usd_amount', v)} onCommit={() => commitRow(r)} width="w-full" />
-                </div>
-                <div>
-                  <label className="block text-[9px] uppercase tracking-wider font-bold text-blue-700 mb-0.5">Bon Balance</label>
-                  <NumCell decimal value={s.balance_from_bon || 0} onChange={(v) => updateField(r.key, 'balance_from_bon', v)} onCommit={() => commitRow(r)} width="w-full" testId={`werkblad-bon-${r.key}`} />
-                </div>
-                <div>
-                  <label className="block text-[9px] uppercase tracking-wider font-bold text-violet-700 mb-0.5">Commissie</label>
-                  <NumCell decimal value={s.commissie_amount || 0} onChange={(v) => updateField(r.key, 'commissie_amount', v)} onCommit={() => commitRow(r)} width="w-full" testId={`werkblad-com-${r.key}`} />
-                </div>
+              {/* EUR / USD / Bon / Commissie */}
+              <div className="px-1.5 pb-1 grid grid-cols-[auto_1fr] gap-x-1 gap-y-0 items-center border-t border-slate-100 pt-1">
+                <div className="text-[9px] font-bold text-slate-500 uppercase">EUR</div>
+                <NumCell decimal value={s.eur_amount || 0} onChange={(v) => updateField(r.key, 'eur_amount', v)} onCommit={() => commitRow(r)} width="w-full" />
+                <div className="text-[9px] font-bold text-slate-500 uppercase">USD</div>
+                <NumCell decimal value={s.usd_amount || 0} onChange={(v) => updateField(r.key, 'usd_amount', v)} onCommit={() => commitRow(r)} width="w-full" />
+                <div className="text-[9px] font-bold text-blue-700 uppercase">Bon</div>
+                <NumCell decimal value={s.balance_from_bon || 0} onChange={(v) => updateField(r.key, 'balance_from_bon', v)} onCommit={() => commitRow(r)} width="w-full" testId={`werkblad-bon-${r.key}`} />
+                <div className="text-[9px] font-bold text-violet-700 uppercase">Com</div>
+                <NumCell decimal value={s.commissie_amount || 0} onChange={(v) => updateField(r.key, 'commissie_amount', v)} onCommit={() => commitRow(r)} width="w-full" testId={`werkblad-com-${r.key}`} />
               </div>
 
-              {/* Footer totals */}
+              {/* Footer */}
               <div className="mt-auto border-t border-slate-100">
-                <div className="px-3 py-1.5 flex items-center justify-between text-[11px] bg-orange-50">
-                  <span className="font-bold text-orange-700">Totaal SRD</span>
+                <div className="px-2 py-1 flex items-center justify-between text-[10px] bg-orange-50">
+                  <span className="font-bold text-orange-700">Totaal</span>
                   <span className="font-black text-orange-700 tabular-nums">{srd > 0 ? fmtSRD(srd) : '—'}</span>
                 </div>
                 {bon > 0 && (
-                  <div className={`px-3 py-2 flex items-center justify-between text-xs border-t-2 ${winst ? 'bg-emerald-100 border-emerald-300' : 'bg-rose-100 border-rose-300'}`} data-testid={`werkblad-card-verschil-${r.key}`}>
-                    <span className={`font-black uppercase tracking-wider text-[10px] ${winst ? 'text-emerald-800' : 'text-rose-800'}`}>
-                      {winst ? '✓ Winst' : '⚠ Bijzetten'}
+                  <div className={`px-2 py-1 flex items-center justify-between text-[10px] border-t-2 ${winst ? 'bg-emerald-100 border-emerald-300' : 'bg-rose-100 border-rose-300'}`} data-testid={`werkblad-card-verschil-${r.key}`}>
+                    <span className={`font-black uppercase tracking-wider text-[9px] ${winst ? 'text-emerald-800' : 'text-rose-800'}`}>
+                      {winst ? '✓ Winst' : '⚠ Bijzet'}
                     </span>
                     <span className={`font-black tabular-nums ${winst ? 'text-emerald-800' : 'text-rose-800'}`}>
                       {winst ? '−' : ''}{fmtSRD(Math.abs(v))}
@@ -250,7 +236,7 @@ function PeriodeTable({ title, dates, machines, balancesMap, onSave, savingKey }
           );
         })}
 
-        {/* SUR cards onderaan */}
+        {/* SUR cards */}
         {machines.map((m) => {
           const s = sur[m.machine_id];
           if (!s) return null;
@@ -260,59 +246,48 @@ function PeriodeTable({ title, dates, machines, balancesMap, onSave, savingKey }
             <div
               key={`sur-${m.machine_id}`}
               data-testid={`werkblad-sur-card-${m.machine_id}`}
-              className="rounded-xl border-2 border-orange-400 bg-gradient-to-br from-orange-50 to-amber-100 overflow-hidden shadow-md flex flex-col"
+              className="rounded-lg border-2 border-orange-400 bg-gradient-to-br from-orange-50 to-amber-100 overflow-hidden shadow-md flex flex-col shrink-0 w-40"
             >
-              <div className="px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-600 border-b border-orange-600 flex items-center justify-between">
-                <span className="text-white font-black uppercase tracking-wider text-xs">SUR {m.name}</span>
-                <span className="text-[10px] font-bold text-orange-100">{dates.length} dagen</span>
+              <div className="px-2 py-1 bg-gradient-to-r from-orange-500 to-amber-600 border-b border-orange-600 flex items-center justify-between">
+                <span className="text-white font-black uppercase text-[10px]">SUR {m.name}</span>
+                <span className="text-[9px] font-bold text-orange-100">{dates.length}d</span>
               </div>
 
-              <div className="px-3 py-2">
-                <div className="grid grid-cols-[auto_auto_1fr] gap-x-2 gap-y-0.5 items-center text-[11px]">
-                  <div className="text-[9px] uppercase tracking-wider font-bold text-orange-700">Denom</div>
-                  <div className="text-[9px] uppercase tracking-wider font-bold text-orange-700 text-center">Aantal</div>
-                  <div className="text-[9px] uppercase tracking-wider font-bold text-orange-700 text-right">Totaal</div>
+              <div className="px-1.5 py-1">
+                <div className="grid grid-cols-[auto_1fr] gap-x-1 gap-y-0 items-center">
                   {SRD_DENOMS.map(d => {
                     const c = s.counts[String(d)] || 0;
                     return (
                       <React.Fragment key={d}>
-                        <div className="text-orange-600 font-bold tabular-nums">{d}</div>
-                        <div className={`tabular-nums text-center font-black ${c > 0 ? 'text-orange-900' : 'text-orange-300'}`}>{c}</div>
-                        <div className={`tabular-nums text-right font-bold ${c > 0 ? 'text-orange-800' : 'text-orange-300'}`}>{c > 0 ? fmtInt(c * d) : '—'}</div>
+                        <div className={`text-[10px] tabular-nums font-bold ${c > 0 ? 'text-orange-700' : 'text-orange-400'}`}>{d}</div>
+                        <div className={`tabular-nums text-right text-[10px] font-black px-1 py-0.5 ${c > 0 ? 'text-orange-900' : 'text-orange-300'}`}>{c}</div>
                       </React.Fragment>
                     );
                   })}
                 </div>
               </div>
 
-              {(s.eur > 0 || s.usd > 0) && (
-                <div className="px-3 pb-2 flex items-center gap-3 text-[11px] border-t border-orange-200 pt-2">
-                  {s.eur > 0 && <span><span className="text-orange-600 font-bold">EUR</span> <span className="font-black text-orange-800">{fmtSRD(s.eur)}</span></span>}
-                  {s.usd > 0 && <span><span className="text-orange-600 font-bold">USD</span> <span className="font-black text-orange-800">{fmtSRD(s.usd)}</span></span>}
-                </div>
-              )}
-
               <div className="mt-auto border-t-2 border-orange-300">
-                <div className="px-3 py-1.5 flex items-center justify-between text-[11px] bg-orange-200">
-                  <span className="font-black text-orange-900">Totaal SRD</span>
+                <div className="px-2 py-1 flex items-center justify-between text-[10px] bg-orange-200">
+                  <span className="font-black text-orange-900">Totaal</span>
                   <span className="font-black text-orange-900 tabular-nums">{fmtSRD(s.srd)}</span>
                 </div>
                 {s.bon > 0 && (
-                  <div className="px-3 py-1.5 flex items-center justify-between text-[11px] bg-blue-200 border-t border-blue-300">
-                    <span className="font-black text-blue-900">Bon Balance</span>
+                  <div className="px-2 py-1 flex items-center justify-between text-[10px] bg-blue-200 border-t border-blue-300">
+                    <span className="font-black text-blue-900">Bon</span>
                     <span className="font-black text-blue-900 tabular-nums">{fmtSRD(s.bon)}</span>
                   </div>
                 )}
                 {s.commissie > 0 && (
-                  <div className="px-3 py-1.5 flex items-center justify-between text-[11px] bg-violet-200 border-t border-violet-300">
-                    <span className="font-black text-violet-900">Commissie</span>
+                  <div className="px-2 py-1 flex items-center justify-between text-[10px] bg-violet-200 border-t border-violet-300">
+                    <span className="font-black text-violet-900">Com</span>
                     <span className="font-black text-violet-900 tabular-nums">{fmtSRD(s.commissie)}</span>
                   </div>
                 )}
                 {s.bon > 0 && (
-                  <div className={`px-3 py-2.5 flex items-center justify-between text-sm border-t-2 ${winst ? 'bg-emerald-200 border-emerald-400' : 'bg-rose-200 border-rose-400'}`} data-testid={`werkblad-sur-card-verschil-${m.machine_id}`}>
-                    <span className={`font-black uppercase tracking-wider text-xs ${winst ? 'text-emerald-900' : 'text-rose-900'}`}>
-                      {winst ? '✓ Winst' : '⚠ Bijzetten'}
+                  <div className={`px-2 py-1 flex items-center justify-between text-[10px] border-t-2 ${winst ? 'bg-emerald-200 border-emerald-400' : 'bg-rose-200 border-rose-400'}`} data-testid={`werkblad-sur-card-verschil-${m.machine_id}`}>
+                    <span className={`font-black uppercase text-[9px] ${winst ? 'text-emerald-900' : 'text-rose-900'}`}>
+                      {winst ? '✓ Winst' : '⚠ Bijzet'}
                     </span>
                     <span className={`font-black tabular-nums ${winst ? 'text-emerald-900' : 'text-rose-900'}`}>
                       {winst ? '−' : ''}{fmtSRD(Math.abs(v))}
