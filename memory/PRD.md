@@ -1,5 +1,33 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 67 (25 apr 2026) — Bank/Kas: maand-filter (alleen huidige maand zichtbaar)
+
+### Verzoek
+"Bij Kwitanties zie ik elke maand nieuwe overzicht — stel we zijn in april dan zie ik alle overzicht van die maand en als we in mei zijn dan alleen dat overzicht, en zo gaat het door. Dus géén lange scroll-lijst meer met alle maanden tegelijk."
+
+### Implementatie
+**`/app/frontend/src/components/vastgoed-kiosk/admin/KasTab.jsx`:**
+
+- Sprint-66 maand-grouping vervangen door **maand-filter dropdown** (zoals bij `/admin/payments` Kwitanties)
+- Standaard staat de dropdown op **huidige maand** (Suriname tijdzone)
+- Dropdown bevat: laatste 12 maanden + alle maanden waar boekingen voor bestaan (auto-aanvulling vanuit `entries[]`)
+- Onder de dropdown: één samenvattings-strip met `<maand> · N boekingen · +inkomsten / -uitgaven / netto`
+- Lijst toont **alleen** records van geselecteerde maand
+- Lege staat: "Geen boekingen in <maand>" wanneer maand leeg is
+
+### Tijdzone-fix
+Nieuwe helper `getSurinameYM(dateInput)` gebruikt `Intl.DateTimeFormat` met `timeZone: 'America/Paramaribo'` om YYYY-MM correct in Suriname-tijd (UTC-3) te bepalen. Lost bug op waarbij entries gemaakt rond middernacht UTC tot de verkeerde maand werden gerekend.
+
+### Resultaat (live getest)
+- Default open: April 2026 → 12 boekingen (april-only) ✓
+- Switch naar Maart 2026 → 6 boekingen (maart-only) ✓
+- Geen scrollen meer door oudere maanden — alleen huidige maand standaard zichtbaar ✓
+
+### Bestand
+- `/app/frontend/src/components/vastgoed-kiosk/admin/KasTab.jsx` — `getSurinameYM()` helper, `selectedMonth` state, dropdown + filter, summary strip
+
+---
+
 ## Sprint 66 (25 apr 2026) — Bank/Kas Boekingen Overzicht gegroepeerd per maand
 
 ### Verzoek

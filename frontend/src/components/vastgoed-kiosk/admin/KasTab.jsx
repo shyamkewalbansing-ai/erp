@@ -15,6 +15,21 @@ function formatMoney(amount, currency = 'SRD') {
 
 const MONTH_NAMES_NL = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
 
+// Suriname-TZ aware month-key (YYYY-MM) for a Date or ISO string.
+function getSurinameYM(dateInput) {
+  const d = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (isNaN(d)) return null;
+  // Use Intl with Paramaribo TZ → returns parts in Suriname local time
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Paramaribo',
+    year: 'numeric',
+    month: '2-digit',
+  }).formatToParts(d);
+  const y = parts.find(p => p.type === 'year')?.value;
+  const m = parts.find(p => p.type === 'month')?.value;
+  return (y && m) ? `${y}-${m}` : null;
+}
+
 function groupEntriesByMonth(entries, activeCurrency) {
   // Returns array of { ym, label, items, totals: { income, expense } }, newest first.
   const map = new Map();
@@ -43,6 +58,9 @@ function groupEntriesByMonth(entries, activeCurrency) {
 
 function KasTab({ token, tenants }) {
   const [entries, setEntries] = useState([]);
+  // Default to current month in Suriname time
+  const _curYM = getSurinameYM(new Date()) || `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+  const [selectedMonth, setSelectedMonth] = useState(_curYM);
   const [totals, setTotals] = useState({ total_income: 0, total_expense: 0, balance: 0 });
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -719,7 +737,43 @@ function KasTab({ token, tenants }) {
           {/* Boekingen Tabel */}
           <div className="bg-white rounded-xl border border-slate-200">
             <div className="p-3 sm:p-4 border-b border-slate-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-              <h2 className="font-semibold text-slate-900 text-sm sm:text-base">Boekingen Overzicht</h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="font-semibold text-slate-900 text-sm sm:text-base">Boekingen Overzicht</h2>
+                {(() => {
+                  // Build month options: 12 months back from today + any extra months found in entries
+                  const monthSet = new Set();
+                  const labelMap = {};
+                  for (let i = 0; i < 12; i++) {
+                    const d = new Date(); d.setMonth(d.getMonth() - i);
+                    const ym = getSurinameYM(d);
+                    if (!ym) continue;
+                    monthSet.add(ym);
+                    const [yy, mm] = ym.split('-');
+                    labelMap[ym] = `${MONTH_NAMES_NL[parseInt(mm) - 1]} ${yy}`;
+                  }
+                  for (const e of entries) {
+                    if (!e.created_at) continue;
+                    const ym = getSurinameYM(e.created_at);
+                    if (!ym) continue;
+                    monthSet.add(ym);
+                    const [yy, mm] = ym.split('-');
+                    labelMap[ym] = `${MONTH_NAMES_NL[parseInt(mm) - 1]} ${yy}`;
+                  }
+                  const opts = Array.from(monthSet).sort().reverse();
+                  return (
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) => setSelectedMonth(e.target.value)}
+                      data-testid="kas-month-filter"
+                      className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs sm:text-sm focus:outline-none focus:border-orange-500 font-medium capitalize"
+                    >
+                      {opts.map(ym => (
+                        <option key={ym} value={ym}>{labelMap[ym]}</option>
+                      ))}
+                    </select>
+                  );
+                })()}
+              </div>
               <div className="grid grid-cols-3 sm:flex gap-1.5 sm:gap-2">
                 <button onClick={() => { setFormType('income'); setShowForm(true); }} className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-2 px-2 sm:px-4 py-2 bg-green-500 text-white rounded-lg text-[10px] sm:text-sm hover:bg-green-600 active:scale-95" data-testid="add-income-btn">
                   <TrendingUp className="w-4 h-4" /> <span>Inkomst</span>
@@ -769,25 +823,60 @@ function KasTab({ token, tenants }) {
               </form>
             )}
 
-            {entries.length === 0 ? (
-              <div className="p-12 text-center">
-                <Landmark className="w-10 h-10 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-400">Nog geen boekingen</p>
-              </div>
-            ) : (
+            {(() => {
+              // Filter entries to only the selected month
+              const filteredEntries = entries.filter(e => {
+                if (!e.created_at) return false;
+                return getSurinameYM(e.created_at) === selectedMonth;
+              });
+              // Compute month totals
+              let mIncome = 0, mExpense = 0;
+              for (const e of filteredEntries) {
+                if (e.exchange_id) continue;
+                const amt = Number(e.amount || 0);
+                if (e.entry_type === 'income') mIncome += amt;
+                else if (e.entry_type === 'expense' || e.entry_type === 'salary') mExpense += amt;
+              }
+              const monthLabel = (() => {
+                const [y, m] = selectedMonth.split('-');
+                const monthNames = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december'];
+                return `${monthNames[parseInt(m) - 1]} ${y}`;
+              })();
+              if (entries.length === 0) {
+                return (
+                  <div className="p-12 text-center">
+                    <Landmark className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-400">Nog geen boekingen</p>
+                  </div>
+                );
+              }
+              if (filteredEntries.length === 0) {
+                return (
+                  <div className="p-12 text-center">
+                    <Landmark className="w-10 h-10 text-slate-300 mx-auto mb-3" />
+                    <p className="text-slate-400 capitalize">Geen boekingen in {monthLabel}</p>
+                  </div>
+                );
+              }
+              return (
               <>
-                {/* Mobile card layout - grouped by month */}
+                {/* Month summary strip */}
+                <div className="px-3 sm:px-4 py-2.5 bg-gradient-to-r from-orange-50 to-amber-50 border-b border-orange-200 flex items-center justify-between gap-3 flex-wrap" data-testid={`month-summary-${selectedMonth}`}>
+                  <span className="text-xs sm:text-sm text-slate-500 font-medium">
+                    <span className="text-orange-700 font-black capitalize">{monthLabel}</span> &middot; {filteredEntries.length} {filteredEntries.length === 1 ? 'boeking' : 'boekingen'}
+                  </span>
+                  <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs font-semibold flex-wrap">
+                    <span className="text-green-600">+ {formatMoney(mIncome, activeCurrency)}</span>
+                    <span className="text-red-500">- {formatMoney(mExpense, activeCurrency)}</span>
+                    <span className={`font-black ${mIncome - mExpense >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      Netto {formatMoney(mIncome - mExpense, activeCurrency)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Mobile card layout */}
                 <div className="md:hidden divide-y divide-slate-100 overflow-hidden">
-                  {groupEntriesByMonth(entries, activeCurrency).map(group => (
-                    <div key={group.ym} data-testid={`month-group-${group.ym}`}>
-                      <div className="sticky top-0 z-10 px-3 py-2 bg-gradient-to-r from-orange-50 to-amber-50 border-y border-orange-200 flex items-center justify-between gap-2">
-                        <h3 className="text-xs font-black text-orange-700 capitalize">{group.label}</h3>
-                        <div className="flex items-center gap-2 text-[10px] font-semibold">
-                          <span className="text-green-600">+ {formatMoney(group.totals.income, activeCurrency)}</span>
-                          <span className="text-red-500">- {formatMoney(group.totals.expense, activeCurrency)}</span>
-                        </div>
-                      </div>
-                      {group.items.map(e => {
+                  {filteredEntries.map(e => {
                     const isExchange = !!e.exchange_id;
                     const dateStr = e.created_at ? new Date(e.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short' }) : '-';
                     const typeColorCls = isExchange
@@ -847,11 +936,9 @@ function KasTab({ token, tenants }) {
                       </div>
                     );
                   })}
-                    </div>
-                  ))}
                 </div>
 
-                {/* Desktop table layout - grouped by month */}
+                {/* Desktop table layout */}
                 <div className="hidden md:block overflow-x-auto">
                 <table className="w-full min-w-[600px]">
                   <thead className="bg-slate-50">
@@ -865,24 +952,7 @@ function KasTab({ token, tenants }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {groupEntriesByMonth(entries, activeCurrency).map(group => (
-                      <React.Fragment key={group.ym}>
-                        <tr className="bg-gradient-to-r from-orange-50 to-amber-50 border-y-2 border-orange-200" data-testid={`desktop-month-group-${group.ym}`}>
-                          <td colSpan={6} className="px-4 py-2.5">
-                            <div className="flex items-center justify-between gap-3 flex-wrap">
-                              <h3 className="text-sm font-black text-orange-700 capitalize">{group.label}</h3>
-                              <div className="flex items-center gap-4 text-xs font-semibold">
-                                <span className="text-slate-500">{group.items.length} {group.items.length === 1 ? 'boeking' : 'boekingen'}</span>
-                                <span className="text-green-600">+ {formatMoney(group.totals.income, activeCurrency)}</span>
-                                <span className="text-red-500">- {formatMoney(group.totals.expense, activeCurrency)}</span>
-                                <span className={`font-black ${group.totals.income - group.totals.expense >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                  Netto: {formatMoney(group.totals.income - group.totals.expense, activeCurrency)}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                        {group.items.map(e => (
+                    {filteredEntries.map(e => (
                       <tr key={e.entry_id} className="border-t border-slate-100 hover:bg-slate-50">
                         <td className="p-4 text-sm text-slate-600">
                           {e.created_at ? new Date(e.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}
@@ -937,14 +1007,13 @@ function KasTab({ token, tenants }) {
                           </button>
                         </td>
                       </tr>
-                        ))}
-                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>
                 </div>
               </>
-            )}
+              );
+            })()}
           </div>
         </>
       ) : activeView === 'verdeling' ? (
