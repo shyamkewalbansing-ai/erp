@@ -1,4 +1,5 @@
 from .base import *
+from .admin import _compute_unpaid_months  # FIFO helper hergebruiken
 
 class EmployeePinLogin(BaseModel):
     pin: str
@@ -294,36 +295,25 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
     count = await db.kiosk_payments.count_documents({"company_id": company_id})
     kwitantie_nummer = f"KW{now.year}-{str(count + 1).zfill(5)}"
     
-    # Auto-calculate covered months for rent payments
+    # Auto-calculate covered months for rent payments using shared FIFO helper
     covered_months = []
     if data.payment_type in ["rent", "partial_rent", "monthly_rent"]:
         monthly_rent = tenant.get("monthly_rent", 0)
         outstanding = tenant.get("outstanding_rent", 0)
         billed_through = tenant.get("rent_billed_through", "")
-        if billed_through and monthly_rent > 0 and outstanding > 0:
-            bt_date = datetime.strptime(billed_through + "-01", "%Y-%m-%d")
-            months_owed = int(outstanding / monthly_rent) if monthly_rent > 0 else 0
-            remainder = outstanding - (months_owed * monthly_rent)
-            if remainder > 0:
-                months_owed += 1
-            month_names_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
-            # Build overdue months list (oldest first) — include billed_through itself
-            all_overdue = []
-            for i in range(months_owed):
-                m_date = bt_date - relativedelta(months=i)
-                m_label = f"{month_names_nl[m_date.month - 1]} {m_date.year}"
-                m_key = m_date.strftime("%Y-%m")
-                all_overdue.append({"label": m_label, "key": m_key})
-            all_overdue.reverse()
-            # Determine how many months this payment covers
-            pay_amount = data.amount
-            for m in all_overdue:
-                if pay_amount >= monthly_rent:
-                    covered_months.append(m["label"])
-                    pay_amount -= monthly_rent
-                elif pay_amount > 0:
-                    covered_months.append(m["label"] + " (gedeeltelijk)")
-                    pay_amount = 0
+        unpaid = await _compute_unpaid_months(company_id, data.tenant_id, billed_through, monthly_rent, outstanding)
+        # unpaid is sorted oldest-first; allocate this payment FIFO
+        pay_amount = float(data.amount)
+        for m in unpaid:
+            if pay_amount <= 0:
+                break
+            needed = float(m.get("remaining", 0))
+            if pay_amount >= needed - 0.01:
+                covered_months.append(m["label"])
+                pay_amount -= needed
+            else:
+                covered_months.append(m["label"] + " (gedeeltelijk)")
+                pay_amount = 0
 
     payment = {
         "payment_id": payment_id,
