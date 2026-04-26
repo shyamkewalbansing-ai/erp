@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Building2, Users, Home, ArrowLeft, Loader2, Settings, ExternalLink,
-  Copy, Check, Receipt, Zap, LogIn, Landmark, Briefcase, Wallet, Wifi, Cpu,
+  Copy, Check, Receipt, Zap, LogIn, Landmark, Briefcase, Wifi, Cpu,
   AlertTriangle, MapPin, Shield, QrCode
 } from 'lucide-react';
 import axios from 'axios';
@@ -15,7 +15,7 @@ import LocationsTab from './admin/LocationsTab';
 import PaymentsTab from './admin/PaymentsTab';
 import SettingsTab from './admin/SettingsTab';
 import KasTab from './admin/KasTab';
-import LoansTab, { LoanDetailModal } from './admin/LoansTab';
+// Leningen functie verwijderd
 import EmployeesTab from './admin/EmployeesTab';
 import SuribetTab from './admin/SuribetTab';
 import PowerTab from './admin/PowerTab';
@@ -55,7 +55,6 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   const [showAddRentModal, setShowAddRentModal] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [selectedTenant, setSelectedTenant] = useState(null);
-  const [loanDetailData, setLoanDetailData] = useState(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [showQRScanner, setShowQRScanner] = useState(false);
 
@@ -178,7 +177,6 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     { id: 'apartments', label: 'Appt.', icon: Home },
     { id: 'payments', label: 'Kwitanties', icon: Receipt },
     { id: 'kas', label: 'Bank/Kas', icon: Landmark },
-    { id: 'loans', label: 'Leningen', icon: Wallet },
     { id: 'employees', label: 'Werknemers', icon: Briefcase },
     { id: 'suribet', label: 'Suribet', icon: Cpu },
     { id: 'power', label: 'Stroom', icon: Zap },
@@ -187,7 +185,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
   ];
   const featureSuribet = !!company?.features?.suribet;
   const ROLE_TABS = {
-    beheerder: ['dashboard', 'tenants', 'locations', 'apartments', 'payments', 'kas', 'loans', 'employees', ...(featureSuribet ? ['suribet'] : []), 'power', 'internet', 'settings'],
+    beheerder: ['dashboard', 'tenants', 'locations', 'apartments', 'payments', 'kas', 'employees', ...(featureSuribet ? ['suribet'] : []), 'power', 'internet', 'settings'],
     boekhouder: ['dashboard', 'tenants', 'payments', 'kas'],
     kiosk_medewerker: [], // No admin dashboard access - only kiosk
   };
@@ -383,10 +381,6 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
           <KasTab token={token} tenants={tenants} formatSRD={formatSRD} />
         )}
 
-        {activeTab === 'loans' && (
-          <LoansTab token={token} tenants={tenants} formatSRD={formatSRD} onShowDetail={setLoanDetailData} />
-        )}
-
         {activeTab === 'employees' && (
           <EmployeesTab token={token} formatSRD={formatSRD} />
         )}
@@ -440,15 +434,6 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
           onClose={() => setShowQRScanner(false)}
           token={token}
           onRefresh={loadData}
-        />
-      )}
-
-      {loanDetailData && (
-        <LoanDetailModal
-          loan={loanDetailData}
-          formatSRD={formatSRD}
-          onClose={() => setLoanDetailData(null)}
-          onPay={() => {}}
         />
       )}
 
