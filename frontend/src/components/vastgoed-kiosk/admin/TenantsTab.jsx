@@ -175,9 +175,14 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-semibold">
+                        <button
+                          onClick={() => onEditTenant && onEditTenant(tenant)}
+                          data-testid={`tenant-billed-${tenant.tenant_id}`}
+                          title="Klik om Gefactureerd t/m aan te passen"
+                          className="px-2 py-1 bg-slate-100 hover:bg-orange-100 text-slate-700 hover:text-orange-700 rounded text-xs font-semibold transition cursor-pointer"
+                        >
                           t/m {billedLabel}
-                        </span>
+                        </button>
                         {overdueMonths.length > 0 && (
                           <div className="mt-1">
                             <span className="text-[11px] text-red-500 font-medium">
