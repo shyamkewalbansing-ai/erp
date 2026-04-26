@@ -502,8 +502,11 @@ async def list_tenants(company: dict = Depends(get_current_company)):
         current_fines = t.get("fines", 0)
         updates = {}
         
-        # Alleen auto-billing voor huurders met EXPLICIETE status="active" — anders niet aanraken
-        if t.get("status") == "active" and monthly_rent > 0:
+        # Auto-billing voor active huurders. Tolereer ook legacy-data zonder expliciete status.
+        # Belangrijk: deze engine raakt ALLEEN het tenant-record aan (rent_billed_through,
+        # outstanding_rent, fines), NOOIT bestaande kwitanties of hun covered_months.
+        is_active_status = t.get("status") in ("active", None, "", "Active")
+        if is_active_status and monthly_rent > 0:
             if not billed_through:
                 billed_through = current_month
                 updates["rent_billed_through"] = current_month
@@ -587,7 +590,7 @@ async def list_tenants(company: dict = Depends(get_current_company)):
             )
             
             # === AUTO WHATSAPP: Billing notifications ===
-            if (t.get("phone") or t.get("telefoon")) and t.get("status") == "active":
+            if (t.get("phone") or t.get("telefoon")) and is_active_status:
                 company_name_for_wa = comp.get("stamp_company_name") or comp.get("name", "") if comp else ""
                 months_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
                 t_phone = t.get("phone") or t.get("telefoon", "")
@@ -622,7 +625,7 @@ async def list_tenants(company: dict = Depends(get_current_company)):
         
         # === AUTO POWER CUTOFF: Turn off Shelly when overdue past cutoff days ===
         power_cutoff_days = comp.get("power_cutoff_days", 0) if comp else 0
-        if power_cutoff_days > 0 and t.get("status") == "active":
+        if power_cutoff_days > 0 and is_active_status:
             total_debt = (updates.get("outstanding_rent", outstanding) + 
                          t.get("service_costs", 0) + 
                          (updates.get("fines", current_fines)))
