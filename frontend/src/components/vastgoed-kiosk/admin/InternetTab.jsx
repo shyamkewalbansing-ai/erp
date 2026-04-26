@@ -148,14 +148,14 @@ function InternetTab({ token, tenants, formatSRD, onRefresh }) {
     <div className="space-y-6" data-testid="internet-tab">
       {/* Plans Section */}
       <div className="bg-white rounded-xl border border-slate-200">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="font-bold text-slate-900">Internet Plannen</h3>
+        <div className="p-3 sm:p-4 border-b border-slate-100 flex items-center justify-between gap-2">
+          <h3 className="font-bold text-slate-900 text-sm sm:text-base">Internet Plannen</h3>
           <button
             onClick={() => { setEditPlan(null); setPlanName(''); setPlanSpeed(''); setPlanPrice(''); setShowPlanModal(true); }}
             data-testid="internet-add-plan"
-            className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition"
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap"
           >
-            <Plus className="w-4 h-4" /> Nieuw plan
+            <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Nieuw plan</span><span className="sm:hidden">Nieuw</span>
           </button>
         </div>
         {plans.length === 0 ? (
@@ -194,7 +194,8 @@ function InternetTab({ token, tenants, formatSRD, onRefresh }) {
         <div className="p-4 border-b border-slate-100">
           <h3 className="font-bold text-slate-900">Aansluitingen per Huurder</h3>
         </div>
-        <div className="overflow-x-auto">
+        {/* Desktop tabel */}
+        <div className="overflow-x-auto hidden md:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
@@ -245,21 +246,61 @@ function InternetTab({ token, tenants, formatSRD, onRefresh }) {
             </tbody>
           </table>
         </div>
+        {/* Mobile cards */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {connections.map(c => (
+            <div key={c.tenant_id} className="p-3" data-testid={`internet-conn-mobile-${c.tenant_id}`}>
+              <div className="flex items-start justify-between mb-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-slate-900 text-sm truncate">{c.name}</p>
+                  <p className="text-xs text-slate-400">App. {c.apartment_number}</p>
+                </div>
+                {c.internet_cost > 0 && (
+                  <p className="font-bold text-slate-900 text-sm whitespace-nowrap ml-2">{formatSRD(c.internet_cost)}<span className="text-[10px] text-slate-400 font-normal">/mnd</span></p>
+                )}
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                {c.internet_plan_name ? (
+                  <span className="px-2 py-1 rounded-full text-[11px] font-medium bg-orange-100 text-orange-700 truncate">{c.internet_plan_name}</span>
+                ) : (
+                  <span className="text-slate-400 text-[11px]">Geen plan</span>
+                )}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => setAssignModal(c)}
+                    data-testid={`internet-assign-mobile-${c.tenant_id}`}
+                    className="px-2.5 py-1.5 text-[11px] bg-slate-100 active:bg-slate-200 rounded-lg font-bold"
+                  >
+                    {c.internet_plan_id ? 'Wijzigen' : 'Toewijzen'}
+                  </button>
+                  {c.internet_plan_id && (
+                    <button
+                      onClick={() => handleUnassign(c.tenant_id)}
+                      className="p-1.5 bg-red-50 active:bg-red-100 text-red-600 rounded-lg"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Tenda Router Management */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
-          <div>
-            <h3 className="font-bold text-slate-900">Router Beheer (Tenda AC1200)</h3>
-            <p className="text-xs text-slate-400 mt-0.5">Internet aan/uit per huurder, verbonden apparaten</p>
+        <div className="p-3 sm:p-4 border-b border-slate-100 flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <h3 className="font-bold text-slate-900 text-sm sm:text-base">Router Beheer (Tenda AC1200)</h3>
+            <p className="text-[11px] sm:text-xs text-slate-400 mt-0.5 hidden sm:block">Internet aan/uit per huurder, verbonden apparaten</p>
           </div>
           <button
             onClick={() => setShowRouterModal(true)}
             data-testid="tenda-add-router"
-            className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-sm font-medium transition"
+            className="flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-lg text-xs sm:text-sm font-medium transition whitespace-nowrap shrink-0"
           >
-            <Plus className="w-4 h-4" /> Router toevoegen
+            <Plus className="w-4 h-4" /> <span className="hidden sm:inline">Router toevoegen</span><span className="sm:hidden">Router</span>
           </button>
         </div>
         {routers.length === 0 ? (
