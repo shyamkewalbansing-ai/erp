@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Trash2, Receipt, Search, Calendar, FileText, RefreshCw, CheckCircle, XCircle, Clock, Printer } from 'lucide-react';
+import { Trash2, Receipt, Search, Calendar, FileText, RefreshCw, CheckCircle, XCircle, Clock, Printer, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import axios from 'axios';
 import ReceiptTicket from '../ReceiptTicket';
 import SignatureModal from './SignatureModal';
 import { getKioskOriginAPI } from './utils';
+
+const API = process.env.REACT_APP_BACKEND_URL ? `${process.env.REACT_APP_BACKEND_URL}/api/kiosk` : '/api/kiosk';
 
 function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selectedMonth, setSelectedMonth, formatSRD, token, company, tenants, onDeletePayment, onRefresh }) {
   const [selectedPayment, setSelectedPayment] = useState(null);
@@ -14,6 +16,32 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
   const [approving, setApproving] = useState(null);
   const [signatureTarget, setSignatureTarget] = useState(null); // payment_id to approve
   const [currencyFilter, setCurrencyFilter] = useState('all');  // all | SRD | USD | EUR
+  const [editingPeriode, setEditingPeriode] = useState(null); // payment_id
+
+  const handleEditPeriode = async (payment) => {
+    const current = (payment.covered_months || []).join(', ');
+    const input = window.prompt(
+      `Periode bewerken voor KW${String(payment.kwitantie_nummer || payment.payment_id || '').slice(-5)}\n\n` +
+      `Geef de juiste periode(s) gescheiden door komma, bijvoorbeeld:\n` +
+      `  februari 2026\n` +
+      `  februari 2026 (gedeeltelijk)\n` +
+      `  januari 2026, februari 2026\n\n` +
+      `Huidige waarde:`,
+      current
+    );
+    if (input === null) return; // cancelled
+    const months = input.split(',').map(s => s.trim()).filter(Boolean);
+    setEditingPeriode(payment.payment_id);
+    try {
+      await axios.put(`${API}/admin/payments/${payment.payment_id}/covered-months`, { covered_months: months }, { headers: { Authorization: `Bearer ${token}` } });
+      toast.success('Periode bijgewerkt');
+      if (onRefresh) onRefresh();
+    } catch (e) {
+      toast.error('Bijwerken mislukt: ' + (e?.response?.data?.detail || e.message));
+    } finally {
+      setEditingPeriode(null);
+    }
+  };
 
   // Small inline formatter so we don't have to prop-drill formatAmount
   const fmtC = (amount, cur) => `${(cur || 'SRD').toUpperCase()} ${Number(amount || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2 })}`;
@@ -217,16 +245,6 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
             ))}
           </div>
         </div>
-        <button
-          onClick={handleFixCoveredMonths}
-          disabled={fixing}
-          data-testid="fix-covered-months-btn"
-          title="Periodes herberekenen"
-          className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 disabled:opacity-50 text-xs font-medium"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${fixing ? 'animate-spin' : ''}`} />
-          <span className="hidden sm:inline">{fixing ? 'Bezig...' : 'Periodes herberekenen'}</span>
-        </button>
       </div>
 
       {/* Table - Desktop */}
@@ -270,7 +288,18 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                     </span>
                   </td>
                   <td className="p-4 text-sm text-slate-600">
-                    {p.covered_months?.length > 0 ? p.covered_months.join(', ') : '-'}
+                    <div className="flex items-center gap-1.5 group">
+                      <span>{p.covered_months?.length > 0 ? p.covered_months.join(', ') : '-'}</span>
+                      <button
+                        onClick={() => handleEditPeriode(p)}
+                        disabled={editingPeriode === p.payment_id}
+                        data-testid={`edit-periode-${p.payment_id}`}
+                        title="Periode handmatig bewerken"
+                        className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-orange-500 transition disabled:opacity-50"
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                    </div>
                   </td>
                   <td className="p-4 text-sm">
                     {p.processed_by ? (
@@ -342,7 +371,26 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
                 {p.status === 'rejected' && <span className="px-1.5 py-0.5 bg-red-100 text-red-600 rounded text-[10px] font-bold">AFGEWEZEN</span>}
               </div>
               {p.covered_months?.length > 0 && (
-                <p className="text-xs text-slate-500 mb-1 truncate">Periode: {p.covered_months.join(', ')}</p>
+                <div className="flex items-center gap-1 mb-1">
+                  <p className="text-xs text-slate-500 truncate flex-1">Periode: {p.covered_months.join(', ')}</p>
+                  <button
+                    onClick={() => handleEditPeriode(p)}
+                    disabled={editingPeriode === p.payment_id}
+                    data-testid={`edit-periode-mobile-${p.payment_id}`}
+                    className="p-1 text-slate-400 active:text-orange-500"
+                  >
+                    <Pencil className="w-3 h-3" />
+                  </button>
+                </div>
+              )}
+              {(!p.covered_months || p.covered_months.length === 0) && (
+                <button
+                  onClick={() => handleEditPeriode(p)}
+                  data-testid={`edit-periode-mobile-${p.payment_id}`}
+                  className="text-xs text-slate-400 mb-1 underline"
+                >
+                  Periode toevoegen
+                </button>
               )}
               {p.processed_by && (
                 <p className="text-xs text-slate-500 mb-1.5 truncate">

@@ -1938,6 +1938,32 @@ async def delete_payment(payment_id: str, company: dict = Depends(get_current_co
 
 @router.post("/admin/payments/fix-covered-months")
 async def fix_covered_months(company: dict = Depends(get_current_company)):
+    """DISABLED — deze functie heeft eerder bestaande covered_months overschreven.
+    Behouden voor URL-compatibiliteit maar voert geen wijzigingen uit.
+    """
+    return {"message": "Functie gedeactiveerd. Bewerk Periode handmatig per kwitantie indien nodig.", "total": 0, "fixed": 0}
+
+
+class CoveredMonthsUpdate(BaseModel):
+    covered_months: list[str]
+
+
+@router.put("/admin/payments/{payment_id}/covered-months")
+async def update_payment_covered_months(payment_id: str, data: CoveredMonthsUpdate, company: dict = Depends(get_current_company)):
+    """Handmatig de Periode (covered_months) van een kwitantie corrigeren.
+    Bijvoorbeeld: ['februari 2026 (gedeeltelijk)']
+    """
+    res = await db.kiosk_payments.update_one(
+        {"payment_id": payment_id, "company_id": company["company_id"]},
+        {"$set": {"covered_months": [m.strip() for m in data.covered_months if m and m.strip()]}}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Kwitantie niet gevonden")
+    return {"message": "Periode bijgewerkt", "covered_months": data.covered_months}
+
+
+@router.post("/admin/payments/_legacy_fix_covered_months_DISABLED")
+async def _legacy_fix_covered_months(company: dict = Depends(get_current_company)):
     """Recalculate covered_months for all rent payments using a date-based approach.
     
     Uses the payment's created_at to determine which month(s) the payment covered:
