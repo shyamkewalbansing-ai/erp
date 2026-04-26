@@ -342,6 +342,14 @@ async def create_payment_public(company_id: str, data: PaymentCreate):
         update_fields = {}
         if data.payment_type in ["rent", "partial_rent"]:
             update_fields["outstanding_rent"] = max(0, tenant.get("outstanding_rent", 0) - data.amount)
+            # Auto-bump rent_billed_through naar (huidige maand - 1) als hij achterloopt
+            try:
+                current_billed = tenant.get("rent_billed_through", "") or ""
+                target_billed = (now - relativedelta(months=1)).strftime("%Y-%m")
+                if current_billed < target_billed:
+                    update_fields["rent_billed_through"] = target_billed
+            except Exception:
+                pass
         elif data.payment_type == "service_costs":
             update_fields["service_costs"] = max(0, tenant.get("service_costs", 0) - data.amount)
         elif data.payment_type == "fines":
@@ -473,6 +481,13 @@ async def approve_payment_with_pin(company_id: str, payment_id: str, data: Appro
     update_fields = {}
     if payment_type in ["rent", "partial_rent"]:
         update_fields["outstanding_rent"] = max(0, tenant.get("outstanding_rent", 0) - amount)
+        try:
+            current_billed = tenant.get("rent_billed_through", "") or ""
+            target_billed = (now - relativedelta(months=1)).strftime("%Y-%m")
+            if current_billed < target_billed:
+                update_fields["rent_billed_through"] = target_billed
+        except Exception:
+            pass
     elif payment_type == "service_costs":
         update_fields["service_costs"] = max(0, tenant.get("service_costs", 0) - amount)
     elif payment_type == "fines":

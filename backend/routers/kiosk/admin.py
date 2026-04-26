@@ -2125,6 +2125,17 @@ async def register_manual_payment(data: PaymentCreate, company: dict = Depends(g
     update_fields = {}
     if data.payment_type in ["rent", "partial_rent"]:
         update_fields["outstanding_rent"] = max(0, tenant.get("outstanding_rent", 0) - data.amount)
+        # Auto-bump rent_billed_through if it's behind the previous calendar month.
+        # Reden: huur wordt achteraf opgehaald — als we in april zitten, dan moet maart al gefactureerd zijn.
+        try:
+            current_billed = tenant.get("rent_billed_through", "") or ""
+            target_dt = (now - relativedelta(months=1))
+            target_billed = target_dt.strftime("%Y-%m")
+            # Alleen vooruit bumpen, nooit terug
+            if current_billed < target_billed:
+                update_fields["rent_billed_through"] = target_billed
+        except Exception:
+            pass
     elif data.payment_type == "service_costs":
         update_fields["service_costs"] = max(0, tenant.get("service_costs", 0) - data.amount)
     elif data.payment_type == "fines":
