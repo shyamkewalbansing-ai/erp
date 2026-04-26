@@ -339,18 +339,20 @@ function PeriodeTable({ title, subtitle, dates, machines, balancesMap, onSave, s
  * Met week-navigatie (◀ ▶) en commissie-kolom.
  */
 export default function SuribetWerkblad({ token, machines, balances, onRefresh }) {
-  // Anchor = de meest recente donderdag (start van een Suribet-week)
-  const [anchorDate, setAnchorDate] = useState(() => snapToThursday(todayISO()));
+  // pickedDate = wat de user kiest (mag elke dag zijn).
+  // weekStart = altijd de donderdag van die Suribet-week (forced snap).
+  const [pickedDate, setPickedDate] = useState(() => snapToThursday(todayISO()));
+  const weekStart = useMemo(() => snapToThursday(pickedDate), [pickedDate]);
   const [savingKey, setSavingKey] = useState(null);
 
   // Periode 1: DO + VR + ZA + ZO (4 dagen, ophaaldag = MA)
-  const periode1Dates = useMemo(() => Array.from({ length: 4 }, (_, i) => addDaysISO(anchorDate, i)), [anchorDate]);
+  const periode1Dates = useMemo(() => Array.from({ length: 4 }, (_, i) => addDaysISO(weekStart, i)), [weekStart]);
   // Periode 2: MA + DI + WO (3 dagen, ophaaldag = DO)
-  const periode2Dates = useMemo(() => Array.from({ length: 3 }, (_, i) => addDaysISO(anchorDate, 4 + i)), [anchorDate]);
+  const periode2Dates = useMemo(() => Array.from({ length: 3 }, (_, i) => addDaysISO(weekStart, 4 + i)), [weekStart]);
 
-  // Ophaaldagen
-  const ophaalP1 = useMemo(() => addDaysISO(anchorDate, 4), [anchorDate]);
-  const ophaalP2 = useMemo(() => addDaysISO(anchorDate, 7), [anchorDate]);
+  // Ophaaldagen — altijd MA (anchor+4) en DO (anchor+7)
+  const ophaalP1 = useMemo(() => addDaysISO(weekStart, 4), [weekStart]);
+  const ophaalP2 = useMemo(() => addDaysISO(weekStart, 7), [weekStart]);
 
   // Map balances by date+machine
   const balancesMap = useMemo(() => {
@@ -380,7 +382,7 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
   };
 
   const resetToCurrentWeek = () => {
-    setAnchorDate(snapToThursday(todayISO()));
+    setPickedDate(snapToThursday(todayISO()));
   };
 
   const handleClosePeriod = async ({ periodLabel, dateFrom, dateTo, ophaalDate }) => {
@@ -419,7 +421,7 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
       {/* Week-navigatie */}
       <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2">
         <button
-          onClick={() => setAnchorDate(addDaysISO(anchorDate, -7))}
+          onClick={() => setPickedDate(addDaysISO(weekStart, -7))}
           data-testid="werkblad-prev-week"
           className="p-1.5 rounded-lg hover:bg-orange-50 text-slate-700"
           title="Vorige week"
@@ -430,8 +432,8 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
           <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Start (DO)</label>
           <input
             type="date"
-            value={anchorDate}
-            onChange={(e) => e.target.value && setAnchorDate(snapToThursday(e.target.value))}
+            value={weekStart}
+            onChange={(e) => e.target.value && setPickedDate(e.target.value)}
             data-testid="werkblad-anchor-date"
             className="px-2 py-1 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-orange-400"
           />
@@ -446,7 +448,7 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
           </span>
         </div>
         <button
-          onClick={() => setAnchorDate(addDaysISO(anchorDate, 7))}
+          onClick={() => setPickedDate(addDaysISO(weekStart, 7))}
           data-testid="werkblad-next-week"
           className="p-1.5 rounded-lg hover:bg-orange-50 text-slate-700"
           title="Volgende week"
