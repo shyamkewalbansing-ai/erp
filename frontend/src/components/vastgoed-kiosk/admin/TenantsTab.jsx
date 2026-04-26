@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { 
   Users, CreditCard, Plus, Pencil, Trash2, DollarSign, Search, 
-  FileText, Mail, Eye, XCircle, CheckCircle, Calendar
+  FileText, Mail, Eye, XCircle, CheckCircle, Calendar, RefreshCw
 } from 'lucide-react';
 import { API, axios, formatSRD, formatAmount, getKioskOriginAPI } from './utils';
 import LeaseModal from './LeaseModal';
@@ -23,6 +23,21 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
       t.tenant_code?.toLowerCase().includes(q);
   });
   const [deleting, setDeleting] = useState(null);
+  const [syncing, setSyncing] = useState(false);
+
+  const handleSyncBilling = async () => {
+    if (!window.confirm('Huurmaand bijwerken voor alle huurders?\n\nDit forceert de auto-billing engine te draaien — handig als huurders een verouderde "t/m feb" tonen.')) return;
+    setSyncing(true);
+    try {
+      const res = await axios.post(`${API}/admin/tenants/sync-billing`, {}, { headers: { Authorization: `Bearer ${token}` } });
+      alert(`Klaar! ${res.data.status_normalized} huurder(s) bijgewerkt op ${res.data.total_tenants} totaal.\n\nDe huurmaand-kolom is nu gelijk aan de actuele maand.`);
+      await onRefresh?.();
+    } catch (e) {
+      alert('Sync mislukt: ' + (e?.response?.data?.detail || e.message));
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const handleDelete = async (tenant) => {
     if (!window.confirm(`Weet u zeker dat u "${tenant.name}" wilt verwijderen?`)) return;
@@ -99,6 +114,17 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
             />
           </div>
           <span className="text-xs text-slate-400 whitespace-nowrap">{activeTenants.length} huurder{activeTenants.length !== 1 ? 's' : ''}</span>
+          <button
+            onClick={handleSyncBilling}
+            disabled={syncing}
+            data-testid="sync-billing-btn"
+            className="flex items-center gap-1.5 px-2.5 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 active:bg-blue-200 disabled:opacity-50 rounded-lg text-xs font-medium whitespace-nowrap"
+            title="Huurmaand bijwerken voor alle huurders"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
+            <span className="hidden md:inline">Sync huurmaand</span>
+            <span className="md:hidden">Sync</span>
+          </button>
           <button
             onClick={onAddTenant}
             data-testid="add-tenant-button"

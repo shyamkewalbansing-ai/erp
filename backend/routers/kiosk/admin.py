@@ -502,7 +502,12 @@ async def list_tenants(company: dict = Depends(get_current_company)):
         current_fines = t.get("fines", 0)
         updates = {}
         
-        if t.get("status") == "active" and monthly_rent > 0:
+        # Tolereer huurders zonder expliciete status (legacy data) als 'active'
+        is_active_status = t.get("status") in ("active", None, "", "Active")
+        if is_active_status and not t.get("status") == "active":
+            # Normaliseer legacy status naar 'active' zodat queries die filtert op status werken
+            updates["status"] = "active"
+        if is_active_status and monthly_rent > 0:
             if not billed_through:
                 billed_through = current_month
                 updates["rent_billed_through"] = current_month
@@ -586,7 +591,7 @@ async def list_tenants(company: dict = Depends(get_current_company)):
             )
             
             # === AUTO WHATSAPP: Billing notifications ===
-            if (t.get("phone") or t.get("telefoon")) and t.get("status") == "active":
+            if (t.get("phone") or t.get("telefoon")) and is_active_status:
                 company_name_for_wa = comp.get("stamp_company_name") or comp.get("name", "") if comp else ""
                 months_nl = ['januari','februari','maart','april','mei','juni','juli','augustus','september','oktober','november','december']
                 t_phone = t.get("phone") or t.get("telefoon", "")
@@ -621,7 +626,7 @@ async def list_tenants(company: dict = Depends(get_current_company)):
         
         # === AUTO POWER CUTOFF: Turn off Shelly when overdue past cutoff days ===
         power_cutoff_days = comp.get("power_cutoff_days", 0) if comp else 0
-        if power_cutoff_days > 0 and t.get("status") == "active":
+        if power_cutoff_days > 0 and is_active_status:
             total_debt = (updates.get("outstanding_rent", outstanding) + 
                          t.get("service_costs", 0) + 
                          (updates.get("fines", current_fines)))
@@ -698,6 +703,28 @@ async def list_tenants(company: dict = Depends(get_current_company)):
         })
     
     return result
+
+
+@router.post("/admin/tenants/sync-billing")
+async def sync_billing_for_all_tenants(company: dict = Depends(get_current_company)):
+    """Force re-sync van rent_billed_through voor alle huurders met legacy/missing status.
+    Gebruik dit als de huurmaand-kolom blijft hangen op een oude maand.
+    """
+    company_id = company["company_id"]
+    now = datetime.now(timezone.utc)
+    # Reset status op alle huurders zonder duidelijke status
+    res1 = await db.kiosk_tenants.update_many(
+        {"company_id": company_id, "$or": [{"status": {"$exists": False}}, {"status": None}, {"status": ""}, {"status": "Active"}]},
+        {"$set": {"status": "active"}}
+    )
+    total = await db.kiosk_tenants.count_documents({"company_id": company_id})
+    return {
+        "message": "Status genormaliseerd. Vernieuw de pagina om de auto-billing te laten draaien.",
+        "status_normalized": res1.modified_count,
+        "total_tenants": total,
+        "synced_at": now.isoformat(),
+    }
+
 
 
 @router.get("/admin/tenants/{tenant_id}/payment-overview")
