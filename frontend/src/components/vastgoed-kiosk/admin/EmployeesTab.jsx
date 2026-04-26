@@ -99,33 +99,33 @@ function EmployeesTab({ token, formatSRD }) {
   return (
     <div className="space-y-6">
       {/* Samenvatting */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-              <Users className="w-5 h-5 text-blue-600" />
+      <div className="grid grid-cols-3 gap-2 sm:gap-4">
+        <div className="bg-white rounded-xl border border-slate-200 p-3 sm:p-6">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+              <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
             </div>
-            <p className="text-sm text-slate-500">Werknemers</p>
+            <p className="text-[11px] sm:text-sm text-slate-500 leading-tight">Werknemers</p>
           </div>
-          <p className="text-2xl font-bold text-slate-900">{activeEmps.length}</p>
+          <p className="text-base sm:text-2xl font-bold text-slate-900">{activeEmps.length}</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
-              <Banknote className="w-5 h-5 text-purple-600" />
+        <div className="bg-white rounded-xl border border-slate-200 p-3 sm:p-6">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+              <Banknote className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
             </div>
-            <p className="text-sm text-slate-500">Totaal Maandloon</p>
+            <p className="text-[11px] sm:text-sm text-slate-500 leading-tight">Maandloon</p>
           </div>
-          <p className="text-2xl font-bold text-slate-900">{formatSRD(totalLoon)}</p>
+          <p className="text-sm sm:text-2xl font-bold text-slate-900 break-all">{formatSRD(totalLoon)}</p>
         </div>
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-green-600" />
+        <div className="bg-white rounded-xl border border-slate-200 p-3 sm:p-6">
+          <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg bg-green-100 flex items-center justify-center">
+              <DollarSign className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
             </div>
-            <p className="text-sm text-slate-500">Totaal Uitbetaald</p>
+            <p className="text-[11px] sm:text-sm text-slate-500 leading-tight">Uitbetaald</p>
           </div>
-          <p className="text-2xl font-bold text-slate-900">{formatSRD(activeEmps.reduce((s, e) => s + (e.total_paid || 0), 0))}</p>
+          <p className="text-sm sm:text-2xl font-bold text-slate-900 break-all">{formatSRD(activeEmps.reduce((s, e) => s + (e.total_paid || 0), 0))}</p>
         </div>
       </div>
 

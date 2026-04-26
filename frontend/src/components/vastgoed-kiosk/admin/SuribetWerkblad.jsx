@@ -338,21 +338,53 @@ function PeriodeTable({ title, subtitle, dates, machines, balancesMap, onSave, s
  * - Periode 2: MA → DI → WO (3 dagen, ophaaldag = DO)
  * Met week-navigatie (◀ ▶) en commissie-kolom.
  */
+/**
+ * Bereken alle Suribet ophaal-cycli die (deels) in een gegeven maand vallen.
+ * - Maandag (dow=1) is een ophaaldag → cyclus = 4 dagen ervoor (DO–ZO)
+ * - Donderdag (dow=4) is een ophaaldag → cyclus = 3 dagen ervoor (MA–WO)
+ */
+function getCyclesForMonth(year, month) {
+  const cycles = [];
+  // Walk een dag voor de maand tot een dag erna om grens-cycli te vangen
+  const start = new Date(year, month, -7);
+  const end = new Date(year, month + 1, 7);
+  const monthStr = String(month + 1).padStart(2, '0');
+  const cursor = new Date(start);
+  let n = 0;
+  while (cursor <= end && n < 50) {
+    const dow = cursor.getDay();
+    const ophaalISO = cursor.toISOString().slice(0, 10);
+    if (dow === 1) { // MA = ophaaldag, cyclus = DO–ZO
+      const dates = [-4, -3, -2, -1].map(off => addDaysISO(ophaalISO, off));
+      cycles.push({ ophaal_date: ophaalISO, dates, period_label: 'DO–ZO', ophaal_day: 'MA' });
+    } else if (dow === 4) { // DO = ophaaldag, cyclus = MA–WO
+      const dates = [-3, -2, -1].map(off => addDaysISO(ophaalISO, off));
+      cycles.push({ ophaal_date: ophaalISO, dates, period_label: 'MA–WO', ophaal_day: 'DO' });
+    }
+    cursor.setDate(cursor.getDate() + 1);
+    n += 1;
+  }
+  // Filter op cycli waarvan minstens 1 dag óf de ophaaldag in de actieve maand valt
+  return cycles.filter(c =>
+    c.ophaal_date.startsWith(`${year}-${monthStr}`) ||
+    c.dates.some(d => d.startsWith(`${year}-${monthStr}`))
+  );
+}
+
+const monthNames = ['Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni', 'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'];
+
 export default function SuribetWerkblad({ token, machines, balances, onRefresh }) {
-  // pickedDate = wat de user kiest (mag elke dag zijn).
-  // weekStart = altijd de donderdag van die Suribet-week (forced snap).
-  const [pickedDate, setPickedDate] = useState(() => snapToThursday(todayISO()));
-  const weekStart = useMemo(() => snapToThursday(pickedDate), [pickedDate]);
+  // Actieve maand state
+  const [activeMonth, setActiveMonth] = useState(() => {
+    const t = new Date();
+    return { year: t.getFullYear(), month: t.getMonth() }; // month = 0-indexed
+  });
   const [savingKey, setSavingKey] = useState(null);
 
-  // Periode 1: DO + VR + ZA + ZO (4 dagen, ophaaldag = MA)
-  const periode1Dates = useMemo(() => Array.from({ length: 4 }, (_, i) => addDaysISO(weekStart, i)), [weekStart]);
-  // Periode 2: MA + DI + WO (3 dagen, ophaaldag = DO)
-  const periode2Dates = useMemo(() => Array.from({ length: 3 }, (_, i) => addDaysISO(weekStart, 4 + i)), [weekStart]);
-
-  // Ophaaldagen — altijd MA (anchor+4) en DO (anchor+7)
-  const ophaalP1 = useMemo(() => addDaysISO(weekStart, 4), [weekStart]);
-  const ophaalP2 = useMemo(() => addDaysISO(weekStart, 7), [weekStart]);
+  const cycles = useMemo(
+    () => getCyclesForMonth(activeMonth.year, activeMonth.month),
+    [activeMonth.year, activeMonth.month]
+  );
 
   // Map balances by date+machine
   const balancesMap = useMemo(() => {
@@ -381,8 +413,23 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
     }
   };
 
-  const resetToCurrentWeek = () => {
-    setPickedDate(snapToThursday(todayISO()));
+  const goToCurrentMonth = () => {
+    const t = new Date();
+    setActiveMonth({ year: t.getFullYear(), month: t.getMonth() });
+  };
+
+  const goPrevMonth = () => {
+    setActiveMonth(({ year, month }) => {
+      if (month === 0) return { year: year - 1, month: 11 };
+      return { year, month: month - 1 };
+    });
+  };
+
+  const goNextMonth = () => {
+    setActiveMonth(({ year, month }) => {
+      if (month === 11) return { year: year + 1, month: 0 };
+      return { year, month: month + 1 };
+    });
   };
 
   const handleClosePeriod = async ({ periodLabel, dateFrom, dateTo, ophaalDate }) => {
@@ -411,77 +458,69 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
     );
   }
 
-  const periode1Title = `Periode 1 — ${dayLabel(periode1Dates[0])} t/m ${dayLabel(periode1Dates[periode1Dates.length - 1])}`;
-  const periode2Title = `Periode 2 — ${dayLabel(periode2Dates[0])} t/m ${dayLabel(periode2Dates[periode2Dates.length - 1])}`;
-  const periode1Subtitle = `Ophaal: ${dayLabel(ophaalP1)}`;
-  const periode2Subtitle = `Ophaal: ${dayLabel(ophaalP2)}`;
-
   return (
     <div className="space-y-3">
-      {/* Week-navigatie */}
+      {/* Maand-navigatie */}
       <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl px-3 py-2">
         <button
-          onClick={() => setPickedDate(addDaysISO(weekStart, -7))}
-          data-testid="werkblad-prev-week"
+          onClick={goPrevMonth}
+          data-testid="werkblad-prev-month"
           className="p-1.5 rounded-lg hover:bg-orange-50 text-slate-700"
-          title="Vorige week"
+          title="Vorige maand"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <div className="flex items-center gap-2 flex-wrap justify-center">
-          <label className="text-[10px] uppercase tracking-wider font-bold text-slate-500">Start (DO)</label>
-          <input
-            type="date"
-            value={weekStart}
-            onChange={(e) => e.target.value && setPickedDate(e.target.value)}
-            data-testid="werkblad-anchor-date"
-            className="px-2 py-1 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-orange-400"
-          />
+        <div className="flex items-center gap-3 flex-wrap justify-center">
+          <h2 className="text-base font-black text-slate-900" data-testid="werkblad-active-month">
+            {monthNames[activeMonth.month]} {activeMonth.year}
+          </h2>
           <button
-            onClick={resetToCurrentWeek}
-            className="text-[10px] font-bold text-orange-600 hover:text-orange-700 ml-1"
+            onClick={goToCurrentMonth}
+            className="text-[10px] font-bold text-orange-600 hover:text-orange-700"
           >
-            Deze week
+            Deze maand
           </button>
-          <span className="text-[10px] text-slate-500 ml-2 hidden sm:inline">
-            Suribet ophaalt op MA &amp; DO
+          <span className="text-[10px] text-slate-500 hidden sm:inline">
+            {cycles.length} ophaal-cycli · MA &amp; DO
           </span>
         </div>
         <button
-          onClick={() => setPickedDate(addDaysISO(weekStart, 7))}
-          data-testid="werkblad-next-week"
+          onClick={goNextMonth}
+          data-testid="werkblad-next-month"
           className="p-1.5 rounded-lg hover:bg-orange-50 text-slate-700"
-          title="Volgende week"
+          title="Volgende maand"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
-      <PeriodeTable
-        title={periode1Title}
-        subtitle={periode1Subtitle}
-        dates={periode1Dates}
-        machines={machines}
-        balancesMap={balancesMap}
-        onSave={handleSave}
-        savingKey={savingKey}
-        onClose={handleClosePeriod}
-        ophaalDate={ophaalP1}
-        periodLabel="Periode 1"
-      />
+      {/* Render alle cycli van de maand */}
+      {cycles.map((c, idx) => {
+        const periodLabel = `Cyclus ${idx + 1}`;
+        const title = `${periodLabel} — ${dayLabel(c.dates[0])} t/m ${dayLabel(c.dates[c.dates.length - 1])}`;
+        const subtitle = `Ophaal: ${dayLabel(c.ophaal_date)}`;
+        return (
+          <PeriodeTable
+            key={c.ophaal_date}
+            title={title}
+            subtitle={subtitle}
+            dates={c.dates}
+            machines={machines}
+            balancesMap={balancesMap}
+            onSave={handleSave}
+            savingKey={savingKey}
+            onClose={handleClosePeriod}
+            ophaalDate={c.ophaal_date}
+            periodLabel={periodLabel}
+          />
+        );
+      })}
 
-      <PeriodeTable
-        title={periode2Title}
-        subtitle={periode2Subtitle}
-        dates={periode2Dates}
-        machines={machines}
-        balancesMap={balancesMap}
-        onSave={handleSave}
-        savingKey={savingKey}
-        onClose={handleClosePeriod}
-        ophaalDate={ophaalP2}
-        periodLabel="Periode 2"
-      />
+      {cycles.length === 0 && (
+        <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 text-center text-sm text-slate-500">
+          Geen ophaal-cycli gevonden voor deze maand.
+        </div>
+      )}
 
       <p className="text-[10px] text-slate-400 text-center">
         Tip: typ direct in een cel en druk <kbd className="px-1 py-0.5 bg-slate-100 rounded text-slate-700">Tab</kbd> of <kbd className="px-1 py-0.5 bg-slate-100 rounded text-slate-700">Enter</kbd> — wijzigingen worden automatisch opgeslagen.
