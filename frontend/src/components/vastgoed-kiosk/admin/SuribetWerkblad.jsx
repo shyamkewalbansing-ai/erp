@@ -207,7 +207,7 @@ function PeriodeTable({ title, subtitle, dates, machines, balancesMap, onSave, s
 
               {/* Denominations */}
               <div className="px-1.5 py-1">
-                <div className="grid grid-cols-[auto_1fr] gap-x-1 gap-y-0 items-center">
+                <div className="grid grid-cols-[auto_1fr_auto] gap-x-1 gap-y-0 items-center">
                   {SRD_DENOMS.map(d => {
                     const c = parseInt(counts[String(d)] || 0) || 0;
                     return (
@@ -220,6 +220,9 @@ function PeriodeTable({ title, subtitle, dates, machines, balancesMap, onSave, s
                           width="w-full"
                           testId={`werkblad-cell-${r.key}-${d}`}
                         />
+                        <div className={`text-[10px] tabular-nums text-right pl-1 ${c > 0 ? 'text-slate-700 font-bold' : 'text-slate-300'}`}>
+                          {c > 0 ? fmtInt(c * d) : '—'}
+                        </div>
                       </React.Fragment>
                     );
                   })}
@@ -277,13 +280,16 @@ function PeriodeTable({ title, subtitle, dates, machines, balancesMap, onSave, s
               </div>
 
               <div className="px-1.5 py-1">
-                <div className="grid grid-cols-[auto_1fr] gap-x-1 gap-y-0 items-center">
+                <div className="grid grid-cols-[auto_auto_1fr] gap-x-1 gap-y-0 items-center">
                   {SRD_DENOMS.map(d => {
                     const c = s.counts[String(d)] || 0;
                     return (
                       <React.Fragment key={d}>
                         <div className={`text-[10px] tabular-nums font-bold ${c > 0 ? 'text-orange-700' : 'text-orange-400'}`}>{d}</div>
-                        <div className={`tabular-nums text-right text-[10px] font-black px-1 py-0.5 ${c > 0 ? 'text-orange-900' : 'text-orange-300'}`}>{c}</div>
+                        <div className={`tabular-nums text-center text-[10px] font-black px-1 py-0.5 ${c > 0 ? 'text-orange-900' : 'text-orange-300'}`}>{c}</div>
+                        <div className={`tabular-nums text-right text-[10px] font-bold pl-1 ${c > 0 ? 'text-orange-800' : 'text-orange-300'}`}>
+                          {c > 0 ? fmtInt(c * d) : '—'}
+                        </div>
                       </React.Fragment>
                     );
                   })}
