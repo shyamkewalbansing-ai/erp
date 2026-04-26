@@ -12,6 +12,13 @@ const addDaysISO = (iso, days) => {
   d.setDate(d.getDate() + days);
   return d.toISOString().slice(0, 10);
 };
+// Snap any date back to the most recent Thursday (= start of a Suribet ophaal-week)
+const snapToThursday = (iso) => {
+  const d = new Date(iso + 'T00:00:00');
+  const dow = d.getDay(); // 0=Zo, 1=Ma, ..., 4=Do, 5=Vr, 6=Za
+  const daysSinceThu = (dow - 4 + 7) % 7; // 0 als do, 1 als vr, ..., 6 als wo
+  return addDaysISO(iso, -daysSinceThu);
+};
 const dayLabel = (iso) => {
   const d = new Date(iso + 'T00:00:00');
   const days = ['ZO', 'MA', 'DI', 'WO', 'DO', 'VR', 'ZA'];
@@ -327,13 +334,7 @@ function PeriodeTable({ title, subtitle, dates, machines, balancesMap, onSave, s
  */
 export default function SuribetWerkblad({ token, machines, balances, onRefresh }) {
   // Anchor = de meest recente donderdag (start van een Suribet-week)
-  const [anchorDate, setAnchorDate] = useState(() => {
-    const today = new Date(todayISO() + 'T00:00:00');
-    const dow = today.getDay(); // 0=Zo, 1=Ma, ..., 4=Do
-    // Aantal dagen sinds laatste donderdag: 0 als do, 1 als vr, ..., 6 als wo
-    const daysSinceThu = (dow - 4 + 7) % 7;
-    return addDaysISO(todayISO(), -daysSinceThu);
-  });
+  const [anchorDate, setAnchorDate] = useState(() => snapToThursday(todayISO()));
   const [savingKey, setSavingKey] = useState(null);
 
   // Periode 1: DO + VR + ZA + ZO (4 dagen, ophaaldag = MA)
@@ -373,10 +374,7 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
   };
 
   const resetToCurrentWeek = () => {
-    const today = new Date(todayISO() + 'T00:00:00');
-    const dow = today.getDay();
-    const daysSinceThu = (dow - 4 + 7) % 7;
-    setAnchorDate(addDaysISO(todayISO(), -daysSinceThu));
+    setAnchorDate(snapToThursday(todayISO()));
   };
 
   const handleClosePeriod = async ({ periodLabel, dateFrom, dateTo, ophaalDate }) => {
@@ -427,7 +425,7 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
           <input
             type="date"
             value={anchorDate}
-            onChange={(e) => setAnchorDate(e.target.value)}
+            onChange={(e) => e.target.value && setAnchorDate(snapToThursday(e.target.value))}
             data-testid="werkblad-anchor-date"
             className="px-2 py-1 text-xs border border-slate-200 rounded-lg focus:outline-none focus:border-orange-400"
           />
