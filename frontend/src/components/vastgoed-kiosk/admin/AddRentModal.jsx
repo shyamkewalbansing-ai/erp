@@ -292,6 +292,44 @@ function AddRentModal({ tenant, onClose, onSave, token }) {
                   <input type="number" step="0.01" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00" className="w-full px-4 py-3 border border-slate-200 rounded-xl text-2xl font-bold text-center focus:outline-none focus:border-orange-400" required />
                 </div>
+
+                {/* FIFO preview — toon welke maanden worden afgelost */}
+                {tenant.overdue_months && tenant.overdue_months.length > 0 && parseFloat(amount) > 0 && (() => {
+                  const monthly = tenant.monthly_rent || 0;
+                  const inputAmount = parseFloat(amount) || 0;
+                  if (monthly <= 0) return null;
+                  const ordered = [...tenant.overdue_months]; // backend already sorted oldest→newest
+                  let remaining = inputAmount;
+                  const allocated = [];
+                  for (const lbl of ordered) {
+                    if (remaining <= 0) break;
+                    if (remaining >= monthly - 0.01) {
+                      allocated.push({ label: lbl, amount: monthly, full: true });
+                      remaining -= monthly;
+                    } else {
+                      allocated.push({ label: lbl, amount: remaining, full: false });
+                      remaining = 0;
+                    }
+                  }
+                  if (allocated.length === 0) return null;
+                  return (
+                    <div className="bg-emerald-50 border-2 border-emerald-300 rounded-xl p-3" data-testid="fifo-preview">
+                      <p className="text-[11px] font-black text-emerald-700 uppercase tracking-wider mb-1.5">Wordt automatisch afgelost (FIFO)</p>
+                      <div className="space-y-0.5">
+                        {allocated.map((a, i) => (
+                          <div key={i} className="flex items-center justify-between text-xs">
+                            <span className={`${a.full ? 'font-bold text-emerald-800' : 'font-medium text-amber-700'}`}>
+                              {a.full ? '✓' : '●'} {a.label}{!a.full && ' (gedeeltelijk)'}
+                            </span>
+                            <span className={`tabular-nums font-bold ${a.full ? 'text-emerald-800' : 'text-amber-700'}`}>{fmt(a.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-[10px] text-slate-500 mt-1.5 italic">Oudste openstaande maand wordt eerst afgelost</p>
+                    </div>
+                  );
+                })()}
+
                 <div>
                   <label className="block text-sm font-medium mb-1">Omschrijving (optioneel)</label>
                   <input type="text" value={description} onChange={(e) => setDescription(e.target.value)}
