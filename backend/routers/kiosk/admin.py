@@ -502,10 +502,9 @@ async def list_tenants(company: dict = Depends(get_current_company)):
         current_fines = t.get("fines", 0)
         updates = {}
         
-        # Auto-billing voor active huurders. Tolereer ook legacy-data zonder expliciete status.
-        # Belangrijk: deze engine raakt ALLEEN het tenant-record aan (rent_billed_through,
-        # outstanding_rent, fines), NOOIT bestaande kwitanties of hun covered_months.
-        is_active_status = t.get("status") in ("active", None, "", "Active")
+        # Alleen auto-billing voor huurders met EXPLICIETE status="active" — anders niet aanraken
+        # om bestaande achterstand-data niet dubbel te tellen
+        is_active_status = t.get("status") == "active"
         if is_active_status and monthly_rent > 0:
             if not billed_through:
                 billed_through = current_month

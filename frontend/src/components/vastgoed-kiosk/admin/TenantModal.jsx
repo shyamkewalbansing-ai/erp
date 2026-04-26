@@ -247,6 +247,7 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
   const [outstandingRent, setOutstandingRent] = useState(tenant?.outstanding_rent || 0);
   const [serviceCosts, setServiceCosts] = useState(tenant?.service_costs || 0);
   const [fines, setFines] = useState(tenant?.fines || 0);
+  const [billedThrough, setBilledThrough] = useState(tenant?.rent_billed_through || '');
   const [leaseStart, setLeaseStart] = useState('');
   const [leaseEnd, setLeaseEnd] = useState('');
   const [idCardNumber, setIdCardNumber] = useState(tenant?.id_card_number || '');
@@ -295,6 +296,9 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
         data.outstanding_rent = parseFloat(outstandingRent);
         data.service_costs = parseFloat(serviceCosts);
         data.fines = parseFloat(fines);
+        if (billedThrough && /^\d{4}-\d{2}$/.test(billedThrough)) {
+          data.rent_billed_through = billedThrough;
+        }
         await axios.put(`${API}/admin/tenants/${tenant.tenant_id}`, data, { headers });
       } else {
         if (leaseStart && leaseEnd) {
@@ -576,6 +580,17 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
           {section === 'saldo' && tenant && (
             <div className="p-4 space-y-3">
               <p className="text-sm font-semibold text-slate-700 mb-2">Openstaand Saldo</p>
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Gefactureerd t/m (huurmaand)</label>
+                <input
+                  type="month"
+                  value={billedThrough}
+                  onChange={(e) => setBilledThrough(e.target.value)}
+                  data-testid="tenant-billed-through-input"
+                  className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">Bv. 2026-03 betekent: huur t/m maart 2026 is gefactureerd. Pas dit aan zonder dat openstaand saldo verandert.</p>
+              </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-600 mb-1.5">Openstaande huur ({currency})</label>
                 <input
