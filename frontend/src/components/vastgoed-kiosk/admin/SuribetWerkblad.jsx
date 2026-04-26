@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Lock } from 'lucide-react';
 import { API, axios } from './utils';
 
 const SRD_DENOMS = [500, 200, 100, 50, 20, 10, 5];
@@ -61,7 +61,7 @@ function NumCell({ value, onChange, onCommit, decimal = false, dim = false, test
 /**
  * Single Periode-grid: kaarten per (datum × machine) + SUR kaarten onderaan
  */
-function PeriodeTable({ title, subtitle, dates, machines, balancesMap, onSave, savingKey }) {
+function PeriodeTable({ title, subtitle, dates, machines, balancesMap, onSave, savingKey, onClose, ophaalDate, periodLabel }) {
   const rows = useMemo(() => {
     const list = [];
     dates.forEach((iso) => {
@@ -159,7 +159,20 @@ function PeriodeTable({ title, subtitle, dates, machines, balancesMap, onSave, s
           <h3 className="text-sm font-black text-slate-900">{title}</h3>
           {subtitle && <p className="text-[10px] font-bold text-orange-600 uppercase tracking-wider mt-0.5">{subtitle}</p>}
         </div>
-        <span className="text-[10px] text-slate-500">{dates.length} dagen × {machines.length} machines</span>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] text-slate-500 hidden sm:inline">{dates.length} dagen × {machines.length} machines</span>
+          {onClose && (
+            <button
+              onClick={() => onClose({ periodLabel, dateFrom: dates[0], dateTo: dates[dates.length - 1], ophaalDate })}
+              data-testid={`werkblad-close-${periodLabel?.toLowerCase().replace(/\s+/g, '-')}`}
+              className="flex items-center gap-1 px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg active:scale-95 shadow"
+              title="Sluit periode af"
+            >
+              <Lock className="w-3 h-3" />
+              Sluit periode
+            </button>
+          )}
+        </div>
       </div>
       <div className="p-2 flex gap-2 overflow-x-auto" data-testid={`werkblad-grid-${title.toLowerCase().replace(/\s+/g, '-')}`}>
         {rows.map((r) => {
@@ -366,6 +379,24 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
     setAnchorDate(addDaysISO(todayISO(), -daysSinceThu));
   };
 
+  const handleClosePeriod = async ({ periodLabel, dateFrom, dateTo, ophaalDate }) => {
+    const msg = `${periodLabel} (${dayLabel(dateFrom)} t/m ${dayLabel(dateTo)}) sluiten?\n\n` +
+      `Suribet komt geld ophalen op ${dayLabel(ophaalDate)}.\n` +
+      `Alle dagstaten in deze periode worden gemarkeerd als opgehaald en verschijnen in de Geschiedenis tab.`;
+    if (!window.confirm(msg)) return;
+    try {
+      await axios.post(`${API}/admin/suribet/cycles/close`, {
+        period_label: periodLabel,
+        date_from: dateFrom,
+        date_to: dateTo,
+        ophaal_date: ophaalDate,
+      }, { headers: { Authorization: `Bearer ${token}` } });
+      await onRefresh?.();
+    } catch (e) {
+      alert('Sluiten mislukt: ' + (e?.response?.data?.detail || e.message));
+    }
+  };
+
   if (machines.length === 0) {
     return (
       <div className="bg-amber-50 border border-amber-300 rounded-xl p-6 text-center text-sm text-amber-800">
@@ -428,6 +459,9 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
         balancesMap={balancesMap}
         onSave={handleSave}
         savingKey={savingKey}
+        onClose={handleClosePeriod}
+        ophaalDate={ophaalP1}
+        periodLabel="Periode 1"
       />
 
       <PeriodeTable
@@ -438,6 +472,9 @@ export default function SuribetWerkblad({ token, machines, balances, onRefresh }
         balancesMap={balancesMap}
         onSave={handleSave}
         savingKey={savingKey}
+        onClose={handleClosePeriod}
+        ophaalDate={ophaalP2}
+        periodLabel="Periode 2"
       />
 
       <p className="text-[10px] text-slate-400 text-center">

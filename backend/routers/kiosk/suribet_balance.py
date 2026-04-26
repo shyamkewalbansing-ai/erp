@@ -137,6 +137,7 @@ async def list_suribet_balances(
     from_date: Optional[str] = None,
     to_date: Optional[str] = None,
     machine_id: Optional[str] = None,
+    include_closed: bool = False,
 ):
     _ensure_feature(company)
     q: dict = {"company_id": company["company_id"]}
@@ -149,6 +150,9 @@ async def list_suribet_balances(
         q["balance_date"] = date_q
     if machine_id:
         q["machine_id"] = machine_id
+    if not include_closed:
+        # Hide balances that belong to a closed cycle
+        q["closed_cycle_id"] = {"$in": [None, ""]}
     items = await db.kiosk_suribet_balances.find(q, {"_id": 0}).sort([("balance_date", 1), ("machine_name", 1)]).to_list(2000)
     # Add computed total per row
     for it in items:
@@ -285,3 +289,127 @@ async def get_suribet_totals(
         pm["verschil"] = pm["balance_from_bon"] - pm["srd_total"]
 
     return {"per_machine": list(per_machine.values()), "denominations": SRD_DENOMS}
+
+
+
+# ============ Cycles (afgesloten Suribet ophaal-periodes) ============
+
+class CycleClose(BaseModel):
+    period_label: str  # e.g. "Periode 1" or "Periode 2"
+    date_from: str     # YYYY-MM-DD
+    date_to: str       # YYYY-MM-DD (inclusive)
+    ophaal_date: str   # YYYY-MM-DD
+    notes: str = ""
+
+
+@router.post("/admin/suribet/cycles/close")
+async def close_suribet_cycle(data: CycleClose, company: dict = Depends(get_current_company)):
+    _ensure_feature(company)
+    # Validate dates
+    for d in (data.date_from, data.date_to, data.ophaal_date):
+        try:
+            datetime.strptime(d, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Datum-formaat moet YYYY-MM-DD zijn")
+    # Find balances in this period that are not yet closed
+    q = {
+        "company_id": company["company_id"],
+        "balance_date": {"$gte": data.date_from, "$lte": data.date_to},
+        "closed_cycle_id": {"$in": [None, ""]},
+    }
+    items = await db.kiosk_suribet_balances.find(q).to_list(2000)
+    if not items:
+        raise HTTPException(status_code=400, detail="Geen openstaande balances gevonden in deze periode")
+
+    # Build per-machine totals for the cycle snapshot
+    per_machine: dict = {}
+    total_srd = 0.0
+    total_bon = 0.0
+    total_com = 0.0
+    total_eur = 0.0
+    total_usd = 0.0
+    balance_ids = []
+    for it in items:
+        balance_ids.append(it["balance_id"])
+        mid = it.get("machine_id")
+        if mid not in per_machine:
+            per_machine[mid] = {
+                "machine_id": mid,
+                "machine_name": it.get("machine_name", ""),
+                "counts": {str(d): 0 for d in SRD_DENOMS},
+                "srd_total": 0.0,
+                "balance_from_bon": 0.0,
+                "commissie_amount": 0.0,
+                "eur_amount": 0.0,
+                "usd_amount": 0.0,
+                "rows_count": 0,
+            }
+        for d in SRD_DENOMS:
+            per_machine[mid]["counts"][str(d)] += int(it.get("counts", {}).get(str(d), 0) or 0)
+        srd = _calc_srd_total(it.get("counts", {}))
+        per_machine[mid]["srd_total"] += srd
+        per_machine[mid]["balance_from_bon"] += float(it.get("balance_from_bon", 0) or 0)
+        per_machine[mid]["commissie_amount"] += float(it.get("commissie_amount", 0) or 0)
+        per_machine[mid]["eur_amount"] += float(it.get("eur_amount", 0) or 0)
+        per_machine[mid]["usd_amount"] += float(it.get("usd_amount", 0) or 0)
+        per_machine[mid]["rows_count"] += 1
+        total_srd += srd
+        total_bon += float(it.get("balance_from_bon", 0) or 0)
+        total_com += float(it.get("commissie_amount", 0) or 0)
+        total_eur += float(it.get("eur_amount", 0) or 0)
+        total_usd += float(it.get("usd_amount", 0) or 0)
+
+    for pm in per_machine.values():
+        pm["verschil"] = pm["balance_from_bon"] - pm["srd_total"]
+
+    cycle = {
+        "cycle_id": generate_uuid(),
+        "company_id": company["company_id"],
+        "period_label": data.period_label,
+        "date_from": data.date_from,
+        "date_to": data.date_to,
+        "ophaal_date": data.ophaal_date,
+        "notes": (data.notes or "").strip(),
+        "balance_ids": balance_ids,
+        "per_machine": list(per_machine.values()),
+        "total_srd": total_srd,
+        "total_bon": total_bon,
+        "total_commissie": total_com,
+        "total_eur": total_eur,
+        "total_usd": total_usd,
+        "total_verschil": total_bon - total_srd,
+        "closed_at": datetime.now(timezone.utc),
+    }
+    await db.kiosk_suribet_cycles.insert_one(dict(cycle))
+    cycle.pop("_id", None)
+
+    # Mark balances as closed
+    await db.kiosk_suribet_balances.update_many(
+        {"company_id": company["company_id"], "balance_id": {"$in": balance_ids}},
+        {"$set": {"closed_cycle_id": cycle["cycle_id"], "closed_at": cycle["closed_at"]}},
+    )
+    return cycle
+
+
+@router.get("/admin/suribet/cycles")
+async def list_suribet_cycles(company: dict = Depends(get_current_company)):
+    _ensure_feature(company)
+    items = await db.kiosk_suribet_cycles.find(
+        {"company_id": company["company_id"]}, {"_id": 0}
+    ).sort([("ophaal_date", -1), ("closed_at", -1)]).to_list(500)
+    return items
+
+
+@router.delete("/admin/suribet/cycles/{cycle_id}")
+async def reopen_suribet_cycle(cycle_id: str, company: dict = Depends(get_current_company)):
+    _ensure_feature(company)
+    cycle = await db.kiosk_suribet_cycles.find_one({"cycle_id": cycle_id, "company_id": company["company_id"]})
+    if not cycle:
+        raise HTTPException(status_code=404, detail="Cyclus niet gevonden")
+    # Unmark balances
+    await db.kiosk_suribet_balances.update_many(
+        {"company_id": company["company_id"], "balance_id": {"$in": cycle.get("balance_ids", [])}},
+        {"$unset": {"closed_cycle_id": "", "closed_at": ""}},
+    )
+    await db.kiosk_suribet_cycles.delete_one({"cycle_id": cycle_id, "company_id": company["company_id"]})
+    return {"message": "Cyclus heropend, balances zijn weer bewerkbaar"}

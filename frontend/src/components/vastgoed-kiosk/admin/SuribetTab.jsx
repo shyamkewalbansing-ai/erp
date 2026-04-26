@@ -3,6 +3,7 @@ import { Plus, Trash2, Pencil, Save, X, Calculator, Cpu } from 'lucide-react';
 import { API, axios } from './utils';
 import MobileModalShell from './MobileModalShell';
 import SuribetWerkblad from './SuribetWerkblad';
+import SuribetCycles from './SuribetCycles';
 
 const SRD_DENOMS = [500, 200, 100, 50, 20, 10, 5];
 
@@ -226,6 +227,7 @@ export default function SuribetTab({ token }) {
   const [machines, setMachines] = useState([]);
   const [balances, setBalances] = useState([]);
   const [totals, setTotals] = useState({ per_machine: [], denominations: SRD_DENOMS });
+  const [cycles, setCycles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editBalance, setEditBalance] = useState(null);
@@ -237,14 +239,16 @@ export default function SuribetTab({ token }) {
     setLoading(true);
     setError(null);
     try {
-      const [m, b, t] = await Promise.all([
+      const [m, b, t, c] = await Promise.all([
         axios.get(`${API}/admin/suribet/machines`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/admin/suribet/balances`, { headers: { Authorization: `Bearer ${token}` } }),
         axios.get(`${API}/admin/suribet/totals`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/admin/suribet/cycles`, { headers: { Authorization: `Bearer ${token}` } }),
       ]);
       setMachines(m.data || []);
       setBalances(b.data || []);
       setTotals(t.data || { per_machine: [], denominations: SRD_DENOMS });
+      setCycles(c.data || []);
     } catch (e) {
       setError(e?.response?.data?.detail || 'Kon data niet laden');
     }
@@ -324,6 +328,13 @@ export default function SuribetTab({ token }) {
         token={token}
         machines={machines}
         balances={balances}
+        onRefresh={load}
+      />
+
+      {/* Geschiedenis — afgesloten cycli */}
+      <SuribetCycles
+        token={token}
+        cycles={cycles}
         onRefresh={load}
       />
 
