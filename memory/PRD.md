@@ -1,5 +1,45 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 73 (27 apr 2026) — Audit Kwitanties tab + handmatig herstel covered_months
+
+### Verzoek
+Productie-DB van gebruiker raakte corrupt door eerdere "Periodes herberekenen" knop die `covered_months` op oude betalingen overschreef. Fysieke kwitanties matchen niet meer met systeem. Maand-overzicht modal toonde verkeerde data. **Geen nieuwe automatisering** — gebruiker wil 100% handmatige controle.
+
+### Implementatie
+
+**Backend** — `/app/backend/routers/kiosk/admin.py`:
+- Nieuw endpoint **`GET /admin/tenants/{tenant_id}/payments-audit`** — geeft ALLE huur-kwitanties van één huurder chronologisch (oudste eerst) met `payment_id`, `kwitantie_nummer`, `created_at`, `amount`, `currency`, `payment_type`, `covered_months`, `status`, `notes`, `payment_method`. Bedoeld voor 1-op-1 vergelijking met fysieke papieren kwitanties.
+- Nieuw endpoint **`PUT /admin/tenants/{tenant_id}/billed-through`** — laat beheerder handmatig `rent_billed_through` corrigeren (YYYY-MM formaat, validatie). Geen impact op `outstanding_rent` of `covered_months`.
+- Bestaand endpoint `PUT /admin/payments/{payment_id}/covered-months` blijft (handmatige periode-correctie per kwitantie).
+
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/admin/MonthOverviewModal.jsx`:
+- Tab-systeem toegevoegd: **Maand-overzicht** ↔ **Audit kwitanties**
+- **Maand-overzicht tab** toont nu ook een gele "Gefactureerd t/m" strip met **Bewerk** knop → handmatige YYYY-MM input
+- **Audit kwitanties tab**: lijst van alle kwitanties chronologisch met badges per `covered_months`, gedeeltelijk-waarschuwing, en **Bewerk** knop per kwitantie. Edit gebruikt `prompt()` voor periode-input, daarna directe PUT en herlaad van beide tabs.
+
+**Frontend cleanup** — `/app/frontend/src/components/vastgoed-kiosk/admin/PaymentsTab.jsx`:
+- Dode `handleFixCoveredMonths` functie + `fixing` state verwijderd (knop was al weg).
+
+### Live getest
+- `GET /admin/tenants/{id}/payments-audit` → 79 kwitanties teruggegeven, gesorteerd chronologisch ✓
+- `PUT /admin/tenants/{id}/billed-through` met "invalid" → 400 "Ongeldig formaat" ✓
+- `PUT /admin/tenants/{id}/billed-through` met "2026-04" → 200 ✓
+- `PUT /admin/payments/{id}/covered-months` → 200 ✓
+- Frontend screenshot: 2 tabs zichtbaar, 79 audit-rijen + 79 Bewerk knoppen, billed-through edit-knop in overview tab ✓
+
+### Bestanden
+- `/app/backend/routers/kiosk/admin.py` (2 nieuwe endpoints na `payment-overview`)
+- `/app/frontend/src/components/vastgoed-kiosk/admin/MonthOverviewModal.jsx` (compleet herschreven met tabs)
+- `/app/frontend/src/components/vastgoed-kiosk/admin/PaymentsTab.jsx` (dode code verwijderd)
+
+### Workflow voor gebruiker (DB herstel)
+1. Open Huurders → klik Kalender-icoon naast huurder → tab "Audit kwitanties"
+2. Vergelijk elke KW-nr met je fysieke kwitantie
+3. Klik "Bewerk" naast verkeerde periode → typ exact wat op papier staat (bv. `februari 2026`)
+4. Indien `Gefactureerd t/m` ook fout staat → tab "Maand-overzicht" → klik Bewerk → typ YYYY-MM
+
+---
+
 ## Sprint 72 (25 apr 2026) — Suribet Werkblad (spreadsheet inline editing)
 
 ### Verzoek

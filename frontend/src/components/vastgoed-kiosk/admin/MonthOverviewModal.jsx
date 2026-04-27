@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
-import { CheckCircle2, AlertCircle, Circle, ChevronDown, ChevronUp } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { CheckCircle2, AlertCircle, Circle, ChevronDown, ChevronUp, Pencil, Calendar, ListChecks, Receipt as ReceiptIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import { API, axios } from './utils';
 import MobileModalShell from './MobileModalShell';
 
@@ -31,28 +32,53 @@ function StatusBadge({ status }) {
 }
 
 export default function MonthOverviewModal({ tenant, token, onClose }) {
+  const [tab, setTab] = useState('overview'); // 'overview' | 'audit'
   const [data, setData] = useState(null);
+  const [audit, setAudit] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [auditLoading, setAuditLoading] = useState(false);
   const [error, setError] = useState(null);
   const [expandedYm, setExpandedYm] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editingBilledThrough, setEditingBilledThrough] = useState(false);
+
+  const loadOverview = useCallback(async () => {
+    try {
+      setLoading(true);
+      const r = await axios.get(`${API}/admin/tenants/${tenant.tenant_id}/payment-overview`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setData(r.data);
+    } catch (e) {
+      setError(e?.response?.data?.detail || 'Kon overzicht niet laden');
+    } finally {
+      setLoading(false);
+    }
+  }, [tenant?.tenant_id, token]);
+
+  const loadAudit = useCallback(async () => {
+    try {
+      setAuditLoading(true);
+      const r = await axios.get(`${API}/admin/tenants/${tenant.tenant_id}/payments-audit`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setAudit(r.data);
+    } catch (e) {
+      toast.error(e?.response?.data?.detail || 'Kon audit niet laden');
+    } finally {
+      setAuditLoading(false);
+    }
+  }, [tenant?.tenant_id, token]);
 
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        setLoading(true);
-        const r = await axios.get(`${API}/admin/tenants/${tenant.tenant_id}/payment-overview`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (!cancelled) setData(r.data);
-      } catch (e) {
-        if (!cancelled) setError(e?.response?.data?.detail || 'Kon overzicht niet laden');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [tenant?.tenant_id, token]);
+    loadOverview();
+  }, [loadOverview]);
+
+  useEffect(() => {
+    if (tab === 'audit' && !audit) {
+      loadAudit();
+    }
+  }, [tab, audit, loadAudit]);
 
   // Group months by year
   const grouped = {};
@@ -65,6 +91,70 @@ export default function MonthOverviewModal({ tenant, token, onClose }) {
   const years = Object.keys(grouped).sort();
   const currency = data?.currency || 'SRD';
 
+  const handleEditPeriode = async (payment) => {
+    const current = (payment.covered_months || []).join(', ');
+    const input = window.prompt(
+      `Periode bewerken voor KW${String(payment.kwitantie_nummer || payment.payment_id || '').slice(-5)}\n\n` +
+      `Geef de juiste periode(s) gescheiden door komma, exact zoals op je papieren kwitantie:\n` +
+      `  februari 2026\n` +
+      `  februari 2026 (gedeeltelijk)\n` +
+      `  januari 2026, februari 2026\n\n` +
+      `Bedrag: ${formatNL(payment.amount, payment.currency)}\n` +
+      `Datum: ${payment.created_at ? new Date(payment.created_at).toLocaleDateString('nl-NL') : '—'}\n\n` +
+      `Huidige waarde:`,
+      current
+    );
+    if (input === null) return;
+    const months = input.split(',').map((s) => s.trim()).filter(Boolean);
+    setEditingId(payment.payment_id);
+    try {
+      await axios.put(
+        `${API}/admin/payments/${payment.payment_id}/covered-months`,
+        { covered_months: months },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Periode bijgewerkt');
+      // Reload both views to keep them in sync
+      await Promise.all([loadOverview(), loadAudit()]);
+    } catch (e) {
+      toast.error('Bijwerken mislukt: ' + (e?.response?.data?.detail || e.message));
+    } finally {
+      setEditingId(null);
+    }
+  };
+
+  const handleEditBilledThrough = async () => {
+    const current = data?.rent_billed_through || '';
+    const input = window.prompt(
+      `Gefactureerd t/m bewerken voor ${data?.tenant_name || 'huurder'}\n\n` +
+      `Gebruik formaat YYYY-MM, bijvoorbeeld:\n` +
+      `  2026-02  (februari 2026)\n` +
+      `  2026-04  (april 2026)\n\n` +
+      `Huidige waarde:`,
+      current
+    );
+    if (input === null) return;
+    const val = input.trim();
+    if (!/^\d{4}-\d{2}$/.test(val)) {
+      toast.error('Ongeldig formaat. Gebruik YYYY-MM (bv. 2026-02).');
+      return;
+    }
+    setEditingBilledThrough(true);
+    try {
+      await axios.put(
+        `${API}/admin/tenants/${tenant.tenant_id}/billed-through`,
+        { rent_billed_through: val },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Gefactureerd t/m bijgewerkt');
+      await Promise.all([loadOverview(), loadAudit()]);
+    } catch (e) {
+      toast.error('Bijwerken mislukt: ' + (e?.response?.data?.detail || e.message));
+    } finally {
+      setEditingBilledThrough(false);
+    }
+  };
+
   return (
     <MobileModalShell
       title="Maand-overzicht"
@@ -74,7 +164,31 @@ export default function MonthOverviewModal({ tenant, token, onClose }) {
       maxWidth="sm:max-w-lg"
       testIdPrefix="month-overview"
     >
-      {loading && (
+      {/* Tabs */}
+      <div className="sticky top-0 z-10 bg-white -mx-4 -mt-4 px-4 pt-2 pb-2 border-b border-slate-200 mb-3">
+        <div className="flex gap-1 bg-slate-100 rounded-lg p-1">
+          <button
+            data-testid="tab-overview"
+            onClick={() => setTab('overview')}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs font-bold transition-colors ${
+              tab === 'overview' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Calendar className="w-3.5 h-3.5" /> Maand-overzicht
+          </button>
+          <button
+            data-testid="tab-audit"
+            onClick={() => setTab('audit')}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs font-bold transition-colors ${
+              tab === 'audit' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <ListChecks className="w-3.5 h-3.5" /> Audit kwitanties
+          </button>
+        </div>
+      </div>
+
+      {loading && tab === 'overview' && (
         <div className="p-8 text-center text-slate-500" data-testid="month-overview-loading">
           <div className="inline-block w-8 h-8 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mb-3" />
           <p className="text-sm">Bezig met laden…</p>
@@ -88,7 +202,7 @@ export default function MonthOverviewModal({ tenant, token, onClose }) {
         </div>
       )}
 
-      {data && !loading && (
+      {tab === 'overview' && data && !loading && (
         <div className="space-y-4 pb-4" data-testid="month-overview-content">
           {/* Header */}
           <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-xl p-4">
@@ -105,6 +219,24 @@ export default function MonthOverviewModal({ tenant, token, onClose }) {
                 <p className="text-base font-black">{formatNL(data.monthly_rent, currency)}</p>
               </div>
             </div>
+          </div>
+
+          {/* Billed through with manual edit */}
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center justify-between gap-2" data-testid="billed-through-row">
+            <div className="min-w-0">
+              <p className="text-[10px] uppercase tracking-wider text-amber-700 font-semibold">Gefactureerd t/m</p>
+              <p className="text-sm font-bold text-amber-900 mt-0.5">
+                {data.rent_billed_through || '—'}
+              </p>
+            </div>
+            <button
+              onClick={handleEditBilledThrough}
+              disabled={editingBilledThrough}
+              data-testid="edit-billed-through-btn"
+              className="px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-bold hover:bg-amber-700 disabled:opacity-50 inline-flex items-center gap-1"
+            >
+              <Pencil className="w-3 h-3" /> Bewerk
+            </button>
           </div>
 
           {/* Summary cards */}
@@ -154,7 +286,7 @@ export default function MonthOverviewModal({ tenant, token, onClose }) {
               <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                 <h3 className="text-sm font-black text-slate-700">{y}</h3>
                 <span className="text-[10px] text-slate-400 font-medium">
-                  {grouped[y].filter(m => m.status === 'paid').length}/{grouped[y].length} betaald
+                  {grouped[y].filter((m) => m.status === 'paid').length}/{grouped[y].length} betaald
                 </span>
               </div>
               <div className="divide-y divide-slate-100">
@@ -220,9 +352,119 @@ export default function MonthOverviewModal({ tenant, token, onClose }) {
           ))}
         </div>
       )}
+
+      {tab === 'audit' && (
+        <div className="space-y-3 pb-4" data-testid="audit-content">
+          {/* Info banner */}
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-3 text-xs text-orange-900">
+            <p className="font-bold mb-1 flex items-center gap-1.5">
+              <ReceiptIcon className="w-3.5 h-3.5" /> Audit-modus
+            </p>
+            <p className="leading-relaxed">
+              Vergelijk hieronder elke kwitantie met je <strong>papieren kwitantie</strong>. Klik op
+              <span className="inline-flex items-center mx-1 px-1.5 py-0.5 rounded bg-white border border-orange-300">
+                <Pencil className="w-2.5 h-2.5" />
+              </span>
+              om de Periode te corrigeren naar wat op het papier staat.
+            </p>
+          </div>
+
+          {auditLoading && (
+            <div className="p-6 text-center text-slate-500" data-testid="audit-loading">
+              <div className="inline-block w-7 h-7 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mb-2" />
+              <p className="text-xs">Kwitanties laden…</p>
+            </div>
+          )}
+
+          {audit && !auditLoading && (
+            <>
+              <div className="text-xs text-slate-500 px-1">
+                Totaal: <strong>{audit.total_payments}</strong> kwitanties &middot; oudste eerst
+              </div>
+
+              {audit.payments.length === 0 && (
+                <p className="text-sm text-slate-500 text-center py-6">Geen huur-kwitanties gevonden</p>
+              )}
+
+              <div className="space-y-2">
+                {audit.payments.map((p) => {
+                  const cur = p.currency || audit.currency;
+                  const isEditing = editingId === p.payment_id;
+                  const partialAny = (p.covered_months || []).some((s) => /\(gedeeltelijk\)/i.test(s));
+                  return (
+                    <div
+                      key={p.payment_id}
+                      className="bg-white border border-slate-200 rounded-xl p-3"
+                      data-testid={`audit-row-${p.payment_id}`}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="min-w-0">
+                          <p className="font-mono text-sm font-black text-slate-800">
+                            {p.kwitantie_nummer || `KW—${String(p.payment_id).slice(-5)}`}
+                          </p>
+                          <p className="text-[11px] text-slate-500 mt-0.5">
+                            {p.created_at ? new Date(p.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'long', year: 'numeric' }) : '—'}
+                          </p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="text-sm font-black text-emerald-700">+ {formatNL(p.amount, cur)}</p>
+                          {p.payment_method && (
+                            <p className="text-[10px] text-slate-400 mt-0.5 uppercase">{p.payment_method}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 bg-slate-50 rounded-lg p-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Periode</p>
+                          {p.covered_months && p.covered_months.length > 0 ? (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {p.covered_months.map((m, i) => (
+                                <span
+                                  key={i}
+                                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                                    /\(gedeeltelijk\)/i.test(m)
+                                      ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                      : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                  }`}
+                                >
+                                  {m}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-rose-600 font-semibold mt-1">⚠ Geen periode ingesteld</p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleEditPeriode(p)}
+                          disabled={isEditing}
+                          data-testid={`audit-edit-${p.payment_id}`}
+                          className="px-3 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-bold hover:bg-orange-600 disabled:opacity-50 inline-flex items-center gap-1 flex-shrink-0"
+                        >
+                          {isEditing ? '…' : <><Pencil className="w-3 h-3" /> Bewerk</>}
+                        </button>
+                      </div>
+
+                      {partialAny && (
+                        <p className="text-[10px] text-amber-700 mt-2 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" /> Bevat een gedeeltelijke betaling
+                        </p>
+                      )}
+
+                      {p.notes && (
+                        <p className="text-[11px] text-slate-500 mt-2 italic line-clamp-2">{p.notes}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </MobileModalShell>
   );
 }
 
 export { MonthOverviewModal };
-// Sat Apr 25 15:07:48 UTC 2026

@@ -12,7 +12,6 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
   const [selectedPayment, setSelectedPayment] = useState(null);
   const [receiptHtml, setReceiptHtml] = useState('');
   const [receiptLoading, setReceiptLoading] = useState(false);
-  const [fixing, setFixing] = useState(false);
   const [approving, setApproving] = useState(null);
   const [signatureTarget, setSignatureTarget] = useState(null); // payment_id to approve
   const [currencyFilter, setCurrencyFilter] = useState('all');  // all | SRD | USD | EUR
@@ -75,23 +74,6 @@ function PaymentsTab({ payments, totalFiltered, searchTerm, setSearchTerm, selec
     tenantMap[t.tenant_code] = total;
     tenantMap[t.name] = total;
   });
-
-  const handleFixCoveredMonths = async () => {
-    if (!window.confirm('Wilt u de periode-gegevens van alle kwitanties herberekenen?')) return;
-    setFixing(true);
-    try {
-      const res = await fetch(`${API}/admin/payments/fix-covered-months`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await res.json();
-      toast.success(`${data.message}`);
-      if (onRefresh) onRefresh();
-    } catch {
-      toast.error('Herberekening mislukt');
-    }
-    setFixing(false);
-  };
 
   const handleApprove = async (paymentId) => {
     // Open signature modal instead of direct approve

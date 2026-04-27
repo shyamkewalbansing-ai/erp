@@ -859,6 +859,93 @@ async def get_tenant_payment_overview(tenant_id: str, company: dict = Depends(ge
     }
 
 
+@router.get("/admin/tenants/{tenant_id}/payments-audit")
+async def get_tenant_payments_audit(tenant_id: str, company: dict = Depends(get_current_company)):
+    """Audit-view voor één huurder: ALLE huur-kwitanties chronologisch (oudste eerst).
+    Gebruikt om de covered_months in de DB te vergelijken met de fysieke papieren kwitanties.
+    Returnt per kwitantie: payment_id, kwitantie_nummer, datum, bedrag, currency, payment_type,
+    huidige covered_months, status, notes.
+    """
+    company_id = company["company_id"]
+    tenant = await db.kiosk_tenants.find_one(
+        {"company_id": company_id, "tenant_id": tenant_id},
+        {"_id": 0, "name": 1, "tenant_code": 1, "apartment_number": 1, "monthly_rent": 1,
+         "currency": 1, "rent_billed_through": 1, "outstanding_rent": 1}
+    )
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+
+    payments = await db.kiosk_payments.find({
+        "company_id": company_id,
+        "tenant_id": tenant_id,
+        "payment_type": {"$in": ["rent", "partial_rent", "monthly_rent"]},
+    }, {
+        "_id": 0,
+        "payment_id": 1,
+        "kwitantie_nummer": 1,
+        "created_at": 1,
+        "amount": 1,
+        "currency": 1,
+        "payment_type": 1,
+        "covered_months": 1,
+        "status": 1,
+        "notes": 1,
+        "payment_method": 1,
+    }).sort("created_at", 1).to_list(5000)
+
+    items = []
+    for p in payments:
+        items.append({
+            "payment_id": p.get("payment_id"),
+            "kwitantie_nummer": p.get("kwitantie_nummer"),
+            "created_at": p.get("created_at").isoformat() if p.get("created_at") else None,
+            "amount": float(p.get("amount", 0) or 0),
+            "currency": (p.get("currency") or tenant.get("currency") or "SRD").upper(),
+            "payment_type": p.get("payment_type", "rent"),
+            "covered_months": p.get("covered_months", []) or [],
+            "status": p.get("status", "approved"),
+            "notes": p.get("notes", "") or "",
+            "payment_method": p.get("payment_method", "") or "",
+        })
+
+    return {
+        "tenant_id": tenant_id,
+        "tenant_name": tenant.get("name"),
+        "tenant_code": tenant.get("tenant_code"),
+        "apartment_number": tenant.get("apartment_number"),
+        "monthly_rent": float(tenant.get("monthly_rent", 0) or 0),
+        "currency": (tenant.get("currency") or "SRD").upper(),
+        "rent_billed_through": tenant.get("rent_billed_through", "") or "",
+        "outstanding_rent": float(tenant.get("outstanding_rent", 0) or 0),
+        "total_payments": len(items),
+        "payments": items,
+    }
+
+
+class TenantBilledThroughUpdate(BaseModel):
+    rent_billed_through: str  # "YYYY-MM"
+
+
+@router.put("/admin/tenants/{tenant_id}/billed-through")
+async def update_tenant_billed_through(tenant_id: str, data: TenantBilledThroughUpdate, company: dict = Depends(get_current_company)):
+    """Handmatig de 'Gefactureerd t/m' datum corrigeren voor een huurder.
+    Geen automatische impact op outstanding_rent of covered_months.
+    """
+    val = (data.rent_billed_through or "").strip()
+    # Validate YYYY-MM
+    try:
+        datetime.strptime(val + "-01", "%Y-%m-%d")
+    except Exception:
+        raise HTTPException(status_code=400, detail="Ongeldig formaat. Gebruik YYYY-MM (bv. 2026-02).")
+    res = await db.kiosk_tenants.update_one(
+        {"tenant_id": tenant_id, "company_id": company["company_id"]},
+        {"$set": {"rent_billed_through": val}}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    return {"message": "Gefactureerd t/m bijgewerkt", "rent_billed_through": val}
+
+
 # ============== COMBINED DASHBOARD ENDPOINT (1 call instead of 6) ==============
 
 @router.get("/admin/dashboard-data")
