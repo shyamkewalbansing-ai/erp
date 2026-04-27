@@ -505,6 +505,19 @@ async def list_tenants(company: dict = Depends(get_current_company)):
         # Alleen auto-billing voor huurders met EXPLICIETE status="active" — anders niet aanraken
         # om bestaande achterstand-data niet dubbel te tellen
         is_active_status = t.get("status") == "active"
+
+        # SIMPEL ALGEMEEN LABEL-FIX (voor ALLE huurders, ongeacht status):
+        # Auto-bump rent_billed_through naar (huidige_kalendermaand - 1) als hij achterloopt.
+        # Reden: huur wordt achteraf opgehaald — als we in april zitten dan is maart de
+        # laatst-gefactureerde maand. Outstanding wordt NIET aangepast.
+        try:
+            target_label = (engine_now - relativedelta(months=1)).strftime("%Y-%m")
+            if billed_through and billed_through < target_label:
+                updates["rent_billed_through"] = target_label
+                billed_through = target_label
+        except Exception:
+            pass
+
         if is_active_status and monthly_rent > 0:
             if not billed_through:
                 billed_through = current_month
