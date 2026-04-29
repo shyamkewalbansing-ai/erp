@@ -153,8 +153,13 @@ function PinLandingScreen({ onSuccess, onPassword, onRegister, onSuperadmin }) {
     <div className="h-screen bg-orange-500 flex flex-col overflow-hidden" style={{ fontFamily: 'Outfit, sans-serif' }}>
       <div className="flex items-center justify-between px-4 sm:px-8 py-4 sm:py-5 bg-orange-600/20 backdrop-blur-sm border-b border-white/20">
         <div className="flex items-center gap-3 sm:gap-4">
-          <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white flex items-center justify-center shadow-lg">
-            <Building2 className="w-6 h-6 sm:w-7 sm:h-7 text-orange-600" />
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white flex items-center justify-center shadow-lg overflow-hidden">
+            <img
+              src="/kiosk-icons/kiosk-192.png"
+              alt="Kiosk"
+              className="w-full h-full object-contain"
+              data-testid="landing-header-logo"
+            />
           </div>
           <div>
             <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight">Appartement Kiosk</h1>
@@ -167,11 +172,16 @@ function PinLandingScreen({ onSuccess, onPassword, onRegister, onSuperadmin }) {
       <div className="flex-1 flex items-center justify-center p-4 sm:p-6 overflow-auto">
         <div className="bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] w-full max-w-md p-6 sm:p-10" data-testid="landing-pin-card">
           <div className="text-center mb-5 sm:mb-7">
-            <div className="w-16 h-16 rounded-2xl bg-[#FF5C00] flex items-center justify-center mx-auto mb-3 shadow-lg shadow-orange-500/30">
-              <Lock className="w-9 h-9 text-white" />
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center mx-auto mb-4 shadow-xl shadow-orange-500/40 overflow-hidden p-3">
+              <img
+                src="/kiosk-icons/kiosk-512.png"
+                alt="Kiosk logo"
+                className="w-full h-full object-contain drop-shadow-md"
+                data-testid="landing-hero-logo"
+              />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">PIN Code</h2>
-            <p className="text-sm text-slate-400 mt-1">Beheerder of medewerker PIN</p>
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Welkom bij Kiosk</h2>
+            <p className="text-sm text-slate-400 mt-1">Voer uw PIN code in om te beginnen</p>
           </div>
 
           {error && (

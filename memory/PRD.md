@@ -1,5 +1,28 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 78 (29 apr 2026) — Landing page /vastgoed met Kiosk-logo
+
+### Verzoek
+Gebruiker wilde een landing page op `/vastgoed` met het oranje huis-logo dat ook als Kiosk PWA-icoon wordt gebruikt.
+
+### Implementatie
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/CompanySelect.jsx`:
+- Header: witte rounded tile met `/kiosk-icons/kiosk-192.png` als logo (vervangt `Building2` icon)
+- Hero boven PIN keypad: 96×96px oranje gradient-tile (from-orange-400 to-orange-600) met `/kiosk-icons/kiosk-512.png` full-bleed inside, shadow-xl glow (vervangt `Lock` icon)
+- Titel: "Welkom bij Kiosk" i.p.v. "PIN Code"
+- Ondertitel: "Voer uw PIN code in om te beginnen"
+
+PIN keypad + footer links (Wachtwoord · Nieuw account · Superadmin) blijven intact.
+
+### Live getest
+- `data-testid="landing-header-logo"` + `landing-hero-logo` aanwezig ✓
+- Visueel (mobile 390×844): oranje huis-logo prominent zichtbaar ✓
+
+### Bestand
+- `/app/frontend/src/components/vastgoed-kiosk/CompanySelect.jsx` (PinLandingScreen component)
+
+---
+
 ## Sprint 77 (29 apr 2026) — Duplicaat UI opschonen — alleen 1 correctiepad
 
 ### Verzoek
