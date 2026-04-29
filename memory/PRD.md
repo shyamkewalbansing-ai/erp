@@ -1,5 +1,29 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 76 (29 apr 2026) — Bedrijfsbrede bulk pause/resume auto-billing
+
+### Verzoek
+"Pauzeer alle auto-billing" knop in Instellingen — in 1 klik alle huurders tegelijk pauzeren voor een grote opschoning.
+
+### Implementatie
+
+**Backend** — `/app/backend/routers/kiosk/admin.py`:
+- Nieuw endpoint **`POST /admin/tenants/bulk-pause-auto-billing`** — `update_many` op alle huurders van het bedrijf met `{pause_auto_billing: bool}`. Retourneert `tenants_updated` count.
+
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/admin/SettingsTab.jsx`:
+- Nieuwe `BulkPauseAutoBillingSection` component toegevoegd in Facturering-sectie
+- Toont live telling: `{total} huurders · {active} actief · {paused} gepauzeerd`
+- 2 knoppen: "Pauzeer alle (N)" rood + "Hervat alle (M)" groen
+- Kleurvlak: sky-blauw wanneer actief, rose wanneer álles gepauzeerd
+- Bevestigingsdialoog vóór bulk-actie
+
+### Live getest
+- `POST /bulk-pause-auto-billing {pause: true}` → `tenants_updated: 6` ✓
+- `POST /bulk-pause-auto-billing {pause: false}` → `tenants_updated: 6` ✓
+- Frontend: section + pause-btn aanwezig ✓
+
+---
+
 ## Sprint 75 (29 apr 2026) — Pause auto-billing per huurder
 
 ### Probleem gevonden

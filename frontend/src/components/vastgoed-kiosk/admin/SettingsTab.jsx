@@ -9,6 +9,78 @@ import { toast } from 'sonner';
 import { API, axios } from './utils';
 import PushNotificationsSettings from './PushNotificationsSettings';
 
+function BulkPauseAutoBillingSection({ token, tenants, onRefresh }) {
+  const [saving, setSaving] = useState(false);
+  const total = (tenants || []).length;
+  const paused = (tenants || []).filter(t => t.pause_auto_billing).length;
+  const active = total - paused;
+  const allPaused = total > 0 && paused === total;
+
+  const handleBulk = async (pause) => {
+    const msg = pause
+      ? `ALLE ${total} huurders pauzeren?\n\nDe auto-billing engine stopt met nieuwe maanden toevoegen. Gebruik dit wanneer je historische data gaat corrigeren zonder dat het systeem ertussen komt.`
+      : `Auto-billing weer HERVATTEN voor alle ${total} huurders?\n\nHet systeem zal weer automatisch nieuwe maanden factureren vanaf de billing_day.`;
+    if (!window.confirm(msg)) return;
+    setSaving(true);
+    try {
+      const r = await axios.post(
+        `${API}/admin/tenants/bulk-pause-auto-billing`,
+        { pause_auto_billing: pause },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`${r.data?.tenants_updated ?? 0} huurders bijgewerkt`);
+      if (onRefresh) onRefresh();
+    } catch (e) {
+      toast.error('Bijwerken mislukt: ' + (e?.response?.data?.detail || e.message));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className={`mt-4 border rounded-lg p-3 ${allPaused ? 'bg-rose-50 border-rose-300' : 'bg-sky-50 border-sky-200'}`}
+      data-testid="bulk-pause-section"
+    >
+      <p className={`text-xs font-bold mb-1 ${allPaused ? 'text-rose-900' : 'text-sky-900'}`}>
+        Auto-billing bedrijfsbreed
+      </p>
+      <p className={`text-[11px] mb-3 leading-snug ${allPaused ? 'text-rose-800' : 'text-sky-800'}`}>
+        {allPaused
+          ? 'Alle huurders zijn GEPAUZEERD. Nieuwe maanden worden niet automatisch gefactureerd totdat je hervat.'
+          : 'Pauzeer alle huurders tegelijk tijdens een grote opschoning. Zo overschrijft de auto-billing engine je handmatige correcties niet.'}
+      </p>
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="text-[11px] bg-white border border-slate-200 rounded-lg px-2 py-1 font-semibold text-slate-700">
+          {total} huurders · <span className="text-emerald-600">{active} actief</span> · <span className="text-rose-600">{paused} gepauzeerd</span>
+        </div>
+        {!allPaused && (
+          <button
+            type="button"
+            data-testid="bulk-pause-btn"
+            onClick={() => handleBulk(true)}
+            disabled={saving || total === 0}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 disabled:opacity-50"
+          >
+            Pauzeer alle ({active})
+          </button>
+        )}
+        {paused > 0 && (
+          <button
+            type="button"
+            data-testid="bulk-resume-btn"
+            onClick={() => handleBulk(false)}
+            disabled={saving}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 disabled:opacity-50"
+          >
+            Hervat alle ({paused})
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SettingsTab({ company, token, onRefresh, tenants }) {
   const [settingsSubTab, setSettingsSubTab] = useState('general');
   const [billingDay, setBillingDay] = useState(company?.billing_day || 1);
@@ -392,6 +464,9 @@ function SettingsTab({ company, token, onRefresh, tenants }) {
               </span>
               . Na die datum wordt de nieuwe maandhuur automatisch bij het saldo opgeteld.
             </div>
+
+            {/* Bulk PAUSE/RESUME auto-billing voor ALLE huurders */}
+            <BulkPauseAutoBillingSection token={token} tenants={tenants} onRefresh={onRefresh} />
 
             {/* Bulk reset knop: zet alle huurders terug naar vorige maand (arrears migratie) */}
             <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-3">

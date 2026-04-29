@@ -977,6 +977,22 @@ async def update_tenant_pause_auto_billing(tenant_id: str, data: TenantPauseAuto
     return {"message": "Auto-billing pauze bijgewerkt", "pause_auto_billing": bool(data.pause_auto_billing)}
 
 
+@router.post("/admin/tenants/bulk-pause-auto-billing")
+async def bulk_pause_auto_billing(data: TenantPauseAutoBillingUpdate, company: dict = Depends(get_current_company)):
+    """Pauzeer of hervat auto-billing voor ALLE huurders in dit bedrijf tegelijk.
+    Handig voor een grote opschoningsronde: eerst pauzeer alles, corrigeer de data, hervat daarna weer.
+    """
+    res = await db.kiosk_tenants.update_many(
+        {"company_id": company["company_id"]},
+        {"$set": {"pause_auto_billing": bool(data.pause_auto_billing)}}
+    )
+    return {
+        "message": "Auto-billing pauze bijgewerkt voor alle huurders",
+        "pause_auto_billing": bool(data.pause_auto_billing),
+        "tenants_updated": res.modified_count,
+    }
+
+
 @router.put("/admin/tenants/{tenant_id}/manual-balance")
 async def update_tenant_manual_balance(tenant_id: str, data: TenantManualBalanceUpdate, company: dict = Depends(get_current_company)):
     """Handmatige override van saldo-velden voor één huurder.
