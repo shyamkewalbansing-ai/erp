@@ -1,5 +1,36 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 77 (29 apr 2026) — Duplicaat UI opschonen — alleen 1 correctiepad
+
+### Verzoek
+Gebruiker: "bepaalde functies eruit — bij huurder bewerken Openstaand Saldo, Gefactureerd t/m, en misschien ook 'Zet alle huurders terug naar vorige maand'". De duplicaten in TenantModal (Saldo tab) en SettingsTab konden eerder auto-gecorrigeerd worden terwijl de user via Maand-overzicht een andere waarde invoerde → inconsistente state.
+
+### Implementatie
+
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/admin/TenantModal.jsx`:
+- `'Saldo'` tab volledig verwijderd uit tabs-array (alleen `Basis` + `ID Kaart`)
+- `outstandingRent`, `serviceCosts`, `fines`, `billedThrough` states + bijbehorende inputs weg
+- `BillingStatusSection` component + gebruik weg (reset-to-current-month knop)
+- Submit-payload kent `data.outstanding_rent/service_costs/fines/rent_billed_through` niet meer — deze velden worden ALLEEN nog via de Maand-overzicht modal beheerd
+- Import `RotateCcw`, `AlertTriangle` weg (ongebruikt)
+
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/admin/SettingsTab.jsx`:
+- "Hulp nodig bij incasso achteraf?" blok + "Zet alle huurders terug naar vorige maand" knop volledig verwijderd
+- `POST /admin/tenants/reset-all-to-previous-month` endpoint blijft in backend (alleen UI is weg) — geen destructief effect meer mogelijk via frontend
+
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/admin/TenantsTab.jsx`:
+- `t/m {billedLabel}` knop in Huurmaand-kolom linkt nu naar `setOverviewTenant(tenant)` ipv `onEditTenant(tenant)` — opent direct Maand-overzicht modal
+
+### Resultaat
+Er is nu **ÉÉN** plek om huurder-saldi/periodes te corrigeren: de Maand-overzicht modal (kalender-icoon of klik op `t/m` label). Geen dubbele paden, geen verwarring, geen risico op overschrijvingen.
+
+### Live getest
+- TenantModal tabs: alleen `Basis` + `ID Kaart` ✓
+- Huurmaand knop → Maand-overzicht (overview + audit tabs direct beschikbaar) ✓
+- Settings: `bulk-reset-prev-month-btn` niet meer aanwezig, `bulk-pause-section` blijft ✓
+
+---
+
 ## Sprint 76 (29 apr 2026) — Bedrijfsbrede bulk pause/resume auto-billing
 
 ### Verzoek

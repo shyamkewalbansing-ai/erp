@@ -176,9 +176,9 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
                       </td>
                       <td className="p-4">
                         <button
-                          onClick={() => onEditTenant && onEditTenant(tenant)}
+                          onClick={() => setOverviewTenant(tenant)}
                           data-testid={`tenant-billed-${tenant.tenant_id}`}
-                          title="Klik om Gefactureerd t/m aan te passen"
+                          title="Klik om Maand-overzicht te openen (periodes, saldi en audit)"
                           className="px-2 py-1 bg-slate-100 hover:bg-orange-100 text-slate-700 hover:text-orange-700 rounded text-xs font-semibold transition cursor-pointer"
                         >
                           t/m {billedLabel}

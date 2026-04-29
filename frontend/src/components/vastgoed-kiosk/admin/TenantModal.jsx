@@ -1,88 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  CreditCard, Check, RotateCcw, AlertTriangle, X, Camera, Upload, Loader2, Sparkles
+  CreditCard, Check, X, Camera, Upload, Loader2, Sparkles
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { API, axios } from './utils';
-
-// Reset billed-through back to current real-world month
-function BillingStatusSection({ tenant, token, onReset }) {
-  const [busy, setBusy] = useState(false);
-  const cur = (tenant?.currency || 'SRD').toUpperCase();
-  const billedThrough = tenant?.rent_billed_through || '';
-  if (!billedThrough) return null;
-  const now = new Date();
-  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const [by, bm] = billedThrough.split('-');
-  const billedDate = new Date(parseInt(by), parseInt(bm) - 1);
-  const currentDate = new Date(now.getFullYear(), now.getMonth());
-  const monthsAhead = (billedDate.getFullYear() - currentDate.getFullYear()) * 12 +
-                      (billedDate.getMonth() - currentDate.getMonth());
-  const billedLabel = billedDate.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
-  const currentLabel = currentDate.toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' });
-  const monthlyRent = parseFloat(tenant.monthly_rent || 0);
-  const internetCost = parseFloat(tenant.internet_cost || 0);
-  const rentRefund = monthlyRent * Math.max(0, monthsAhead);
-  const internetRefund = internetCost * Math.max(0, monthsAhead);
-
-  const resetToCurrent = async () => {
-    if (!window.confirm(
-      `Weet u zeker dat u de factureringsstatus wilt herstellen?\n\n` +
-      `Van: ${billedLabel} (${monthsAhead} maand(en) vooruit)\n` +
-      `Naar: ${currentLabel}\n\n` +
-      `Openstaand saldo wordt verlaagd met:\n` +
-      `• Huur: ${cur} ${rentRefund.toLocaleString('nl-NL', {minimumFractionDigits: 2})}` +
-      (internetRefund > 0 ? `\n• Internet: ${cur} ${internetRefund.toLocaleString('nl-NL', {minimumFractionDigits: 2})}` : '')
-    )) return;
-    setBusy(true);
-    try {
-      const r = await axios.post(
-        `${API}/admin/tenants/${tenant.tenant_id}/reset-to-current-month`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success(r.data?.message || 'Factureringsstatus hersteld');
-      if (onReset) onReset();
-    } catch (err) {
-      toast.error(err.response?.data?.detail || 'Herstellen mislukt');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="mt-4 pt-4 border-t border-slate-200">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Factureringsstatus</p>
-          <p className="text-sm text-slate-700">
-            Gefactureerd t/m: <span className="font-bold">{billedLabel}</span>
-          </p>
-          {billedThrough > currentMonthKey ? (
-            <div className="mt-1 inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md">
-              <AlertTriangle className="w-3.5 h-3.5" />
-              {monthsAhead} maand(en) vooruit gefactureerd
-            </div>
-          ) : (
-            <p className="text-xs text-slate-400 mt-1">Huidige maand: {currentLabel}</p>
-          )}
-        </div>
-        {billedThrough > currentMonthKey && (
-          <button
-            type="button"
-            onClick={resetToCurrent}
-            disabled={busy}
-            data-testid="reset-to-current-month-btn"
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 disabled:opacity-50 shadow-sm"
-          >
-            <RotateCcw className="w-4 h-4" />
-            {busy ? 'Bezig...' : `Reset naar ${currentLabel}`}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // ID card camera scanner component
 function IdCardScanner({ token, onScanned }) {
@@ -244,10 +165,6 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
   const initialCurrency = (tenant?.currency || selectedApt?.currency || 'SRD').toUpperCase();
   const [currency, setCurrency] = useState(initialCurrency);
   const [depositRequired, setDepositRequired] = useState(tenant?.deposit_required || 0);
-  const [outstandingRent, setOutstandingRent] = useState(tenant?.outstanding_rent || 0);
-  const [serviceCosts, setServiceCosts] = useState(tenant?.service_costs || 0);
-  const [fines, setFines] = useState(tenant?.fines || 0);
-  const [billedThrough, setBilledThrough] = useState(tenant?.rent_billed_through || '');
   const [leaseStart, setLeaseStart] = useState('');
   const [leaseEnd, setLeaseEnd] = useState('');
   const [idCardNumber, setIdCardNumber] = useState(tenant?.id_card_number || '');
@@ -293,12 +210,6 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
         id_card_raw: idCardRaw || null,
       };
       if (tenant) {
-        data.outstanding_rent = parseFloat(outstandingRent);
-        data.service_costs = parseFloat(serviceCosts);
-        data.fines = parseFloat(fines);
-        if (billedThrough && /^\d{4}-\d{2}$/.test(billedThrough)) {
-          data.rent_billed_through = billedThrough;
-        }
         await axios.put(`${API}/admin/tenants/${tenant.tenant_id}`, data, { headers });
       } else {
         if (leaseStart && leaseEnd) {
@@ -319,7 +230,7 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
   const tabs = [
     { id: 'basis', label: 'Basis' },
     { id: 'id', label: 'ID Kaart' },
-    ...(tenant ? [{ id: 'saldo', label: 'Saldo' }] : [{ id: 'lease', label: 'Contract' }]),
+    ...(tenant ? [] : [{ id: 'lease', label: 'Contract' }]),
   ];
 
   return (
@@ -479,10 +390,6 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
                   placeholder="Automatisch als leeg"
                 />
               </div>
-
-              {tenant && (
-                <BillingStatusSection tenant={tenant} token={token} onReset={onSave} />
-              )}
             </div>
           )}
 
@@ -577,54 +484,7 @@ function TenantModal({ tenant, apartments, onClose, onSave, token }) {
             </div>
           )}
 
-          {section === 'saldo' && tenant && (
-            <div className="p-4 space-y-3">
-              <p className="text-sm font-semibold text-slate-700 mb-2">Openstaand Saldo</p>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Gefactureerd t/m (huurmaand)</label>
-                <input
-                  type="month"
-                  value={billedThrough}
-                  onChange={(e) => setBilledThrough(e.target.value)}
-                  data-testid="tenant-billed-through-input"
-                  className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
-                />
-                <p className="text-[10px] text-slate-400 mt-1">Bv. 2026-03 betekent: huur t/m maart 2026 is gefactureerd. Pas dit aan zonder dat openstaand saldo verandert.</p>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1.5">Openstaande huur ({currency})</label>
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  value={outstandingRent}
-                  onChange={(e) => setOutstandingRent(e.target.value)}
-                  className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Service kosten</label>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    value={serviceCosts}
-                    onChange={(e) => setServiceCosts(e.target.value)}
-                    className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1.5">Boetes</label>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    value={fines}
-                    onChange={(e) => setFines(e.target.value)}
-                    className="w-full px-3 py-3 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-orange-400"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
+          {section === 'saldo' && tenant && null}
         </form>
 
         {/* Sticky footer with action buttons */}
