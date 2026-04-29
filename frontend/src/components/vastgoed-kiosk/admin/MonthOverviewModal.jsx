@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { CheckCircle2, AlertCircle, Circle, ChevronDown, ChevronUp, Pencil, Calendar, ListChecks, Receipt as ReceiptIcon } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Circle, ChevronDown, ChevronUp, Pencil, Calendar, ListChecks, Receipt as ReceiptIcon, Save, Wallet } from 'lucide-react';
 import { toast } from 'sonner';
 import { API, axios } from './utils';
 import MobileModalShell from './MobileModalShell';
@@ -7,6 +7,153 @@ import MobileModalShell from './MobileModalShell';
 function formatNL(amount, currency = 'SRD') {
   const n = Number(amount || 0);
   return `${currency} ${n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function ManualBalanceSection({ tenant, token, currency, onChanged }) {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [rent, setRent] = useState(String(tenant?.outstanding_rent ?? ''));
+  const [service, setService] = useState(String(tenant?.service_costs ?? ''));
+  const [fines, setFines] = useState(String(tenant?.fines ?? ''));
+  const [internet, setInternet] = useState(String(tenant?.internet_outstanding ?? ''));
+
+  useEffect(() => {
+    setRent(String(tenant?.outstanding_rent ?? ''));
+    setService(String(tenant?.service_costs ?? ''));
+    setFines(String(tenant?.fines ?? ''));
+    setInternet(String(tenant?.internet_outstanding ?? ''));
+  }, [tenant?.tenant_id, tenant?.outstanding_rent, tenant?.service_costs, tenant?.fines, tenant?.internet_outstanding]);
+
+  const parse = (v) => {
+    const n = Number(String(v).replace(',', '.'));
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  };
+
+  const handleSave = async () => {
+    const payload = {};
+    const a = parse(rent); if (a === null) return toast.error('Ongeldige huur');
+    const b = parse(service); if (b === null) return toast.error('Ongeldige servicekosten');
+    const c = parse(fines); if (c === null) return toast.error('Ongeldige boetes');
+    const d = parse(internet); if (d === null) return toast.error('Ongeldig internet');
+    payload.outstanding_rent = a;
+    payload.service_costs = b;
+    payload.fines = c;
+    payload.internet_outstanding = d;
+
+    if (!window.confirm(
+      `Saldi handmatig overschrijven voor ${tenant?.name || 'huurder'}?\n\n` +
+      `Huur:    ${formatNL(a, currency)}\n` +
+      `Service: ${formatNL(b, currency)}\n` +
+      `Boetes:  ${formatNL(c, currency)}\n` +
+      `Internet: ${formatNL(d, currency)}\n\n` +
+      `Dit overschrijft de huidige waarden. Geen andere velden of kwitanties worden gewijzigd.`
+    )) return;
+
+    setSaving(true);
+    try {
+      await axios.put(
+        `${API}/admin/tenants/${tenant.tenant_id}/manual-balance`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Saldi bijgewerkt');
+      if (onChanged) await onChanged();
+      setOpen(false);
+    } catch (e) {
+      toast.error('Bijwerken mislukt: ' + (e?.response?.data?.detail || e.message));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-sky-50 border border-sky-200 rounded-xl overflow-hidden" data-testid="manual-balance-section">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full px-3 py-2.5 flex items-center justify-between gap-2 text-left hover:bg-sky-100/60 transition-colors"
+        data-testid="manual-balance-toggle"
+      >
+        <div className="flex items-center gap-2 min-w-0">
+          <Wallet className="w-4 h-4 text-sky-700 flex-shrink-0" />
+          <div className="min-w-0">
+            <p className="text-[10px] uppercase tracking-wider text-sky-700 font-semibold">Saldi handmatig bewerken</p>
+            <p className="text-[11px] text-sky-900 truncate">Huur · Service · Boetes · Internet</p>
+          </div>
+        </div>
+        {open ? <ChevronUp className="w-4 h-4 text-sky-700" /> : <ChevronDown className="w-4 h-4 text-sky-700" />}
+      </button>
+
+      {open && (
+        <div className="px-3 pb-3 pt-1 space-y-2 bg-white border-t border-sky-200">
+          <p className="text-[11px] text-slate-500 leading-snug mb-2">
+            Vul hieronder de juiste saldi in zoals ze volgens je papieren boekhouding horen te zijn.
+            Alle bedragen in <strong>{currency}</strong>. Geen kwitanties of facturering-datums worden aangepast.
+          </p>
+
+          <div className="grid grid-cols-2 gap-2">
+            <label className="block">
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Openstaande huur</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={rent}
+                onChange={(e) => setRent(e.target.value)}
+                data-testid="manual-balance-rent"
+                className="mt-1 w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-sky-400 focus:border-sky-400"
+                placeholder="0.00"
+              />
+            </label>
+            <label className="block">
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Servicekosten</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={service}
+                onChange={(e) => setService(e.target.value)}
+                data-testid="manual-balance-service"
+                className="mt-1 w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-sky-400 focus:border-sky-400"
+                placeholder="0.00"
+              />
+            </label>
+            <label className="block">
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Boetes</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={fines}
+                onChange={(e) => setFines(e.target.value)}
+                data-testid="manual-balance-fines"
+                className="mt-1 w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-sky-400 focus:border-sky-400"
+                placeholder="0.00"
+              />
+            </label>
+            <label className="block">
+              <span className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold">Internet</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={internet}
+                onChange={(e) => setInternet(e.target.value)}
+                data-testid="manual-balance-internet"
+                className="mt-1 w-full px-2 py-1.5 border border-slate-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-sky-400 focus:border-sky-400"
+                placeholder="0.00"
+              />
+            </label>
+          </div>
+
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            data-testid="manual-balance-save"
+            className="w-full mt-2 px-3 py-2 bg-sky-600 text-white rounded-lg text-xs font-bold hover:bg-sky-700 disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
+          >
+            <Save className="w-3.5 h-3.5" />
+            {saving ? 'Opslaan…' : 'Saldi opslaan'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function StatusBadge({ status }) {
@@ -31,7 +178,7 @@ function StatusBadge({ status }) {
   );
 }
 
-export default function MonthOverviewModal({ tenant, token, onClose }) {
+export default function MonthOverviewModal({ tenant, token, onClose, onRefresh }) {
   const [tab, setTab] = useState('overview'); // 'overview' | 'audit'
   const [data, setData] = useState(null);
   const [audit, setAudit] = useState(null);
@@ -116,6 +263,7 @@ export default function MonthOverviewModal({ tenant, token, onClose }) {
       toast.success('Periode bijgewerkt');
       // Reload both views to keep them in sync
       await Promise.all([loadOverview(), loadAudit()]);
+      if (onRefresh) onRefresh();
     } catch (e) {
       toast.error('Bijwerken mislukt: ' + (e?.response?.data?.detail || e.message));
     } finally {
@@ -148,6 +296,7 @@ export default function MonthOverviewModal({ tenant, token, onClose }) {
       );
       toast.success('Gefactureerd t/m bijgewerkt');
       await Promise.all([loadOverview(), loadAudit()]);
+      if (onRefresh) onRefresh();
     } catch (e) {
       toast.error('Bijwerken mislukt: ' + (e?.response?.data?.detail || e.message));
     } finally {
@@ -238,6 +387,17 @@ export default function MonthOverviewModal({ tenant, token, onClose }) {
               <Pencil className="w-3 h-3" /> Bewerk
             </button>
           </div>
+
+          {/* Manual balance editor */}
+          <ManualBalanceSection
+            tenant={tenant}
+            token={token}
+            currency={currency}
+            onChanged={async () => {
+              await Promise.all([loadOverview(), loadAudit()]);
+              if (onRefresh) onRefresh();
+            }}
+          />
 
           {/* Summary cards */}
           <div className="grid grid-cols-3 gap-2">

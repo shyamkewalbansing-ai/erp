@@ -946,6 +946,39 @@ async def update_tenant_billed_through(tenant_id: str, data: TenantBilledThrough
     return {"message": "Gefactureerd t/m bijgewerkt", "rent_billed_through": val}
 
 
+class TenantManualBalanceUpdate(BaseModel):
+    outstanding_rent: Optional[float] = None
+    service_costs: Optional[float] = None
+    fines: Optional[float] = None
+    internet_outstanding: Optional[float] = None
+
+
+@router.put("/admin/tenants/{tenant_id}/manual-balance")
+async def update_tenant_manual_balance(tenant_id: str, data: TenantManualBalanceUpdate, company: dict = Depends(get_current_company)):
+    """Handmatige override van saldo-velden voor één huurder.
+    Alleen de meegegeven velden worden bijgewerkt. Geen automatische herberekening.
+    Negatieve waarden worden geclamped op 0.
+    """
+    updates = {}
+    for field in ("outstanding_rent", "service_costs", "fines", "internet_outstanding"):
+        val = getattr(data, field, None)
+        if val is not None:
+            try:
+                num = max(0.0, float(val))
+            except (TypeError, ValueError):
+                raise HTTPException(status_code=400, detail=f"Ongeldige waarde voor {field}")
+            updates[field] = round(num, 2)
+    if not updates:
+        raise HTTPException(status_code=400, detail="Geen velden om bij te werken")
+    res = await db.kiosk_tenants.update_one(
+        {"tenant_id": tenant_id, "company_id": company["company_id"]},
+        {"$set": updates}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    return {"message": "Saldi bijgewerkt", "updated": updates}
+
+
 # ============== COMBINED DASHBOARD ENDPOINT (1 call instead of 6) ==============
 
 @router.get("/admin/dashboard-data")

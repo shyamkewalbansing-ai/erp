@@ -1,5 +1,43 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 74 (29 apr 2026) — Handmatige saldo-editor per huurder
+
+### Verzoek
+User's boekhouding is verstoord: niet alleen `covered_months` en `rent_billed_through` staan fout, ook `outstanding_rent`, `service_costs`, `fines` en `internet_outstanding` kloppen niet meer. Gebruiker heeft 100% handmatige controle over alle saldi nodig.
+
+### Implementatie
+
+**Backend** — `/app/backend/routers/kiosk/admin.py`:
+- Nieuw endpoint **`PUT /admin/tenants/{tenant_id}/manual-balance`** — override van `outstanding_rent`, `service_costs`, `fines`, `internet_outstanding`. Alleen meegegeven velden worden bijgewerkt. Negatieve waarden worden geclamped op 0. Geen automatische herberekening van andere velden of kwitanties.
+
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/admin/MonthOverviewModal.jsx`:
+- Nieuwe `ManualBalanceSection` component (collapsable sky-blauwe strip) onder "Gefactureerd t/m"
+- 4 numerieke inputs: Openstaande huur, Servicekosten, Boetes, Internet
+- Bevestigingsdialoog met overzicht van oude→nieuwe bedragen
+- Na save: `loadOverview + loadAudit + onRefresh` → tenants-tabel direct bijgewerkt
+
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/admin/TenantsTab.jsx`:
+- `onRefresh` prop doorgegeven aan MonthOverviewModal zodat de tenants-lijst na handmatige saldo-edits of periode-edits direct vernieuwt.
+
+### Live getest (curl + Playwright)
+- `PUT /manual-balance {}` → 400 "Geen velden om bij te werken" ✓
+- `PUT /manual-balance {service_costs: 100}` → 200 "Saldi bijgewerkt" ✓
+- `PUT /manual-balance {service_costs: 0}` → 200 ✓
+- Frontend: toggle + 4 inputs + save-knop aanwezig ✓
+
+### Workflow voor gebruiker (volledig DB-herstel)
+1. Huurders → klik 📅 kalender-icoon naast huurder
+2. Tab **"Maand-overzicht"** → sectie "Saldi handmatig bewerken" → vul juiste bedragen in → Opslaan
+3. Indien `Gefactureerd t/m` fout → ✏️ Bewerk in gele strip → typ YYYY-MM
+4. Tab **"Audit kwitanties"** → voor elke kwitantie waar `covered_months` niet matcht met papier → ✏️ Bewerk
+
+### Bestanden
+- `/app/backend/routers/kiosk/admin.py` — `PUT /admin/tenants/{id}/manual-balance` + `TenantManualBalanceUpdate` model
+- `/app/frontend/src/components/vastgoed-kiosk/admin/MonthOverviewModal.jsx` — `ManualBalanceSection` component toegevoegd
+- `/app/frontend/src/components/vastgoed-kiosk/admin/TenantsTab.jsx` — `onRefresh` doorgeven
+
+---
+
 ## Sprint 73 (27 apr 2026) — Audit Kwitanties tab + handmatig herstel covered_months
 
 ### Verzoek

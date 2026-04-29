@@ -420,6 +420,7 @@ function TenantsTab({ tenants, apartments, leases, formatSRD, getInitials, onAdd
           tenant={overviewTenant}
           token={token}
           onClose={() => setOverviewTenant(null)}
+          onRefresh={onRefresh}
         />
       )}
     </div>
