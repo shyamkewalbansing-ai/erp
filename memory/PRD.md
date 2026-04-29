@@ -1,5 +1,28 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 81 (29 apr 2026) — Landing redesign: Cream + Bold Orange accents
+
+### Verzoek
+"Achtergrond moet licht zijn maar er moet meer orange zijn"
+
+### Implementatie
+MarketingLanding.jsx volledig herschreven met **light cream theme** (#FFF7F0 / #FFFBF5) en **dominante oranje accenten/secties**:
+- **Hero**: warm cream-amber gradient background met radiale oranje mesh + dotted pattern. Kiosk Terminal in 3D oranje gradient frame (from-[#FF8A3D] via-[#FF5C00] to-[#C74600]) met "Betaling voltooid" + "Face-ID Veilige login" floating badges
+- **Stats strip**: volle oranje band met witte cijfers (van hero naar features visuele overgang)
+- **Features**: cream background, Kiosk Terminal is een volle 2x2 oranje FLAGSHIP card met witte icon-tile, andere 12 cards zijn wit met oranje accent-iconen die op hover volledig oranje worden
+- **Pricing**: Professional card volledig oranje gevuld (white text) met "MEEST GEKOZEN" wit-oranje badge; Starter wit met oranje button
+- **CTA**: volle oranje rounded-3xl banner met witte blobs, wit "Start gratis" button op oranje
+- **Footer**: lichte oranje gradient (from-[#FFF7F0] to-[#FFEAD3]) met oranje icon tiles voor contact info
+
+### Live getest
+- `features:13 starter:1 pro:1` ✓
+- Playwright screenshots bevestigen cream basis + sterk oranje karakter
+
+### Bestand
+- `/app/frontend/src/components/vastgoed-kiosk/MarketingLanding.jsx` — compleet herschreven (~580 regels)
+
+---
+
 ## Sprint 80 (29 apr 2026) — Landing page redesign: Dark & Orange archetype
 
 ### Verzoek

@@ -6,31 +6,24 @@ import {
   Mail, MapPin, MessageCircle, Star, ChevronRight, Cpu
 } from 'lucide-react';
 
-// ======================================================================
-// Design system — Archetype 4 (Swiss & High-Contrast) · Dark + Orange
-// ======================================================================
-const COLORS = {
-  primary: '#FF5C00',
-  primaryHover: '#E65300',
-  bg: '#09090b',
-  surface: '#121214',
-  surfaceEl: '#1C1C1F',
-};
+// =========================================================================
+// Design — Light Cream with Bold Orange accents
+// Primary: #FF5C00 · Cream bg: #FFF7F0 · Warm surface: #FFFBF5
+// =========================================================================
 
-// ================= Grain noise overlay ==============================
-const GRAIN_SVG = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.04 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>`;
+const GRAIN_SVG = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 0.5  0 0 0 0 0  0 0 0 0.06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>`;
 
-function Noise({ opacity = 0.04, className = '' }) {
+function Noise({ opacity = 0.5, className = '' }) {
   return (
     <div
       aria-hidden
-      className={`pointer-events-none absolute inset-0 mix-blend-overlay ${className}`}
+      className={`pointer-events-none absolute inset-0 mix-blend-multiply ${className}`}
       style={{ backgroundImage: `url("${GRAIN_SVG}")`, opacity }}
     />
   );
 }
 
-// ================= Top Nav (sticky · glassmorphic) ==================
+// ================= Top Nav =========================================
 function TopNav({ onLogin, onRegister }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -52,7 +45,7 @@ function TopNav({ onLogin, onRegister }) {
       <header
         className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
           scrolled
-            ? 'backdrop-blur-xl bg-[#09090b]/75 border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.3)]'
+            ? 'backdrop-blur-xl bg-[#FFF7F0]/85 border-b border-orange-200/60 shadow-[0_4px_30px_-10px_rgba(255,92,0,0.25)]'
             : 'bg-transparent'
         }`}
       >
@@ -62,40 +55,40 @@ function TopNav({ onLogin, onRegister }) {
             data-testid="nav-logo"
             className="flex items-center gap-3 group"
           >
-            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#FF5C00] to-[#B33F00] flex items-center justify-center p-1.5 overflow-hidden shadow-[0_0_25px_-5px_rgba(255,92,0,0.5)] group-hover:shadow-[0_0_35px_-5px_rgba(255,92,0,0.7)] transition-shadow">
-              <img src="/kiosk-icons/kiosk-512.png" alt="SuriRent" className="w-full h-full object-contain drop-shadow-md" />
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#FF8A3D] via-[#FF5C00] to-[#C74600] flex items-center justify-center p-1.5 overflow-hidden shadow-[0_8px_20px_-5px_rgba(255,92,0,0.55)] group-hover:shadow-[0_10px_25px_-5px_rgba(255,92,0,0.7)] transition-shadow">
+              <img src="/kiosk-icons/kiosk-512.png" alt="SuriRent" className="w-full h-full object-contain drop-shadow" />
             </div>
             <div className="text-left leading-none">
-              <p className="text-base sm:text-lg font-bold text-white tracking-tight">SuriRent</p>
+              <p className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">SuriRent</p>
               <p className="text-[9px] sm:text-[10px] text-[#FF5C00] font-bold tracking-[0.3em] uppercase mt-1">N.V.</p>
             </div>
           </button>
 
-          <nav className="hidden md:flex items-center gap-2 text-sm font-medium">
-            <button onClick={() => scrollTo('features')} data-testid="nav-features" className="px-4 py-2 text-zinc-400 hover:text-white transition-colors">Functies</button>
-            <button onClick={() => scrollTo('pricing')} data-testid="nav-pricing" className="px-4 py-2 text-zinc-400 hover:text-white transition-colors">Prijzen</button>
-            <button onClick={() => scrollTo('contact')} data-testid="nav-contact" className="px-4 py-2 text-zinc-400 hover:text-white transition-colors">Contact</button>
+          <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
+            <button onClick={() => scrollTo('features')} data-testid="nav-features" className="px-4 py-2 text-slate-700 hover:text-[#FF5C00] transition-colors">Functies</button>
+            <button onClick={() => scrollTo('pricing')} data-testid="nav-pricing" className="px-4 py-2 text-slate-700 hover:text-[#FF5C00] transition-colors">Prijzen</button>
+            <button onClick={() => scrollTo('contact')} data-testid="nav-contact" className="px-4 py-2 text-slate-700 hover:text-[#FF5C00] transition-colors">Contact</button>
           </nav>
 
           <div className="flex items-center gap-2">
             <button
               onClick={onLogin}
               data-testid="nav-login-btn"
-              className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white transition-colors"
+              className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-semibold text-slate-800 hover:text-[#FF5C00] transition-colors"
             >
               Inloggen
             </button>
             <button
               onClick={onRegister}
               data-testid="nav-register-btn"
-              className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#FF5C00] text-white text-sm font-semibold rounded-md hover:bg-[#E65300] transition-colors shadow-[0_0_25px_-5px_rgba(255,92,0,0.6)]"
+              className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#FF5C00] text-white text-sm font-bold rounded-xl hover:bg-[#E65300] transition-colors shadow-[0_8px_25px_-5px_rgba(255,92,0,0.55)]"
             >
               Start gratis <ArrowRight className="w-4 h-4" />
             </button>
             <button
               onClick={() => setOpen((v) => !v)}
               data-testid="nav-mobile-toggle"
-              className="md:hidden ml-1 w-10 h-10 rounded-md border border-white/10 bg-white/5 flex items-center justify-center text-white"
+              className="md:hidden ml-1 w-10 h-10 rounded-xl border border-orange-200 bg-white/80 flex items-center justify-center text-slate-800"
             >
               {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
@@ -103,12 +96,12 @@ function TopNav({ onLogin, onRegister }) {
         </div>
 
         {open && (
-          <div className="md:hidden backdrop-blur-xl bg-[#09090b]/95 border-t border-white/10 shadow-lg">
+          <div className="md:hidden backdrop-blur-xl bg-[#FFF7F0]/95 border-t border-orange-200/60">
             <div className="px-5 py-3 flex flex-col gap-1">
-              <button onClick={() => scrollTo('features')} data-testid="nav-mobile-features" className="text-left py-3 px-2 rounded-md hover:bg-white/5 text-zinc-300 font-medium">Functies</button>
-              <button onClick={() => scrollTo('pricing')} data-testid="nav-mobile-pricing" className="text-left py-3 px-2 rounded-md hover:bg-white/5 text-zinc-300 font-medium">Prijzen</button>
-              <button onClick={() => scrollTo('contact')} data-testid="nav-mobile-contact" className="text-left py-3 px-2 rounded-md hover:bg-white/5 text-zinc-300 font-medium">Contact</button>
-              <button onClick={onLogin} data-testid="nav-mobile-login" className="text-left py-3 px-2 rounded-md hover:bg-white/5 text-[#FF5C00] font-semibold border-t border-white/10 mt-1 pt-3">
+              <button onClick={() => scrollTo('features')} data-testid="nav-mobile-features" className="text-left py-3 px-2 rounded-md hover:bg-orange-50 text-slate-800 font-semibold">Functies</button>
+              <button onClick={() => scrollTo('pricing')} data-testid="nav-mobile-pricing" className="text-left py-3 px-2 rounded-md hover:bg-orange-50 text-slate-800 font-semibold">Prijzen</button>
+              <button onClick={() => scrollTo('contact')} data-testid="nav-mobile-contact" className="text-left py-3 px-2 rounded-md hover:bg-orange-50 text-slate-800 font-semibold">Contact</button>
+              <button onClick={onLogin} data-testid="nav-mobile-login" className="text-left py-3 px-2 rounded-md hover:bg-orange-50 text-[#FF5C00] font-bold border-t border-orange-200/60 mt-1 pt-3">
                 Inloggen →
               </button>
             </div>
@@ -123,39 +116,40 @@ function TopNav({ onLogin, onRegister }) {
 // ================= Hero ============================================
 function Hero({ onLogin, onRegister }) {
   return (
-    <section className="relative overflow-hidden min-h-[85vh] flex flex-col justify-center">
-      {/* Radial orange glow top-right */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,92,0,0.22),transparent_55%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(255,92,0,0.08),transparent_50%)] pointer-events-none" />
-      <Noise />
+    <section className="relative overflow-hidden">
+      {/* Warm cream base with giant orange radial mesh */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#FFF7F0] via-[#FFEAD3] to-[#FFD9B3]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,92,0,0.35),transparent_55%)]" />
+      <div className="absolute -top-20 -right-40 w-[800px] h-[800px] bg-[#FF5C00]/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-60 -left-32 w-[500px] h-[500px] bg-amber-300/30 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Grid overlay */}
+      {/* Dotted pattern */}
       <div
-        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        className="absolute inset-0 opacity-[0.15] pointer-events-none"
         style={{
-          backgroundImage:
-            'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
+          backgroundImage: 'radial-gradient(rgba(255,92,0,0.4) 1px, transparent 1px)',
+          backgroundSize: '32px 32px',
         }}
       />
+      <Noise opacity={0.25} />
 
-      <div className="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-24 w-full">
+      <div className="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-24 lg:py-28">
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
           <div className="lg:col-span-7">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#FF5C00]/10 border border-[#FF5C00]/25 rounded-full mb-8">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-white/70 backdrop-blur-sm border border-orange-300/60 rounded-full mb-8 shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C00] animate-pulse" />
-              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#FF5C00]">Nieuw in Suriname</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#FF5C00]">Nieuw in Suriname</span>
             </div>
 
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.02] text-white mb-6">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter leading-[1.02] text-slate-900 mb-6">
               De complete{' '}
               <span className="bg-clip-text text-transparent bg-gradient-to-br from-[#FF8A3D] via-[#FF5C00] to-[#C74600]">
                 huurbeheer
               </span>{' '}
-              oplossing voor vastgoed
+              oplossing voor vastgoed.
             </h1>
 
-            <p className="text-base md:text-lg text-zinc-400 leading-relaxed mb-10 max-w-xl">
+            <p className="text-base md:text-lg text-slate-700 leading-relaxed mb-10 max-w-xl">
               Automatiseer huurbetalingen, kwitanties, loonstroken en boekhouding. Met een selfservice Kiosk terminal en PWA app — speciaal gebouwd voor de Surinaamse markt.
             </p>
 
@@ -163,7 +157,7 @@ function Hero({ onLogin, onRegister }) {
               <button
                 onClick={onRegister}
                 data-testid="hero-register-btn"
-                className="group inline-flex items-center gap-2 px-7 py-4 bg-[#FF5C00] text-white font-semibold rounded-md hover:bg-[#E65300] transition-colors shadow-[0_0_40px_-10px_rgba(255,92,0,0.7)]"
+                className="group inline-flex items-center gap-2 px-7 py-4 bg-[#FF5C00] text-white font-bold rounded-xl hover:bg-[#E65300] transition-colors shadow-[0_12px_32px_-8px_rgba(255,92,0,0.6)]"
               >
                 Start gratis
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -171,79 +165,75 @@ function Hero({ onLogin, onRegister }) {
               <button
                 onClick={onLogin}
                 data-testid="hero-login-btn"
-                className="inline-flex items-center gap-2 px-7 py-4 bg-white/5 border border-white/10 text-white font-semibold rounded-md hover:bg-white/10 hover:border-white/20 transition-colors"
+                className="inline-flex items-center gap-2 px-7 py-4 bg-white/80 backdrop-blur-sm border border-orange-200 text-slate-900 font-bold rounded-xl hover:bg-white hover:border-[#FF5C00]/60 transition-colors shadow-sm"
               >
                 Inloggen
               </button>
             </div>
 
-            <div className="flex items-center gap-6 mt-10 text-xs text-zinc-500 font-medium">
+            <div className="flex flex-wrap items-center gap-6 mt-10 text-xs text-slate-600 font-semibold">
               <div className="flex items-center gap-1.5">
-                <Check className="w-4 h-4 text-[#FF5C00]" /> Geen creditcard nodig
+                <div className="w-5 h-5 rounded-full bg-[#FF5C00] flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                </div>
+                Geen creditcard nodig
               </div>
               <div className="flex items-center gap-1.5">
-                <Check className="w-4 h-4 text-[#FF5C00]" /> Direct installeren
+                <div className="w-5 h-5 rounded-full bg-[#FF5C00] flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                </div>
+                Direct installeren
               </div>
             </div>
           </div>
 
-          {/* Right visual — Kiosk Terminal mockup */}
+          {/* Right visual — Kiosk mockup with bold orange frame */}
           <div className="lg:col-span-5 relative">
-            {/* Ambient orange glow behind */}
-            <div className="absolute -inset-8 bg-gradient-to-br from-[#FF5C00]/30 via-transparent to-transparent blur-3xl" />
+            <div className="absolute -inset-10 bg-gradient-to-br from-[#FF5C00]/40 via-amber-400/30 to-transparent blur-3xl rounded-full" />
 
-            <div className="relative bg-[#121214] rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
-              {/* Terminal header */}
-              <div className="flex items-center justify-between px-5 py-3 border-b border-white/5 bg-white/[0.02]">
-                <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
-                </div>
-                <span className="text-[10px] font-mono text-zinc-500 tracking-wider">KIOSK · A1</span>
+            <div className="relative bg-gradient-to-br from-[#FF6B1A] via-[#FF5C00] to-[#C74600] rounded-[2rem] p-5 shadow-[0_40px_80px_-20px_rgba(255,92,0,0.6)] transform lg:-rotate-1 hover:rotate-0 transition-transform duration-700">
+              {/* Floating voltooid badge */}
+              <div className="absolute -top-4 -right-4 bg-white rounded-xl px-3 py-2 shadow-xl flex items-center gap-1.5 transform rotate-6 border border-emerald-200">
+                <Check className="w-4 h-4 text-emerald-600" strokeWidth={3} />
+                <span className="text-[11px] font-black text-slate-900">Betaling voltooid</span>
               </div>
 
-              <div className="p-5 sm:p-7">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#FF5C00] to-[#B33F00] p-2 shadow-[0_0_25px_-5px_rgba(255,92,0,0.6)]">
+              <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-inner">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#FF8A3D] to-[#C74600] p-2 shadow-lg">
                     <img src="/kiosk-icons/kiosk-512.png" alt="logo" className="w-full h-full object-contain" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-white">Selfservice Terminal</p>
-                    <p className="text-[11px] text-zinc-500">Appartement A1 · maart 2026</p>
+                    <p className="text-sm font-black text-slate-900">Selfservice Terminal</p>
+                    <p className="text-[11px] text-slate-500">Appartement A1 · maart 2026</p>
                   </div>
                 </div>
 
                 <div className="space-y-2.5">
-                  <div className="bg-[#FF5C00]/10 border border-[#FF5C00]/30 rounded-lg p-3 flex items-center justify-between">
-                    <span className="text-xs font-semibold text-[#FF5C00]">Huur maart 2026</span>
-                    <span className="text-sm font-bold text-white">SRD 5.000</span>
+                  <div className="bg-gradient-to-r from-[#FFF4EC] to-[#FFE6D3] border border-[#FF5C00]/30 rounded-xl p-3 flex items-center justify-between">
+                    <span className="text-xs font-bold text-[#C74600]">Huur maart 2026</span>
+                    <span className="text-sm font-black text-slate-900">SRD 5.000</span>
                   </div>
-                  <div className="bg-white/5 border border-white/5 rounded-lg p-3 flex items-center justify-between">
-                    <span className="text-xs text-zinc-400">Betalingswijze</span>
-                    <span className="text-xs font-semibold text-white">Contant</span>
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-slate-600">Betalingswijze</span>
+                    <span className="text-xs font-bold text-slate-900">Contant</span>
                   </div>
-                  <div className="bg-white/5 border border-white/5 rounded-lg p-3">
-                    <p className="text-[10px] uppercase text-zinc-500 font-semibold tracking-widest">Kwitantie</p>
-                    <p className="font-mono text-xs text-white font-bold mt-1">KW2026-00127</p>
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
+                    <p className="text-[10px] uppercase text-slate-500 font-bold tracking-widest">Kwitantie</p>
+                    <p className="font-mono text-xs text-slate-900 font-black mt-0.5">KW2026-00127</p>
                   </div>
-                </div>
-
-                <div className="mt-5 flex items-center gap-2 px-3 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-                  <Check className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs font-semibold text-emerald-300">Betaling voltooid · QR beveiligd</span>
                 </div>
               </div>
             </div>
 
             {/* Floating face-ID badge */}
-            <div className="hidden sm:flex absolute -bottom-6 -left-6 bg-[#1C1C1F] border border-[#FF5C00]/30 rounded-xl px-4 py-3 items-center gap-3 shadow-xl shadow-black/50 backdrop-blur-sm">
-              <div className="w-9 h-9 rounded-lg bg-[#FF5C00]/15 border border-[#FF5C00]/30 flex items-center justify-center">
-                <ScanFace className="w-5 h-5 text-[#FF5C00]" />
+            <div className="hidden sm:flex absolute -bottom-4 -left-4 bg-white rounded-xl px-4 py-3 items-center gap-3 shadow-xl border border-orange-200 transform -rotate-6">
+              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#FF8A3D] to-[#FF5C00] flex items-center justify-center shadow">
+                <ScanFace className="w-5 h-5 text-white" />
               </div>
               <div>
-                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Face-ID</p>
-                <p className="text-xs font-bold text-white">Veilige login</p>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Face-ID</p>
+                <p className="text-xs font-black text-slate-900">Veilige login</p>
               </div>
             </div>
           </div>
@@ -253,47 +243,39 @@ function Hero({ onLogin, onRegister }) {
   );
 }
 
-// ================= Stats strip =====================================
+// ================= Stats strip (orange band) =======================
 const STATS = [
   { value: '24/7', label: 'Kiosk beschikbaar' },
-  { value: '3', label: 'Valutas ondersteund' },
+  { value: '3', label: 'Valutas' },
   { value: '13+', label: 'Kernfuncties' },
   { value: '100%', label: 'Mobile-first' },
 ];
 
 function StatsStrip() {
   return (
-    <section className="relative -mt-12 mb-8 z-10">
-      <div className="max-w-7xl mx-auto px-5 sm:px-8">
-        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10">
-            {STATS.map((s) => (
-              <div key={s.label} className="px-5 py-5 sm:py-6">
-                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tighter">
-                  {s.value.includes('/') || s.value.includes('+') || s.value.includes('%') ? (
-                    <>
-                      <span className="bg-clip-text text-transparent bg-gradient-to-br from-[#FF8A3D] to-[#FF5C00]">
-                        {s.value}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="bg-clip-text text-transparent bg-gradient-to-br from-[#FF8A3D] to-[#FF5C00]">{s.value}</span>
-                  )}
-                </p>
-                <p className="text-[10px] sm:text-xs text-zinc-500 font-semibold uppercase tracking-[0.15em] mt-1.5">{s.label}</p>
-              </div>
-            ))}
-          </div>
+    <section className="relative py-8 bg-gradient-to-r from-[#FF8A3D] via-[#FF5C00] to-[#E04E00] overflow-hidden">
+      <Noise opacity={0.15} />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.15),transparent_60%)]" />
+      <div className="relative max-w-7xl mx-auto px-5 sm:px-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {STATS.map((s, i) => (
+            <div
+              key={s.label}
+              className={`text-center md:text-left ${i !== 0 ? 'md:border-l md:border-white/25 md:pl-6' : ''}`}
+            >
+              <p className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tighter">{s.value}</p>
+              <p className="text-[10px] sm:text-xs text-white/85 font-bold uppercase tracking-[0.2em] mt-1">{s.label}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>
   );
 }
 
-// ================= Features Bento Grid ==============================
+// ================= Features Bento ==================================
 const FEATURES = [
   { icon: Receipt, title: 'Huurbeheer & Kwitanties', desc: 'FIFO-toewijzing, automatische WhatsApp/SMS herinneringen, digitale kwitanties.', span: 'md:col-span-1' },
-  // Kiosk Terminal — hero feature, 2x2
   { icon: ScanFace, title: 'Kiosk Terminal', desc: 'Selfservice terminal met PIN login en face-ID voor snelle huurbetaling door huurders. De kern van SuriRent.', span: 'md:col-span-2 md:row-span-2', featured: true },
   { icon: Wallet, title: 'Multi-valuta Boekhouding', desc: 'SRD, USD en EUR zij aan zij. Wisseltransacties met CME dagkoers.', span: 'md:col-span-1' },
   { icon: Users, title: 'Werknemers & Loonstroken', desc: 'Loonstroken, voorschotten en payroll kalender in één scherm.', span: 'md:col-span-1' },
@@ -312,62 +294,66 @@ function FeatureCard({ feature, idx }) {
   const Icon = feature.icon;
   const isFeatured = feature.featured;
 
+  if (isFeatured) {
+    return (
+      <div
+        data-testid={`feature-${idx}`}
+        className={`group relative overflow-hidden rounded-3xl p-8 md:p-10 transition-all duration-300 hover:-translate-y-1 ${feature.span || ''} bg-gradient-to-br from-[#FF8A3D] via-[#FF5C00] to-[#C74600] shadow-[0_25px_60px_-15px_rgba(255,92,0,0.6)] hover:shadow-[0_30px_70px_-15px_rgba(255,92,0,0.75)] min-h-[280px] flex flex-col`}
+      >
+        <Noise opacity={0.12} />
+        <div className="absolute -top-24 -right-24 w-72 h-72 bg-white/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-5 right-5 px-3 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-full">
+          Flagship
+        </div>
+
+        <div className="relative w-14 h-14 rounded-2xl bg-white/95 flex items-center justify-center mb-6 shadow-xl">
+          <Icon className="w-7 h-7 text-[#FF5C00]" strokeWidth={2.3} />
+        </div>
+
+        <h3 className="relative text-2xl md:text-3xl font-black tracking-tight text-white mb-3 leading-tight">
+          {feature.title}
+        </h3>
+        <p className="relative text-white/90 leading-relaxed text-sm md:text-base max-w-md">
+          {feature.desc}
+        </p>
+
+        <div className="relative mt-auto pt-6 flex items-center gap-2 text-sm font-black text-white">
+          Meer informatie
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       data-testid={`feature-${idx}`}
-      className={`group relative overflow-hidden rounded-2xl p-6 md:p-7 transition-all duration-300 hover:-translate-y-1 ${feature.span || ''} ${
-        isFeatured
-          ? 'bg-gradient-to-br from-[#1C1C1F] via-[#1C1C1F] to-[#FF5C00]/10 border border-[#FF5C00]/40 shadow-[0_0_40px_-10px_rgba(255,92,0,0.3)] hover:shadow-[0_0_60px_-10px_rgba(255,92,0,0.5)]'
-          : 'bg-[#121214] border border-white/5 hover:bg-[#1C1C1F] hover:border-white/15'
-      }`}
+      className={`group relative overflow-hidden rounded-2xl p-6 md:p-7 bg-white border border-orange-100 transition-all duration-300 hover:-translate-y-1 hover:border-[#FF5C00]/40 hover:shadow-[0_20px_40px_-15px_rgba(255,92,0,0.25)] ${feature.span || ''}`}
     >
-      {isFeatured && (
-        <>
-          <div className="absolute -top-20 -right-20 w-60 h-60 bg-[#FF5C00]/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute top-4 right-4 px-2.5 py-1 bg-[#FF5C00] text-white text-[9px] font-bold uppercase tracking-widest rounded-full shadow-lg">
-            Flagship
-          </div>
-        </>
-      )}
-
-      <div
-        className={`relative w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center mb-5 ${
-          isFeatured
-            ? 'bg-gradient-to-br from-[#FF5C00] to-[#B33F00] shadow-[0_0_25px_-5px_rgba(255,92,0,0.6)]'
-            : 'bg-white/5 border border-white/10 group-hover:bg-[#FF5C00]/15 group-hover:border-[#FF5C00]/40 transition-colors'
-        }`}
-      >
-        <Icon className={`w-5 h-5 md:w-6 md:h-6 ${isFeatured ? 'text-white' : 'text-zinc-300 group-hover:text-[#FF5C00] transition-colors'}`} />
+      <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl bg-gradient-to-br from-orange-50 to-orange-100 border border-orange-200 flex items-center justify-center mb-5 group-hover:from-[#FF8A3D] group-hover:to-[#FF5C00] group-hover:border-transparent transition-all">
+        <Icon className="w-5 h-5 md:w-6 md:h-6 text-[#FF5C00] group-hover:text-white transition-colors" strokeWidth={2.2} />
       </div>
 
-      <h3 className={`relative font-semibold tracking-tight mb-2 ${isFeatured ? 'text-xl md:text-2xl text-white' : 'text-base md:text-lg text-white'}`}>
-        {feature.title}
-      </h3>
-      <p className={`relative leading-relaxed ${isFeatured ? 'text-sm md:text-base text-zinc-300' : 'text-sm text-zinc-500'}`}>
-        {feature.desc}
-      </p>
-
-      {isFeatured && (
-        <div className="relative mt-6 inline-flex items-center gap-1.5 text-xs font-semibold text-[#FF5C00]">
-          Meer informatie <ArrowRight className="w-3.5 h-3.5" />
-        </div>
-      )}
+      <h3 className="font-bold tracking-tight mb-2 text-slate-900 text-base md:text-lg">{feature.title}</h3>
+      <p className="text-sm text-slate-600 leading-relaxed">{feature.desc}</p>
     </div>
   );
 }
 
 function FeaturesSection() {
   return (
-    <section id="features" className="relative py-24 md:py-32 bg-[#09090b]">
-      <Noise opacity={0.03} />
+    <section id="features" className="relative py-24 md:py-32 bg-[#FFFBF5]">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(255,92,0,0.06),transparent_50%)] pointer-events-none" />
+      <Noise opacity={0.15} />
+
       <div className="relative max-w-7xl mx-auto px-5 sm:px-8">
         <div className="max-w-3xl mb-14 md:mb-20">
-          <p className="text-xs md:text-sm font-semibold uppercase tracking-[0.2em] text-[#FF5C00] mb-4">Functies</p>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight leading-tight text-white mb-5">
+          <p className="text-xs md:text-sm font-black uppercase tracking-[0.2em] text-[#FF5C00] mb-4">Functies</p>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-slate-900 mb-5">
             Alles in één systeem, <br />
-            <span className="text-zinc-500">van kiosk tot kwitantie.</span>
+            <span className="text-slate-400">van kiosk tot kwitantie.</span>
           </h2>
-          <p className="text-base md:text-lg text-zinc-400 leading-relaxed">
+          <p className="text-base md:text-lg text-slate-600 leading-relaxed">
             SuriRent bundelt 13+ kernfuncties in één mobiele app. Geen losse tools meer — alles verbonden en in het Nederlands.
           </p>
         </div>
@@ -387,52 +373,79 @@ const STARTER = ['Tot 15 huurders', 'Alle kernfuncties', 'WhatsApp & SMS notific
 const PRO = ['Onbeperkt huurders', 'Alles uit Starter', 'Kiosk terminal (face-ID + PIN)', 'Shelly elektriciteit integratie', 'Payment gateways (SumUp/Mope/Uni5Pay)', 'AI-Assistent onbeperkt', 'Eigen domein + SSL', 'Prioritaire WhatsApp support'];
 
 function PricingCard({ name, price, desc, features, cta, onCta, featured, testid }) {
+  if (featured) {
+    return (
+      <div
+        data-testid={testid}
+        className="relative rounded-3xl p-7 md:p-9 overflow-hidden bg-gradient-to-br from-[#FF8A3D] via-[#FF5C00] to-[#C74600] shadow-[0_30px_70px_-15px_rgba(255,92,0,0.6)]"
+      >
+        <Noise opacity={0.1} />
+        <div className="absolute -top-24 -right-24 w-80 h-80 bg-white/20 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative inline-flex items-center gap-1 px-3 py-1.5 bg-white text-[#FF5C00] text-[10px] font-black uppercase tracking-[0.2em] rounded-full shadow-lg mb-6">
+          <Star className="w-3 h-3 fill-current" /> Meest gekozen
+        </div>
+
+        <h3 className="relative text-xl md:text-2xl font-black tracking-tight text-white">{name}</h3>
+        <p className="relative text-sm text-white/85 mt-1.5">{desc}</p>
+
+        <div className="relative mt-6 mb-7 flex items-baseline gap-1.5">
+          <span className="text-xs font-black text-white/80">SRD</span>
+          <span className="text-5xl md:text-6xl font-black tracking-tighter text-white">{price.toLocaleString('nl-NL')}</span>
+          <span className="text-sm text-white/80">/maand</span>
+        </div>
+
+        <button
+          onClick={onCta}
+          data-testid={`${testid}-cta`}
+          className="relative w-full py-3.5 rounded-xl font-black text-sm bg-white text-[#FF5C00] hover:bg-orange-50 transition-colors shadow-xl"
+        >
+          {cta}
+        </button>
+
+        <div className="relative mt-7 pt-7 border-t border-white/25 space-y-3.5">
+          {features.map((f) => (
+            <div key={f} className="flex items-start gap-2.5 text-sm">
+              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-white flex items-center justify-center mt-0.5">
+                <Check className="w-3 h-3 text-[#FF5C00]" strokeWidth={3} />
+              </div>
+              <span className="text-white font-medium">{f}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       data-testid={testid}
-      className={`relative rounded-2xl p-7 md:p-9 transition-all duration-300 ${
-        featured
-          ? 'bg-gradient-to-br from-[#1C1C1F] to-[#0D0604] border border-[#FF5C00]/40 shadow-[0_0_60px_-10px_rgba(255,92,0,0.4)]'
-          : 'bg-[#121214] border border-white/10 hover:border-white/20'
-      }`}
+      className="relative rounded-3xl p-7 md:p-9 bg-white border-2 border-orange-100 hover:border-[#FF5C00]/40 transition-colors shadow-[0_20px_40px_-20px_rgba(255,92,0,0.15)]"
     >
-      {featured && (
-        <>
-          <div className="absolute -top-16 -right-16 w-56 h-56 bg-[#FF5C00]/20 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 bg-[#FF5C00] text-white text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full shadow-[0_0_20px_-2px_rgba(255,92,0,0.6)]">
-            <Star className="w-3 h-3 fill-current" /> Aanbevolen
-          </div>
-        </>
-      )}
+      <h3 className="text-xl md:text-2xl font-black tracking-tight text-slate-900">{name}</h3>
+      <p className="text-sm text-slate-600 mt-1.5">{desc}</p>
 
-      <h3 className="relative text-xl md:text-2xl font-semibold tracking-tight text-white">{name}</h3>
-      <p className="relative text-sm text-zinc-500 mt-1.5">{desc}</p>
-
-      <div className="relative mt-6 mb-7 flex items-baseline gap-1.5">
-        <span className="text-xs font-semibold text-zinc-500">SRD</span>
-        <span className="text-5xl md:text-6xl font-bold tracking-tighter text-white">{price.toLocaleString('nl-NL')}</span>
-        <span className="text-sm text-zinc-500">/maand</span>
+      <div className="mt-6 mb-7 flex items-baseline gap-1.5">
+        <span className="text-xs font-bold text-slate-400">SRD</span>
+        <span className="text-5xl md:text-6xl font-black tracking-tighter text-slate-900">{price.toLocaleString('nl-NL')}</span>
+        <span className="text-sm text-slate-500">/maand</span>
       </div>
 
       <button
         onClick={onCta}
         data-testid={`${testid}-cta`}
-        className={`relative w-full py-3.5 rounded-md font-semibold text-sm transition-colors ${
-          featured
-            ? 'bg-[#FF5C00] text-white hover:bg-[#E65300] shadow-[0_0_30px_-5px_rgba(255,92,0,0.6)]'
-            : 'bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20'
-        }`}
+        className="w-full py-3.5 rounded-xl font-bold text-sm bg-[#FF5C00] text-white hover:bg-[#E65300] transition-colors shadow-[0_12px_25px_-8px_rgba(255,92,0,0.55)]"
       >
         {cta}
       </button>
 
-      <div className="relative mt-7 pt-7 border-t border-white/5 space-y-3.5">
+      <div className="mt-7 pt-7 border-t border-orange-100 space-y-3.5">
         {features.map((f) => (
           <div key={f} className="flex items-start gap-2.5 text-sm">
-            <div className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center mt-0.5 ${featured ? 'bg-[#FF5C00]/20' : 'bg-white/5'}`}>
-              <Check className={`w-3 h-3 ${featured ? 'text-[#FF5C00]' : 'text-zinc-400'}`} />
+            <div className="flex-shrink-0 w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center mt-0.5">
+              <Check className="w-3 h-3 text-[#FF5C00]" strokeWidth={3} />
             </div>
-            <span className="text-zinc-300">{f}</span>
+            <span className="text-slate-700">{f}</span>
           </div>
         ))}
       </div>
@@ -442,17 +455,17 @@ function PricingCard({ name, price, desc, features, cta, onCta, featured, testid
 
 function PricingSection({ onRegister }) {
   return (
-    <section id="pricing" className="relative py-24 md:py-32 bg-[#09090b] overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,92,0,0.08),transparent_60%)] pointer-events-none" />
-      <Noise opacity={0.03} />
+    <section id="pricing" className="relative py-24 md:py-32 bg-[#FFF7F0] overflow-hidden">
+      <div className="absolute -top-20 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-[radial-gradient(ellipse_at_center,rgba(255,92,0,0.15),transparent_60%)] pointer-events-none" />
+      <Noise opacity={0.15} />
 
       <div className="relative max-w-6xl mx-auto px-5 sm:px-8">
         <div className="max-w-2xl mx-auto text-center mb-14 md:mb-20">
-          <p className="text-xs md:text-sm font-semibold uppercase tracking-[0.2em] text-[#FF5C00] mb-4">Prijzen</p>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight leading-tight text-white mb-5">
-            Eén prijs, <span className="text-zinc-500">geen verrassingen.</span>
+          <p className="text-xs md:text-sm font-black uppercase tracking-[0.2em] text-[#FF5C00] mb-4">Prijzen</p>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-slate-900 mb-5">
+            Eén prijs, <span className="text-slate-400">geen verrassingen.</span>
           </h2>
-          <p className="text-base md:text-lg text-zinc-400 leading-relaxed">
+          <p className="text-base md:text-lg text-slate-600 leading-relaxed">
             Maandelijks opzegbaar. Geen setup-kosten. Geen verborgen fees.
           </p>
         </div>
@@ -479,9 +492,9 @@ function PricingSection({ onRegister }) {
           />
         </div>
 
-        <p className="text-center text-sm text-zinc-500 mt-10">
+        <p className="text-center text-sm text-slate-500 mt-10">
           Vragen over een maatwerk pakket?{' '}
-          <a href="#contact" className="text-[#FF5C00] font-semibold hover:underline">
+          <a href="#contact" className="text-[#FF5C00] font-bold hover:underline">
             Neem contact op
           </a>
         </p>
@@ -490,32 +503,30 @@ function PricingSection({ onRegister }) {
   );
 }
 
-// ================= CTA Banner ======================================
+// ================= CTA Banner (full orange) ========================
 function CTASection({ onRegister }) {
   return (
-    <section className="relative py-20 md:py-28 bg-[#09090b]">
+    <section className="relative py-20 md:py-28 bg-[#FFFBF5]">
       <div className="max-w-6xl mx-auto px-5 sm:px-8">
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#121214] to-[#1a0a03] border border-[#FF5C00]/25 p-10 sm:p-16 lg:p-20 text-center">
-          <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#FF5C00]/25 rounded-full blur-3xl" />
-          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-[#FF5C00]/15 rounded-full blur-3xl" />
-          <Noise opacity={0.04} />
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#FF8A3D] via-[#FF5C00] to-[#C74600] p-10 sm:p-16 lg:p-20 text-center shadow-[0_40px_80px_-20px_rgba(255,92,0,0.5)]">
+          <Noise opacity={0.12} />
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-white/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-amber-300/30 rounded-full blur-3xl" />
 
           <div className="relative max-w-3xl mx-auto">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF5C00] mb-4">Klaar om te starten?</p>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight leading-tight text-white mb-6">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-white/90 mb-4">Klaar om te starten?</p>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white mb-6">
               Automatiseer je vastgoedbeheer <br className="hidden sm:block" />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#FF8A3D] to-[#FF5C00]">
-                vanaf vandaag.
-              </span>
+              vanaf vandaag.
             </h2>
-            <p className="text-base md:text-lg text-zinc-400 leading-relaxed mb-10 max-w-xl mx-auto">
+            <p className="text-base md:text-lg text-white/90 leading-relaxed mb-10 max-w-xl mx-auto">
               Installeer SuriRent nu en bespaar uren per week op administratie. Gratis proefperiode, geen creditcard vereist.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <button
                 onClick={onRegister}
                 data-testid="cta-register-btn"
-                className="group inline-flex items-center gap-2 px-8 py-4 bg-[#FF5C00] text-white font-semibold rounded-md hover:bg-[#E65300] transition-colors shadow-[0_0_40px_-10px_rgba(255,92,0,0.7)]"
+                className="group inline-flex items-center gap-2 px-8 py-4 bg-white text-[#FF5C00] font-black rounded-xl hover:bg-orange-50 transition-colors shadow-xl"
               >
                 Start gratis
                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -525,7 +536,7 @@ function CTASection({ onRegister }) {
                 target="_blank"
                 rel="noreferrer"
                 data-testid="cta-whatsapp-btn"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white/5 border border-white/10 text-white font-semibold rounded-md hover:bg-white/10 hover:border-white/20 transition-colors"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-white/15 backdrop-blur border border-white/30 text-white font-bold rounded-xl hover:bg-white/25 transition-colors"
               >
                 <MessageCircle className="w-5 h-5" /> WhatsApp ons
               </a>
@@ -540,66 +551,75 @@ function CTASection({ onRegister }) {
 // ================= Footer ==========================================
 function Footer({ onLogin }) {
   return (
-    <footer id="contact" className="relative bg-[#09090b] border-t border-white/10 pt-20 pb-10">
-      <Noise opacity={0.02} />
+    <footer id="contact" className="relative bg-gradient-to-br from-[#FFF7F0] to-[#FFEAD3] border-t border-orange-200 pt-20 pb-10">
+      <Noise opacity={0.15} />
       <div className="relative max-w-7xl mx-auto px-5 sm:px-8">
         <div className="grid md:grid-cols-4 gap-10">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-5">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FF5C00] to-[#B33F00] p-1.5 shadow-[0_0_25px_-5px_rgba(255,92,0,0.5)]">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FF8A3D] to-[#C74600] p-1.5 shadow-[0_8px_20px_-5px_rgba(255,92,0,0.55)]">
                 <img src="/kiosk-icons/kiosk-512.png" alt="SuriRent" className="w-full h-full object-contain" />
               </div>
               <div>
-                <p className="text-lg font-bold text-white tracking-tight">SuriRent</p>
+                <p className="text-lg font-black text-slate-900 tracking-tight">SuriRent</p>
                 <p className="text-[10px] text-[#FF5C00] font-bold tracking-[0.3em] uppercase">N.V.</p>
               </div>
             </div>
-            <p className="text-sm text-zinc-500 leading-relaxed max-w-md">
+            <p className="text-sm text-slate-700 leading-relaxed max-w-md">
               Complete huurbeheer oplossing voor Surinaamse vastgoedbedrijven. Van Kiosk terminal tot loonstrook, in één app.
             </p>
           </div>
 
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF5C00] mb-5">Contact</h4>
+            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-[#FF5C00] mb-5">Contact</h4>
             <ul className="space-y-3.5 text-sm">
               <li>
-                <a href="tel:+5978815993" data-testid="footer-phone" className="flex items-center gap-2.5 text-zinc-400 hover:text-white transition-colors group">
-                  <Phone className="w-4 h-4 text-[#FF5C00] group-hover:scale-110 transition-transform" /> +597 881 5993
+                <a href="tel:+5978815993" data-testid="footer-phone" className="flex items-center gap-2.5 text-slate-700 hover:text-[#FF5C00] transition-colors group font-semibold">
+                  <div className="w-7 h-7 rounded-lg bg-[#FF5C00] flex items-center justify-center shadow group-hover:scale-110 transition-transform">
+                    <Phone className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  +597 881 5993
                 </a>
               </li>
               <li>
-                <a href="mailto:info@surirent.sr" data-testid="footer-email" className="flex items-center gap-2.5 text-zinc-400 hover:text-white transition-colors group">
-                  <Mail className="w-4 h-4 text-[#FF5C00] group-hover:scale-110 transition-transform" /> info@surirent.sr
+                <a href="mailto:info@surirent.sr" data-testid="footer-email" className="flex items-center gap-2.5 text-slate-700 hover:text-[#FF5C00] transition-colors group font-semibold">
+                  <div className="w-7 h-7 rounded-lg bg-[#FF5C00] flex items-center justify-center shadow group-hover:scale-110 transition-transform">
+                    <Mail className="w-3.5 h-3.5 text-white" />
+                  </div>
+                  info@surirent.sr
                 </a>
               </li>
-              <li className="flex items-center gap-2.5 text-zinc-400">
-                <MapPin className="w-4 h-4 text-[#FF5C00]" /> Paramaribo, Suriname
+              <li className="flex items-center gap-2.5 text-slate-700 font-semibold">
+                <div className="w-7 h-7 rounded-lg bg-[#FF5C00] flex items-center justify-center shadow">
+                  <MapPin className="w-3.5 h-3.5 text-white" />
+                </div>
+                Paramaribo, Suriname
               </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF5C00] mb-5">Toegang</h4>
+            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-[#FF5C00] mb-5">Toegang</h4>
             <ul className="space-y-3.5 text-sm">
               <li>
-                <button onClick={onLogin} data-testid="footer-login-btn" className="text-zinc-400 hover:text-white transition-colors">
+                <button onClick={onLogin} data-testid="footer-login-btn" className="text-slate-700 hover:text-[#FF5C00] transition-colors font-semibold">
                   Inloggen / PIN
                 </button>
               </li>
               <li>
-                <a href="#pricing" className="text-zinc-400 hover:text-white transition-colors">Prijzen</a>
+                <a href="#pricing" className="text-slate-700 hover:text-[#FF5C00] transition-colors font-semibold">Prijzen</a>
               </li>
               <li>
-                <a href="#features" className="text-zinc-400 hover:text-white transition-colors">Functies</a>
+                <a href="#features" className="text-slate-700 hover:text-[#FF5C00] transition-colors font-semibold">Functies</a>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-14 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <p className="text-xs text-zinc-600">© {new Date().getFullYear()} SuriRent N.V. Alle rechten voorbehouden.</p>
-          <p className="text-xs text-zinc-600">
-            Gemaakt in <span className="text-[#FF5C00] font-semibold">Suriname</span>
+        <div className="mt-14 pt-8 border-t border-orange-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <p className="text-xs text-slate-600 font-semibold">© {new Date().getFullYear()} SuriRent N.V. Alle rechten voorbehouden.</p>
+          <p className="text-xs text-slate-600 font-semibold">
+            Gemaakt in <span className="text-[#FF5C00] font-black">Suriname</span>
           </p>
         </div>
       </div>
@@ -614,7 +634,7 @@ export default function MarketingLanding() {
   useEffect(() => {
     document.body.style.overflow = '';
     document.body.style.touchAction = '';
-    document.body.style.backgroundColor = COLORS.bg;
+    document.body.style.backgroundColor = '#FFF7F0';
     return () => {
       document.body.style.backgroundColor = '';
     };
@@ -625,7 +645,7 @@ export default function MarketingLanding() {
 
   return (
     <div
-      className="min-h-screen bg-[#09090b] text-white antialiased selection:bg-[#FF5C00]/30 selection:text-white"
+      className="min-h-screen bg-[#FFF7F0] text-slate-900 antialiased selection:bg-[#FF5C00] selection:text-white"
       style={{ fontFamily: "'Outfit', sans-serif" }}
     >
       <TopNav onLogin={goLogin} onRegister={goRegister} />
