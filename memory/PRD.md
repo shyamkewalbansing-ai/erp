@@ -1,5 +1,41 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 80 (29 apr 2026) — Landing page redesign: Dark & Orange archetype
+
+### Verzoek
+"Kan de website nog meer moderns het is te veel wit moet meer orange zijn zoals de kleur van de KIOSK"
+
+### Design spec
+Design agent leverde Archetype 4 (Swiss & High-Contrast) — Modified Dark/Orange met:
+- Primary: `#FF5C00` · Hover: `#E65300` · Glow: `rgba(255,92,0,0.25)`
+- Background: `#09090b` (page) · `#121214` (surface) · `#1C1C1F` (elevated)
+- Text: `#F8FAFC` / `#A1A1AA` / `#71717A`
+- Typography: Outfit, H1 `text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter`
+- Bento grid met Kiosk feature `col-span-2 row-span-2` flagship
+- Glassmorphism `backdrop-blur-xl bg-zinc-950/60 border-white/5`
+- Radial mesh gradients + SVG grain noise overlay
+
+### Implementatie
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/MarketingLanding.jsx` volledig herschreven (~560 regels):
+- `Noise` component met inline SVG fractalNoise filter (opacity 0.02-0.04 per sectie)
+- **TopNav**: sticky glassmorphic `backdrop-blur-xl bg-[#09090b]/75`, geanimeerde pulsing dot in badge
+- **Hero**: min-h-85vh, radial orange glow top-right + bottom-left, grid overlay (0.04 opacity), gradient text `from-[#FF8A3D] via-[#FF5C00] to-[#C74600]` op "huurbeheer", Kiosk Terminal mockup met traffic-light header + orange glow per regel
+- **StatsStrip**: glassmorphic card -mt-12 overlapping hero, divide-x divide-white/10, gradient numbers
+- **Features Bento**: `grid-cols-1 md:grid-cols-3 lg:grid-cols-4 auto-rows-[minmax(180px,auto)]`, Kiosk card spans 2x2 met oranje border + "FLAGSHIP" badge + `shadow-[0_0_40px_-10px_rgba(255,92,0,0.3)]`, andere cards krijgen oranje accent op hover
+- **Pricing**: Professional card donker gradient `from-[#1C1C1F] to-[#0D0604]`, oranje border + glow, "Aanbevolen" badge met Star icon, witte text op oranje button
+- **CTA**: rounded-3xl met donker→oranje-rood gradient, 2 grote radial blurs, "vanaf vandaag" met oranje text gradient
+- **Footer**: border-t border-white/10, oranje accent icons, SuriRent N.V. branding
+
+### Live getest
+- `features:13 starter:1 pro:1` ✓
+- Playwright screenshots (Hero/Features/Pricing/CTA) bevestigen vibrant orange + dark aesthetic ✓
+- ESLint schoon ✓
+
+### Bestand
+- `/app/frontend/src/components/vastgoed-kiosk/MarketingLanding.jsx` — volledig herschreven
+
+---
+
 ## Sprint 79 (29 apr 2026) — Marketing landing page op /vastgoed
 
 ### Verzoek

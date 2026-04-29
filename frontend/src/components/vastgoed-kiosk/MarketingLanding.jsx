@@ -3,130 +3,46 @@ import { useNavigate } from 'react-router-dom';
 import {
   Menu, X, ArrowRight, Check, Building2, Receipt, Users, Wallet, Wifi,
   Shield, Zap, CreditCard, Download, Sparkles, Globe, ScanFace, Phone,
-  Mail, MapPin, MessageCircle, Star, ChevronRight
+  Mail, MapPin, MessageCircle, Star, ChevronRight, Cpu
 } from 'lucide-react';
 
-const FEATURES = [
-  {
-    icon: Receipt,
-    title: 'Huurbeheer & Kwitanties',
-    desc: 'FIFO-toewijzing per maand, automatische WhatsApp/SMS herinneringen, digitale kwitanties.',
-    color: 'from-orange-500 to-orange-600',
-  },
-  {
-    icon: ScanFace,
-    title: 'Kiosk Terminal',
-    desc: 'Self-service terminal met PIN login en face-ID voor snelle huurbetaling door huurders.',
-    color: 'from-amber-500 to-orange-600',
-  },
-  {
-    icon: Wallet,
-    title: 'Multi-valuta Boekhouding',
-    desc: 'Verwerk SRD, USD en EUR zij aan zij. Wisseltransacties met actuele CME dagkoers.',
-    color: 'from-orange-600 to-rose-500',
-  },
-  {
-    icon: Users,
-    title: 'Werknemers & Loonstroken',
-    desc: 'Loonstroken (NL: Loonstroken), voorschotten (Voorschot) en payroll kalender in één scherm.',
-    color: 'from-orange-500 to-amber-500',
-  },
-  {
-    icon: CreditCard,
-    title: 'Bank & Kas Management',
-    desc: 'Meerdere kassen en bankrekeningen, automatische saldi, volledige audit trail.',
-    color: 'from-amber-600 to-orange-600',
-  },
-  {
-    icon: Wifi,
-    title: 'Internet Abonnementen',
-    desc: 'Beheer internet plannen per huurder, Tenda router koppeling en apparatenoverzicht.',
-    color: 'from-orange-500 to-orange-700',
-  },
-  {
-    icon: Building2,
-    title: 'Appartementen & Locaties',
-    desc: 'Centraal beheer van panden, units en locaties met huurcontracten per unit.',
-    color: 'from-orange-600 to-amber-600',
-  },
-  {
-    icon: Zap,
-    title: 'Elektriciteit (Shelly)',
-    desc: 'Shelly smart breakers koppelen per appartement. Schakel stroom op afstand.',
-    color: 'from-amber-500 to-orange-500',
-  },
-  {
-    icon: CreditCard,
-    title: 'Payment Gateways',
-    desc: 'SumUp, Mope en Uni5Pay geïntegreerd voor online en terminal betalingen.',
-    color: 'from-orange-500 to-rose-600',
-  },
-  {
-    icon: Shield,
-    title: 'Beveiligde PDF Kwitanties',
-    desc: 'AES-256 versleutelde PDFs, publieke QR-verificatie, watermerk en hash-vergelijking.',
-    color: 'from-orange-700 to-amber-700',
-  },
-  {
-    icon: Download,
-    title: 'PWA App',
-    desc: 'Installeer de app op je telefoon of tablet — werkt zelfs zonder internet.',
-    color: 'from-orange-500 to-amber-500',
-  },
-  {
-    icon: Sparkles,
-    title: 'AI-Assistent',
-    desc: 'Stel vragen in het Nederlands. AI helpt met boekhouding, rapportages en snelle antwoorden.',
-    color: 'from-amber-500 to-orange-600',
-  },
-  {
-    icon: Globe,
-    title: 'Eigen Domein',
-    desc: 'Host je kiosk op je eigen domeinnaam met SSL en gepersonaliseerde branding.',
-    color: 'from-orange-600 to-orange-700',
-  },
-];
+// ======================================================================
+// Design system — Archetype 4 (Swiss & High-Contrast) · Dark + Orange
+// ======================================================================
+const COLORS = {
+  primary: '#FF5C00',
+  primaryHover: '#E65300',
+  bg: '#09090b',
+  surface: '#121214',
+  surfaceEl: '#1C1C1F',
+};
 
-const STATS = [
-  { value: '24/7', label: 'Kiosk beschikbaar' },
-  { value: '3', label: 'Valutas ondersteund' },
-  { value: '13+', label: 'Kernfuncties' },
-  { value: '100%', label: 'Mobile-first' },
-];
+// ================= Grain noise overlay ==============================
+const GRAIN_SVG = `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.04 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>`;
 
-const STARTER_FEATURES = [
-  'Tot 15 huurders',
-  'Alle kernfuncties',
-  'WhatsApp & SMS notificaties',
-  'Beveiligde PDF kwitanties',
-  'PWA mobile app',
-  'SRD/USD/EUR boekhouding',
-  'Email support',
-];
+function Noise({ opacity = 0.04, className = '' }) {
+  return (
+    <div
+      aria-hidden
+      className={`pointer-events-none absolute inset-0 mix-blend-overlay ${className}`}
+      style={{ backgroundImage: `url("${GRAIN_SVG}")`, opacity }}
+    />
+  );
+}
 
-const PRO_FEATURES = [
-  'Onbeperkt huurders',
-  'Alles uit Starter',
-  'Kiosk terminal (face-ID + PIN)',
-  'Shelly elektriciteit integratie',
-  'Payment gateways (SumUp/Mope/Uni5Pay)',
-  'AI-Assistent onbeperkt',
-  'Eigen domein + SSL',
-  'Prioritaire WhatsApp support',
-];
-
+// ================= Top Nav (sticky · glassmorphic) ==================
 function TopNav({ onLogin, onRegister }) {
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   const scrollTo = (id) => {
-    setMenuOpen(false);
+    setOpen(false);
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -134,63 +50,67 @@ function TopNav({ onLogin, onRegister }) {
   return (
     <>
       <header
-        className={`fixed top-0 inset-x-0 z-40 transition-all ${
-          scrolled ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-slate-100' : 'bg-transparent'
+        className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
+          scrolled
+            ? 'backdrop-blur-xl bg-[#09090b]/75 border-b border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.3)]'
+            : 'bg-transparent'
         }`}
       >
         <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 sm:h-20 flex items-center justify-between">
           <button
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-            className="flex items-center gap-2.5 group"
             data-testid="nav-logo"
+            className="flex items-center gap-3 group"
           >
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-md shadow-orange-500/30 overflow-hidden p-1.5 group-hover:scale-105 transition-transform">
-              <img src="/kiosk-icons/kiosk-512.png" alt="SuriRent" className="w-full h-full object-contain" />
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-gradient-to-br from-[#FF5C00] to-[#B33F00] flex items-center justify-center p-1.5 overflow-hidden shadow-[0_0_25px_-5px_rgba(255,92,0,0.5)] group-hover:shadow-[0_0_35px_-5px_rgba(255,92,0,0.7)] transition-shadow">
+              <img src="/kiosk-icons/kiosk-512.png" alt="SuriRent" className="w-full h-full object-contain drop-shadow-md" />
             </div>
-            <div className="text-left">
-              <p className="text-base sm:text-lg font-black text-slate-900 leading-tight tracking-tight">SuriRent</p>
-              <p className="text-[10px] text-orange-600 font-bold tracking-widest uppercase -mt-0.5">N.V.</p>
+            <div className="text-left leading-none">
+              <p className="text-base sm:text-lg font-bold text-white tracking-tight">SuriRent</p>
+              <p className="text-[9px] sm:text-[10px] text-[#FF5C00] font-bold tracking-[0.3em] uppercase mt-1">N.V.</p>
             </div>
           </button>
 
-          <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-slate-600">
-            <button onClick={() => scrollTo('features')} className="hover:text-orange-600 transition" data-testid="nav-features">Functies</button>
-            <button onClick={() => scrollTo('pricing')} className="hover:text-orange-600 transition" data-testid="nav-pricing">Prijzen</button>
-            <button onClick={() => scrollTo('contact')} className="hover:text-orange-600 transition" data-testid="nav-contact">Contact</button>
+          <nav className="hidden md:flex items-center gap-2 text-sm font-medium">
+            <button onClick={() => scrollTo('features')} data-testid="nav-features" className="px-4 py-2 text-zinc-400 hover:text-white transition-colors">Functies</button>
+            <button onClick={() => scrollTo('pricing')} data-testid="nav-pricing" className="px-4 py-2 text-zinc-400 hover:text-white transition-colors">Prijzen</button>
+            <button onClick={() => scrollTo('contact')} data-testid="nav-contact" className="px-4 py-2 text-zinc-400 hover:text-white transition-colors">Contact</button>
           </nav>
 
           <div className="flex items-center gap-2">
             <button
               onClick={onLogin}
               data-testid="nav-login-btn"
-              className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold text-slate-700 hover:text-orange-600 transition"
+              className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-medium text-zinc-300 hover:text-white transition-colors"
             >
               Inloggen
             </button>
             <button
               onClick={onRegister}
               data-testid="nav-register-btn"
-              className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 bg-orange-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-orange-500/30 hover:bg-orange-600 hover:shadow-orange-500/40 transition active:scale-95"
+              className="inline-flex items-center gap-1.5 px-4 sm:px-5 py-2 sm:py-2.5 bg-[#FF5C00] text-white text-sm font-semibold rounded-md hover:bg-[#E65300] transition-colors shadow-[0_0_25px_-5px_rgba(255,92,0,0.6)]"
             >
               Start gratis <ArrowRight className="w-4 h-4" />
             </button>
             <button
-              onClick={() => setMenuOpen((v) => !v)}
-              className="md:hidden ml-1 w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-700"
+              onClick={() => setOpen((v) => !v)}
               data-testid="nav-mobile-toggle"
+              className="md:hidden ml-1 w-10 h-10 rounded-md border border-white/10 bg-white/5 flex items-center justify-center text-white"
             >
-              {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
 
-        {menuOpen && (
-          <div className="md:hidden bg-white border-t border-slate-100 shadow-lg">
+        {open && (
+          <div className="md:hidden backdrop-blur-xl bg-[#09090b]/95 border-t border-white/10 shadow-lg">
             <div className="px-5 py-3 flex flex-col gap-1">
-              <button onClick={() => scrollTo('features')} className="text-left py-2.5 px-2 rounded-lg hover:bg-slate-50 font-semibold text-slate-700" data-testid="nav-mobile-features">Functies</button>
-              <button onClick={() => scrollTo('pricing')} className="text-left py-2.5 px-2 rounded-lg hover:bg-slate-50 font-semibold text-slate-700" data-testid="nav-mobile-pricing">Prijzen</button>
-              <button onClick={() => scrollTo('contact')} className="text-left py-2.5 px-2 rounded-lg hover:bg-slate-50 font-semibold text-slate-700" data-testid="nav-mobile-contact">Contact</button>
-              <button onClick={onLogin} className="text-left py-2.5 px-2 rounded-lg hover:bg-slate-50 font-semibold text-orange-600 border-t border-slate-100 mt-1 pt-3" data-testid="nav-mobile-login">Inloggen →</button>
+              <button onClick={() => scrollTo('features')} data-testid="nav-mobile-features" className="text-left py-3 px-2 rounded-md hover:bg-white/5 text-zinc-300 font-medium">Functies</button>
+              <button onClick={() => scrollTo('pricing')} data-testid="nav-mobile-pricing" className="text-left py-3 px-2 rounded-md hover:bg-white/5 text-zinc-300 font-medium">Prijzen</button>
+              <button onClick={() => scrollTo('contact')} data-testid="nav-mobile-contact" className="text-left py-3 px-2 rounded-md hover:bg-white/5 text-zinc-300 font-medium">Contact</button>
+              <button onClick={onLogin} data-testid="nav-mobile-login" className="text-left py-3 px-2 rounded-md hover:bg-white/5 text-[#FF5C00] font-semibold border-t border-white/10 mt-1 pt-3">
+                Inloggen →
+              </button>
             </div>
           </div>
         )}
@@ -200,107 +120,261 @@ function TopNav({ onLogin, onRegister }) {
   );
 }
 
+// ================= Hero ============================================
 function Hero({ onLogin, onRegister }) {
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-orange-50/40 via-white to-white">
-      {/* Decorative blobs */}
-      <div className="absolute -top-20 -right-20 w-96 h-96 bg-orange-200/40 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-40 -left-16 w-80 h-80 bg-amber-100/50 rounded-full blur-3xl pointer-events-none" />
+    <section className="relative overflow-hidden min-h-[85vh] flex flex-col justify-center">
+      {/* Radial orange glow top-right */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,92,0,0.22),transparent_55%)] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(255,92,0,0.08),transparent_50%)] pointer-events-none" />
+      <Noise />
 
-      <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-12 sm:pt-20 pb-16 sm:pb-24">
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-orange-100 text-orange-700 text-xs font-bold rounded-full mb-6 uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" /> Nieuw in Suriname
+      {/* Grid overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.04] pointer-events-none"
+        style={{
+          backgroundImage:
+            'linear-gradient(rgba(255,255,255,1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,1) 1px, transparent 1px)',
+          backgroundSize: '60px 60px',
+        }}
+      />
+
+      <div className="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 sm:py-24 w-full">
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-center">
+          <div className="lg:col-span-7">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#FF5C00]/10 border border-[#FF5C00]/25 rounded-full mb-8">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FF5C00] animate-pulse" />
+              <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#FF5C00]">Nieuw in Suriname</span>
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 leading-[1.05] tracking-tight mb-6">
+
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-[1.02] text-white mb-6">
               De complete{' '}
-              <span className="relative inline-block">
-                <span className="relative z-10 text-orange-600">huurbeheer</span>
-                <span className="absolute bottom-1 left-0 right-0 h-3 bg-orange-200/60 -z-0" />
+              <span className="bg-clip-text text-transparent bg-gradient-to-br from-[#FF8A3D] via-[#FF5C00] to-[#C74600]">
+                huurbeheer
               </span>{' '}
               oplossing voor vastgoed
             </h1>
-            <p className="text-base sm:text-lg text-slate-600 leading-relaxed mb-8 max-w-xl">
-              Automatiseer huurbetalingen, kwitanties, loonstroken en boekhouding — met een selfservice Kiosk terminal en PWA app. Speciaal gebouwd voor de Surinaamse markt.
+
+            <p className="text-base md:text-lg text-zinc-400 leading-relaxed mb-10 max-w-xl">
+              Automatiseer huurbetalingen, kwitanties, loonstroken en boekhouding. Met een selfservice Kiosk terminal en PWA app — speciaal gebouwd voor de Surinaamse markt.
             </p>
+
             <div className="flex flex-wrap items-center gap-3">
               <button
                 onClick={onRegister}
                 data-testid="hero-register-btn"
-                className="inline-flex items-center gap-2 px-6 py-3.5 bg-orange-500 text-white font-bold rounded-xl shadow-xl shadow-orange-500/40 hover:bg-orange-600 hover:shadow-orange-500/50 transition active:scale-95"
+                className="group inline-flex items-center gap-2 px-7 py-4 bg-[#FF5C00] text-white font-semibold rounded-md hover:bg-[#E65300] transition-colors shadow-[0_0_40px_-10px_rgba(255,92,0,0.7)]"
               >
-                Start nu <ArrowRight className="w-4 h-4" />
+                Start gratis
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </button>
               <button
                 onClick={onLogin}
                 data-testid="hero-login-btn"
-                className="inline-flex items-center gap-2 px-6 py-3.5 bg-white border-2 border-slate-200 text-slate-800 font-bold rounded-xl hover:border-orange-400 hover:text-orange-600 transition active:scale-95"
+                className="inline-flex items-center gap-2 px-7 py-4 bg-white/5 border border-white/10 text-white font-semibold rounded-md hover:bg-white/10 hover:border-white/20 transition-colors"
               >
                 Inloggen
               </button>
             </div>
-            <div className="flex items-center gap-5 mt-8 text-xs text-slate-500 font-semibold">
+
+            <div className="flex items-center gap-6 mt-10 text-xs text-zinc-500 font-medium">
               <div className="flex items-center gap-1.5">
-                <Check className="w-4 h-4 text-emerald-500" /> Geen creditcard nodig
+                <Check className="w-4 h-4 text-[#FF5C00]" /> Geen creditcard nodig
               </div>
               <div className="flex items-center gap-1.5">
-                <Check className="w-4 h-4 text-emerald-500" /> Direct installeren
+                <Check className="w-4 h-4 text-[#FF5C00]" /> Direct installeren
               </div>
             </div>
           </div>
 
-          {/* Visual — stylized kiosk mockup */}
-          <div className="relative">
-            <div className="relative bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 rounded-[2.5rem] p-6 sm:p-10 shadow-2xl shadow-orange-500/30 transform lg:rotate-1">
-              <div className="absolute -top-4 -right-4 bg-white rounded-2xl px-3 py-2 shadow-xl flex items-center gap-2 transform -rotate-6">
-                <Check className="w-4 h-4 text-emerald-500" />
-                <span className="text-xs font-black text-slate-900">Betaling voltooid</span>
+          {/* Right visual — Kiosk Terminal mockup */}
+          <div className="lg:col-span-5 relative">
+            {/* Ambient orange glow behind */}
+            <div className="absolute -inset-8 bg-gradient-to-br from-[#FF5C00]/30 via-transparent to-transparent blur-3xl" />
+
+            <div className="relative bg-[#121214] rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+              {/* Terminal header */}
+              <div className="flex items-center justify-between px-5 py-3 border-b border-white/5 bg-white/[0.02]">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/70" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/70" />
+                </div>
+                <span className="text-[10px] font-mono text-zinc-500 tracking-wider">KIOSK · A1</span>
               </div>
-              <div className="bg-white rounded-2xl p-5 sm:p-6 shadow-inner">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center p-2 overflow-hidden">
+
+              <div className="p-5 sm:p-7">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-[#FF5C00] to-[#B33F00] p-2 shadow-[0_0_25px_-5px_rgba(255,92,0,0.6)]">
                     <img src="/kiosk-icons/kiosk-512.png" alt="logo" className="w-full h-full object-contain" />
                   </div>
                   <div>
-                    <p className="font-black text-slate-900">Kiosk Terminal</p>
-                    <p className="text-xs text-slate-500">Appartement A1 · Selfservice</p>
+                    <p className="text-sm font-semibold text-white">Selfservice Terminal</p>
+                    <p className="text-[11px] text-zinc-500">Appartement A1 · maart 2026</p>
                   </div>
                 </div>
+
                 <div className="space-y-2.5">
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between">
-                    <span className="text-xs font-bold text-emerald-700">Huur maart 2026</span>
-                    <span className="text-sm font-black text-emerald-700">SRD 5.000</span>
+                  <div className="bg-[#FF5C00]/10 border border-[#FF5C00]/30 rounded-lg p-3 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-[#FF5C00]">Huur maart 2026</span>
+                    <span className="text-sm font-bold text-white">SRD 5.000</span>
                   </div>
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 flex items-center justify-between">
-                    <span className="text-xs font-semibold text-slate-700">Betalingswijze</span>
-                    <span className="text-xs font-bold text-slate-900">Contant</span>
+                  <div className="bg-white/5 border border-white/5 rounded-lg p-3 flex items-center justify-between">
+                    <span className="text-xs text-zinc-400">Betalingswijze</span>
+                    <span className="text-xs font-semibold text-white">Contant</span>
                   </div>
-                  <div className="bg-orange-50 border border-orange-200 rounded-xl p-3">
-                    <p className="text-[10px] uppercase text-orange-700 font-bold tracking-wider">Kwitantie</p>
-                    <p className="font-mono text-xs text-slate-900 font-bold">KW2026-00127</p>
+                  <div className="bg-white/5 border border-white/5 rounded-lg p-3">
+                    <p className="text-[10px] uppercase text-zinc-500 font-semibold tracking-widest">Kwitantie</p>
+                    <p className="font-mono text-xs text-white font-bold mt-1">KW2026-00127</p>
                   </div>
+                </div>
+
+                <div className="mt-5 flex items-center gap-2 px-3 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span className="text-xs font-semibold text-emerald-300">Betaling voltooid · QR beveiligd</span>
                 </div>
               </div>
             </div>
-            {/* Floating badge */}
-            <div className="hidden sm:flex absolute -bottom-4 -left-4 bg-white rounded-2xl px-4 py-3 shadow-xl items-center gap-3 transform -rotate-3">
-              <ScanFace className="w-6 h-6 text-orange-600" />
+
+            {/* Floating face-ID badge */}
+            <div className="hidden sm:flex absolute -bottom-6 -left-6 bg-[#1C1C1F] border border-[#FF5C00]/30 rounded-xl px-4 py-3 items-center gap-3 shadow-xl shadow-black/50 backdrop-blur-sm">
+              <div className="w-9 h-9 rounded-lg bg-[#FF5C00]/15 border border-[#FF5C00]/30 flex items-center justify-center">
+                <ScanFace className="w-5 h-5 text-[#FF5C00]" />
+              </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Face-ID</p>
-                <p className="text-xs font-black text-slate-900">Veilige login</p>
+                <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest">Face-ID</p>
+                <p className="text-xs font-bold text-white">Veilige login</p>
               </div>
             </div>
           </div>
         </div>
+      </div>
+    </section>
+  );
+}
 
-        {/* Stats strip */}
-        <div className="mt-12 sm:mt-20 grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 bg-white border border-slate-200 rounded-2xl p-5 sm:p-8 shadow-sm">
-          {STATS.map((s) => (
-            <div key={s.label} className="text-center sm:text-left">
-              <p className="text-2xl sm:text-3xl font-black text-orange-600">{s.value}</p>
-              <p className="text-[11px] sm:text-xs text-slate-500 font-semibold uppercase tracking-wider mt-0.5">{s.label}</p>
-            </div>
+// ================= Stats strip =====================================
+const STATS = [
+  { value: '24/7', label: 'Kiosk beschikbaar' },
+  { value: '3', label: 'Valutas ondersteund' },
+  { value: '13+', label: 'Kernfuncties' },
+  { value: '100%', label: 'Mobile-first' },
+];
+
+function StatsStrip() {
+  return (
+    <section className="relative -mt-12 mb-8 z-10">
+      <div className="max-w-7xl mx-auto px-5 sm:px-8">
+        <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
+          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/10">
+            {STATS.map((s) => (
+              <div key={s.label} className="px-5 py-5 sm:py-6">
+                <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white tracking-tighter">
+                  {s.value.includes('/') || s.value.includes('+') || s.value.includes('%') ? (
+                    <>
+                      <span className="bg-clip-text text-transparent bg-gradient-to-br from-[#FF8A3D] to-[#FF5C00]">
+                        {s.value}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="bg-clip-text text-transparent bg-gradient-to-br from-[#FF8A3D] to-[#FF5C00]">{s.value}</span>
+                  )}
+                </p>
+                <p className="text-[10px] sm:text-xs text-zinc-500 font-semibold uppercase tracking-[0.15em] mt-1.5">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ================= Features Bento Grid ==============================
+const FEATURES = [
+  { icon: Receipt, title: 'Huurbeheer & Kwitanties', desc: 'FIFO-toewijzing, automatische WhatsApp/SMS herinneringen, digitale kwitanties.', span: 'md:col-span-1' },
+  // Kiosk Terminal — hero feature, 2x2
+  { icon: ScanFace, title: 'Kiosk Terminal', desc: 'Selfservice terminal met PIN login en face-ID voor snelle huurbetaling door huurders. De kern van SuriRent.', span: 'md:col-span-2 md:row-span-2', featured: true },
+  { icon: Wallet, title: 'Multi-valuta Boekhouding', desc: 'SRD, USD en EUR zij aan zij. Wisseltransacties met CME dagkoers.', span: 'md:col-span-1' },
+  { icon: Users, title: 'Werknemers & Loonstroken', desc: 'Loonstroken, voorschotten en payroll kalender in één scherm.', span: 'md:col-span-1' },
+  { icon: CreditCard, title: 'Bank & Kas', desc: 'Meerdere kassen, automatische saldi, volledige audit trail.', span: 'md:col-span-1' },
+  { icon: Wifi, title: 'Internet', desc: 'Beheer internet plannen per huurder, Tenda router koppeling.', span: 'md:col-span-1' },
+  { icon: Building2, title: 'Appartementen & Locaties', desc: 'Centraal beheer van panden, units en locaties met huurcontracten.', span: 'md:col-span-1' },
+  { icon: Zap, title: 'Elektriciteit (Shelly)', desc: 'Smart breakers per appartement. Schakel stroom op afstand.', span: 'md:col-span-1' },
+  { icon: Cpu, title: 'Payment Gateways', desc: 'SumUp, Mope en Uni5Pay volledig geïntegreerd.', span: 'md:col-span-1' },
+  { icon: Shield, title: 'Beveiligde PDF Kwitanties', desc: 'AES-256 versleutelde PDFs, publieke QR-verificatie, watermerk en hash-vergelijking.', span: 'md:col-span-2' },
+  { icon: Download, title: 'PWA App', desc: 'Installeer als native app op telefoon of tablet.', span: 'md:col-span-1' },
+  { icon: Sparkles, title: 'AI-Assistent', desc: 'Stel vragen in het Nederlands — AI helpt je 24/7.', span: 'md:col-span-1' },
+  { icon: Globe, title: 'Eigen Domein + SSL', desc: 'Host op je eigen domeinnaam met gepersonaliseerde branding.', span: 'md:col-span-1' },
+];
+
+function FeatureCard({ feature, idx }) {
+  const Icon = feature.icon;
+  const isFeatured = feature.featured;
+
+  return (
+    <div
+      data-testid={`feature-${idx}`}
+      className={`group relative overflow-hidden rounded-2xl p-6 md:p-7 transition-all duration-300 hover:-translate-y-1 ${feature.span || ''} ${
+        isFeatured
+          ? 'bg-gradient-to-br from-[#1C1C1F] via-[#1C1C1F] to-[#FF5C00]/10 border border-[#FF5C00]/40 shadow-[0_0_40px_-10px_rgba(255,92,0,0.3)] hover:shadow-[0_0_60px_-10px_rgba(255,92,0,0.5)]'
+          : 'bg-[#121214] border border-white/5 hover:bg-[#1C1C1F] hover:border-white/15'
+      }`}
+    >
+      {isFeatured && (
+        <>
+          <div className="absolute -top-20 -right-20 w-60 h-60 bg-[#FF5C00]/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-4 right-4 px-2.5 py-1 bg-[#FF5C00] text-white text-[9px] font-bold uppercase tracking-widest rounded-full shadow-lg">
+            Flagship
+          </div>
+        </>
+      )}
+
+      <div
+        className={`relative w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center mb-5 ${
+          isFeatured
+            ? 'bg-gradient-to-br from-[#FF5C00] to-[#B33F00] shadow-[0_0_25px_-5px_rgba(255,92,0,0.6)]'
+            : 'bg-white/5 border border-white/10 group-hover:bg-[#FF5C00]/15 group-hover:border-[#FF5C00]/40 transition-colors'
+        }`}
+      >
+        <Icon className={`w-5 h-5 md:w-6 md:h-6 ${isFeatured ? 'text-white' : 'text-zinc-300 group-hover:text-[#FF5C00] transition-colors'}`} />
+      </div>
+
+      <h3 className={`relative font-semibold tracking-tight mb-2 ${isFeatured ? 'text-xl md:text-2xl text-white' : 'text-base md:text-lg text-white'}`}>
+        {feature.title}
+      </h3>
+      <p className={`relative leading-relaxed ${isFeatured ? 'text-sm md:text-base text-zinc-300' : 'text-sm text-zinc-500'}`}>
+        {feature.desc}
+      </p>
+
+      {isFeatured && (
+        <div className="relative mt-6 inline-flex items-center gap-1.5 text-xs font-semibold text-[#FF5C00]">
+          Meer informatie <ArrowRight className="w-3.5 h-3.5" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FeaturesSection() {
+  return (
+    <section id="features" className="relative py-24 md:py-32 bg-[#09090b]">
+      <Noise opacity={0.03} />
+      <div className="relative max-w-7xl mx-auto px-5 sm:px-8">
+        <div className="max-w-3xl mb-14 md:mb-20">
+          <p className="text-xs md:text-sm font-semibold uppercase tracking-[0.2em] text-[#FF5C00] mb-4">Functies</p>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight leading-tight text-white mb-5">
+            Alles in één systeem, <br />
+            <span className="text-zinc-500">van kiosk tot kwitantie.</span>
+          </h2>
+          <p className="text-base md:text-lg text-zinc-400 leading-relaxed">
+            SuriRent bundelt 13+ kernfuncties in één mobiele app. Geen losse tools meer — alles verbonden en in het Nederlands.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5 auto-rows-[minmax(180px,auto)]">
+          {FEATURES.map((f, idx) => (
+            <FeatureCard key={f.title} feature={f} idx={idx} />
           ))}
         </div>
       </div>
@@ -308,110 +382,87 @@ function Hero({ onLogin, onRegister }) {
   );
 }
 
-function FeaturesSection() {
-  return (
-    <section id="features" className="py-16 sm:py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-5 sm:px-8">
-        <div className="max-w-2xl mb-10 sm:mb-16">
-          <p className="text-xs font-black text-orange-600 uppercase tracking-widest mb-3">Functies</p>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 leading-tight tracking-tight mb-4">
-            Alles in één systeem
-          </h2>
-          <p className="text-base sm:text-lg text-slate-600 leading-relaxed">
-            Van huurbetaling tot loonstrook, van elektriciteit tot AI-assistent. SuriRent bundelt 13+ kernfuncties in één mobiele app.
-          </p>
-        </div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-          {FEATURES.map((f, idx) => {
-            const Icon = f.icon;
-            return (
-              <div
-                key={f.title}
-                className="group relative bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 hover:border-orange-300 hover:shadow-xl hover:shadow-orange-100 transition-all"
-                data-testid={`feature-${idx}`}
-              >
-                <div className={`w-11 h-11 rounded-xl bg-gradient-to-br ${f.color} flex items-center justify-center mb-4 shadow-md`}>
-                  <Icon className="w-5 h-5 text-white" />
-                </div>
-                <h3 className="text-base font-black text-slate-900 mb-1.5 leading-snug">{f.title}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{f.desc}</p>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
+// ================= Pricing =========================================
+const STARTER = ['Tot 15 huurders', 'Alle kernfuncties', 'WhatsApp & SMS notificaties', 'Beveiligde PDF kwitanties', 'PWA mobile app', 'SRD/USD/EUR boekhouding', 'Email support'];
+const PRO = ['Onbeperkt huurders', 'Alles uit Starter', 'Kiosk terminal (face-ID + PIN)', 'Shelly elektriciteit integratie', 'Payment gateways (SumUp/Mope/Uni5Pay)', 'AI-Assistent onbeperkt', 'Eigen domein + SSL', 'Prioritaire WhatsApp support'];
 
 function PricingCard({ name, price, desc, features, cta, onCta, featured, testid }) {
   return (
     <div
-      className={`relative rounded-3xl p-6 sm:p-8 border-2 transition-all ${
-        featured
-          ? 'bg-gradient-to-br from-orange-500 to-orange-600 border-orange-600 text-white shadow-2xl shadow-orange-500/40 lg:scale-[1.03]'
-          : 'bg-white border-slate-200 hover:border-orange-300 hover:shadow-xl'
-      }`}
       data-testid={testid}
+      className={`relative rounded-2xl p-7 md:p-9 transition-all duration-300 ${
+        featured
+          ? 'bg-gradient-to-br from-[#1C1C1F] to-[#0D0604] border border-[#FF5C00]/40 shadow-[0_0_60px_-10px_rgba(255,92,0,0.4)]'
+          : 'bg-[#121214] border border-white/10 hover:border-white/20'
+      }`}
     >
       {featured && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-orange-600 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-          <Star className="w-3 h-3" /> Meest gekozen
-        </div>
+        <>
+          <div className="absolute -top-16 -right-16 w-56 h-56 bg-[#FF5C00]/20 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 bg-[#FF5C00] text-white text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full shadow-[0_0_20px_-2px_rgba(255,92,0,0.6)]">
+            <Star className="w-3 h-3 fill-current" /> Aanbevolen
+          </div>
+        </>
       )}
-      <h3 className={`text-xl font-black tracking-tight ${featured ? 'text-white' : 'text-slate-900'}`}>{name}</h3>
-      <p className={`text-sm mt-1 ${featured ? 'text-white/80' : 'text-slate-500'}`}>{desc}</p>
-      <div className="mt-5 mb-6 flex items-baseline gap-1">
-        <span className={`text-xs font-bold ${featured ? 'text-white/70' : 'text-slate-400'}`}>SRD</span>
-        <span className={`text-4xl sm:text-5xl font-black tracking-tight ${featured ? 'text-white' : 'text-slate-900'}`}>
-          {price.toLocaleString('nl-NL')}
-        </span>
-        <span className={`text-sm font-semibold ${featured ? 'text-white/70' : 'text-slate-400'}`}>/maand</span>
+
+      <h3 className="relative text-xl md:text-2xl font-semibold tracking-tight text-white">{name}</h3>
+      <p className="relative text-sm text-zinc-500 mt-1.5">{desc}</p>
+
+      <div className="relative mt-6 mb-7 flex items-baseline gap-1.5">
+        <span className="text-xs font-semibold text-zinc-500">SRD</span>
+        <span className="text-5xl md:text-6xl font-bold tracking-tighter text-white">{price.toLocaleString('nl-NL')}</span>
+        <span className="text-sm text-zinc-500">/maand</span>
       </div>
+
       <button
         onClick={onCta}
         data-testid={`${testid}-cta`}
-        className={`w-full py-3 rounded-xl font-bold text-sm transition active:scale-95 ${
+        className={`relative w-full py-3.5 rounded-md font-semibold text-sm transition-colors ${
           featured
-            ? 'bg-white text-orange-600 hover:bg-orange-50 shadow-lg'
-            : 'bg-orange-500 text-white hover:bg-orange-600 shadow-md shadow-orange-500/30'
+            ? 'bg-[#FF5C00] text-white hover:bg-[#E65300] shadow-[0_0_30px_-5px_rgba(255,92,0,0.6)]'
+            : 'bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20'
         }`}
       >
         {cta}
       </button>
-      <ul className={`mt-6 space-y-3 ${featured ? 'text-white' : 'text-slate-700'}`}>
+
+      <div className="relative mt-7 pt-7 border-t border-white/5 space-y-3.5">
         {features.map((f) => (
-          <li key={f} className="flex items-start gap-2.5 text-sm">
-            <Check className={`w-4 h-4 flex-shrink-0 mt-0.5 ${featured ? 'text-white' : 'text-emerald-500'}`} />
-            <span className={featured ? 'text-white/95' : 'text-slate-700'}>{f}</span>
-          </li>
+          <div key={f} className="flex items-start gap-2.5 text-sm">
+            <div className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center mt-0.5 ${featured ? 'bg-[#FF5C00]/20' : 'bg-white/5'}`}>
+              <Check className={`w-3 h-3 ${featured ? 'text-[#FF5C00]' : 'text-zinc-400'}`} />
+            </div>
+            <span className="text-zinc-300">{f}</span>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 }
 
 function PricingSection({ onRegister }) {
   return (
-    <section id="pricing" className="py-16 sm:py-24 bg-gradient-to-b from-slate-50 to-white">
-      <div className="max-w-6xl mx-auto px-5 sm:px-8">
-        <div className="max-w-2xl mx-auto text-center mb-12 sm:mb-16">
-          <p className="text-xs font-black text-orange-600 uppercase tracking-widest mb-3">Prijzen</p>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 leading-tight tracking-tight mb-4">
-            Eén prijs, geen verrassingen
+    <section id="pricing" className="relative py-24 md:py-32 bg-[#09090b] overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,92,0,0.08),transparent_60%)] pointer-events-none" />
+      <Noise opacity={0.03} />
+
+      <div className="relative max-w-6xl mx-auto px-5 sm:px-8">
+        <div className="max-w-2xl mx-auto text-center mb-14 md:mb-20">
+          <p className="text-xs md:text-sm font-semibold uppercase tracking-[0.2em] text-[#FF5C00] mb-4">Prijzen</p>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight leading-tight text-white mb-5">
+            Eén prijs, <span className="text-zinc-500">geen verrassingen.</span>
           </h2>
-          <p className="text-base sm:text-lg text-slate-600 leading-relaxed">
+          <p className="text-base md:text-lg text-zinc-400 leading-relaxed">
             Maandelijks opzegbaar. Geen setup-kosten. Geen verborgen fees.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-5 sm:gap-7 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-2 gap-6 md:gap-8">
           <PricingCard
             name="Starter"
             price={3000}
             desc="Voor kleinere vastgoedbeheerders die willen starten."
-            features={STARTER_FEATURES}
+            features={STARTER}
             cta="Start met Starter"
             onCta={onRegister}
             testid="pricing-starter"
@@ -420,7 +471,7 @@ function PricingSection({ onRegister }) {
             name="Professional"
             price={5000}
             desc="Voor groeiende bedrijven met Kiosk terminal en integraties."
-            features={PRO_FEATURES}
+            features={PRO}
             cta="Start met Professional"
             onCta={onRegister}
             featured
@@ -428,42 +479,53 @@ function PricingSection({ onRegister }) {
           />
         </div>
 
-        <p className="text-center text-sm text-slate-500 mt-8">
-          Vragen over een maatwerk pakket? <a href="#contact" className="text-orange-600 font-bold hover:underline">Neem contact op</a>
+        <p className="text-center text-sm text-zinc-500 mt-10">
+          Vragen over een maatwerk pakket?{' '}
+          <a href="#contact" className="text-[#FF5C00] font-semibold hover:underline">
+            Neem contact op
+          </a>
         </p>
       </div>
     </section>
   );
 }
 
+// ================= CTA Banner ======================================
 function CTASection({ onRegister }) {
   return (
-    <section className="py-16 sm:py-24 bg-white">
-      <div className="max-w-5xl mx-auto px-5 sm:px-8">
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-slate-900 via-slate-800 to-orange-900 p-8 sm:p-14 lg:p-20">
-          <div className="absolute -top-20 -right-20 w-80 h-80 bg-orange-500/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl" />
-          <div className="relative max-w-2xl">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight mb-5">
-              Klaar om je vastgoedbeheer te automatiseren?
+    <section className="relative py-20 md:py-28 bg-[#09090b]">
+      <div className="max-w-6xl mx-auto px-5 sm:px-8">
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#121214] to-[#1a0a03] border border-[#FF5C00]/25 p-10 sm:p-16 lg:p-20 text-center">
+          <div className="absolute -top-24 -right-24 w-96 h-96 bg-[#FF5C00]/25 rounded-full blur-3xl" />
+          <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-[#FF5C00]/15 rounded-full blur-3xl" />
+          <Noise opacity={0.04} />
+
+          <div className="relative max-w-3xl mx-auto">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF5C00] mb-4">Klaar om te starten?</p>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight leading-tight text-white mb-6">
+              Automatiseer je vastgoedbeheer <br className="hidden sm:block" />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#FF8A3D] to-[#FF5C00]">
+                vanaf vandaag.
+              </span>
             </h2>
-            <p className="text-base sm:text-lg text-slate-300 leading-relaxed mb-8">
-              Installeer SuriRent vandaag nog en bespaar uren per week op administratie. Gratis proefperiode — geen creditcard vereist.
+            <p className="text-base md:text-lg text-zinc-400 leading-relaxed mb-10 max-w-xl mx-auto">
+              Installeer SuriRent nu en bespaar uren per week op administratie. Gratis proefperiode, geen creditcard vereist.
             </p>
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <button
                 onClick={onRegister}
                 data-testid="cta-register-btn"
-                className="inline-flex items-center gap-2 px-7 py-4 bg-orange-500 text-white font-black rounded-xl shadow-xl shadow-orange-500/30 hover:bg-orange-600 transition active:scale-95"
+                className="group inline-flex items-center gap-2 px-8 py-4 bg-[#FF5C00] text-white font-semibold rounded-md hover:bg-[#E65300] transition-colors shadow-[0_0_40px_-10px_rgba(255,92,0,0.7)]"
               >
-                Start nu gratis <ChevronRight className="w-5 h-5" />
+                Start gratis
+                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
               <a
                 href="https://wa.me/5978815993"
                 target="_blank"
                 rel="noreferrer"
                 data-testid="cta-whatsapp-btn"
-                className="inline-flex items-center gap-2 px-6 py-4 bg-white/10 backdrop-blur border border-white/20 text-white font-bold rounded-xl hover:bg-white/20 transition"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-white/5 border border-white/10 text-white font-semibold rounded-md hover:bg-white/10 hover:border-white/20 transition-colors"
               >
                 <MessageCircle className="w-5 h-5" /> WhatsApp ons
               </a>
@@ -475,88 +537,100 @@ function CTASection({ onRegister }) {
   );
 }
 
+// ================= Footer ==========================================
 function Footer({ onLogin }) {
   return (
-    <footer id="contact" className="bg-slate-900 text-slate-300">
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 py-12 sm:py-16">
-        <div className="grid md:grid-cols-4 gap-8 sm:gap-10">
+    <footer id="contact" className="relative bg-[#09090b] border-t border-white/10 pt-20 pb-10">
+      <Noise opacity={0.02} />
+      <div className="relative max-w-7xl mx-auto px-5 sm:px-8">
+        <div className="grid md:grid-cols-4 gap-10">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center p-1.5 overflow-hidden">
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FF5C00] to-[#B33F00] p-1.5 shadow-[0_0_25px_-5px_rgba(255,92,0,0.5)]">
                 <img src="/kiosk-icons/kiosk-512.png" alt="SuriRent" className="w-full h-full object-contain" />
               </div>
               <div>
-                <p className="font-black text-white text-lg tracking-tight">SuriRent</p>
-                <p className="text-[10px] text-orange-400 font-bold tracking-widest uppercase -mt-0.5">N.V.</p>
+                <p className="text-lg font-bold text-white tracking-tight">SuriRent</p>
+                <p className="text-[10px] text-[#FF5C00] font-bold tracking-[0.3em] uppercase">N.V.</p>
               </div>
             </div>
-            <p className="text-sm text-slate-400 leading-relaxed max-w-md">
-              Complete huurbeheer oplossing voor Surinaamse vastgoedbedrijven. Van Kiosk terminal tot loonstrook.
+            <p className="text-sm text-zinc-500 leading-relaxed max-w-md">
+              Complete huurbeheer oplossing voor Surinaamse vastgoedbedrijven. Van Kiosk terminal tot loonstrook, in één app.
             </p>
           </div>
 
           <div>
-            <h4 className="text-xs font-black text-white uppercase tracking-widest mb-4">Contact</h4>
-            <ul className="space-y-3 text-sm">
+            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF5C00] mb-5">Contact</h4>
+            <ul className="space-y-3.5 text-sm">
               <li>
-                <a href="tel:+5978815993" data-testid="footer-phone" className="flex items-center gap-2 hover:text-orange-400 transition">
-                  <Phone className="w-4 h-4 text-orange-400" /> +597 881 5993
+                <a href="tel:+5978815993" data-testid="footer-phone" className="flex items-center gap-2.5 text-zinc-400 hover:text-white transition-colors group">
+                  <Phone className="w-4 h-4 text-[#FF5C00] group-hover:scale-110 transition-transform" /> +597 881 5993
                 </a>
               </li>
               <li>
-                <a href="mailto:info@surirent.sr" data-testid="footer-email" className="flex items-center gap-2 hover:text-orange-400 transition">
-                  <Mail className="w-4 h-4 text-orange-400" /> info@surirent.sr
+                <a href="mailto:info@surirent.sr" data-testid="footer-email" className="flex items-center gap-2.5 text-zinc-400 hover:text-white transition-colors group">
+                  <Mail className="w-4 h-4 text-[#FF5C00] group-hover:scale-110 transition-transform" /> info@surirent.sr
                 </a>
               </li>
-              <li className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-orange-400" /> Paramaribo, Suriname
+              <li className="flex items-center gap-2.5 text-zinc-400">
+                <MapPin className="w-4 h-4 text-[#FF5C00]" /> Paramaribo, Suriname
               </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-xs font-black text-white uppercase tracking-widest mb-4">Toegang</h4>
-            <ul className="space-y-3 text-sm">
+            <h4 className="text-xs font-semibold uppercase tracking-[0.2em] text-[#FF5C00] mb-5">Toegang</h4>
+            <ul className="space-y-3.5 text-sm">
               <li>
-                <button onClick={onLogin} data-testid="footer-login-btn" className="hover:text-orange-400 transition">
+                <button onClick={onLogin} data-testid="footer-login-btn" className="text-zinc-400 hover:text-white transition-colors">
                   Inloggen / PIN
                 </button>
               </li>
               <li>
-                <a href="#pricing" className="hover:text-orange-400 transition">Prijzen</a>
+                <a href="#pricing" className="text-zinc-400 hover:text-white transition-colors">Prijzen</a>
               </li>
               <li>
-                <a href="#features" className="hover:text-orange-400 transition">Functies</a>
+                <a href="#features" className="text-zinc-400 hover:text-white transition-colors">Functies</a>
               </li>
             </ul>
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <p className="text-xs text-slate-500">© {new Date().getFullYear()} SuriRent N.V. Alle rechten voorbehouden.</p>
-          <p className="text-xs text-slate-500">Gemaakt in <span className="text-orange-400 font-bold">Suriname</span></p>
+        <div className="mt-14 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <p className="text-xs text-zinc-600">© {new Date().getFullYear()} SuriRent N.V. Alle rechten voorbehouden.</p>
+          <p className="text-xs text-zinc-600">
+            Gemaakt in <span className="text-[#FF5C00] font-semibold">Suriname</span>
+          </p>
         </div>
       </div>
     </footer>
   );
 }
 
+// ================= Main ============================================
 export default function MarketingLanding() {
   const navigate = useNavigate();
 
-  // Ensure body scroll is restored (kiosk landing freezes it)
   useEffect(() => {
     document.body.style.overflow = '';
     document.body.style.touchAction = '';
+    document.body.style.backgroundColor = COLORS.bg;
+    return () => {
+      document.body.style.backgroundColor = '';
+    };
   }, []);
 
   const goLogin = () => navigate('/vastgoed/login');
   const goRegister = () => navigate('/vastgoed/login?register=1');
 
   return (
-    <div className="min-h-screen bg-white" style={{ fontFamily: 'Outfit, sans-serif' }}>
+    <div
+      className="min-h-screen bg-[#09090b] text-white antialiased selection:bg-[#FF5C00]/30 selection:text-white"
+      style={{ fontFamily: "'Outfit', sans-serif" }}
+    >
       <TopNav onLogin={goLogin} onRegister={goRegister} />
       <Hero onLogin={goLogin} onRegister={goRegister} />
+      <StatsStrip />
       <FeaturesSection />
       <PricingSection onRegister={goRegister} />
       <CTASection onRegister={goRegister} />
