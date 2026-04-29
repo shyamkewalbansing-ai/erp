@@ -1,113 +1,130 @@
 {
-  "theme": "light",
-  "archetype": "Archetype 4: Swiss & High-Contrast (Kiosk Variant)",
-  "design_philosophy": "The UI must communicate instant visual confirmation and extreme clarity. The interaction is for a large touch screen (kiosk), meaning enormous typography, massive touch targets, and high-contrast readable elements. We abandon the 'admin receipt' look for a premium, Apple-style self-service terminal experience.",
+  "theme": {
+    "mode": "dark",
+    "archetype": "Archetype 4 (Swiss & High-Contrast) - Modified Dark/Orange",
+    "rationale": "Sleek, professional, high-end SaaS aesthetic. Replaces the 'too much white' with a deep, authoritative dark mode that allows the brand's primary Kiosk Orange (#FF5C00) to pop powerfully. This builds trust while maintaining a modern, cutting-edge software feel."
+  },
   "typography": {
-    "heading": "Outfit",
-    "body": "Plus Jakarta Sans",
-    "mono": "JetBrains Mono",
-    "hierarchy": {
-      "h1": "text-5xl sm:text-6xl lg:text-7xl font-black tracking-tighter text-gray-900",
-      "h2": "text-3xl sm:text-4xl font-bold tracking-tight text-gray-900",
-      "amount": "text-5xl sm:text-7xl lg:text-8xl font-black font-mono tracking-tighter text-emerald-600",
-      "body": "text-lg sm:text-xl lg:text-2xl text-gray-600",
-      "mono_data": "font-mono text-xl sm:text-2xl lg:text-3xl font-semibold text-gray-900",
-      "label": "text-sm sm:text-base lg:text-lg uppercase tracking-widest text-gray-500 font-bold"
+    "font_family": "'Outfit', sans-serif",
+    "scale": {
+      "h1": "text-5xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-tight",
+      "h2": "text-3xl md:text-4xl lg:text-5xl font-semibold tracking-tight leading-tight",
+      "h3": "text-xl md:text-2xl font-semibold tracking-tight",
+      "h4": "text-lg md:text-xl font-medium",
+      "body": "text-base md:text-lg text-zinc-400 leading-relaxed",
+      "small": "text-sm text-zinc-500",
+      "overline": "text-xs md:text-sm font-semibold uppercase tracking-[0.2em] text-[#FF5C00]"
     }
   },
   "colors": {
-    "background": "#F8FAFC",
-    "card_bg": "rgba(255, 255, 255, 0.95)",
-    "primary_text": "#111827",
-    "secondary_text": "#64748B",
-    "accent_success": "#059669",
-    "accent_success_bg": "#D1FAE5",
-    "border": "#E2E8F0"
+    "primary": {
+      "base": "#FF5C00",
+      "hover": "#E65300",
+      "glow": "rgba(255, 92, 0, 0.25)"
+    },
+    "background": {
+      "page": "#09090b",
+      "surface": "#121214",
+      "surface_elevated": "#1C1C1F"
+    },
+    "border": {
+      "default": "rgba(255, 255, 255, 0.08)",
+      "hover": "rgba(255, 255, 255, 0.15)",
+      "accent": "rgba(255, 92, 0, 0.4)"
+    },
+    "text": {
+      "primary": "#F8FAFC",
+      "secondary": "#A1A1AA",
+      "muted": "#71717A",
+      "inverse": "#09090B"
+    }
   },
-  "layout_spacing": {
-    "page_padding": "p-8 sm:p-12 lg:p-16",
-    "card_padding": "p-10 sm:p-14 lg:p-20",
-    "gap_massive": "gap-16",
-    "gap_large": "gap-10",
-    "gap_medium": "gap-6",
-    "gap_small": "gap-3"
+  "visual_enhancers": {
+    "glassmorphism": "backdrop-blur-xl bg-zinc-950/60 border border-white/5",
+    "gradients": {
+      "mesh_background": "bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-[#FF5C00]/15 via-[#09090b] to-[#09090b]",
+      "text_highlight": "bg-clip-text text-transparent bg-gradient-to-r from-white to-zinc-500",
+      "accent_glow": "shadow-[0_0_40px_-10px_rgba(255,92,0,0.3)]"
+    },
+    "noise": "Apply a subtle SVG noise overlay or CSS grain (opacity 2-3%) over dark backgrounds to remove digital flatness and add a premium tactile feel.",
+    "borders": "Use strict 1px borders (border-white/5 or border-white/10). No soft muddy shadows; rely on crisp contrast."
+  },
+  "layout_strategy": {
+    "spacing": "Generous. Use py-24 or py-32 for section padding. Use gap-8 or gap-12 for grids.",
+    "alignment": "Left-aligned for textual dominance. Center align only for specific floating CTAs.",
+    "grid_system": "Bento Grid (Grid-cols-1 md:grid-cols-4) with intentional asymmetry."
   },
   "components": {
-    "kiosk_container": {
-      "description": "Full screen layout with the custom background, centering the main content block.",
-      "styles": "min-h-screen w-full flex items-center justify-center bg-cover bg-center bg-no-repeat relative"
+    "buttons": {
+      "primary": "bg-[#FF5C00] text-white hover:bg-[#E65300] transition-colors rounded-md px-6 py-3 font-medium flex items-center gap-2",
+      "secondary": "bg-white/5 text-white hover:bg-white/10 border border-white/10 transition-colors rounded-md px-6 py-3 font-medium",
+      "ghost": "text-zinc-400 hover:text-white transition-colors"
     },
-    "receipt_bento_card": {
-      "description": "A massive, ultra-premium glassmorphism-inspired white card holding all the data. It uses a strong shadow to pop off the screen.",
-      "styles": "w-full max-w-5xl mx-auto bg-white/95 backdrop-blur-xl shadow-[0_30px_100px_-15px_rgba(0,0,0,0.15)] rounded-[40px] border border-white p-12 lg:p-16 flex flex-col gap-12 relative overflow-hidden"
+    "cards": {
+      "default": "bg-[#121214] border border-white/5 rounded-xl p-6 md:p-8 hover:bg-[#1C1C1F] hover:border-white/15 transition-all duration-300",
+      "highlighted": "bg-[#121214] border border-[#FF5C00]/30 rounded-xl p-6 md:p-8 relative overflow-hidden shadow-[0_0_30px_-10px_rgba(255,92,0,0.15)]"
     },
-    "success_header": {
-      "description": "Top section with animated checkmark and success title.",
-      "styles": "flex flex-col items-center justify-center text-center gap-6"
-    },
-    "amount_display_box": {
-      "description": "A dedicated high-contrast block for the total paid amount.",
-      "styles": "w-full bg-emerald-50 rounded-3xl p-10 flex flex-col items-center justify-center text-center gap-2 border border-emerald-100"
-    },
-    "receipt_details_grid": {
-      "description": "A 2-column CSS grid displaying the receipt data pairs cleanly.",
-      "styles": "grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8 w-full px-4"
-    },
-    "data_pair": {
-      "description": "A label and value pair.",
-      "styles": "flex flex-col gap-2 items-start"
-    },
-    "done_button": {
-      "description": "Massive touch target for the kiosk with an internal shrinking progress bar indicating timeout.",
-      "styles": "relative overflow-hidden w-full max-w-2xl mx-auto h-28 bg-gray-900 rounded-3xl text-3xl font-bold text-white transition-transform active:scale-95 flex items-center justify-center cursor-pointer shadow-2xl hover:bg-gray-800"
-    },
-    "done_button_progress": {
-      "description": "The absolute div inside the done button that animates width from 100% to 0%.",
-      "styles": "absolute inset-0 bg-white/20 origin-left"
-    }
+    "navigation": "Sticky top, z-50. Glassmorphic header (`backdrop-blur-xl bg-[#09090b]/70 border-b border-white/10`). Must have desktop links visible, not hidden in hamburger."
   },
-  "animations": {
-    "page_enter": {
-      "type": "framer-motion",
-      "props": "initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}"
+  "section_blueprints": {
+    "header": {
+      "description": "Sticky top nav with logo (Kiosk icon), Links (Functies, Prijzen, Contact), and CTAs (Inloggen, Start gratis)."
     },
-    "success_icon_scale": {
-      "type": "framer-motion",
-      "props": "initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', bounce: 0.5, duration: 0.8 }}"
+    "hero": {
+      "layout": "Min-h-[85vh] flex flex-col justify-center relative overflow-hidden.",
+      "visuals": "Dark slate background with a strong orange radial glow from top-right. Subtle noise texture.",
+      "content": "Left-aligned massive H1 'De complete huurbeheer oplossing voor vastgoed'. Orange overline 'Modern. Strak. Automatisch.'. Two buttons (Primary: Start gratis, Secondary: Inloggen)."
     },
-    "button_progress": {
-      "type": "framer-motion",
-      "props": "initial={{ scaleX: 1 }} animate={{ scaleX: 0 }} transition={{ duration: 10, ease: 'linear' }}"
-    }
-  },
-  "audio_effects": {
-    "instruction": "Retain the exact `playSuccessSound()` and `playPaperFeedSound()` AudioContext logic from the current KioskReceipt.jsx. Execute them in a useEffect on mount."
-  },
-  "accessibility": {
-    "contrast": "Maintained high contrast text (gray-900 on white, emerald-600 on emerald-50).",
-    "touch_targets": "Button is h-28 (112px), well above kiosk minimum sizes."
-  },
-  "instructions_to_main_agent": [
-    "You are building the UI for `/huurders/:companyId` (Tenant Kiosk). Do not just render the admin `<ReceiptTicket />` component. Build a completely new, bespoke KIOSK layout for the payment success screen using pure Tailwind and HTML elements.",
-    "Target file: Create or update the relevant payment success component (e.g. `PaymentConfirm.jsx` or create `TenantPaymentSuccessScreen.jsx` based on how routing is set up in HuurdersLayout). Verify which file handles the success state for the tenant kiosk.",
-    "Use Framer Motion to orchestrate a beautiful entrance: Card slides up, Checkmark pops in, Amount scales up.",
-    "Make sure to extract all required data from the `payment` object passed as prop (receipt number, date, tenant name, apartment, payment method, amount paid, remaining balance).",
-    "Keep the `AudioContext` sound generation functions exactly as they are in the current codebase (e.g. `playSuccessSound()`) but trigger them appropriately when the success screen renders.",
-    "Implement the 'Klaar' (Done) button with a visual countdown: use a framer-motion `motion.div` inside the button that scales on the X-axis (`scaleX: 0`) over the 10 or 12 seconds countdown duration.",
-    "Do NOT use 'Inter' for headings. Use 'Outfit' for headings and 'JetBrains Mono' for all data values.",
-    "Ensure `data-testid` attributes are placed on the main container, the amount, and the done button.",
-    "Apply the generated `kiosk_bg` image as the background of the main wrapper using inline style or Tailwind arbitrary value: `backgroundImage: 'url(...)', backgroundSize: 'cover'`."
-  ],
-  "media": {
-    "images": {
-      "kiosk_bg": {
-        "url": "https://static.prod-images.emergentagent.com/jobs/543d1584-8ed8-49c0-9f0d-1f4c4dcb9d22/images/1adb050b1ae8a688c85b3259ce0b713f0f1738f2fcb84aa25a0ed33f6888be4d.png",
-        "description": "A subtle, ultra-modern minimalist geometric background texture. Apply to the outermost screen wrapper."
+    "stats_strip": {
+      "layout": "Grid of 4 items (24/7, 3 valutas, 13+ functies, 100% mobile-first) placed inside a glassmorphic container overlapping the bottom of the hero section or just below it (-mt-12 or similar).",
+      "style": "Border-y border-white/10 bg-white/5 backdrop-blur-md py-6."
+    },
+    "features_bento": {
+      "layout": "Bento Grid (`grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6`). 13 features.",
+      "special_treatment": "Make the 'Kiosk Terminal' feature span 2 columns and 2 rows (`col-span-2 row-span-2`), with an orange border and glow to emphasize the MVP feature. Other features mix 1-col and 2-col spans to create asymmetry."
+    },
+    "pricing": {
+      "layout": "2-column grid centered (`max-w-5xl mx-auto gap-8`).",
+      "cards": {
+        "starter": "Standard dark card (`border-white/10`). SRD 3.000/maand.",
+        "professional": "Highlighted card (`border-[#FF5C00]/40`). SRD 5.000/maand. Include an 'Aanbevolen' (Recommended) badge in #FF5C00."
       }
     },
-    "icons": {
-      "success": "Lucide CheckCircle (size: w-32 h-32 or w-40 h-40)",
-      "home": "Lucide Home (for the Klaar button)"
+    "cta_banner": {
+      "layout": "Large rounded-3xl container, text-center py-20 px-4 max-w-6xl mx-auto.",
+      "visuals": "Deep dark surface with intense orange mesh gradient overlay (`bg-gradient-to-br from-[#121214] to-[#1a0a03] border border-[#FF5C00]/20`)."
+    },
+    "footer": {
+      "layout": "Py-20 border-t border-white/10.",
+      "content": "Grid layout for contact info (+597 881 5993, info@surirent.sr, Paramaribo) and branding."
     }
-  }
+  },
+  "motion_and_interactions": {
+    "hover_states": "Cards should slightly lift (`-translate-y-1`) and increase border opacity on hover. Buttons should shift background color smoothly.",
+    "scroll_reveal": "Staggered fade-up (`opacity-0 translate-y-4` to `opacity-100 translate-y-0`) for Bento grid items.",
+    "kiosk_glow": "The Kiosk feature card should have a slow, pulsing box-shadow glow in orange."
+  },
+  "media": {
+    "images": [
+      {
+        "url": "https://images.unsplash.com/photo-1760596413966-22e91dde4e4b?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwyfHxtb2Rlcm4lMjBhcGFydG1lbnQlMjBidWlsZGluZyUyMHJlYWwlMjBlc3RhdGV8ZW58MHx8fHwxNzc3NTA0Nzc1fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Modern apartment building with curved balconies and large windows.",
+        "category": "hero_background_or_feature_accent"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1772256019760-a144ae100cc4?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHwzfHxtb2Rlcm4lMjBhcGFydG1lbnQlMjBidWlsZGluZyUyMHJlYWwlMjBlc3RhdGV8ZW58MHx8fHwxNzc3NTA0Nzc1fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Modern apartment buildings against a clear blue sky.",
+        "category": "features_showcase"
+      }
+    ],
+    "icons": {
+      "library": "lucide-react",
+      "brand_logo": "/kiosk-icons/kiosk-512.png"
+    }
+  },
+  "accessibility": {
+    "testing_attributes": "All interactive elements MUST have a `data-testid` attribute (e.g., `data-testid=\"hero-cta-button\"`).",
+    "contrast": "Ensure white text over orange buttons meets 4.5:1 contrast. Use pure white text on the #FF5C00 background for clarity."
+  },
+  "instructions_to_main_agent": "Use the exact hex codes provided. Build the layout using standard HTML/Tailwind directly in the React component for the marketing sections. Ensure the 'Kiosk' feature stands out massively in the bento grid. Make the background deep black (#09090b) and use the radial gradient classes for the orange mesh glow. Do NOT use standard flat white cards. Apply data-testid to every button and link."
 }
