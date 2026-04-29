@@ -256,7 +256,12 @@ function PinLandingScreen({ onSuccess, onPassword, onRegister, onSuperadmin }) {
 
 function KioskLoginScreen({ onSuccess }) {
   const navigate = useNavigate();
-  const [view, setView] = useState('main'); // main, password, register, register_confirm, superadmin
+  const [view, setView] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('register') === '1' ? 'register' : 'main';
+    } catch { return 'main'; }
+  }); // main, password, register, register_confirm, superadmin
   const [bankDetails, setBankDetails] = useState(null);
   const [showPinModal, setShowPinModal] = useState(false);
 

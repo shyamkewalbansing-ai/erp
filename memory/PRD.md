@@ -1,5 +1,45 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 79 (29 apr 2026) — Marketing landing page op /vastgoed
+
+### Verzoek
+Echte marketing website-pagina op `/vastgoed` met features, prijzen, contact en login/register CTA.
+
+### Implementatie
+
+**Routing** — `/app/frontend/src/App.js`:
+- `/vastgoed` → `VastgoedMarketingLanding` (nieuw)
+- `/vastgoed/login` → `VastgoedKioskCompanySelect` (verplaatst — was /vastgoed)
+- `/vastgoed/login?register=1` opent direct het registratie-formulier
+
+**Nieuwe component** — `/app/frontend/src/components/vastgoed-kiosk/MarketingLanding.jsx` (~410 regels):
+- **TopNav**: sticky, blur on scroll, SuriRent N.V. logo + Functies/Prijzen/Contact + Inloggen + Start-gratis CTA, mobile hamburger menu
+- **Hero**: "De complete huurbeheer oplossing" met oranje underline accent, Kiosk Terminal mockup (Huur maart 2026 · SRD 5.000 · KW2026-00127), Face-ID floating badge, stats-strip (24/7 · 3 valutas · 13+ functies · 100% mobile)
+- **FeaturesSection**: 3-kolom grid met 13 features (Huurbeheer, Kiosk, Multi-valuta, Werknemers, Bank/Kas, Internet, Appartementen, Shelly, Payment gateways, Beveiligde PDF, PWA, AI, Eigen domein) elk met gradient icon tile
+- **PricingSection**: 2-tier (Starter SRD 3.000 / Professional SRD 5.000) met "Meest gekozen" badge op Pro
+- **CTASection**: donker slate→oranje gradient panel met "Start nu gratis" + WhatsApp link naar +5978815993
+- **Footer**: SuriRent N.V. logo, contact info (+597 881 5993, info@surirent.sr, Paramaribo), links
+
+**CompanySelect.jsx**: `view` state init leest `?register=1` query param uit URL om direct op registratie-scherm te openen.
+
+### Design
+- Strak & professioneel — wit + oranje gradients (#FF5C00 family)
+- Font: Outfit sans-serif (al in index.html)
+- Shadcn-style cards met hover states
+- Alle logos: `/kiosk-icons/kiosk-512.png` in oranje gradient tiles
+
+### Live getest (Playwright)
+- `nav-logo:1 hero-reg:1 features:13 starter:1 pro:1 phone:1` ✓
+- Login knop navigeert naar `/vastgoed/login` ✓
+- 3 screenshots (hero/features/pricing) visueel bevestigd ✓
+
+### Bestanden
+- `/app/frontend/src/components/vastgoed-kiosk/MarketingLanding.jsx` (nieuw)
+- `/app/frontend/src/App.js` (routing)
+- `/app/frontend/src/components/vastgoed-kiosk/CompanySelect.jsx` (register query param)
+
+---
+
 ## Sprint 78 (29 apr 2026) — Landing page /vastgoed met Kiosk-logo
 
 ### Verzoek

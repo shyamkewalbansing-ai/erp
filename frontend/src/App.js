@@ -117,6 +117,7 @@ const SchuldbeheerDocumenten = lazy(() => import("./pages/schuldbeheer/Documente
 // Vastgoed Kiosk Module - Public Pages (connects to external KIOSK backend)
 const VastgoedKioskLayout = lazy(() => import("./components/vastgoed-kiosk/KioskLayout"));
 const VastgoedKioskCompanySelect = lazy(() => import("./components/vastgoed-kiosk/CompanySelect"));
+const VastgoedMarketingLanding = lazy(() => import("./components/vastgoed-kiosk/MarketingLanding"));
 const VastgoedKioskAdmin = lazy(() => import("./components/vastgoed-kiosk/KioskAdminDashboard"));
 const VastgoedSuperAdmin = lazy(() => import("./components/vastgoed-kiosk/SuperAdminDashboard"));
 const HuurdersLayout = lazy(() => import("./components/vastgoed-kiosk/HuurdersLayout"));
@@ -548,6 +549,11 @@ function MainAppRoutes() {
         
         {/* Vastgoed Kiosk - Public Pages (connects to external KIOSK backend) */}
         <Route path="/vastgoed" element={
+          <SafeSuspense>
+            <VastgoedMarketingLanding />
+          </SafeSuspense>
+        } />
+        <Route path="/vastgoed/login" element={
           <SafeSuspense>
             <VastgoedKioskCompanySelect />
           </SafeSuspense>
