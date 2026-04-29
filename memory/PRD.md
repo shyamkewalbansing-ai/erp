@@ -1,5 +1,31 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 82 (29 apr 2026) — Video demo sectie op landing
+
+### Implementatie
+MarketingLanding.jsx — nieuwe `VideoDemoSection` tussen StatsStrip en FeaturesSection:
+- Config bovenaan file: `DEMO_VIDEO_URL` (leeg = "Binnenkort beschikbaar"), `DEMO_VIDEO_DURATION` (default "15 sec")
+- Poster: oranje gradient card met decoratieve Kiosk mockup (Selfservice Terminal · Huur maart 2026 · KW-nummer) achter een donker gradient overlay
+- Centrale Play-knop: witte ronde knop met oranje play-icon + pulsating glow-ring wanneer video actief is
+- Corner decoraties: traffic-light dots + "SuriRent · Kiosk Demo" badge
+- `VideoModal` component: full-screen zwart overlay met iframe/video, ESC-key + click-outside om te sluiten, autoplay=1 via URL parameter
+- Auto-detect YouTube/Vimeo (iframe) vs directe MP4 (video tag)
+
+### Live getest
+- `video-play-btn` renders ✓
+- Placeholder toont "Binnenkort beschikbaar" badge wanneer URL leeg ✓
+
+### Gebruiksinstructie
+User kan zijn video toevoegen door 1 regel te wijzigen:
+```js
+const DEMO_VIDEO_URL = "https://www.youtube.com/embed/xyz123";
+```
+
+### Bestand
+- `/app/frontend/src/components/vastgoed-kiosk/MarketingLanding.jsx`
+
+---
+
 ## Sprint 81 (29 apr 2026) — Landing redesign: Cream + Bold Orange accents
 
 ### Verzoek

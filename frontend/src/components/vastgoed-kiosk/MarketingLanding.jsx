@@ -3,8 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import {
   Menu, X, ArrowRight, Check, Building2, Receipt, Users, Wallet, Wifi,
   Shield, Zap, CreditCard, Download, Sparkles, Globe, ScanFace, Phone,
-  Mail, MapPin, MessageCircle, Star, ChevronRight, Cpu
+  Mail, MapPin, MessageCircle, Star, ChevronRight, Cpu, Play, Clock
 } from 'lucide-react';
+
+// =========================================================================
+// VIDEO DEMO — vul hieronder je video URL in zodra je een screencast hebt.
+// Ondersteunt YouTube (https://www.youtube.com/embed/VIDEO_ID), Vimeo embed,
+// of directe MP4 URL (bv. https://mijn-cdn.com/demo.mp4).
+// Laat leeg "" om een "Binnenkort beschikbaar" badge te tonen.
+// =========================================================================
+const DEMO_VIDEO_URL = ''; // voorbeeld: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+const DEMO_VIDEO_DURATION = '15 sec'; // toon-duur bij play-knop
 
 // =========================================================================
 // Design — Light Cream with Bold Orange accents
@@ -269,6 +278,161 @@ function StatsStrip() {
           ))}
         </div>
       </div>
+    </section>
+  );
+}
+
+// ================= Video Demo Section ==============================
+function VideoModal({ url, onClose }) {
+  useEffect(() => {
+    const esc = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', esc);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', esc);
+      document.body.style.overflow = '';
+    };
+  }, [onClose]);
+
+  const isYoutube = /youtube\.com|youtu\.be/.test(url);
+  const isVimeo = /vimeo\.com/.test(url);
+  const isIframe = isYoutube || isVimeo;
+
+  return (
+    <div
+      onClick={onClose}
+      data-testid="video-modal"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-5xl aspect-video rounded-2xl overflow-hidden bg-black shadow-2xl border border-white/10"
+      >
+        <button
+          onClick={onClose}
+          data-testid="video-modal-close"
+          className="absolute -top-12 right-0 text-white/70 hover:text-white flex items-center gap-1.5 text-sm font-semibold"
+        >
+          <X className="w-5 h-5" /> Sluiten
+        </button>
+        {isIframe ? (
+          <iframe
+            src={`${url}${url.includes('?') ? '&' : '?'}autoplay=1`}
+            title="SuriRent demo"
+            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+            allowFullScreen
+            className="w-full h-full"
+          />
+        ) : (
+          <video src={url} autoPlay controls className="w-full h-full" />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function VideoDemoSection() {
+  const [open, setOpen] = useState(false);
+  const hasVideo = Boolean(DEMO_VIDEO_URL);
+
+  return (
+    <section className="relative py-20 md:py-28 bg-[#FFFBF5] overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,rgba(255,92,0,0.08),transparent_60%)] pointer-events-none" />
+      <Noise opacity={0.15} />
+
+      <div className="relative max-w-6xl mx-auto px-5 sm:px-8">
+        <div className="max-w-2xl mx-auto text-center mb-10 md:mb-14">
+          <p className="text-xs md:text-sm font-black uppercase tracking-[0.2em] text-[#FF5C00] mb-4">Demo</p>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-slate-900 mb-5">
+            Zie SuriRent <span className="text-slate-400">in actie.</span>
+          </h2>
+          <p className="text-base md:text-lg text-slate-600 leading-relaxed">
+            Bekijk in 15 seconden hoe een huurder betaalt aan de Kiosk terminal en hoe jij het beheert vanaf je telefoon.
+          </p>
+        </div>
+
+        {/* Video poster with play button */}
+        <div className="relative group max-w-4xl mx-auto">
+          {/* Ambient glow */}
+          <div className="absolute -inset-6 bg-gradient-to-br from-[#FF5C00]/30 via-amber-300/20 to-transparent blur-3xl rounded-full pointer-events-none" />
+
+          <button
+            onClick={() => hasVideo && setOpen(true)}
+            disabled={!hasVideo}
+            data-testid="video-play-btn"
+            className="relative block w-full aspect-video rounded-3xl overflow-hidden bg-gradient-to-br from-[#FF8A3D] via-[#FF5C00] to-[#C74600] shadow-[0_30px_70px_-15px_rgba(255,92,0,0.55)] group-hover:shadow-[0_40px_90px_-15px_rgba(255,92,0,0.7)] transition-all group-hover:-translate-y-1 disabled:cursor-not-allowed"
+          >
+            <Noise opacity={0.12} />
+
+            {/* Decorative mockup behind */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-[85%] max-w-md bg-white rounded-2xl p-5 sm:p-6 shadow-2xl opacity-95 transform -rotate-2">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#FF8A3D] to-[#C74600] p-1.5 shadow-lg">
+                    <img src="/kiosk-icons/kiosk-512.png" alt="logo" className="w-full h-full object-contain" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-sm font-black text-slate-900">Selfservice Terminal</p>
+                    <p className="text-[11px] text-slate-500">Appartement A1</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="bg-gradient-to-r from-[#FFF4EC] to-[#FFE6D3] border border-[#FF5C00]/30 rounded-lg p-2.5 flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-[#C74600]">Huur maart 2026</span>
+                    <span className="text-sm font-black text-slate-900">SRD 5.000</span>
+                  </div>
+                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-2.5 flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-600">Kwitantie</span>
+                    <span className="font-mono text-[11px] font-black text-slate-900">KW2026-00127</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Dark overlay for contrast */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/30 to-black/50" />
+
+            {/* Center play / coming-soon */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center z-10">
+              {hasVideo ? (
+                <>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-white/30 rounded-full blur-xl animate-pulse" />
+                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
+                      <Play className="w-8 h-8 sm:w-10 sm:h-10 text-[#FF5C00] ml-1" fill="#FF5C00" />
+                    </div>
+                  </div>
+                  <div className="mt-5 flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full">
+                    <Clock className="w-3.5 h-3.5 text-white" />
+                    <span className="text-xs font-bold text-white tracking-wider">{DEMO_VIDEO_DURATION} · Bekijk demo</span>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-2xl">
+                    <Play className="w-8 h-8 sm:w-10 sm:h-10 text-[#FF5C00] ml-1" fill="#FF5C00" />
+                  </div>
+                  <div className="mt-5 flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-full">
+                    <span className="text-xs font-bold text-white tracking-wider">Binnenkort beschikbaar</span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Corner decoration */}
+            <div className="absolute top-5 left-5 flex items-center gap-2 z-10">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500/80" />
+              <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/80" />
+              <div className="w-2.5 h-2.5 rounded-full bg-green-500/80" />
+            </div>
+            <div className="absolute bottom-5 right-5 px-3 py-1.5 bg-white/20 backdrop-blur-md border border-white/30 rounded-full z-10">
+              <span className="text-[10px] font-bold text-white tracking-[0.2em] uppercase">SuriRent · Kiosk Demo</span>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      {open && hasVideo && <VideoModal url={DEMO_VIDEO_URL} onClose={() => setOpen(false)} />}
     </section>
   );
 }
@@ -651,6 +815,7 @@ export default function MarketingLanding() {
       <TopNav onLogin={goLogin} onRegister={goRegister} />
       <Hero onLogin={goLogin} onRegister={goRegister} />
       <StatsStrip />
+      <VideoDemoSection />
       <FeaturesSection />
       <PricingSection onRegister={goRegister} />
       <CTASection onRegister={goRegister} />
