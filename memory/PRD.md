@@ -1,5 +1,45 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 75 (29 apr 2026) — Pause auto-billing per huurder
+
+### Probleem gevonden
+Gebruiker meldde: "Maand-overzicht staat goed, alleen Huurmaand in Huurders-tab niet." Oorzaak: de `list_tenants` endpoint heeft een **auto-billing engine** die elke pagina-refresh nieuwe maanden toevoegt wanneer `billing_day` verstreken is. Dus elke handmatige correctie van `rent_billed_through` of `outstanding_rent` werd binnen 1 seconde ongedaan gemaakt bij de volgende refresh.
+
+### Implementatie
+
+**Backend** — `/app/backend/routers/kiosk/admin.py`:
+- Nieuw veld op tenant: `pause_auto_billing: bool` (default false)
+- `list_tenants` auto-billing engine: `if is_active_status and not auto_billing_paused and monthly_rent > 0:` — skip engine voor gepauzeerde huurders
+- `pause_auto_billing` veld toegevoegd aan tenant-response
+- `payment-overview` endpoint exposed `pause_auto_billing`
+- Nieuw endpoint **`PUT /admin/tenants/{id}/pause-auto-billing`** met `TenantPauseAutoBillingUpdate` model
+
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/admin/MonthOverviewModal.jsx`:
+- Nieuwe `PauseAutoBillingToggle` component tussen "Gefactureerd t/m" en "Saldi handmatig bewerken"
+- Visueel: grijs/slate als actief, rood/rose als gepauzeerd
+- Confirm-dialog bij pauzeren, direct toggle bij hervatten
+- Na toggle: loadOverview + loadAudit + onRefresh → Huurders-tabel bijgewerkt
+
+### Live getest
+- `PUT /pause-auto-billing {pause_auto_billing: true}` → 200, veld zichtbaar in tenants-list ✓
+- `PUT /pause-auto-billing {pause_auto_billing: false}` → 200 ✓
+- Frontend: pause-row + pause-btn + manual-toggle + billed-btn alle 4 aanwezig ✓
+
+### Workflow voor DB-herstel (finaal)
+1. Huurders → 📅 kalender-icoon
+2. **Eerst**: klik "Pauzeer" → auto-billing uit (rood)
+3. Corrigeer `Gefactureerd t/m` → Bewerk
+4. Corrigeer Saldi (Huur, Service, Boetes, Internet) → Opslaan
+5. Tab "Audit kwitanties" → corrigeer `covered_months` per kwitantie
+6. Sluit modal → verifieer in Huurders-tabel
+7. **Wanneer je klaar bent**: open modal opnieuw → klik "Hervat" → auto-billing weer aan (grijs)
+
+### Bestanden
+- `/app/backend/routers/kiosk/admin.py` — pause check + veld + endpoint
+- `/app/frontend/src/components/vastgoed-kiosk/admin/MonthOverviewModal.jsx` — PauseAutoBillingToggle component
+
+---
+
 ## Sprint 74 (29 apr 2026) — Handmatige saldo-editor per huurder
 
 ### Verzoek

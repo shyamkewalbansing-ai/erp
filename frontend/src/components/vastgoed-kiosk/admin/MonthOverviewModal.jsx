@@ -9,6 +9,71 @@ function formatNL(amount, currency = 'SRD') {
   return `${currency} ${n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+function PauseAutoBillingToggle({ tenantId, paused, token, onChanged }) {
+  const [saving, setSaving] = useState(false);
+  const [local, setLocal] = useState(Boolean(paused));
+
+  useEffect(() => {
+    setLocal(Boolean(paused));
+  }, [paused, tenantId]);
+
+  const handleToggle = async () => {
+    const next = !local;
+    if (next && !window.confirm(
+      'Auto-billing pauzeren voor deze huurder?\n\n' +
+      'Het systeem zal GEEN nieuwe maanden automatisch factureren totdat je weer hervat.\n' +
+      'Gebruik dit tijdens correctie van historische data.'
+    )) return;
+    setSaving(true);
+    try {
+      await axios.put(
+        `${API}/admin/tenants/${tenantId}/pause-auto-billing`,
+        { pause_auto_billing: next },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setLocal(next);
+      toast.success(next ? 'Auto-billing gepauzeerd' : 'Auto-billing hervat');
+      if (onChanged) await onChanged();
+    } catch (e) {
+      toast.error('Bijwerken mislukt: ' + (e?.response?.data?.detail || e.message));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className={`border rounded-xl p-3 flex items-center justify-between gap-2 ${
+        local ? 'bg-rose-50 border-rose-300' : 'bg-slate-50 border-slate-200'
+      }`}
+      data-testid="pause-auto-billing-row"
+    >
+      <div className="min-w-0">
+        <p className={`text-[10px] uppercase tracking-wider font-semibold ${local ? 'text-rose-700' : 'text-slate-600'}`}>
+          Auto-billing {local ? 'GEPAUZEERD' : 'actief'}
+        </p>
+        <p className={`text-[11px] mt-0.5 leading-snug ${local ? 'text-rose-900' : 'text-slate-500'}`}>
+          {local
+            ? 'Systeem factureert geen nieuwe maanden automatisch. Je handmatige correcties blijven staan.'
+            : 'Systeem voegt nieuwe maanden automatisch toe op basis van billing_day.'}
+        </p>
+      </div>
+      <button
+        onClick={handleToggle}
+        disabled={saving}
+        data-testid="pause-auto-billing-toggle"
+        className={`px-3 py-1.5 rounded-lg text-xs font-bold disabled:opacity-50 flex-shrink-0 ${
+          local
+            ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+            : 'bg-rose-600 text-white hover:bg-rose-700'
+        }`}
+      >
+        {saving ? '…' : local ? 'Hervat' : 'Pauzeer'}
+      </button>
+    </div>
+  );
+}
+
 function ManualBalanceSection({ tenant, token, currency, onChanged }) {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -389,6 +454,16 @@ export default function MonthOverviewModal({ tenant, token, onClose, onRefresh }
           </div>
 
           {/* Manual balance editor */}
+          <PauseAutoBillingToggle
+            tenantId={tenant.tenant_id}
+            paused={data.pause_auto_billing}
+            token={token}
+            onChanged={async () => {
+              await Promise.all([loadOverview(), loadAudit()]);
+              if (onRefresh) onRefresh();
+            }}
+          />
+
           <ManualBalanceSection
             tenant={tenant}
             token={token}

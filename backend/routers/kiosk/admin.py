@@ -505,8 +505,11 @@ async def list_tenants(company: dict = Depends(get_current_company)):
         # Alleen auto-billing voor huurders met EXPLICIETE status="active" — anders niet aanraken
         # om bestaande achterstand-data niet dubbel te tellen
         is_active_status = t.get("status") == "active"
+        # Handmatige pauze: als de beheerder historische data aan het corrigeren is, voorkom
+        # dat de auto-billing engine nieuwe maanden erbij telt tijdens de Huurders-fetch.
+        auto_billing_paused = bool(t.get("pause_auto_billing", False))
 
-        if is_active_status and monthly_rent > 0:
+        if is_active_status and not auto_billing_paused and monthly_rent > 0:
             if not billed_through:
                 billed_through = current_month
                 updates["rent_billed_through"] = current_month
@@ -699,6 +702,7 @@ async def list_tenants(company: dict = Depends(get_current_company)):
             "id_card_number": t.get("id_card_number"),
             "id_card_name": t.get("id_card_name"),
             "id_card_dob": t.get("id_card_dob"),
+            "pause_auto_billing": bool(t.get("pause_auto_billing", False)),
         })
     
     return result
@@ -849,6 +853,7 @@ async def get_tenant_payment_overview(tenant_id: str, company: dict = Depends(ge
         "currency": (tenant.get("currency") or "SRD").upper(),
         "rent_billed_through": billed_through,
         "outstanding_rent": float(tenant.get("outstanding_rent", 0) or 0),
+        "pause_auto_billing": bool(tenant.get("pause_auto_billing", False)),
         "months": months,
         "summary": {
             "total_paid": total_paid,
@@ -951,6 +956,25 @@ class TenantManualBalanceUpdate(BaseModel):
     service_costs: Optional[float] = None
     fines: Optional[float] = None
     internet_outstanding: Optional[float] = None
+
+
+class TenantPauseAutoBillingUpdate(BaseModel):
+    pause_auto_billing: bool
+
+
+@router.put("/admin/tenants/{tenant_id}/pause-auto-billing")
+async def update_tenant_pause_auto_billing(tenant_id: str, data: TenantPauseAutoBillingUpdate, company: dict = Depends(get_current_company)):
+    """Pauzeer of herstart auto-billing voor één huurder.
+    Wanneer True: de auto-billing engine slaat deze huurder over bij list_tenants,
+    zodat handmatige correcties (billed_through, outstanding) niet worden overschreven.
+    """
+    res = await db.kiosk_tenants.update_one(
+        {"tenant_id": tenant_id, "company_id": company["company_id"]},
+        {"$set": {"pause_auto_billing": bool(data.pause_auto_billing)}}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Huurder niet gevonden")
+    return {"message": "Auto-billing pauze bijgewerkt", "pause_auto_billing": bool(data.pause_auto_billing)}
 
 
 @router.put("/admin/tenants/{tenant_id}/manual-balance")
