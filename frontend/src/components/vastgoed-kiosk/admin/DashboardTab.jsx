@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { 
-  Users, CreditCard, Home, DollarSign, AlertTriangle, FileText, Wifi, Clock
+  Users, CreditCard, Home, DollarSign, AlertTriangle, FileText, Wifi, Clock, Download
 } from 'lucide-react';
 
-function DashboardTab({ dashboard, payments, leases, formatSRD }) {
+function DashboardTab({ dashboard, payments, leases, formatSRD, company }) {
   // Suriname time (UTC-3) — hooks must be before any conditional return
   const [srTime, setSrTime] = useState('');
   useEffect(() => {
@@ -48,15 +48,130 @@ function DashboardTab({ dashboard, payments, leases, formatSRD }) {
 
   const recentPayments = (payments || []).filter(p => p.status !== 'rejected').slice(0, 6);
 
+  const handleExportPDF = () => {
+    const typeLabels = { rent:'Huur', monthly_rent:'Huur', partial_rent:'Deelbetaling', service_costs:'Service', fines:'Boetes', fine:'Boetes', deposit:'Borg', internet:'Internet' };
+    const companyName = company?.name || company?.company_name || 'SuriRent N.V.';
+    const generatedAt = new Date().toLocaleString('nl-NL', { timeZone: 'America/Paramaribo', dateStyle: 'full', timeStyle: 'short' });
+
+    const statRows = stats.map((s) => `
+      <tr>
+        <td class="label">${s.label}</td>
+        <td class="value">${s.value}</td>
+      </tr>`).join('');
+
+    const paymentRows = recentPayments.map((p) => `
+      <tr>
+        <td>${p.created_at ? new Date(p.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '-'}</td>
+        <td><strong>${p.tenant_name || '-'}</strong></td>
+        <td>${p.apartment_number || '-'}</td>
+        <td>${typeLabels[p.payment_type] || (p.payment_type || '').replace('_', ' ')}</td>
+        <td>${(p.covered_months || []).join(', ') || '-'}</td>
+        <td>${p.processed_by || '-'}</td>
+        <td class="amount">${formatSRD(p.amount)}</td>
+        <td class="receipt">${p.kwitantie_nummer || '-'}</td>
+      </tr>`).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<title>Financieel Overzicht — ${companyName}</title>
+<style>
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 32px 28px; color: #1e293b; background: #fff; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #FF5C00; padding-bottom: 16px; margin-bottom: 24px; }
+  .header h1 { font-size: 24px; margin: 0; color: #0f172a; letter-spacing: -0.5px; }
+  .header .subtitle { color: #FF5C00; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+  .header .meta { text-align: right; font-size: 11px; color: #64748b; }
+  .header .meta strong { color: #0f172a; }
+  h2 { font-size: 15px; color: #0f172a; margin: 24px 0 10px; padding-bottom: 6px; border-bottom: 1px solid #e2e8f0; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th { text-align: left; background: #FFF4EC; color: #C74600; padding: 8px 10px; border-bottom: 2px solid #FF5C00; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+  td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafbfc; }
+  .stats td.label { color: #64748b; width: 60%; }
+  .stats td.value { font-weight: 700; color: #0f172a; text-align: right; }
+  .amount { text-align: right; font-weight: 700; color: #0f172a; }
+  .receipt { font-family: monospace; color: #64748b; font-size: 10px; text-align: right; }
+  .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; display: flex; justify-content: space-between; }
+  .badge { display: inline-block; background: #FFF4EC; color: #C74600; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+  @media print { body { padding: 16px; } }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>${companyName}</h1>
+      <div class="subtitle">Financieel Overzicht</div>
+    </div>
+    <div class="meta">
+      <div><strong>${generatedAt}</strong></div>
+      <div>Suriname (UTC-3)</div>
+    </div>
+  </div>
+
+  <h2>Kerncijfers</h2>
+  <table class="stats">
+    <tbody>${statRows}</tbody>
+  </table>
+
+  <h2>Recente betalingen <span class="badge">${recentPayments.length} records</span></h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Datum</th>
+        <th>Huurder</th>
+        <th>Appt</th>
+        <th>Type</th>
+        <th>Periode</th>
+        <th>Ontvangen door</th>
+        <th style="text-align:right">Bedrag</th>
+        <th style="text-align:right">Kwitantie</th>
+      </tr>
+    </thead>
+    <tbody>${paymentRows || '<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:20px">Geen betalingen.</td></tr>'}</tbody>
+  </table>
+
+  <div class="footer">
+    <div>Gegenereerd via SuriRent · ${companyName}</div>
+    <div>Pagina 1 / 1</div>
+  </div>
+
+  <script>window.addEventListener('load', () => setTimeout(() => window.print(), 300));</script>
+</body>
+</html>`;
+
+    const w = window.open('', '_blank', 'width=1000,height=800');
+    if (!w) {
+      alert('Pop-up geblokkeerd. Sta pop-ups toe om het PDF rapport te openen.');
+      return;
+    }
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  };
+
   return (
     <div>
       {/* Lease warnings removed from dashboard - status shown in Huurovereenkomsten tab */}
 
       {/* Stat Cards */}
       <div className="bg-white rounded-xl border border-slate-200 mb-6">
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+        <div className="p-4 border-b border-slate-200 flex items-center justify-between gap-3">
           <h2 className="font-semibold text-slate-900">Overzicht</h2>
-          <span className="text-sm text-slate-500">{srTime}</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleExportPDF}
+              data-testid="export-financial-pdf-btn"
+              title="Financieel overzicht als PDF opslaan"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg shadow-sm transition active:scale-95"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">PDF</span>
+              <span className="sm:hidden">PDF</span>
+            </button>
+            <span className="text-sm text-slate-500 hidden sm:inline">{srTime}</span>
+          </div>
         </div>
         {/* Mobile: grid cards */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:hidden gap-px bg-slate-100">

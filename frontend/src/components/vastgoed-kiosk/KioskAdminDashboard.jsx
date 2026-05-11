@@ -317,7 +317,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
       {/* Scrollable content area */}
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-contain px-3 sm:px-4 lg:px-8 py-3 sm:py-4 pb-20 md:pb-6" style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
 
-        {activeTab === 'dashboard' && <DashboardTab dashboard={dashboard} payments={payments} leases={leases} formatSRD={formatSRD} />}
+        {activeTab === 'dashboard' && <DashboardTab dashboard={dashboard} payments={payments} leases={leases} formatSRD={formatSRD} company={company} />}
 
         {activeTab === 'tenants' && (
           <TenantsTab 

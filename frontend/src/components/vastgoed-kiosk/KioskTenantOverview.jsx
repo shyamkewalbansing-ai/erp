@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, ArrowRight, User, CreditCard, Wallet, FileText, CheckCircle, Home, Clock, X, Wifi, Printer } from 'lucide-react';
+import { ArrowLeft, ArrowRight, User, CreditCard, Wallet, FileText, CheckCircle, Home, Clock, X, Wifi, Printer, Download } from 'lucide-react';
 import axios from 'axios';
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
@@ -63,6 +63,138 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
     { label: 'Internet', value: tenant.internet_outstanding || 0, icon: Wifi },
   ];
 
+  const handleExportPDF = async () => {
+    // Always fetch fresh payment history for the PDF
+    let history = payments;
+    if (!history || history.length === 0) {
+      try {
+        const res = await axios.get(`${API}/public/${companyId}/tenant/${tenant.tenant_id}/payments`);
+        history = res.data || [];
+      } catch { history = []; }
+    }
+
+    const generatedAt = new Date().toLocaleString('nl-NL', { timeZone: 'America/Paramaribo', dateStyle: 'full', timeStyle: 'short' });
+    const overdueStr = (tenant.overdue_months && tenant.overdue_months.length) ? tenant.overdue_months.join(', ') : '—';
+
+    const itemRows = items.map((it) => `
+      <tr>
+        <td class="label">${it.label}</td>
+        <td class="value">${fmt(it.value)}</td>
+      </tr>`).join('');
+
+    const historyRows = (history || []).slice(0, 30).map((p) => {
+      const d = p.created_at ? new Date(p.created_at).toLocaleDateString('nl-NL', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+      const type = TYPE_LABELS[p.payment_type] || (p.payment_type || '').replace('_', ' ');
+      const periode = (p.covered_months || []).join(', ') || '-';
+      const ontvangen = p.processed_by || '-';
+      return `
+      <tr>
+        <td>${d}</td>
+        <td>${type}</td>
+        <td>${periode}</td>
+        <td>${ontvangen}</td>
+        <td class="amount">${formatMoney(p.amount, p.currency || cur)}</td>
+        <td class="receipt">${p.kwitantie_nummer || '-'}</td>
+      </tr>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<title>Financieel Overzicht — ${tenant.name}</title>
+<style>
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 32px 28px; color: #1e293b; background: #fff; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #FF5C00; padding-bottom: 16px; margin-bottom: 22px; }
+  .header h1 { font-size: 22px; margin: 0; color: #0f172a; letter-spacing: -0.5px; }
+  .header .subtitle { color: #FF5C00; font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+  .header .meta { text-align: right; font-size: 11px; color: #64748b; }
+  .header .meta strong { color: #0f172a; }
+  .tenant-card { background: #0f172a; color: #fff; border-radius: 12px; padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .tenant-card .name { font-size: 16px; font-weight: 700; }
+  .tenant-card .meta { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+  .tenant-card .total-label { font-size: 10px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1.5px; }
+  .tenant-card .total-amount { font-size: 22px; font-weight: 800; color: #FF8A3D; }
+  h2 { font-size: 14px; color: #0f172a; margin: 24px 0 10px; padding-bottom: 6px; border-bottom: 1px solid #e2e8f0; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  th { text-align: left; background: #FFF4EC; color: #C74600; padding: 8px 10px; border-bottom: 2px solid #FF5C00; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+  td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: top; }
+  tr:nth-child(even) td { background: #fafbfc; }
+  .items td.label { color: #64748b; width: 65%; }
+  .items td.value { font-weight: 700; color: #0f172a; text-align: right; }
+  .amount { text-align: right; font-weight: 700; color: #0f172a; }
+  .receipt { font-family: monospace; color: #64748b; font-size: 10px; text-align: right; }
+  .overdue-banner { background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 10px 14px; border-radius: 8px; font-size: 11px; margin-bottom: 16px; }
+  .overdue-banner strong { color: #7f1d1d; }
+  .footer { margin-top: 32px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; display: flex; justify-content: space-between; }
+  @media print { body { padding: 16px; } }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <h1>Financieel Overzicht</h1>
+      <div class="subtitle">Huurder rapport</div>
+    </div>
+    <div class="meta">
+      <div><strong>${generatedAt}</strong></div>
+      <div>Suriname (UTC-3)</div>
+    </div>
+  </div>
+
+  <div class="tenant-card">
+    <div>
+      <div class="name">${tenant.name}</div>
+      <div class="meta">Appartement ${tenant.apartment_number || '-'} · ${tenant.tenant_code || ''}</div>
+    </div>
+    <div style="text-align:right">
+      <div class="total-label">Totaal openstaand</div>
+      <div class="total-amount">${fmt(total)}</div>
+    </div>
+  </div>
+
+  ${overdueStr !== '—' ? `<div class="overdue-banner"><strong>Achterstand:</strong> ${overdueStr}</div>` : ''}
+
+  <h2>Saldi</h2>
+  <table class="items">
+    <tbody>${itemRows}</tbody>
+  </table>
+
+  <h2>Betalingsgeschiedenis (laatste 30)</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Datum</th>
+        <th>Type</th>
+        <th>Periode</th>
+        <th>Ontvangen door</th>
+        <th style="text-align:right">Bedrag</th>
+        <th style="text-align:right">Kwitantie</th>
+      </tr>
+    </thead>
+    <tbody>${historyRows || '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">Geen betalingen geregistreerd.</td></tr>'}</tbody>
+  </table>
+
+  <div class="footer">
+    <div>${tenant.name} · Appartement ${tenant.apartment_number || '-'}</div>
+    <div>Gegenereerd via SuriRent Kiosk</div>
+  </div>
+
+  <script>window.addEventListener('load', () => setTimeout(() => window.print(), 300));</script>
+</body>
+</html>`;
+
+    const w = window.open('', '_blank', 'width=1000,height=800');
+    if (!w) {
+      alert('Pop-up geblokkeerd. Sta pop-ups toe om het PDF rapport te openen.');
+      return;
+    }
+    w.document.open();
+    w.document.write(html);
+    w.document.close();
+  };
+
   if (variant === 'huurder') {
     return (
       <div className="h-full bg-orange-500 flex flex-col" style={{ padding: '1.5vh 3vw 0' }}>
@@ -92,9 +224,21 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
                   <p className="kiosk-small opacity-60">Appartement {tenant.apartment_number} · {tenant.tenant_code}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="kiosk-small opacity-60">Totaal openstaand</p>
-                <p className="kiosk-amount-md whitespace-nowrap">{fmt(total)}</p>
+              <div className="text-right flex items-center" style={{ gap: 'clamp(8px, 1vw, 14px)' }}>
+                <button
+                  onClick={handleExportPDF}
+                  data-testid="kiosk-export-pdf-btn-huurder"
+                  title="Financieel overzicht opslaan als PDF"
+                  className="inline-flex items-center bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg transition active:scale-95"
+                  style={{ gap: 'clamp(4px, 0.4vw, 8px)', padding: 'clamp(6px, 0.9vh, 12px) clamp(10px, 1.2vw, 18px)', fontSize: 'clamp(11px, 1.3vh, 14px)' }}
+                >
+                  <Download style={{ width: '1.8vh', height: '1.8vh' }} />
+                  <span>PDF</span>
+                </button>
+                <div>
+                  <p className="kiosk-small opacity-60">Totaal openstaand</p>
+                  <p className="kiosk-amount-md whitespace-nowrap">{fmt(total)}</p>
+                </div>
               </div>
             </div>
 
@@ -225,8 +369,18 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
       <div className="flex-1 flex flex-col md:flex-row gap-3 sm:gap-4 min-h-0 overflow-auto pb-2">
         {/* Left panel - Financial overview */}
         <div className="kiosk-card flex-none md:flex-[3] flex flex-col min-w-0">
-          <div className="p-3 sm:p-4 border-b border-slate-100">
+          <div className="p-3 sm:p-4 border-b border-slate-100 flex items-center justify-between gap-2">
             <span className="text-sm sm:text-base font-semibold text-slate-800">Financieel overzicht</span>
+            <button
+              onClick={handleExportPDF}
+              data-testid="kiosk-export-pdf-btn"
+              title="Financieel overzicht opslaan als PDF"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg shadow-sm transition active:scale-95"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">PDF</span>
+              <span className="sm:hidden">PDF</span>
+            </button>
           </div>
           <div className="flex-1 flex flex-col justify-center">
             {items.map((item, i) => (

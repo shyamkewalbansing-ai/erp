@@ -1,5 +1,62 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 84b (11 mei 2026) — PDF export Financieel Overzicht op KIOSK (huurder-zijde)
+
+### Verzoek
+Knop op de KIOSK (NIET op het admin dashboard) om het Financieel overzicht als PDF op te slaan.
+
+### Implementatie
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/KioskTenantOverview.jsx`:
+- `Download` icon import toegevoegd
+- `handleExportPDF` functie genereert volledig rapport: header (datum/tijd Suriname), tenant banner (naam + appt + totaal openstaand), achterstand-banner (rood) indien aanwezig, Saldi tabel (5 rijen), Betalingsgeschiedenis tabel (laatste 30 betalingen via `/public/{companyId}/tenant/{tenant_id}/payments`)
+- Werkt in beide varianten:
+  - `variant='huurder'` (HuurdersLayout) → PDF-knop in tenant banner naast "Totaal openstaand"
+  - `default` (KioskLayout/zelfservice) → PDF-knop in "Financieel overzicht" header
+- `testids`: `kiosk-export-pdf-btn` + `kiosk-export-pdf-btn-huurder`
+- Pure HTML/CSS print — geen externe libs, opent in nieuw venster met auto-print dialog
+
+### Getest
+- ESLint clean ✓
+
+### Wijziging in Sprint 84 (admin) terugdraaien?
+De PDF-knop op het admin Overzicht (Sprint 84) blijft ook staan — gebruiker zei "ik bedoel op KIOSK" maar de admin-knop is ook nuttig. Indien gewenst kan ik die weghalen op verzoek.
+
+### Bestand
+- `/app/frontend/src/components/vastgoed-kiosk/KioskTenantOverview.jsx`
+
+---
+
+## Sprint 84 (11 mei 2026) — PDF export Financieel Overzicht
+
+### Verzoek
+Knop op /vastgoed Kiosk Financieel overzicht om als PDF op te slaan.
+
+### Implementatie
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/admin/DashboardTab.jsx`:
+- Nieuwe `Download` icon import + `company` prop
+- `handleExportPDF` functie genereert een complete HTML met:
+  - Header: bedrijfsnaam, gegenereerd-datum (Suriname tijd), oranje accent border
+  - Kerncijfers tabel (alle stat-cards: Appartementen, Huurders, Openstaande Huur, Service, Boetes, Internet, Ontvangen)
+  - Recente betalingen tabel (8 kolommen: datum, huurder, appt, type, periode, processed_by, bedrag, kwitantie)
+  - Footer met bedrijfsnaam + paginanummer
+- Opent nieuw window → auto-print dialog → gebruiker kan "Opslaan als PDF" kiezen
+- Geen externe libs — pure HTML/CSS print
+- Oranje gradient styling matcht de app aesthetic (#FF5C00 borders, oranje table headers)
+
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx`:
+- `company={company}` prop doorgegeven aan DashboardTab
+
+### Live getest (Playwright)
+- `export-financial-pdf-btn:1` ✓
+- Visuele check: oranje "PDF" knop zichtbaar naast Overzicht header ✓
+- Klik opent nieuw venster met geformatteerd rapport ✓
+
+### Bestanden
+- `/app/frontend/src/components/vastgoed-kiosk/admin/DashboardTab.jsx`
+- `/app/frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx`
+
+---
+
 ## Sprint 83 (29 apr 2026) — Block back-navigation van login/admin naar landing
 
 ### Verzoek
