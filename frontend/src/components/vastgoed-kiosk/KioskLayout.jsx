@@ -173,7 +173,7 @@ export default function KioskLayout() {
           <p className="text-sm text-slate-500 mb-2">{companyName}</p>
           <p className="text-sm text-slate-400 mb-6">Uw abonnement is verlopen. Neem contact op met de beheerder.</p>
           <button 
-            onClick={() => navigate('/vastgoed')}
+            onClick={() => navigate('/vastgoed/login', { replace: true })}
             className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl transition shadow-lg shadow-orange-500/25"
           >
             Terug naar Home
@@ -193,7 +193,7 @@ export default function KioskLayout() {
           <h1 className="text-xl font-bold text-slate-900 mb-2">Bedrijf niet gevonden</h1>
           <p className="text-sm text-slate-400 mb-6">Deze kiosk is niet geconfigureerd.</p>
           <button 
-            onClick={() => navigate('/vastgoed')}
+            onClick={() => navigate('/vastgoed/login', { replace: true })}
             className="w-full px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-2xl transition shadow-lg shadow-orange-500/25"
           >
             Terug naar Home
@@ -224,7 +224,7 @@ export default function KioskLayout() {
               setPinVerified(true);
               goTo('welcome');
             }}
-            onBack={() => navigate('/vastgoed')}
+            onBack={() => navigate('/vastgoed/login', { replace: true })}
           />
         );
       case 'pin':
@@ -243,7 +243,7 @@ export default function KioskLayout() {
               setKioskEmployee(emp);
               try { sessionStorage.setItem(`kiosk_employee_${companyId}`, JSON.stringify(emp)); } catch { /* noop */ }
             }}
-            onBack={() => navigate('/vastgoed')}
+            onBack={() => navigate('/vastgoed/login', { replace: true })}
           />
         );
       case 'welcome':

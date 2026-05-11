@@ -804,8 +804,8 @@ export default function MarketingLanding() {
     };
   }, []);
 
-  const goLogin = () => navigate('/vastgoed/login');
-  const goRegister = () => navigate('/vastgoed/login?register=1');
+  const goLogin = () => navigate('/vastgoed/login', { replace: true });
+  const goRegister = () => navigate('/vastgoed/login?register=1', { replace: true });
 
   return (
     <div

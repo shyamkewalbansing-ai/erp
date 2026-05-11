@@ -12,7 +12,7 @@ export default function KioskWelcome({ onStart, onAdmin, companyName, companyId,
       Object.keys(sessionStorage).forEach(key => {
         if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
       });
-      navigate('/vastgoed');
+      navigate('/vastgoed/login', { replace: true });
     }
   };
 

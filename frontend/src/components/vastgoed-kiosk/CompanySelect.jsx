@@ -256,6 +256,19 @@ function PinLandingScreen({ onSuccess, onPassword, onRegister, onSuperadmin }) {
 
 function KioskLoginScreen({ onSuccess }) {
   const navigate = useNavigate();
+
+  // Trap browser back button — gebruiker mag niet terug naar landing page
+  useEffect(() => {
+    // Push a sentinel entry so the FIRST back press is "consumed"
+    window.history.pushState(null, '', window.location.href);
+    const onPopState = () => {
+      // Always re-push so back button stays on this page
+      window.history.pushState(null, '', window.location.href);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
   const [view, setView] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);

@@ -30,6 +30,17 @@ const API = `${process.env.REACT_APP_BACKEND_URL}/api/kiosk`;
 
 export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthenticated = false, onBack, onLock, kioskEmployee: kioskEmployeeProp }) {
   const navigate = useNavigate();
+
+  // Trap browser back button — beheerder mag niet terug naar marketing landing
+  useEffect(() => {
+    window.history.pushState(null, '', window.location.href);
+    const onPopState = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
   // Fallback to localStorage for direct /vastgoed/admin access via PIN keypad
   const kioskEmployee = kioskEmployeeProp || (() => {
     try {
@@ -71,7 +82,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     if (onBack) {
       onBack();
     } else {
-      navigate('/vastgoed');
+      navigate('/vastgoed/login', { replace: true });
     }
   };
 
@@ -84,7 +95,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     } else if (company?.company_id) {
       navigate(`/vastgoed/${company.company_id}`);
     } else {
-      navigate('/vastgoed');
+      navigate('/vastgoed/login', { replace: true });
     }
   };
 
@@ -97,14 +108,14 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
       Object.keys(sessionStorage).forEach(key => {
         if (key.startsWith('kiosk_pin_verified_')) sessionStorage.removeItem(key);
       });
-      navigate('/vastgoed');
+      navigate('/vastgoed/login', { replace: true });
     }
   };
 
   useEffect(() => {
     if (!token) {
       if (!pinAuthenticated) {
-        navigate('/vastgoed');
+        navigate('/vastgoed/login', { replace: true });
         return;
       }
     }
@@ -129,7 +140,7 @@ export default function KioskAdminDashboard({ companyId: propCompanyId, pinAuthe
     } catch (err) {
       if (err.response?.status === 401) {
         localStorage.removeItem('kiosk_token');
-        navigate('/vastgoed');
+        navigate('/vastgoed/login', { replace: true });
       }
     } finally {
       setLoading(false);

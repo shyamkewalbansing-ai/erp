@@ -1,5 +1,35 @@
 # Vastgoed Kiosk ERP — PRD
 
+## Sprint 83 (29 apr 2026) — Block back-navigation van login/admin naar landing
+
+### Verzoek
+"Ik wil niet dat wanneer je bij de inlog bent of als bedrijf gaat inloggen dat ze terug kunnen gaan op de landing page website, ze moeten blijven in de inlog."
+
+### Implementatie
+
+**3 lagen bescherming:**
+
+1. **Replace ipv push bij navigatie naar login** — MarketingLanding `goLogin`/`goRegister` gebruiken `navigate(..., { replace: true })`. Landing entry verdwijnt direct uit history.
+
+2. **Logout/unauthorized navigaties** in 4 files (`KioskWelcome.jsx`, `SuperAdminDashboard.jsx`, `KioskLayout.jsx`, `KioskAdminDashboard.jsx`) bulk gewijzigd: `navigate('/vastgoed')` → `navigate('/vastgoed/login', { replace: true })`. 11 occurrences vervangen.
+
+3. **PopState-trap** in `KioskLoginScreen` + `KioskAdminDashboard` + `SuperAdminDashboard`. Op mount: `pushState` sentinel + `popstate` listener die elke back-actie direct re-pusht. Browser back-knop heeft hierdoor geen effect zolang user op deze schermen is.
+
+### Live getest (Playwright)
+- Start op `/vastgoed` (landing) → klik Inloggen → URL `/vastgoed/login` ✓
+- 3x `page.go_back()` → URL blijft `/vastgoed/login` ✓
+- PIN keypad volledig intact ✓
+
+### Bestanden
+- `/app/frontend/src/components/vastgoed-kiosk/MarketingLanding.jsx`
+- `/app/frontend/src/components/vastgoed-kiosk/CompanySelect.jsx`
+- `/app/frontend/src/components/vastgoed-kiosk/KioskAdminDashboard.jsx`
+- `/app/frontend/src/components/vastgoed-kiosk/SuperAdminDashboard.jsx`
+- `/app/frontend/src/components/vastgoed-kiosk/KioskWelcome.jsx`
+- `/app/frontend/src/components/vastgoed-kiosk/KioskLayout.jsx`
+
+---
+
 ## Sprint 82 (29 apr 2026) — Video demo sectie op landing
 
 ### Implementatie

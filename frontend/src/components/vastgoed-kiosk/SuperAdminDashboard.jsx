@@ -28,8 +28,18 @@ export default function SuperAdminDashboard() {
   const formatSRD = (v) => `SRD ${(v || 0).toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
   useEffect(() => {
-    if (!token) { navigate('/vastgoed'); return; }
+    if (!token) { navigate('/vastgoed/login', { replace: true }); return; }
     loadData();
+  }, []);
+
+  // Trap browser back button — superadmin mag niet terug naar marketing landing
+  useEffect(() => {
+    window.history.pushState(null, '', window.location.href);
+    const onPopState = () => {
+      window.history.pushState(null, '', window.location.href);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
   const loadData = async () => {
@@ -44,7 +54,7 @@ export default function SuperAdminDashboard() {
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
         localStorage.removeItem('superadmin_token');
-        navigate('/vastgoed');
+        navigate('/vastgoed/login', { replace: true });
       }
     }
     setLoading(false);
@@ -271,7 +281,7 @@ export default function SuperAdminDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem('superadmin_token');
-    navigate('/vastgoed');
+    navigate('/vastgoed/login', { replace: true });
   };
 
   const filteredCompanies = companies.filter(c => {
