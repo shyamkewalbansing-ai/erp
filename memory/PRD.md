@@ -1,6 +1,36 @@
 # Vastgoed Kiosk ERP — PRD
 
-## Sprint 84b (11 mei 2026) — PDF export Financieel Overzicht op KIOSK (huurder-zijde)
+## Sprint 84c (11 mei 2026) — Inline PDF modal voor PWA standalone
+
+### Probleem
+Gebruiker meldde: "Als de Financieel overzicht als PDF geopend wordt, kan ik niet meer afsluiten op een PWA app — moet wel terug kunnen gaan naar de Kiosk."
+
+In PWA standalone mode opent `window.open` een venster zonder browser-UI (geen sluit-knop), waardoor de gebruiker vast komt te zitten.
+
+### Implementatie
+**Frontend** — `/app/frontend/src/components/vastgoed-kiosk/KioskTenantOverview.jsx`:
+- Nieuwe `PdfModal` component: fullscreen overlay binnen de Kiosk met:
+  - Top toolbar: titel + 3 knoppen (Afdrukken/PDF, Download, **Sluiten**)
+  - Iframe met `srcDoc` voor preview van het rapport
+- `handleExportPDF` detecteert PWA standalone via `matchMedia('(display-mode: standalone)')` of `window.navigator.standalone` of Android-app referrer
+  - PWA standalone → altijd inline modal
+  - Normale browser → nieuw venster met auto-print (zoals voorheen)
+  - Fallback bij pop-up blocker → inline modal
+- Print-knop: `iframe.contentWindow.print()` triggert printen van alleen het rapport
+- Download-knop: HTML blob download als `.html` bestand (gebruiker kan dat in browser openen en als PDF afdrukken)
+- Loading state op de PDF-knoppen tijdens generatie
+
+### Live getest (Playwright + PWA standalone mock)
+- `matchMedia` gemockt naar standalone:true
+- PDF modal verschijnt inline ✓ (`modal:1, close:1, print:1`)
+- Visueel bevestigd: complete rapport zichtbaar + 3 werkende knoppen
+
+### Bestand
+- `/app/frontend/src/components/vastgoed-kiosk/KioskTenantOverview.jsx`
+
+---
+
+## Sprint 84b (11 mei 2026) — PDF export Financieel Overzicht op KIOSK
 
 ### Verzoek
 Knop op de KIOSK (NIET op het admin dashboard) om het Financieel overzicht als PDF op te slaan.

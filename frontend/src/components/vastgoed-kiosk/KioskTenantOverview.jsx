@@ -33,12 +33,85 @@ function printPaymentReceipt(payment) {
 const TYPE_LABELS = { rent: 'Huur', partial_rent: 'Gedeeltelijk', service_costs: 'Servicekosten', fines: 'Boetes', deposit: 'Borg' };
 const METHOD_LABELS = { cash: 'Contant', card: 'Pinpas', mope: 'Mope', bank: 'Bank', pin: 'PIN' };
 
+// Inline fullscreen PDF preview modal — werkt ook in PWA standalone mode
+function PdfModal({ html, onClose, onPrint, fileName = 'rapport.pdf' }) {
+  const handleDownload = () => {
+    // Download als HTML bestand (browser kan dit dan zelf "afdrukken als PDF")
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName.replace(/\.pdf$/i, '') + '.html';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[200] bg-slate-900/85 backdrop-blur-sm flex flex-col" data-testid="kiosk-pdf-modal">
+      {/* Top toolbar */}
+      <div className="bg-white border-b border-slate-200 px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2 flex-shrink-0 shadow-md">
+        <div className="flex items-center gap-2 min-w-0">
+          <div className="w-9 h-9 rounded-lg bg-orange-500 flex items-center justify-center flex-shrink-0">
+            <FileText className="w-4 h-4 text-white" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-slate-900 leading-tight">Financieel Overzicht</p>
+            <p className="text-[11px] text-slate-500 truncate">Klaar om te downloaden of af te drukken</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={onPrint}
+            data-testid="kiosk-pdf-print-btn"
+            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white text-xs sm:text-sm font-bold rounded-lg shadow-sm transition active:scale-95"
+          >
+            <Printer className="w-4 h-4" />
+            <span className="hidden sm:inline">Afdrukken / PDF</span>
+            <span className="sm:hidden">Print</span>
+          </button>
+          <button
+            onClick={handleDownload}
+            data-testid="kiosk-pdf-download-btn"
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-bold rounded-lg transition active:scale-95"
+            title="Download als HTML"
+          >
+            <Download className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onClose}
+            data-testid="kiosk-pdf-close-btn"
+            className="inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold rounded-lg shadow-sm transition active:scale-95"
+          >
+            <X className="w-4 h-4" />
+            <span className="hidden sm:inline">Sluiten</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Iframe preview */}
+      <div className="flex-1 bg-slate-100 overflow-hidden">
+        <iframe
+          id="kiosk-pdf-iframe"
+          title="Financieel Overzicht"
+          srcDoc={html}
+          className="w-full h-full bg-white"
+          style={{ border: 'none' }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, variant = 'default' }) {
   const cur = (tenant?.currency || 'SRD').toUpperCase();
   const fmt = (v) => formatMoney(v, cur);
   const [showHistory, setShowHistory] = useState(false);
   const [payments, setPayments] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [pdfHtml, setPdfHtml] = useState(null);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
 
   if (!tenant) return null;
 
@@ -64,6 +137,7 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
   ];
 
   const handleExportPDF = async () => {
+    setGeneratingPdf(true);
     // Always fetch fresh payment history for the PDF
     let history = payments;
     if (!history || history.length === 0) {
@@ -180,19 +254,52 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
     <div>${tenant.name} · Appartement ${tenant.apartment_number || '-'}</div>
     <div>Gegenereerd via SuriRent Kiosk</div>
   </div>
-
-  <script>window.addEventListener('load', () => setTimeout(() => window.print(), 300));</script>
 </body>
 </html>`;
 
+    // Auto-trigger native print only for new-window flow; inline modal uses its own button
+    const htmlWithAutoPrint = html.replace(
+      '</body>',
+      `<script>window.addEventListener('load', () => setTimeout(() => window.print(), 300));</script></body>`
+    );
+
+    // Detect PWA standalone mode — in PWA window.open opent een venster
+    // zonder browser UI (geen sluit-knop), wat de gebruiker vast zet.
+    // Altijd inline modal gebruiken in PWA. Op normale browser gebruik nieuw venster.
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      || window.navigator.standalone
+      || document.referrer.includes('android-app://');
+
+    if (isStandalone) {
+      setPdfHtml(html);
+      setGeneratingPdf(false);
+      return;
+    }
+
     const w = window.open('', '_blank', 'width=1000,height=800');
     if (!w) {
-      alert('Pop-up geblokkeerd. Sta pop-ups toe om het PDF rapport te openen.');
+      // Pop-up geblokkeerd — fallback naar inline modal
+      setPdfHtml(html);
+      setGeneratingPdf(false);
       return;
     }
     w.document.open();
-    w.document.write(html);
+    w.document.write(htmlWithAutoPrint);
     w.document.close();
+    setGeneratingPdf(false);
+  };
+
+  const handlePrintInline = () => {
+    // Print de iframe content
+    const iframe = document.getElementById('kiosk-pdf-iframe');
+    if (iframe && iframe.contentWindow) {
+      try {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+      } catch (e) {
+        window.print();
+      }
+    }
   };
 
   if (variant === 'huurder') {
@@ -227,13 +334,14 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
               <div className="text-right flex items-center" style={{ gap: 'clamp(8px, 1vw, 14px)' }}>
                 <button
                   onClick={handleExportPDF}
+                  disabled={generatingPdf}
                   data-testid="kiosk-export-pdf-btn-huurder"
                   title="Financieel overzicht opslaan als PDF"
-                  className="inline-flex items-center bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg transition active:scale-95"
+                  className="inline-flex items-center bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white font-bold rounded-lg transition active:scale-95"
                   style={{ gap: 'clamp(4px, 0.4vw, 8px)', padding: 'clamp(6px, 0.9vh, 12px) clamp(10px, 1.2vw, 18px)', fontSize: 'clamp(11px, 1.3vh, 14px)' }}
                 >
                   <Download style={{ width: '1.8vh', height: '1.8vh' }} />
-                  <span>PDF</span>
+                  <span>{generatingPdf ? '...' : 'PDF'}</span>
                 </button>
                 <div>
                   <p className="kiosk-small opacity-60">Totaal openstaand</p>
@@ -345,6 +453,8 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
             </div>
           </div>
         )}
+
+        {pdfHtml && <PdfModal html={pdfHtml} onClose={() => setPdfHtml(null)} onPrint={handlePrintInline} fileName={`Financieel-${tenant.name}-${tenant.apartment_number || ''}.pdf`} />}
       </div>
     );
   }
@@ -373,13 +483,13 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
             <span className="text-sm sm:text-base font-semibold text-slate-800">Financieel overzicht</span>
             <button
               onClick={handleExportPDF}
+              disabled={generatingPdf}
               data-testid="kiosk-export-pdf-btn"
               title="Financieel overzicht opslaan als PDF"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold rounded-lg shadow-sm transition active:scale-95"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 disabled:opacity-60 text-white text-xs font-bold rounded-lg shadow-sm transition active:scale-95"
             >
               <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">PDF</span>
-              <span className="sm:hidden">PDF</span>
+              <span>{generatingPdf ? '...' : 'PDF'}</span>
             </button>
           </div>
           <div className="flex-1 flex flex-col justify-center">
@@ -530,6 +640,8 @@ export default function KioskTenantOverview({ tenant, onBack, onPay, companyId, 
           </div>
         </div>
       )}
+
+      {pdfHtml && <PdfModal html={pdfHtml} onClose={() => setPdfHtml(null)} onPrint={handlePrintInline} fileName={`Financieel-${tenant.name}-${tenant.apartment_number || ''}.pdf`} />}
     </div>
   );
 }
